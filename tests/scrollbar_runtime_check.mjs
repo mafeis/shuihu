@@ -16,6 +16,7 @@ const context = await browser.newContext({
 });
 
 const viewports = [
+  ["1440x900", 1440, 900, false],
   ["1080p", 1920, 1080, false],
   ["1440p", 2560, 1440, false],
   ["4K", 3840, 2160, false],

@@ -7630,6 +7630,7 @@ button[aria-pressed="true"] {
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  align-self: start;
   padding: 32px;
   text-align: center;
 }
