@@ -153,7 +153,7 @@ import {
   chooseAutoBattleAction,
   normalizeAutoBattleTactic,
 } from "./auto-battle.js";
-import { sound } from "./audio.js";
+import { combatSfxCue, sound } from "./audio.js";
 
 const app = document.querySelector("#app");
 const gameShell = window.gameShell || null;
@@ -4278,8 +4278,7 @@ function resolveChainAttack() {
   }
   presentBattleResult(result);
   battleUi.resultTone = "combo";
-  sound.confirm();
-  sound.hit(true);
+  sound.playCombatCue("combo");
   render();
   showBattleResult();
   scheduleBattle(() => advanceAfterResult(), 1120);
@@ -4304,7 +4303,12 @@ function runEnemyTurn() {
     : { ok: false, lines: ["敌军阵脚已乱。"] };
   presentBattleResult(result.ok ? result : { lines: ["敌军阵脚已乱。"], kind: "damage" });
   battleUi.resultTone = "hostile";
-  sound.hit(Boolean(action.skill?.power >= 1.2));
+  sound.playCombatCue(
+    combatSfxCue({
+      skill: action.skill && { ...action.skill, path: actor.path },
+      result,
+    }),
+  );
   render();
   showBattleResult();
   scheduleBattle(() => advanceAfterResult(), 920);
@@ -4348,8 +4352,12 @@ function resolveHeroAction(skill, targetUid = null) {
   }
   presentBattleResult(result);
   battleUi.resultTone = result.kind === "heal" ? "support" : "heroic";
-  if (result.kind === "heal") sound.heal();
-  else sound.hit(result.lines.some((line) => line.includes("暴击")));
+  sound.playCombatCue(
+    combatSfxCue({
+      skill: { ...skill, path: actor.path },
+      result,
+    }),
+  );
   render();
   showBattleResult();
   scheduleBattle(() => advanceAfterResult(), 900);
@@ -5114,7 +5122,7 @@ function startChapterBattle() {
   });
   setBattleFacilityContext(battle, state);
   battleUi = createBattleUi();
-  sound.hit(true);
+  sound.playCombatCue("battle-start");
   setScreen("battle");
 }
 
@@ -5617,7 +5625,7 @@ function launchArenaWave() {
   state.arena.lastWave = Math.max(state.arena.lastWave, arenaRun.wave);
   state.arena.bestWave = Math.max(state.arena.bestWave, arenaRun.wave);
   persist();
-  sound.hit(true);
+  sound.playCombatCue("battle-start");
   setScreen("battle");
 }
 
