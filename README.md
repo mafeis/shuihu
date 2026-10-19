@@ -4,7 +4,7 @@
 
 浏览器与 Electron 共用同一套游戏源码。桌面版支持 macOS、Windows 与 Linux 打包，浏览器版支持 PWA 离线启动。
 
-![林冲角色原画](assets/characters/linchong/keyart.png)
+![林冲角色原画](public/github-cover.png)
 
 ## 运行
 
