@@ -993,6 +993,11 @@ export function equipmentStats(equipment) {
   return totals;
 }
 
+export function equipmentMatchesCategory(itemId, category = "all") {
+  if (category === "all") return Boolean(EQUIPMENT[itemId]);
+  return EQUIPMENT[itemId]?.slot === category;
+}
+
 export function deriveHeroStats(state, heroId) {
   const hero = HEROES[heroId];
   const entry = state.roster[heroId] || createRosterEntry(heroId);

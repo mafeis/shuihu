@@ -1556,6 +1556,61 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   await click("button[data-action=nav-roster]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-roster")');
+  const rosterLayout = await evaluate(`(() => ({
+    cards: document.querySelectorAll(".roster-list-panel .hero-card").length,
+    filters: document.querySelectorAll(".roster-filters button").length,
+    page: document.querySelector(".roster-list-panel .list-pagination")?.innerText || "",
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  }))()`);
+  assertEqual(rosterLayout.cards, 16, "roster should paginate at sixteen heroes");
+  assertEqual(rosterLayout.filters, 5, "roster should filter by every hero path");
+  assertEqual(rosterLayout.page.includes("第 1 /"), true, "roster should begin on the first page");
+  assertEqual(rosterLayout.overflow, 0, "roster filters should not overflow horizontally");
+  await click('button[data-action="filter-roster-path"][data-path="ling"]');
+  const rosterLing = await evaluate(`(() => ({
+    cards: document.querySelectorAll(".roster-list-panel .hero-card").length,
+    paths: [...document.querySelectorAll(".roster-list-panel .hero-card .path-badge > span")].map((node) => node.textContent.trim()),
+  }))()`);
+  assertEqual(rosterLing.paths.every((path) => path === "灵巧"), true, "roster path filter should only show matching heroes");
+  await click('button[data-action="filter-roster-path"][data-path="all"]');
+  await click('button[data-action="roster-page"][data-direction="1"]');
+  assertEqual(
+    await evaluate('document.querySelectorAll(".roster-list-panel .hero-card").length > 0 && document.querySelector(".roster-list-panel .list-pagination")?.innerText.includes("第 2 /")'),
+    true,
+    "roster should advance through later pages",
+  );
+  await click('button[data-action="filter-roster-path"][data-path="all"]');
+  await click('button[data-action="equipment-hero"][data-hero="linchong"]');
+  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-equipment")');
+  const equipmentLayout = await evaluate(`(() => ({
+    items: document.querySelectorAll(".inventory-item").length,
+    totalItems: Number(document.querySelector(".inventory-panel > .section-heading > span")?.textContent.match(/\\d+/)?.[0] || 0),
+    filters: document.querySelectorAll(".equipment-filter-group button").length,
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  }))()`);
+  assertEqual(equipmentLayout.totalItems > 5, true, "equipment fixture should cover multiple inventory pages");
+  assertEqual(equipmentLayout.items <= 5, true, "equipment inventory should paginate short lists");
+  assertEqual(equipmentLayout.filters, 9, "equipment should expose category and hero path filters");
+  assertEqual(equipmentLayout.overflow, 0, "equipment filters should not overflow horizontally");
+  await click('button[data-action="filter-equipment-item"][data-slot="weapon"]');
+  assertEqual(
+    await evaluate('[...document.querySelectorAll(".inventory-item .item-copy small")].every((node) => node.textContent.startsWith("兵刃"))'),
+    true,
+    "weapon category should hide armor and tokens",
+  );
+  await click('button[data-action="filter-equipment-path"][data-path="shou"]');
+  assertEqual(
+    await evaluate(`(() => {
+      const shouHeroes = new Set(${JSON.stringify(HERO_ORDER.filter((heroId) => HEROES[heroId].path === "shou"))});
+      const tabs = [...document.querySelectorAll(".equipment-hero-tabs button[data-action='select-equipment-hero']")];
+      return tabs.length > 0 && tabs.every((node) => shouHeroes.has(node.dataset.hero));
+    })()`),
+    true,
+    "equipment hero tabs should remain selectable after filtering",
+  );
+  await click('button[data-action="filter-equipment-path"][data-path="all"]');
+  await click('button[data-action="nav-roster"]');
+  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-roster")');
   await click('button[data-action="nav-formation"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-formation")');
   const bondFormation = await evaluate(`(() => {
