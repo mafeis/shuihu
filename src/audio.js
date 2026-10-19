@@ -1,6 +1,83 @@
+const SCENE_TRACKS = {
+  title: "title_theme",
+  battle: "battle_theme",
+  ending: "ending_theme",
+  "final-choice": "ending_theme",
+  story: "jianghu_theme",
+  map: "jianghu_theme",
+  camp: "jianghu_theme",
+  roster: "jianghu_theme",
+  formation: "jianghu_theme",
+  equipment: "jianghu_theme",
+  codex: "jianghu_theme",
+  settings: "jianghu_theme",
+  reward: "ending_theme",
+  arena: "battle_theme",
+  "arena-briefing": "battle_theme",
+  "arena-reward": "jianghu_theme",
+};
+
+const CHAPTER_TRACKS = {
+  qingfeng: "qingfeng_theme",
+  jiangzhou: "jiangzhou_theme",
+  zhujiazhuang: "zhujiazhuang_theme",
+  damingfu: "damingfu_theme",
+};
+
+export const COMBAT_SFX_CUES = [
+  "battle-start",
+  "slash",
+  "heavy",
+  "projectile",
+  "block",
+  "evade",
+  "heal",
+  "combo",
+  "victory",
+  "defeat",
+];
+
+export function sceneMusicTrack(scene, context = {}) {
+  const chapterId = String(context.chapterId || "");
+  if (
+    ["story", "battle", "reward"].includes(scene) &&
+    chapterId.startsWith("recruitment-")
+  ) {
+    return "recruitment_theme";
+  }
+  if (scene === "story" && chapterId === "liangshan") return "ending_theme";
+  if (
+    ["battle", "arena", "arena-briefing"].includes(scene) &&
+    context.boss
+  ) {
+    return "boss_theme";
+  }
+  if (["story", "battle", "arena-briefing"].includes(scene)) {
+    const chapterTrack = CHAPTER_TRACKS[chapterId];
+    if (chapterTrack) return chapterTrack;
+  }
+  return SCENE_TRACKS[scene] || "jianghu_theme";
+}
+
+export function combatSfxCue({ skill, result }) {
+  if (result?.phase === "victory") return "victory";
+  if (result?.phase === "defeat") return "defeat";
+  const events = Array.isArray(result?.events) ? result.events : [];
+  if (events.some((event) => event.type === "combo")) return "combo";
+  if (events.some((event) => event.type === "heal")) return "heal";
+  const evaded = events.some((event) => event.type === "evade");
+  if (!skill) return evaded ? "evade" : "block";
+  const path = skill.path || skill.actorPath;
+  if (path === "shou") return evaded ? "evade" : "block";
+  if (path === "tao") return evaded ? "evade" : "heavy";
+  if (path === "ling") return evaded ? "evade" : "projectile";
+  return evaded ? "evade" : "slash";
+}
+
 class SoundEngine {
   constructor() {
     this.context = null;
+    this.masterGain = null;
     this.enabled = true;
     this.unlocked = false;
     this.musicVolume = 0.65;
@@ -9,13 +86,33 @@ class SoundEngine {
     this.musicLayers = [this.createMusicLayer(), this.createMusicLayer()];
     this.activeMusicLayer = 0;
     this.musicFadeTimer = null;
+    this.lastCue = null;
+    if (globalThis.window && globalThis.document) {
+      globalThis.__shuihuAudioElements = () =>
+        this.musicLayers.filter((layer) => layer instanceof globalThis.Audio)
+          .length;
+      globalThis.__shuihuAudioPlayAttempts = (trackId) =>
+        this.musicLayers.filter(
+          (layer) => layer.dataset?.track === trackId && layer.playAttempted,
+        ).length;
+      globalThis.__shuihuSound = this;
+    }
   }
 
   setEnabled(value) {
     this.enabled = Boolean(value);
-    document.documentElement.dataset.audio = this.enabled ? "on" : "off";
+    globalThis.document?.documentElement.setAttribute(
+      "data-audio",
+      this.enabled ? "on" : "off",
+    );
     if (!this.enabled) {
-      this.musicLayers.forEach((layer) => layer.pause());
+      if (this.musicFadeTimer) globalThis.window?.clearInterval(this.musicFadeTimer);
+      this.musicFadeTimer = null;
+      this.musicLayers.forEach((layer) => {
+        layer.pause();
+        layer.removeAttribute("src");
+      });
+      this.context?.suspend().catch(() => {});
       return;
     }
     if (this.unlocked && this.currentMusic) this.playMusic(this.currentMusic);
@@ -28,24 +125,33 @@ class SoundEngine {
     if (sfxVolume !== undefined) {
       this.sfxVolume = Math.max(0, Math.min(1, Number(sfxVolume)));
     }
-    document.documentElement.dataset.musicVolume = String(this.musicVolume);
-    document.documentElement.dataset.sfxVolume = String(this.sfxVolume);
-
+    const root = globalThis.document?.documentElement;
+    if (root) {
+      root.setAttribute("data-music-volume", String(this.musicVolume));
+      root.setAttribute("data-sfx-volume", String(this.sfxVolume));
+    }
+    if (this.masterGain) {
+      this.masterGain.gain.setTargetAtTime(
+        Math.pow(this.sfxVolume, 1.35) * 0.7,
+        this.context.currentTime,
+        0.015,
+      );
+    }
     const activeLayer = this.musicLayers[this.activeMusicLayer];
     if (this.musicVolume <= 0) {
       this.musicLayers.forEach((layer) => layer.pause());
-      return;
-    }
-    if (this.enabled && this.unlocked && this.currentMusic) {
-      if (activeLayer.dataset.track === this.currentMusic) {
+    } else if (this.enabled && this.unlocked && this.currentMusic) {
+      if (activeLayer.dataset.track !== this.currentMusic) {
+        this.playMusic(this.currentMusic);
+      } else {
         activeLayer.volume = this.musicTargetVolume();
         if (activeLayer.paused) {
-          const playAttempt = activeLayer.play();
-          if (playAttempt?.catch) playAttempt.catch(() => {});
+          this.catchPlayback(activeLayer);
         }
-      } else {
-        this.playMusic(this.currentMusic);
       }
+    }
+    if (this.enabled && this.unlocked && this.context?.state === "suspended") {
+      this.context.resume().catch(() => {});
     }
   }
 
@@ -54,10 +160,13 @@ class SoundEngine {
   }
 
   createMusicLayer() {
-    const layer = new Audio();
+    const AudioElement = globalThis.Audio || globalThis.window?.Audio;
+    if (!AudioElement) return {};
+    const layer = new AudioElement();
     layer.loop = true;
     layer.preload = "auto";
     layer.volume = 0;
+    layer.dataset.track = "";
     return layer;
   }
 
@@ -67,52 +176,19 @@ class SoundEngine {
     if (this.currentMusic) this.playMusic(this.currentMusic);
   }
 
+  catchPlayback(layer) {
+    const attempt = layer.play?.();
+    if (attempt?.catch) attempt.catch(() => {});
+    return attempt;
+  }
+
   setSceneMusic(scene, context = {}) {
-    const sceneTracks = {
-      title: "title_theme",
-      battle: "battle_theme",
-      ending: "ending_theme",
-      "final-choice": "ending_theme",
-      story: "jianghu_theme",
-      map: "jianghu_theme",
-      camp: "jianghu_theme",
-      roster: "jianghu_theme",
-      formation: "jianghu_theme",
-      equipment: "jianghu_theme",
-      codex: "jianghu_theme",
-      settings: "jianghu_theme",
-      reward: "ending_theme",
-      arena: "battle_theme",
-      "arena-briefing": "battle_theme",
-      "arena-reward": "jianghu_theme",
-    };
-    let nextTrack = sceneTracks[scene] || "jianghu_theme";
-    const isRecruitmentScene =
-      ["story", "battle", "reward"].includes(scene) &&
-      String(context.chapterId || "").startsWith("recruitment-");
-    if (isRecruitmentScene) {
-      nextTrack = "recruitment_theme";
-    } else if (scene === "story" && context.chapterId === "liangshan") {
-      nextTrack = "ending_theme";
-    } else if (scene === "story" && context.chapterId === "qingfeng") {
-      nextTrack = "qingfeng_theme";
-    } else if (scene === "story" && context.chapterId === "jiangzhou") {
-      nextTrack = "jiangzhou_theme";
-    } else if (scene === "story" && context.chapterId === "zhujiazhuang") {
-      nextTrack = "zhujiazhuang_theme";
-    } else if (scene === "story" && context.chapterId === "damingfu") {
-      nextTrack = "damingfu_theme";
-    } else if (scene === "battle" && context.boss) {
-      nextTrack = "boss_theme";
-    } else if (scene === "battle" && context.chapterId === "jiangzhou") {
-      nextTrack = "jiangzhou_theme";
-    } else if (scene === "battle" && context.chapterId === "zhujiazhuang") {
-      nextTrack = "zhujiazhuang_theme";
-    } else if (scene === "battle" && context.chapterId === "damingfu") {
-      nextTrack = "damingfu_theme";
-    }
+    const nextTrack = sceneMusicTrack(scene, context);
     if (nextTrack === this.currentMusic) {
-      if (this.enabled && this.unlocked) this.playMusic(nextTrack);
+      if (this.enabled && this.unlocked) {
+        const activeLayer = this.musicLayers[this.activeMusicLayer];
+        if (activeLayer.paused) this.playMusic(nextTrack);
+      }
       return;
     }
     this.currentMusic = nextTrack;
@@ -121,41 +197,37 @@ class SoundEngine {
 
   playMusic(trackId) {
     if (!this.enabled || !this.unlocked || !trackId) return;
-    document.documentElement.dataset.music = trackId;
+    globalThis.document?.documentElement.setAttribute("data-music", trackId);
     const currentLayer = this.musicLayers[this.activeMusicLayer];
     const source = `/assets/audio/${trackId}.mp3`;
-    if (currentLayer.dataset.track === trackId && !currentLayer.paused) {
-      return;
-    }
-
+    if (currentLayer.dataset?.track === trackId && !currentLayer.paused) return;
     const nextIndex = 1 - this.activeMusicLayer;
     const nextLayer = this.musicLayers[nextIndex];
     nextLayer.dataset.track = trackId;
     nextLayer.src = source;
     nextLayer.currentTime = 0;
     nextLayer.volume = 0;
-    const playAttempt = nextLayer.play();
-    if (playAttempt?.catch) playAttempt.catch(() => {});
+    nextLayer.playAttempted = true;
+    this.catchPlayback(nextLayer);
     this.activeMusicLayer = nextIndex;
     this.crossfadeMusic(currentLayer, nextLayer);
   }
 
   crossfadeMusic(previous, next) {
-    if (this.musicFadeTimer) window.clearInterval(this.musicFadeTimer);
+    if (this.musicFadeTimer) globalThis.window?.clearInterval(this.musicFadeTimer);
     const targetVolume = this.musicTargetVolume();
     let progress = 0;
     const steps = 24;
-    this.musicFadeTimer = window.setInterval(() => {
+    this.musicFadeTimer = globalThis.window?.setInterval(() => {
       progress += 1;
       const ratio = Math.min(1, progress / steps);
       next.volume = targetVolume * ratio;
       previous.volume = Math.max(0, previous.volume * (1 - ratio));
       if (ratio >= 1) {
-        window.clearInterval(this.musicFadeTimer);
+        globalThis.window?.clearInterval(this.musicFadeTimer);
         this.musicFadeTimer = null;
         previous.pause();
         previous.removeAttribute("src");
-        previous.load();
       }
     }, 45);
   }
@@ -163,41 +235,86 @@ class SoundEngine {
   ensureContext() {
     if (!this.enabled) return null;
     if (!this.context) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return null;
-      this.context = new AudioContext();
+      const AudioContextClass =
+        globalThis.window?.AudioContext || globalThis.window?.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      this.context = new AudioContextClass();
+      this.masterGain = this.context.createGain();
+      this.masterGain.gain.value = Math.pow(this.sfxVolume, 1.35) * 0.7;
+      this.masterGain.connect(this.context.destination);
     }
-    if (this.context.state === "suspended") this.context.resume();
+    if (this.context.state === "suspended") this.context.resume().catch(() => {});
     return this.context;
   }
 
-  tone(frequency, duration, options = {}) {
-    if (this.sfxVolume <= 0) return;
+  noise(duration, options = {}) {
     const context = this.ensureContext();
-    if (!context) return;
-    const oscillator = context.createOscillator();
+    if (!context || this.sfxVolume <= 0) return;
+    const start = Math.max(0, options.delay || 0);
+    const source = context.createBufferSource();
+    const filter = context.createBiquadFilter();
     const gain = context.createGain();
-    oscillator.type = options.type || "sine";
-    oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+    const frameCount = Math.max(1, Math.ceil(context.sampleRate * (duration + start)));
+    const buffer = context.createBuffer(1, frameCount, context.sampleRate);
+    const samples = buffer.getChannelData(0);
+    let noise = 0;
+    for (let index = 0; index < frameCount; index += 1) {
+      noise = noise * 0.72 + (Math.random() * 2 - 1) * 0.28;
+      samples[index] = noise;
+    }
+    source.buffer = buffer;
+    filter.type = options.filter || "bandpass";
+    filter.frequency.setValueAtTime(options.frequency || 1600, context.currentTime);
     if (options.endFrequency) {
-      oscillator.frequency.exponentialRampToValueAtTime(
-        Math.max(20, options.endFrequency),
-        context.currentTime + duration,
+      filter.frequency.exponentialRampToValueAtTime(
+        options.endFrequency,
+        context.currentTime + start + duration,
       );
     }
+    filter.Q.value = options.q || 0.8;
     gain.gain.setValueAtTime(0.0001, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(
-      (options.volume || 0.025) * this.sfxVolume,
-      context.currentTime + 0.012,
+    gain.gain.linearRampToValueAtTime(
+      options.volume || 0.1,
+      context.currentTime + start + (options.attack || 0.008),
     );
     gain.gain.exponentialRampToValueAtTime(
       0.0001,
-      context.currentTime + duration,
+      context.currentTime + start + duration,
+    );
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+    source.start(context.currentTime + start);
+    source.stop(context.currentTime + start + duration + 0.03);
+  }
+
+  tone(frequency, duration, options = {}) {
+    const context = this.ensureContext();
+    if (!context || this.sfxVolume <= 0) return;
+    const start = Math.max(0, options.delay || 0);
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = options.type || "sine";
+    oscillator.frequency.setValueAtTime(frequency, context.currentTime + start);
+    if (options.endFrequency) {
+      oscillator.frequency.exponentialRampToValueAtTime(
+        Math.max(20, options.endFrequency),
+        context.currentTime + start + duration,
+      );
+    }
+    gain.gain.setValueAtTime(0.0001, context.currentTime + start);
+    gain.gain.exponentialRampToValueAtTime(
+      options.volume || 0.025,
+      context.currentTime + start + 0.012,
+    );
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      context.currentTime + start + duration,
     );
     oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start();
-    oscillator.stop(context.currentTime + duration + 0.02);
+    gain.connect(this.masterGain);
+    oscillator.start(context.currentTime + start);
+    oscillator.stop(context.currentTime + start + duration + 0.02);
   }
 
   click() {
@@ -213,50 +330,144 @@ class SoundEngine {
   }
 
   hit(heavy = false) {
-    this.tone(heavy ? 88 : 120, heavy ? 0.22 : 0.13, {
-      type: "sawtooth",
-      endFrequency: heavy ? 42 : 68,
-      volume: heavy ? 0.045 : 0.03,
+    this.noise(heavy ? 0.24 : 0.12, {
+      frequency: heavy ? 650 : 1600,
+      endFrequency: heavy ? 120 : 650,
+      volume: heavy ? 0.16 : 0.07,
+    });
+    this.tone(heavy ? 86 : 150, heavy ? 0.2 : 0.1, {
+      type: "sine",
+      endFrequency: heavy ? 38 : 72,
+      volume: heavy ? 0.16 : 0.06,
+    });
+  }
+
+  slash() {
+    this.noise(0.16, {
+      filter: "highpass",
+      frequency: 2200,
+      volume: 0.075,
+    });
+    this.noise(0.16, {
+      frequency: 4500,
+      endFrequency: 1400,
+      volume: 0.1,
+      delay: 0.04,
+    });
+  }
+
+  projectile() {
+    this.noise(0.2, {
+      filter: "highpass",
+      frequency: 1100,
+      endFrequency: 3200,
+      volume: 0.045,
+    });
+    this.tone(950, 0.08, {
+      type: "triangle",
+      endFrequency: 250,
+      volume: 0.02,
+    });
+    this.hit(false);
+  }
+
+  block() {
+    this.hit(false);
+    this.tone(340, 0.16, {
+      type: "square",
+      endFrequency: 270,
+      volume: 0.04,
+    });
+    this.tone(680, 0.12, { type: "sine", volume: 0.03 });
+  }
+
+  evade() {
+    this.noise(0.16, {
+      filter: "highpass",
+      frequency: 2500,
+      volume: 0.035,
+    });
+    this.tone(820, 0.1, {
+      type: "sine",
+      endFrequency: 1350,
+      volume: 0.02,
     });
   }
 
   heal() {
-    this.tone(520, 0.22, {
-      type: "sine",
-      endFrequency: 760,
-      volume: 0.02,
+    [520, 654, 784].forEach((frequency, index) => {
+      this.tone(frequency, 0.3, {
+        type: "sine",
+        delay: index * 0.07,
+        volume: 0.025,
+      });
     });
-    window.setTimeout(
-      () => this.tone(680, 0.18, { type: "sine", volume: 0.012 }),
-      80,
-    );
+  }
+
+  combo() {
+    this.noise(0.32, {
+      filter: "highpass",
+      frequency: 1800,
+      volume: 0.08,
+    });
+    [196, 294, 392, 587].forEach((frequency, index) => {
+      this.tone(frequency, 0.25, {
+        type: "triangle",
+        delay: index * 0.055,
+        volume: 0.03,
+      });
+    });
+    this.hit(true);
+  }
+
+  battleStart() {
+    this.hit(true);
+    this.tone(98, 0.45, {
+      type: "triangle",
+      endFrequency: 62,
+      delay: 0.04,
+      volume: 0.06,
+    });
   }
 
   victory() {
     [262, 330, 392, 523].forEach((frequency, index) => {
-      window.setTimeout(
-        () =>
-          this.tone(frequency, 0.28, {
-            type: "triangle",
-            volume: 0.024,
-          }),
-        index * 95,
-      );
+      this.tone(frequency, 0.28, {
+        type: "triangle",
+        delay: index * 0.095,
+        volume: 0.035,
+      });
     });
   }
 
   defeat() {
     [220, 174, 130].forEach((frequency, index) => {
-      window.setTimeout(
-        () =>
-          this.tone(frequency, 0.4, {
-            type: "sine",
-            endFrequency: frequency * 0.78,
-            volume: 0.02,
-          }),
-        index * 130,
-      );
+      this.tone(frequency, 0.42, {
+        type: "sine",
+        endFrequency: frequency * 0.76,
+        delay: index * 0.13,
+        volume: 0.032,
+      });
     });
+  }
+
+  playCombatCue(cue) {
+    if (!COMBAT_SFX_CUES.includes(cue)) return false;
+    this.lastCue = cue;
+    const actions = {
+      "battle-start": () => this.battleStart(),
+      slash: () => this.slash(),
+      heavy: () => this.hit(true),
+      projectile: () => this.projectile(),
+      block: () => this.block(),
+      evade: () => this.evade(),
+      heal: () => this.heal(),
+      combo: () => this.combo(),
+      victory: () => this.victory(),
+      defeat: () => this.defeat(),
+    };
+    actions[cue]();
+    return true;
   }
 }
 
