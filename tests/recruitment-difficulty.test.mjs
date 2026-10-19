@@ -23,12 +23,18 @@ import {
   skillUsable,
   validTargets,
 } from "../src/battle.js";
+import { openingCinematicProfile } from "../src/cinematic.js";
+import {
+  getChapterTactic,
+} from "../src/chapter-tactics.js";
 import {
   battleEnemyScale,
   applyBattleRewards,
   applyHeroRecruitmentRewards,
   createInitialState,
   createRosterEntry,
+  recordChoice,
+  recruitHero,
   recommendTeam,
 } from "../src/state.js";
 
@@ -120,9 +126,19 @@ function simulateAutoBattleWithRandom(battle, tactics) {
     const actor = currentCombatant(battle);
     if (actor?.side === "enemy") {
       let action = chooseEnemyAction(battle, actor);
-      if (action.skill && !validTargets(battle, actor.uid, action.skill).length) {
+      if (!action?.skill) {
+        finishResolutionAndAdvance(battle);
+        continue;
+      }
+      if (
+        action?.skill &&
+        !validTargets(battle, actor.uid, action.skill).length
+      ) {
         action = chooseEnemyAction(battle, actor);
-        if (!validTargets(battle, actor.uid, action.skill).length) {
+        if (
+          action?.skill &&
+          !validTargets(battle, actor.uid, action.skill).length
+        ) {
           const fallbackSkill = enemySkillList(actor).find(
             (skill) =>
               skillUsable(actor, skill) &&
@@ -136,7 +152,7 @@ function simulateAutoBattleWithRandom(battle, tactics) {
             : action;
         }
       }
-      const result = action.skill
+      const result = action?.skill
         ? performAction(battle, actor.uid, action.skill, action.target?.uid)
         : { ok: false };
       if (!result.ok) {
@@ -194,7 +210,7 @@ function simulateAutoBattleWithRandom(battle, tactics) {
   throw new Error(`Battle ${battle.chapterTitle} did not finish`);
 }
 
-function campaignBattle(state, chapter) {
+function campaignBattle(state, chapter, optionIndex = 0) {
   return createBattle(
     state,
     {
@@ -213,8 +229,69 @@ function campaignBattle(state, chapter) {
     },
     {
       enemyScale: battleEnemyScale(state),
+      specialRule: getChapterTactic(chapter.id, optionIndex),
     },
   );
+}
+
+function cloneState(state) {
+  return structuredClone(state);
+}
+
+function simulateFirstPlaythrough() {
+  const state = createInitialState({ difficulty: "story" });
+  state.team = ["linchong", null, null];
+  const played = [];
+  const play = (chapter, optionIndex = 0) => {
+    const outcomes = Array.from({ length: 200 }, (_, sample) =>
+      simulateAutoBattle(
+        campaignBattle(cloneState(state), chapter, optionIndex),
+        ["balanced"],
+        0x90000 + played.length * 1000 + sample,
+      ),
+    );
+    const victories = outcomes.filter((outcome) => outcome === "victory").length;
+    played.push({ title: chapter.title, victories, optionIndex });
+  };
+
+  for (const [index, chapter] of CHAPTERS.entries()) {
+    state.team = recommendTeam(state).team;
+    for (const optionIndex of chapter.choice.options.keys()) {
+      play(chapter, optionIndex);
+    }
+    recordChoice(
+      state,
+      chapter.id,
+      0,
+      chapter.choice.options[0].effect,
+    );
+    applyBattleRewards(state, chapter);
+    for (const recruitment of Object.values(HERO_RECRUITMENTS).filter(
+      (entry) => entry.requiredChapter === index,
+    )) {
+      state.team = recommendTeam(state).team;
+      const snapshot = cloneState(state);
+      const testedBattle = recruitmentBattle(
+        recruitment.heroId,
+        snapshot,
+      ).battle;
+      assert.equal(
+        simulateAutoBattle(testedBattle),
+        "victory",
+        `${recruitment.title} economy battle`,
+      );
+      recordChoice(
+        state,
+        testedBattle.chapterId,
+        0,
+        recruitment.choice.options[0].effect,
+      );
+      applyHeroRecruitmentRewards(state, recruitment.heroId);
+      // Recruit the target even if its economy battle is sampled below.
+      recruitHero(state, recruitment.heroId);
+    }
+  }
+  return played;
 }
 
 test("chapter seven recruitment comes before its chapter battle", () => {
@@ -222,7 +299,6 @@ test("chapter seven recruitment comes before its chapter battle", () => {
   assert.equal(recruitment.requiredChapter, 7);
   assert.equal(recruitment.title, "笔改灯市");
 });
-
 test("笔改灯市 has a viable auto-battle path for every doctrine", () => {
   for (const [index, tactics] of [
     ["balanced"],
@@ -240,7 +316,6 @@ test("笔改灯市 has a viable auto-battle path for every doctrine", () => {
     );
   }
 });
-
 test("recruitments chain into every later chapter", () => {
   const state = createInitialState({ difficulty: "story" });
   state.team = ["linchong", null, null];
@@ -261,10 +336,7 @@ test("recruitments chain into every later chapter", () => {
       (entry) => entry.requiredChapter === index,
     )) {
       state.team = recommendTeam(state).team;
-      const recruited = recruitmentBattle(
-        recruitment.heroId,
-        state,
-      );
+      const recruited = recruitmentBattle(recruitment.heroId, state);
       assert.equal(
         simulateAutoBattle(recruited.battle),
         "victory",
@@ -274,7 +346,6 @@ test("recruitments chain into every later chapter", () => {
     }
   }
 });
-
 test("every campaign chapter has a viable formation and auto-battle tactic", () => {
   const state = createInitialState({ difficulty: "story" });
   state.team = ["linchong", null, null];
@@ -322,5 +393,32 @@ test("every campaign chapter has a viable formation and auto-battle tactic", () 
       `${chapter.id} has no viable formation and auto-battle route`,
     );
     applyBattleRewards(state, chapter);
+  }
+});
+
+test("first playthrough gives every chapter and recruitment a reachable route", () => {
+  const campaign = simulateFirstPlaythrough();
+  assert.equal(
+    campaign.length,
+    CHAPTERS.reduce(
+      (total, chapter) => total + chapter.choice.options.length,
+      0,
+    ),
+  );
+  const weakChapters = campaign
+    .filter((entry) => entry.victories < 160)
+    .map((entry) => `${entry.title} ${entry.victories}/200`)
+    .join("、");
+  assert.equal(
+    weakChapters,
+    "",
+    `Expected each chapter branch to win at least 160/200, failed: ${weakChapters}`,
+  );
+  for (const endingId of ["brotherhood", "order", "freedom"]) {
+    assert.equal(
+      openingCinematicProfile({ ending: endingId }).scenes.length,
+      4,
+      `${endingId} should not hide the next opening cinematic`,
+    );
   }
 });

@@ -515,16 +515,6 @@ function tickBleed(actor, battle) {
 export function skillUsable(actor, skill) {
   if (!actor || actor.hp <= 0) return false;
   if (skill.yiqiCost && actor.yiqi < skill.yiqiCost) return false;
-  if (
-    actor.statuses?.guard > 0 &&
-    skill.target === "self" &&
-    (skill.effects || []).some(
-      (effect) =>
-        effect.type === "selfStatus" && effect.status === "guard",
-    )
-  ) {
-    return false;
-  }
   return !(actor.cooldowns[skill.id] > 0);
 }
 
@@ -537,6 +527,7 @@ export function enemySkillList(actor) {
 }
 
 export function validTargets(battle, actorUid, skill) {
+  if (!skill) return [];
   const actor = combatantById(battle, actorUid);
   if (!actor) return [];
   const enemies = opponentsOf(battle, actor);
@@ -575,16 +566,21 @@ export function chooseEnemyAction(battle, actor) {
   const skills = enemySkillList(actor).filter(
     (skill) =>
       (!skill.minRound || battle.round >= skill.minRound) &&
-      skillUsable(actor, skill),
+      skillUsable(actor, skill) &&
+      validTargets(battle, actor.uid, skill).length > 0,
   );
   const weighted = [];
   for (const skill of skills) {
     for (let i = 0; i < (skill.weight || 1); i += 1) weighted.push(skill);
   }
-  const skill = pick(weighted.length ? weighted : enemySkillList(actor)[0]);
+  if (!weighted.length) return null;
+  const skill = pick(weighted);
   const targets = validTargets(battle, actor.uid, skill);
   let target = targets[0] || null;
-  if (skill.target === "enemy" || skill.target === "allEnemies") {
+  if (
+    skill &&
+    (skill.target === "enemy" || skill.target === "allEnemies")
+  ) {
     const weightedTargets = [];
     for (const unit of targets) {
       const rowWeight = ROWS[unit.row]?.aggro || 1;

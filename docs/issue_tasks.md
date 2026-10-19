@@ -1,6 +1,6 @@
 # GitHub Issue 处理清单
 
-更新于 2026-10-19。已处理的 issue 均保留在下方清单中；当前仍有 #19 开场动画与 #22 UI 点击动效处于 OPEN 状态。原独立分支仍在，但本次 1.0.1 发行不把这两项标为完成。
+更新于 2026-10-19。已处理的 issue 均保留在下方清单中，GitHub 当前仍有 #22、#23、#24 处于 OPEN 状态。点击动效、推荐装备和桌面开发启动问题仍未完成。
 
 | Issue | 分支 | 状态 | 验证与合并 |
 | --- | --- | --- | --- |
@@ -12,8 +12,10 @@
 | #9 UI及UE优化问题 | `fix/issue-9-inventory-ui` | 已完成 | PR #14，合并提交 `9507ca0` |
 | #13 营寨优化问题 | `fix/issue-13-camp-grid` | 已完成 | PR #16，合并提交 `8f8d7ca` |
 | #17 好汉介绍页面 | `fix/issue-17-hero-biography` | 已完成 | PR 已合并，issue 已关闭 |
-| #18 战斗特效与阵容表现 | `fix/issue-18-battle-vfx-layout` | 已完成 | PR 已合并，issue 已关闭 |
-| #19 开局的动画不够精细 | `fix/issue-19-opening-cinematic-endings` | OPEN | 分支已合入主线基础，尚无独立 PR 验收，不计入 1.0.1 完成项 |
+| #18 战斗特效与阵容表现 | `fix/issue-18-battle-vfx-layout` | 已完成 | 分支已合入主线，issue 已关闭 |
+| #19 开局的动画不够精细 | `fix/issue-19-opening-cinematic-endings` | 已完成 | 分支已合入主线，issue 已关闭 |
 | #22 增加 UI 点击动效 | 待独立分支 | OPEN | 尚无独立实现，不计入 1.0.1 完成项 |
+| #23 增加推荐装备功能 | 待独立分支 | OPEN | 尚无独立实现，不计入 1.0.1 完成项 |
+| #24 npm run desktop:dev 报错 | 待独立分支 | OPEN | 尚无独立实现；本次发行独立完成桌面打包 |
 
-每个 issue 使用独立分支和 PR。完成标准为相关测试、构建与 GitHub Actions 全部通过，并在合并后确认 issue 自动关闭。1.0.1 桌面发行不宣称解决 #19 与 #22。
+每个 issue 使用独立分支和 PR。完成标准为相关测试、构建与 GitHub Actions 全部通过，并在合并后确认 issue 自动关闭。1.0.1 桌面发行不宣称解决 #22、#23、#24。

@@ -1,7 +1,12 @@
 import { AUTO_BATTLE_TACTICS, PATHS } from "./data.js";
-import { heroSkillList, skillUsable } from "./battle.js";
+import {
+  heroSkillList,
+  skillUsable,
+  validTargets,
+} from "./battle.js";
 
 const REPEATED_SUPPORT_LIMIT = 2;
+const REPEATED_ACTION_LIMIT = 3;
 const battleActionMemory = new WeakMap();
 
 export function normalizeAutoBattleTactic(value) {
@@ -14,6 +19,9 @@ function battleMemory(battle) {
     memory = {
       supportStreak: 0,
       supportLastAction: null,
+      streak: 0,
+      lastAction: null,
+      lastActorUid: null,
     };
     battleActionMemory.set(battle, memory);
   }
@@ -23,15 +31,22 @@ function battleMemory(battle) {
 export function recordAutoBattleChoice(battle, action) {
   if (!battle || !action?.skill) return;
   const memory = battleMemory(battle);
+  const actionKey = [
+    action.skill.id,
+    action.target?.uid || action.skill.target,
+  ].join(":");
+  memory.streak =
+    memory.lastActorUid === action.actorUid &&
+    memory.lastAction === actionKey
+      ? memory.streak + 1
+      : 1;
+  memory.lastActorUid = action.actorUid;
+  memory.lastAction = actionKey;
   if (action.skill.power > 0 || action.skill.target === "allEnemies") {
     memory.supportStreak = 0;
     memory.supportLastAction = null;
     return;
   }
-  const actionKey = [
-    action.skill.id,
-    action.target?.uid || action.skill.target,
-  ].join(":");
   memory.supportStreak =
     memory.supportLastAction === actionKey
       ? memory.supportStreak + 1
@@ -53,6 +68,10 @@ function hitCount(skill) {
     : Math.max(1, Number(skill.hits) || 1);
 }
 
+function lastHeroStanding(battle) {
+  return battle.heroes.filter((unit) => unit.hp > 0).length <= 1;
+}
+
 function targetScore(actor, unit, tactic, livingEnemies) {
   const hpRatio = unit.hp / Math.max(1, unit.maxHp);
   const poiseRatio = unit.poise / Math.max(1, unit.poiseMax);
@@ -66,14 +85,8 @@ function targetScore(actor, unit, tactic, livingEnemies) {
       (unit.row === 0 ? 18 : 0) +
       (unit.broken > 0 ? 12 : 0);
   } else if (tactic === "guardian") {
-    const enemyAtk = Math.max(
-      1,
-      ...livingEnemies.map((enemy) => enemy.atk),
-    );
-    score =
-      (unit.atk / enemyAtk) * 58 +
-      hpRatio * 16 +
-      (unit.row === 2 ? 12 : 0);
+    const threat = unit.atk * (unit.row === 2 ? 1.25 : 1);
+    score = hpRatio * 16 + (unit.row === 2 ? 12 : 0);
   } else if (tactic === "hunter") {
     score =
       (1 - hpRatio) * 92 +
@@ -112,6 +125,55 @@ function targetScore(actor, unit, tactic, livingEnemies) {
     score += 12;
   }
   return score;
+}
+
+function estimateDamage(actor, skill, target, battle) {
+  const power = Number(skill.power) || 0;
+  if (!target || power <= 0) return 0;
+  let defense = target.def;
+  if (
+    actor.refId === "wusong" &&
+    target.hp / Math.max(1, target.maxHp) >
+      actor.hp / Math.max(1, actor.maxHp)
+  ) {
+    defense *= 0.85;
+  }
+  let estimate = Math.max(
+    9,
+    power * actor.atk * 1.82 - defense * 0.54,
+  );
+  if (PATHS[actor.path]?.beats === target.path) estimate *= 1.2;
+  if (PATHS[target.path]?.beats === actor.path) estimate *= 0.9;
+  if (target.broken > 0) estimate *= 1.32;
+  if (target.statuses.armorBreak > 0) estimate *= 1.18;
+  if (actor.statuses.inspiration > 0) estimate *= 1.18;
+  if (target.statuses.guard > 0) estimate *= 0.56;
+  estimate *= 1 - Math.max(0, battle.modifiers?.damageReductionPct || 0);
+  if (skill.executeBonus && target.hp / target.maxHp < 0.4) {
+    estimate *= skill.executeBonus;
+  }
+  if (target.statuses.bleeding > 0 && skill.bleedBonus) {
+    estimate *= skill.bleedBonus;
+  }
+  return Math.max(1, estimate);
+}
+
+function damageUnits(actor, skill, target, battle) {
+  if (!target || Number(skill.power) <= 0) return 0;
+  if (skill.target !== "allEnemies") {
+    return Math.min(
+      target.hp,
+      estimateDamage(actor, skill, target, battle) *
+        Math.max(1, Number(skill.hits) || 1),
+    );
+  }
+  return battle.enemies
+    .filter((enemy) => enemy.hp > 0)
+    .reduce(
+      (total, enemy) =>
+        total + Math.min(enemy.hp, estimateDamage(actor, skill, enemy, battle)),
+      0,
+    );
 }
 
 export function autoTargetForSkill(
@@ -161,11 +223,33 @@ export function autoTargetForSkill(
         ? livingEnemies.filter((unit) => unit.row === 2)
         : livingEnemies;
   return [...(targetPool.length ? targetPool : livingEnemies)].sort(
-    (a, b) =>
-      targetScore(actor, b, tactic, livingEnemies) -
-        targetScore(actor, a, tactic, livingEnemies) ||
-      a.uid.localeCompare(b.uid),
+    (a, b) => {
+      const aDamage = damageUnits(actor, skill, a, battle);
+      const bDamage = damageUnits(actor, skill, b, battle);
+      const aFinished = aDamage >= a.hp;
+      const bFinished = bDamage >= b.hp;
+      if (tactic === "guardian") {
+        const threat = threatGap(b) - threatGap(a);
+        if (Math.abs(threat) >= 1) return threat;
+      }
+      if (tactic !== "guardian" && tactic !== "breaker" && aFinished !== bFinished) {
+        return aFinished ? -1 : 1;
+      }
+      return (
+        bDamage - aDamage ||
+        targetScore(actor, b, tactic, livingEnemies) -
+          targetScore(actor, a, tactic, livingEnemies) ||
+        (tactic === "hunter"
+          ? b.hp / Math.max(1, b.maxHp) - a.hp / Math.max(1, a.maxHp)
+          : 0) ||
+        a.uid.localeCompare(b.uid)
+      );
+    },
   )[0] || null;
+}
+
+function threatGap(unit) {
+  return unit.atk;
 }
 
 function defensiveSkillScore(skill) {
@@ -182,49 +266,149 @@ function defensiveSkillScore(skill) {
   return score;
 }
 
-function damageSkillScore(actor, skill, target, livingEnemies, tactic) {
-  const targetFactor =
-    skill.target === "allEnemies"
-      ? Math.min(2.6, Math.max(1, livingEnemies.length * 0.82))
-      : 1;
+function damageSkillScore(actor, skill, target, tactic, battle) {
+  const hitTargets =
+    skill.target === "allEnemies" ? battle.enemies : [target];
+  const expectedDamage = hitTargets
+    .filter((unit) => unit?.hp > 0)
+    .reduce(
+      (total, unit) =>
+        total +
+        Math.min(unit.hp, estimateDamage(actor, skill, unit, battle)) *
+          hitCount(skill),
+      0,
+    );
+  const immediateYiqi = Math.max(0, Number(skill.yiqi) || 12);
   let score =
-    Math.max(0.1, skill.power || 0.1) *
-    hitCount(skill) *
-    targetFactor *
-    (1 + (skill.poise || 0) / 90);
+    Math.max(1, expectedDamage) +
+    Math.max(0, skill.poise || 0) * 0.75 +
+    immediateYiqi * 2;
+  const livingHeroes = battle.heroes.filter((unit) => unit.hp > 0);
+  if (
+    hasEffect(skill, "teamYiqi") &&
+    livingHeroes.some((unit) => unit.yiqi < 100)
+  ) {
+    score += hitTargets
+      .filter((unit) => unit?.hp > 0)
+      .reduce((total, unit) => total + Math.max(0, 100 - unit.yiqi), 0);
+  }
+  if (hasEffect(skill, "targetYiqi") && target && target.yiqi < 100) {
+    score += (100 - target.yiqi) * 2;
+  }
 
-  if (target && PATHS[actor.path]?.beats === target.path) score *= 1.24;
-  if (target && target.hp / target.maxHp < 0.38) {
-    if (skill.executeBonus || skill.executeCrit) {
-      score *= skill.executeBonus || 1.35;
-    }
-    if (tactic === "hunter") score *= 1.26;
-  }
-  if (target && target.statuses.bleeding > 0 && skill.bleedBonus) {
-    score *= skill.bleedBonus;
-  }
-  if (skill.bomb) {
-    score *= 1.14 + Math.max(0, skill.poise || 0) / 240;
-  }
+  if (skill.bomb) score *= 1.08 + Math.max(0, skill.poise || 0) / 400;
   if (
     actor.refId === "ruanxiaoqi" &&
     actor.hp / Math.max(1, actor.maxHp) < 0.5
   ) {
-    score *= 1.12;
+    score *= 1.08;
   }
   if (tactic === "breaker") {
-    score *= 1 + (skill.poise || 0) / 42;
-    if (hasEffect(skill, "status", "armorBreak")) score *= 1.28;
-    if (skill.target === "allEnemies") score *= 1.16;
+    score *= 1 + (skill.poise || 0) / 120;
+    if (hasEffect(skill, "status", "armorBreak")) score *= 1.18;
+    if (skill.target === "allEnemies") score *= 1.08;
   }
   if (tactic === "guardian") {
-    score *= 0.92;
-    if (target?.boss) score *= 1.08;
+    score *= 0.94;
+    if (target?.boss) score *= 1.06;
   }
-  if (tactic === "hunter" && skill.target !== "allEnemies") {
-    score *= 1.12;
+  if (!lastHeroStanding(battle)) {
+    if (target?.boss) score *= 1.4;
+    else if (skill.target === "allEnemies") score *= 0.8;
+  }
+  if (tactic === "hunter") {
+    if (target && target.hp / target.maxHp < 0.45) score *= 1.12;
+    if (target && expectedDamage >= target.hp) score *= 1.2;
+    if (skill.target !== "allEnemies") score *= 1.08;
+  }
+  if (
+    skill.heal &&
+    target?.side === "hero" &&
+    target.hp / target.maxHp < 0.55
+  ) {
+    score *= target.hp / target.maxHp < 0.35 ? 0.05 : 0.5;
   }
   return score;
+}
+
+function availableAction(battle, actor, skill, tactic) {
+  if (!skill) return null;
+  const targets = validTargets(battle, actor.uid, skill);
+  if (!targets.length) return null;
+  const assumesTarget = [
+    "enemy",
+    "frontEnemy",
+    "backEnemy",
+    "lowestEnemy",
+    "ally",
+  ].includes(skill.target);
+  const target = autoTargetForSkill(battle, actor, skill, tactic);
+  if (assumesTarget && !target) return null;
+  return {
+    skill,
+    target,
+    actorUid: actor.uid,
+  };
+}
+
+function statusIsActive(unit, status) {
+  return (unit.statuses?.[status] || 0) > 0;
+}
+
+function supportIsUseful(battle, actor, skill, role = null) {
+  const livingAllies = battle.heroes.filter((unit) => unit.hp > 0);
+  const statusActive = (status) =>
+    livingAllies.every((unit) => statusIsActive(unit, status));
+  const healsSomeone = livingAllies.some((unit) => unit.hp < unit.maxHp);
+  if (Number(skill.heal || 0) > 0 && !healsSomeone) return false;
+  if (
+    hasEffect(skill, "teamStatus", "guard") ||
+    (role === "guard" && hasEffect(skill, "teamStatus", "guard"))
+  ) {
+    if (statusActive("guard")) return false;
+  }
+  const currentStatusActive = (status) =>
+    livingAllies.some((unit) => statusIsActive(unit, status));
+  if (
+    hasEffect(skill, "teamStatus", "inspiration") ||
+    (role === "inspiration" &&
+      hasEffect(skill, "teamStatus", "inspiration"))
+  ) {
+    if (role === "inspiration" && currentStatusActive("inspiration")) {
+      return false;
+    }
+  }
+  if (
+    hasEffect(skill, "targetStatus", "guard") ||
+    (role === "guard" && hasEffect(skill, "targetStatus", "guard"))
+  ) {
+    const target = autoTargetForSkill(battle, actor, skill, "guardian");
+    if (target && statusIsActive(target, "guard")) return false;
+  }
+  if (
+    hasEffect(skill, "targetStatus", "inspiration") ||
+    (role === "inspiration" &&
+      hasEffect(skill, "targetStatus", "inspiration"))
+  ) {
+    const target = autoTargetForSkill(battle, actor, skill, "guardian");
+    if (target && statusIsActive(target, "inspiration")) return false;
+  }
+  const hasUsefulEffect =
+    (skill.effects || []).some((effect) =>
+      [
+        "teamStatus",
+        "targetStatus",
+        "selfStatus",
+        "teamCleanse",
+        "targetCleanse",
+        "selfHeal",
+      ].includes(effect.type),
+    ) ||
+    ["targetYiqi", "teamYiqi", "lowestAllyYiqi"].some((type) =>
+      hasEffect(skill, type),
+    );
+  if (!hasUsefulEffect && Number(skill.heal || 0) <= 0) return false;
+  return true;
 }
 
 export function chooseAutoBattleAction(
@@ -236,7 +420,10 @@ export function chooseAutoBattleAction(
   const skills = heroSkillList(actor).filter((skill) =>
     skillUsable(actor, skill),
   );
-  if (!skills.length) return null;
+  const readySkills = skills.filter(
+    (skill) => validTargets(battle, actor.uid, skill).length,
+  );
+  if (!readySkills.length) return null;
 
   const livingHeroes = battle.heroes.filter((unit) => unit.hp > 0);
   const livingEnemies = battle.enemies.filter((unit) => unit.hp > 0);
@@ -252,81 +439,88 @@ export function chooseAutoBattleAction(
   const lowHealthCount = livingHeroes.filter(
     (unit) => unit.hp / unit.maxHp < Math.max(0.5, healThreshold - 0.05),
   ).length;
-  const ultimates = skills.filter((skill) => skill.ultimate);
+  const ultimates = readySkills.filter((skill) => skill.ultimate);
   const allHealthy = livingHeroes.every(
     (unit) => unit.hp >= unit.maxHp,
   );
-  const usefulSupport = (skill) =>
-    !allHealthy ||
-    hasEffect(skill, "targetYiqi") ||
-    hasEffect(skill, "teamYiqi") ||
-    hasEffect(skill, "lowestAllyYiqi");
+  const usefulSupport = (skill, role = null) =>
+    supportIsUseful(battle, actor, skill, role);
   const stalled =
     battleMemory(battle).supportStreak >
     REPEATED_SUPPORT_LIMIT;
   const damageFirst =
     (skill) => skill.power > 0 || skill.target === "allEnemies";
+  const damageSkills = readySkills.filter(
+    (skill) => skill.power > 0 || skill.target === "allEnemies",
+  );
+  const bestDamageAction = () => {
+    const scored = damageSkills
+      .map((skill) => {
+        const action = availableAction(battle, actor, skill, tactic);
+        if (!action) return null;
+        return {
+          skill,
+          action,
+          score: damageSkillScore(
+            actor,
+            skill,
+            action.target,
+            tactic,
+            battle,
+          ),
+        };
+      })
+      .filter(Boolean)
+      .sort(
+        (a, b) =>
+          b.score - a.score ||
+          a.skill.id.localeCompare(b.skill.id),
+      );
+    return scored[0]?.action || null;
+  };
+  if (lastHeroStanding(battle) && damageSkills.length) {
+    return bestDamageAction();
+  }
+  const memory = battleMemory(battle);
+  if (
+    memory.lastActorUid === actor.uid &&
+    memory.streak >= REPEATED_ACTION_LIMIT
+  ) {
+    const varied = bestDamageAction();
+    if (varied) return varied;
+  }
   if (
     stalled &&
-    skills.some(damageFirst) &&
+    damageSkills.length &&
     livingHeroes.every(
       (unit) => unit.hp / Math.max(1, unit.maxHp) >= healThreshold,
     )
   ) {
-    const damageSkill = skills
-      .filter(damageFirst)
-      .sort(
-        (a, b) =>
-          damageSkillScore(actor, b, null, livingEnemies, tactic) -
-          damageSkillScore(actor, a, null, livingEnemies, tactic),
-      )[0];
-    return {
-      skill: damageSkill,
-      target: autoTargetForSkill(battle, actor, damageSkill, tactic),
-    };
+    const damageAction = bestDamageAction();
+    if (damageAction) return damageAction;
   }
 
   const urgentHeal = ultimates.find(
     (skill) =>
       skill.heal &&
+      livingHeroes.some((unit) => unit.hp < unit.maxHp) &&
       (skill.target === "allAllies"
         ? lowHealthCount > 0
         : lowestHero &&
           lowestHero.hp < lowestHero.maxHp &&
           lowestHero.hp / lowestHero.maxHp < healThreshold),
   );
-  if (urgentHeal) {
-    return {
-      skill: urgentHeal,
-      target: autoTargetForSkill(battle, actor, urgentHeal, tactic),
-    };
-  }
+  if (urgentHeal) return availableAction(battle, actor, urgentHeal, tactic);
 
-  if (
-    allHealthy &&
-    skills.some(damageFirst) &&
-    skills.some(
-      (skill) =>
-        defensiveSkillScore(skill) > 0 &&
-        !damageFirst(skill) &&
-        !usefulSupport(skill),
-    )
-  ) {
-    const damageSkill = skills
-      .filter(damageFirst)
-      .sort(
-        (a, b) =>
-          damageSkillScore(actor, b, null, livingEnemies, tactic) -
-          damageSkillScore(actor, a, null, livingEnemies, tactic),
-      )[0];
-    return {
-      skill: damageSkill,
-      target: autoTargetForSkill(battle, actor, damageSkill, tactic),
-    };
-  }
+  const supportUltimate = readySkills.find(
+    (skill) =>
+      skill.ultimate &&
+      defensiveSkillScore(skill) > 0 &&
+      usefulSupport(skill),
+  );
 
   if (tactic === "guardian") {
-    const defensiveSkills = skills
+    const defensiveSkills = readySkills
       .filter((skill) => !skill.ultimate && defensiveSkillScore(skill) > 0)
       .sort(
         (a, b) =>
@@ -336,7 +530,7 @@ export function chooseAutoBattleAction(
       (skill) => skill.heal && skill.target === "allAllies",
     );
     if (groupHeal && lowHealthCount >= 2) {
-      return { skill: groupHeal, target: null };
+      return availableAction(battle, actor, groupHeal, tactic);
     }
     const singleHeal = defensiveSkills.find(
       (skill) => skill.heal && skill.target === "ally",
@@ -347,16 +541,17 @@ export function chooseAutoBattleAction(
       lowestHero.hp < lowestHero.maxHp &&
       lowestHero.hp / lowestHero.maxHp < healThreshold
     ) {
-      return {
-        skill: singleHeal,
-        target: autoTargetForSkill(battle, actor, singleHeal, tactic),
-      };
+      return availableAction(battle, actor, singleHeal, tactic);
     }
     const groupGuard = defensiveSkills.find((skill) =>
       hasEffect(skill, "teamStatus", "guard"),
     );
-    if (groupGuard && !stalled && usefulSupport(groupGuard)) {
-      return { skill: groupGuard, target: null };
+    if (
+      groupGuard &&
+      !stalled &&
+      usefulSupport(groupGuard, "guard")
+    ) {
+      return availableAction(battle, actor, groupGuard, tactic);
     }
     const teamSupport = defensiveSkills.find(
       (skill) =>
@@ -364,12 +559,35 @@ export function chooseAutoBattleAction(
         hasEffect(skill, "teamYiqi") ||
         hasEffect(skill, "targetYiqi"),
     );
-    if (teamSupport && !stalled && usefulSupport(teamSupport)) {
-      return {
-        skill: teamSupport,
-        target: autoTargetForSkill(battle, actor, teamSupport, tactic),
-      };
+    if (
+      teamSupport &&
+      !stalled &&
+      usefulSupport(
+        teamSupport,
+        livingHeroes.every((unit) => unit.hp >= unit.maxHp)
+          ? "yiqi"
+          : null,
+      )
+    ) {
+      return availableAction(battle, actor, teamSupport, tactic);
     }
+  }
+
+  if (supportUltimate && !stalled) {
+    const action = availableAction(battle, actor, supportUltimate, tactic);
+    if (action) return action;
+  }
+
+  const yiqiUltimate = readySkills.find(
+    (skill) =>
+      skill.ultimate &&
+      (skill.effects || []).some((effect) => effect.type === "teamYiqi") &&
+      supportIsUseful(battle, actor, skill) &&
+      validTargets(battle, actor.uid, skill).length > 0,
+  );
+  if (yiqiUltimate && !stalled) {
+    const action = availableAction(battle, actor, yiqiUltimate, tactic);
+    if (action) return action;
   }
 
   const damageUltimate = ultimates.find(
@@ -381,10 +599,7 @@ export function chooseAutoBattleAction(
       battle.round >= 2 ||
       livingEnemies.length <= 1)
   ) {
-    return {
-      skill: damageUltimate,
-      target: autoTargetForSkill(battle, actor, damageUltimate, tactic),
-    };
+    return availableAction(battle, actor, damageUltimate, tactic);
   }
 
   if (
@@ -392,25 +607,22 @@ export function chooseAutoBattleAction(
     lowestHero.hp < lowestHero.maxHp &&
     lowestHero.hp / lowestHero.maxHp < healThreshold
   ) {
-    const groupHeal = skills
+    const groupHeal = readySkills
       .filter((skill) => skill.heal && skill.target === "allAllies")
       .sort((a, b) => b.heal - a.heal)[0];
     if (groupHeal && lowHealthCount >= 2) {
-      return { skill: groupHeal, target: null };
+      return availableAction(battle, actor, groupHeal, tactic);
     }
-    const singleHeal = skills
+    const singleHeal = readySkills
       .filter((skill) => skill.heal && skill.target === "ally")
       .sort((a, b) => b.heal - a.heal)[0];
     if (singleHeal) {
-      return {
-        skill: singleHeal,
-        target: autoTargetForSkill(battle, actor, singleHeal, tactic),
-      };
+      return availableAction(battle, actor, singleHeal, tactic);
     }
-    if (groupHeal) return { skill: groupHeal, target: null };
+    if (groupHeal) return availableAction(battle, actor, groupHeal, tactic);
   }
 
-  const groupGuard = skills.find(
+  const groupGuard = readySkills.find(
     (skill) =>
       skill.target === "allAllies" &&
       hasEffect(skill, "teamStatus", "guard"),
@@ -418,12 +630,13 @@ export function chooseAutoBattleAction(
   if (
     groupGuard &&
     !livingHeroes.every((unit) => unit.statuses.guard > 0) &&
-    !stalled
+    !stalled &&
+    supportIsUseful(battle, actor, groupGuard, "guard")
   ) {
-    return { skill: groupGuard, target: null };
+    return availableAction(battle, actor, groupGuard, tactic);
   }
 
-  const supportSkill = skills.find(
+  const supportSkill = readySkills.find(
     (skill) =>
       skill.target === "ally" &&
       hasEffect(skill, "targetYiqi") &&
@@ -431,61 +644,52 @@ export function chooseAutoBattleAction(
         (unit) => unit.yiqi < (tactic === "guardian" ? 78 : 65),
       ),
   );
-  if (supportSkill && usefulSupport(supportSkill)) {
-    return {
-      skill: supportSkill,
-      target: autoTargetForSkill(battle, actor, supportSkill, tactic),
-    };
-  }
-
-  const supportUltimate = ultimates.find((skill) => skill !== damageUltimate);
-  if (
-    supportUltimate &&
-    !stalled &&
-    usefulSupport(supportUltimate)
-  ) {
-    return {
-      skill: supportUltimate,
-      target: autoTargetForSkill(battle, actor, supportUltimate, tactic),
-    };
+  if (supportSkill && usefulSupport(supportSkill, "yiqi")) {
+    return availableAction(battle, actor, supportSkill, tactic);
   }
 
   const canUseDamageUltimate =
     tactic !== "guardian" ||
     battle.round >= 2 ||
     livingEnemies.length <= 1;
-  const damageSkills = skills.filter(
+  const usableDamageSkills = readySkills.filter(
     (skill) =>
       (skill.power > 0 || skill.target === "allEnemies") &&
       (!skill.ultimate || canUseDamageUltimate),
   );
-  const scored = damageSkills
+  const scored = usableDamageSkills
     .map((skill) => {
-      const target = autoTargetForSkill(battle, actor, skill, tactic);
+      const action = availableAction(battle, actor, skill, tactic);
+      if (!action) return null;
       return {
         skill,
-        target,
+        action,
         score: damageSkillScore(
           actor,
           skill,
-          target,
-          livingEnemies,
+          action.target,
           tactic,
+          battle,
         ),
       };
     })
+    .filter(Boolean)
     .sort(
       (a, b) =>
         b.score - a.score ||
         a.skill.id.localeCompare(b.skill.id),
     );
   if (scored[0]) {
-    return { skill: scored[0].skill, target: scored[0].target };
+    return scored[0].action;
   }
 
-  const fallback = skills[0];
-  return {
-    skill: fallback,
-    target: autoTargetForSkill(battle, actor, fallback, tactic),
-  };
+  const healingSkill = readySkills.find((skill) => skill.heal > 0);
+  if (healingSkill) {
+    const action = availableAction(battle, actor, healingSkill, tactic);
+    if (action) return action;
+  }
+
+  return readySkills
+    .map((skill) => availableAction(battle, actor, skill, tactic))
+    .find(Boolean) || null;
 }

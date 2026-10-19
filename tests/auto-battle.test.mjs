@@ -47,6 +47,11 @@ test("auto-battle tactics prioritize distinct enemy targets", () => {
   front.hp = Math.round(front.maxHp * 0.82);
   front.poise = Math.round(front.poiseMax * 0.94);
   front.atk = 45;
+  for (const enemy of battle.enemies) {
+    enemy.hp = enemy.maxHp;
+    enemy.def = 0;
+    enemy.statuses.guard = 0;
+  }
 
   middle.row = 1;
   middle.hp = Math.round(middle.maxHp * 0.2);
@@ -62,12 +67,12 @@ test("auto-battle tactics prioritize distinct enemy targets", () => {
     (entry) => entry.id === "hua_basic",
   );
   assert.equal(
-    autoTargetForSkill(battle, actor, skill, "breaker").uid,
-    front.uid,
-  );
-  assert.equal(
     autoTargetForSkill(battle, actor, skill, "guardian").uid,
     back.uid,
+  );
+  assert.equal(
+    autoTargetForSkill(battle, actor, skill, "breaker").uid,
+    front.uid,
   );
   assert.equal(
     autoTargetForSkill(battle, actor, skill, "hunter").uid,
@@ -154,4 +159,19 @@ test("auto-battle gets a damage action after two unchanging support actions", ()
     return chooseAutoBattleAction(battle, healer, "balanced");
   })();
   assert.ok(memory.skill.power > 0);
+});
+
+test("last hero standing attacks instead of healing forever", () => {
+  const battle = battleFor(["huarong", "linchong", "andaoquan"]);
+  const healer = battle.heroes.find((unit) => unit.refId === "andaoquan");
+  for (const hero of battle.heroes) {
+    if (hero !== healer) hero.hp = 0;
+  }
+  healer.hp = Math.round(healer.maxHp * 0.2);
+  healer.cooldowns = {};
+  healer.yiqi = 100;
+
+  const action = chooseAutoBattleAction(battle, healer, "balanced");
+
+  assert.ok(action.skill.power > 0);
 });
