@@ -6,9 +6,10 @@
 
 ## 运行
 
-需要 Node.js 20 或更高版本。
+需要 Node.js 20 或更高版本，以及 Git LFS。
 
 ```bash
+git lfs install
 npm ci
 npm run dev
 ```
@@ -67,12 +68,15 @@ npm run desktop:pack:win      # Windows x64 NSIS 安装包与 ZIP
 
 游戏使用 AI 辅助生产的美术、音乐和视频素材，生成式资产披露见 [store/steam_ai_disclosure.json](store/steam_ai_disclosure.json)。正式角色素材、音频与商店图由 Git LFS 管理；原始生成稿、QA 截图和内部 ComfyUI 工作流不进入公开仓库。
 
-克隆包含 LFS 素材的项目：
+首次使用 Git LFS 的设备需要先初始化：
 
 ```bash
 git lfs install
 git clone https://github.com/mafeis/shuihu.git
+git lfs pull
 ```
+
+GitHub 自动生成的 “Download ZIP” 只包含 LFS 指针，不包含实际素材。需要完整源码时请使用 Git 克隆；只想直接运行或分享时，请下载 [发行页](https://github.com/mafeis/shuihu/releases/latest)中的完整安装包。
 
 游戏运行时不会连接 ComfyUI 或生成式模型服务。本地素材生产工具通过 `COMFY_URL` 环境变量指定自建服务地址，使用说明见 [ComfyUI 素材生产](docs/comfyui_asset_generation.md)。
 
