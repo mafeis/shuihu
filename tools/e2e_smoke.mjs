@@ -10,6 +10,7 @@ import {
   ARENA_ENCOUNTERS,
   CHAPTERS,
   CHAIN_FORMATIONS,
+  EQUIPMENT,
   HERO_BONDS,
   HERO_LEGENDS,
   HERO_ORDER,
@@ -36,6 +37,8 @@ const captureSteamScreenshots =
   process.env.CAPTURE_STEAM_SCREENSHOTS === "1";
 const captureVisualQa = process.env.CAPTURE_VISUAL_QA === "1";
 const expectWebApp = process.env.EXPECT_WEB_APP === "1";
+const equipmentFocus = process.env.E2E_EQUIPMENT_FOCUS === "1";
+class EquipmentFocusComplete extends Error {}
 let devServer = null;
 let chrome = null;
 let socket = null;
@@ -508,6 +511,10 @@ function campaignFixture() {
   state.team = ["likui", "linchong", "huarong"];
   state.stats.heroesRecruited = HERO_ORDER.length;
   state.inventory.copper = 5000;
+  Object.assign(
+    state.inventory,
+    Object.fromEntries(Object.keys(EQUIPMENT).map((itemId) => [itemId, 1])),
+  );
   state.settings.autoBattle = true;
   state.settings.battleSpeed = 4;
   return state;
@@ -728,6 +735,34 @@ try {
     scale: 1,
     dontSetVisibleSize: true,
   });
+
+  if (equipmentFocus) {
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
+    await setSave(bondFixture());
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
+    await clickText("续上旧卷");
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
+    await click("button[data-action=nav-roster]");
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-roster")');
+    await click('button[data-action="equipment-hero"][data-hero="linchong"]');
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-equipment")');
+    const focusedEquipment = await evaluate(`(() => ({
+      items: document.querySelectorAll(".inventory-item").length,
+      total: Number(document.querySelector(".inventory-panel > .section-heading > span")?.textContent.match(/\\d+/)?.[0] || 0),
+      hasNextPage: Boolean(document.querySelector('button[data-action="equipment-page"][data-direction="1"]')),
+    }))()`);
+    assertEqual(focusedEquipment.total > 5, true, "equipment fixture should cover multiple inventory pages");
+    assertEqual(focusedEquipment.items <= 5, true, "equipment inventory should paginate short lists");
+    assertEqual(focusedEquipment.hasNextPage, true, "equipment inventory pagination should be available");
+    await click('button[data-action="equipment-page"][data-direction="1"]');
+    assertEqual(
+      await evaluate('document.querySelector(".inventory-panel .list-pagination")?.innerText.includes("第 2 /")'),
+      true,
+      "equipment inventory should advance to its second page",
+    );
+    console.log(JSON.stringify({ equipmentFocus: focusedEquipment }));
+    throw new EquipmentFocusComplete();
+  }
 
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await waitFor(
@@ -1592,6 +1627,13 @@ try {
   assertEqual(equipmentLayout.items <= 5, true, "equipment inventory should paginate short lists");
   assertEqual(equipmentLayout.filters, 9, "equipment should expose category and hero path filters");
   assertEqual(equipmentLayout.overflow, 0, "equipment filters should not overflow horizontally");
+  await click('button[data-action="equipment-page"][data-direction="1"]');
+  assertEqual(
+    await evaluate('document.querySelector(".inventory-panel .list-pagination")?.innerText.includes("第 2 /")'),
+    true,
+    "equipment inventory should advance to its second page",
+  );
+  await click('button[data-action="equipment-page"][data-direction="-1"]');
   await click('button[data-action="filter-equipment-item"][data-slot="weapon"]');
   assertEqual(
     await evaluate('[...document.querySelectorAll(".inventory-item .item-copy small")].every((node) => node.textContent.startsWith("兵刃"))'),
@@ -3818,6 +3860,8 @@ try {
       2,
     ),
   );
+} catch (error) {
+  if (!(error instanceof EquipmentFocusComplete)) throw error;
 } finally {
   if (inputStateCleanup && socket?.ws?.readyState === WebSocket.OPEN) {
     try {
