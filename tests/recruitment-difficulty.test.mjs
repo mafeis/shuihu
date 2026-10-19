@@ -238,6 +238,30 @@ function cloneState(state) {
   return structuredClone(state);
 }
 
+function stateBeforeChapter(chapterId) {
+  const state = createInitialState({ difficulty: "story" });
+  state.team = ["linchong", null, null];
+  for (const [index, chapter] of CHAPTERS.entries()) {
+    if (chapter.id === chapterId) return state;
+    state.team = recommendTeam(state).team;
+    recordChoice(
+      state,
+      chapter.id,
+      0,
+      chapter.choice.options[0].effect,
+    );
+    applyBattleRewards(state, chapter);
+    if (CHAPTERS[index + 1]?.id === chapterId) return state;
+    for (const recruitment of Object.values(HERO_RECRUITMENTS).filter(
+      (entry) => entry.requiredChapter === index,
+    )) {
+      applyHeroRecruitmentRewards(state, recruitment.heroId);
+      recruitHero(state, recruitment.heroId);
+    }
+  }
+  throw new Error(`Unknown chapter ${chapterId}`);
+}
+
 function simulateFirstPlaythrough() {
   const state = createInitialState({ difficulty: "story" });
   state.team = ["linchong", null, null];
@@ -394,6 +418,51 @@ test("every campaign chapter has a viable formation and auto-battle tactic", () 
     );
     applyBattleRewards(state, chapter);
   }
+});
+
+test("玉麟出府 stays reliable across late-campaign auto-battle seeds", () => {
+  const state = stateBeforeChapter("damingfu");
+  state.team = recommendTeam(state).team;
+  const seeds = [
+    16934,
+    ...Array.from({ length: 20000 }, (_, sample) => sample),
+  ];
+  const outcomes = seeds.map((seed) => {
+    const battle = recruitmentBattle("lujunyi", cloneState(state)).battle;
+    return {
+      seed,
+      phase: simulateAutoBattle(
+        battle,
+        ["balanced"],
+        seed,
+      ),
+      battle,
+    };
+  });
+  const defeats = outcomes
+    .filter((outcome) => outcome.phase === "defeat")
+    .map((outcome) => outcome.seed);
+  if (defeats.length) {
+    const failed = outcomes.find((outcome) => outcome.phase === "defeat");
+    console.error(
+      JSON.stringify(failed.battle.log.slice(-24), null, 2),
+      "\nHeroes:",
+      failed.battle.heroes.map(({ name, hp, maxHp, yiqi }) => ({
+        name,
+        hp,
+        maxHp,
+        yiqi,
+      })),
+      "\nEnemies:",
+      failed.battle.enemies.map(({ name, hp, maxHp, yiqi }) => ({
+        name,
+        hp,
+        maxHp,
+        yiqi,
+      })),
+    );
+  }
+  assert.deepEqual(defeats, []);
 });
 
 test("first playthrough gives every chapter and recruitment a reachable route", () => {

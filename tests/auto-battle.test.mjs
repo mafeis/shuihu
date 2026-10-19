@@ -161,7 +161,7 @@ test("auto-battle gets a damage action after two unchanging support actions", ()
   assert.ok(memory.skill.power > 0);
 });
 
-test("last hero standing attacks instead of healing forever", () => {
+test("last hero standing takes one emergency heal before attacking", () => {
   const battle = battleFor(["huarong", "linchong", "andaoquan"]);
   const healer = battle.heroes.find((unit) => unit.refId === "andaoquan");
   for (const hero of battle.heroes) {
@@ -172,6 +172,13 @@ test("last hero standing attacks instead of healing forever", () => {
   healer.yiqi = 100;
 
   const action = chooseAutoBattleAction(battle, healer, "balanced");
+  assert.ok(action.skill.heal > 0);
 
-  assert.ok(action.skill.power > 0);
+  for (const skill of HEROES.andaoquan.skills.filter(
+    (entry) => entry.heal > 0,
+  )) {
+    healer.cooldowns[skill.id] = 9;
+  }
+  const followUp = chooseAutoBattleAction(battle, healer, "balanced");
+  assert.ok(followUp.skill.power > 0);
 });

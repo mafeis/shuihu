@@ -445,9 +445,9 @@ export function chooseAutoBattleAction(
   );
   const usefulSupport = (skill, role = null) =>
     supportIsUseful(battle, actor, skill, role);
+  const memory = battleMemory(battle);
   const stalled =
-    battleMemory(battle).supportStreak >
-    REPEATED_SUPPORT_LIMIT;
+    memory.supportStreak > REPEATED_SUPPORT_LIMIT;
   const damageFirst =
     (skill) => skill.power > 0 || skill.target === "allEnemies";
   const damageSkills = readySkills.filter(
@@ -478,10 +478,26 @@ export function chooseAutoBattleAction(
       );
     return scored[0]?.action || null;
   };
-  if (lastHeroStanding(battle) && damageSkills.length) {
-    return bestDamageAction();
+  if (lastHeroStanding(battle)) {
+    const emergencyHeal = readySkills
+      .filter((skill) => skill.heal > 0)
+      .sort((a, b) => b.heal - a.heal)[0];
+    if (
+      emergencyHeal &&
+      actor.hp / Math.max(1, actor.maxHp) <
+        Math.min(0.8, healThreshold + 0.1) &&
+      memory.supportStreak <= REPEATED_SUPPORT_LIMIT
+    ) {
+      const healAction = availableAction(
+        battle,
+        actor,
+        emergencyHeal,
+        tactic,
+      );
+      if (healAction) return healAction;
+    }
+    if (damageSkills.length) return bestDamageAction();
   }
-  const memory = battleMemory(battle);
   if (
     memory.lastActorUid === actor.uid &&
     memory.streak >= REPEATED_ACTION_LIMIT
