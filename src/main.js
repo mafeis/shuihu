@@ -179,6 +179,7 @@ import {
   clickFeedbackOrigin,
   currencyFeedback,
 } from "./ui-feedback.js";
+import { recommendEquipment } from "./equipment-recommendation.js";
 import { combatSfxCue, sound } from "./audio.js";
 
 const app = document.querySelector("#app");
@@ -252,6 +253,13 @@ const EQUIPMENT_CATEGORIES = [
   { id: "armor", name: "护甲", icon: "shield" },
   { id: "token", name: "随身物", icon: "gem" },
 ];
+
+const EQUIPMENT_STYLE_LABELS = {
+  offense: "锋刃",
+  guard: "坚壁",
+  mobility: "疾行",
+  balanced: "均衡",
+};
 
 const HERO_GROUPS = [
   { id: "all", name: "全路数" },
@@ -2883,6 +2891,10 @@ function renderEquipment() {
   const entry = state.roster[heroId];
   const stats = deriveHeroStats(state, heroId);
   const items = inventoryItems(state);
+  const recommendation = recommendEquipment(state, heroId);
+  const recommendedItemIds = new Set(
+    Object.values(recommendation.equipment).filter(Boolean),
+  );
   const visibleItems = items.filter(({ item }) =>
     equipmentMatchesCategory(item.id, equipmentCategory),
   );
@@ -2899,7 +2911,13 @@ function renderEquipment() {
       <main class="equipment-layout">
         <section class="equipment-heading">
           <div><p class="eyebrow">甲兵武备</p><h1>整理行装</h1><p>武器、护甲、随身物各装备一件。从行囊换装时，旧装备会自动收回。</p></div>
-          <div class="equipment-wallet">${icon("coins", 18)}<b>${state.inventory.copper}</b><span>贯</span></div>
+          <div class="equipment-heading-actions">
+            <button class="button ${recommendation.changes.length ? "secondary" : "ghost"}" data-action="recommend-equipment" title="按好汉路数、站位与属性综合推荐">
+              ${icon("wand-sparkles", 17)}
+              <span>${recommendation.changes.length ? `军师荐装 · ${recommendation.changes.length} 件` : "军师荐装 · 当前已优"}</span>
+            </button>
+            <div class="equipment-wallet">${icon("coins", 18)}<b>${state.inventory.copper}</b><span>贯</span></div>
+          </div>
         </section>
         <section class="equipment-hero-tabs">
           ${visibleHeroes
@@ -2968,7 +2986,7 @@ function renderEquipment() {
                   ? inventoryPage.items
                       .map(
                         ({ item, amount }) => `
-                          <button class="inventory-item" data-action="equip-item" data-item="${item.id}">
+                          <button class="inventory-item ${recommendedItemIds.has(item.id) ? "is-recommended" : ""}" data-action="equip-item" data-item="${item.id}">
                             <span class="item-glyph">${icon(item.slot === "weapon" ? "swords" : item.slot === "armor" ? "shield" : "gem", 20)}</span>
                             <span class="item-copy">
                               <small>${item.slot === "weapon" ? "兵刃" : item.slot === "armor" ? "护甲" : "随身物"} · ${item.rarity}</small>
@@ -7203,6 +7221,32 @@ function handleAction(action, element) {
         toast("无法装备此物", "danger");
       }
       return;
+    case "recommend-equipment": {
+      const heroId = state.recruited.includes(selectedEquipmentHero)
+        ? selectedEquipmentHero
+        : state.recruited[0];
+      const recommendation = recommendEquipment(state, heroId);
+      if (!recommendation.changes.length) {
+        sound.click();
+        toast(`${HEROES[heroId].name}当前配装已是最优`, "success");
+        return;
+      }
+      const equipped = recommendation.changes.filter((change) =>
+        equipItem(state, heroId, change.to),
+      );
+      if (!equipped.length) {
+        toast("当前没有可替换的推荐装备", "danger");
+        return;
+      }
+      persist();
+      sound.confirm();
+      render();
+      toast(
+        `${HEROES[heroId].name}已调整 ${equipped.length} 件装备 · ${EQUIPMENT_STYLE_LABELS[recommendation.style]}配装`,
+        "success",
+      );
+      return;
+    }
     case "unequip":
       if (unequipItem(state, element.dataset.hero, element.dataset.slot)) {
         persist();
