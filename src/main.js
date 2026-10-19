@@ -167,6 +167,7 @@ import {
 import {
   chooseAutoBattleAction,
   normalizeAutoBattleTactic,
+  recordAutoBattleChoice,
 } from "./auto-battle.js";
 import { battleVfxProfile } from "./battle-vfx.js";
 import {
@@ -4653,6 +4654,7 @@ function runAutoHeroTurn() {
     }, 220);
     return;
   }
+  recordAutoBattleChoice(battle, action);
   resolveHeroAction(action.skill, action.target?.uid || null);
 }
 

@@ -1398,10 +1398,7 @@ try {
   assertEqual(imageState.broken, 0, "battle images should not be broken");
   assertEqual(imageState.stretched, 0, "battle images should not be stretched");
 
-  await waitFor(
-    'document.querySelector(".game-frame")?.classList.contains("screen-reward")',
-    35000,
-  );
+  await waitForReward("Qingfeng doctrine regression battle", 35000);
   const rewardLayout = await evaluate(`(() => {
     const panel = document.querySelector(".medal-reward-panel");
     const items = panel ? [...panel.querySelectorAll(".medal-reward-list > span")] : [];

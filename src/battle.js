@@ -515,6 +515,16 @@ function tickBleed(actor, battle) {
 export function skillUsable(actor, skill) {
   if (!actor || actor.hp <= 0) return false;
   if (skill.yiqiCost && actor.yiqi < skill.yiqiCost) return false;
+  if (
+    actor.statuses?.guard > 0 &&
+    skill.target === "self" &&
+    (skill.effects || []).some(
+      (effect) =>
+        effect.type === "selfStatus" && effect.status === "guard",
+    )
+  ) {
+    return false;
+  }
   return !(actor.cooldowns[skill.id] > 0);
 }
 
@@ -535,13 +545,20 @@ export function validTargets(battle, actorUid, skill) {
     case "enemy":
     case "allEnemies":
       return enemies;
-    case "frontEnemy":
-      return enemies.filter((unit) => unit.row === 0).slice(0, 1);
-    case "backEnemy":
-      return enemies
-        .filter((unit) => unit.row === 2)
-        .sort((a, b) => b.spd - a.spd)
-        .slice(0, 1);
+    case "frontEnemy": {
+      const target =
+        enemies.find((unit) => unit.row === 0) ||
+        [...enemies].sort((a, b) => a.row - b.row)[0];
+      return target ? [target] : [];
+    }
+    case "backEnemy": {
+      const target =
+        enemies
+          .filter((unit) => unit.row === 2)
+          .sort((a, b) => b.spd - a.spd)[0] ||
+        [...enemies].sort((a, b) => b.row - a.row)[0];
+      return target ? [target] : [];
+    }
     case "lowestEnemy":
       return [...enemies].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, 1);
     case "ally":
@@ -955,13 +972,12 @@ function resolveTargets(battle, actor, skill, selectedTargetUid) {
     case "self":
       return [actor];
     case "frontEnemy":
-      return enemies.filter((unit) => unit.row === 0).slice(0, 1);
-    case "backEnemy": {
-      const candidates = enemies.filter((unit) => unit.row === 2);
-      return candidates.length
-        ? [candidates.sort((a, b) => b.spd - a.spd)[0]]
-        : [[...enemies].sort((a, b) => b.row - a.row)[0]];
-    }
+      return [enemies.find((unit) => unit.row === 0) || enemies[0]];
+    case "backEnemy":
+      return [
+        enemies.filter((unit) => unit.row === 2).sort((a, b) => b.spd - a.spd)[0] ||
+          [...enemies].sort((a, b) => b.row - a.row)[0],
+      ];
     case "lowestEnemy":
       return [[...enemies].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0]];
     case "ally": {

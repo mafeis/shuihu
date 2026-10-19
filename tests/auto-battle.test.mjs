@@ -9,6 +9,7 @@ import {
   autoTargetForSkill,
   chooseAutoBattleAction,
   normalizeAutoBattleTactic,
+  recordAutoBattleChoice,
 } from "../src/auto-battle.js";
 import { createBattle } from "../src/battle.js";
 import { createInitialState } from "../src/state.js";
@@ -87,7 +88,70 @@ test("guardian auto-battle holds a damage ultimate while the line is healthy", (
   assert.notEqual(guardianAction.skill.id, "hua_ult");
 });
 
+test("balanced support heals the most endangered ally before taking another action", () => {
+  const battle = battleFor(["huarong", "linchong", "andaoquan"]);
+  const healer = battle.heroes.find((unit) => unit.refId === "andaoquan");
+  const [front, middle] = battle.heroes;
+  front.hp = Math.round(front.maxHp * 0.3);
+  middle.hp = Math.round(middle.maxHp * 0.6);
+  healer.cooldowns = {};
+
+  const action = chooseAutoBattleAction(battle, healer, "balanced");
+
+  assert.equal(action.skill.id, "an_needle");
+  assert.equal(action.target.uid, front.uid);
+});
+
 test("unknown auto-battle tactics fall back to balanced", () => {
   assert.equal(normalizeAutoBattleTactic("unknown"), "balanced");
   assert.equal(normalizeAutoBattleTactic("hunter"), "hunter");
+});
+
+test("auto-battle chooses damage instead of repeating support at full health", () => {
+  const battle = battleFor(["huarong", "linchong", "andaoquan"]);
+  const healer = battle.heroes.find((unit) => unit.refId === "andaoquan");
+  healer.cooldowns = {};
+  healer.yiqi = 100;
+
+  const action = chooseAutoBattleAction(
+    battle,
+    healer,
+    "balanced",
+  );
+
+  assert.ok(action.skill.power > 0);
+});
+
+test("auto-battle uses a full-health support ultimate that restores yiqi", () => {
+  const battle = battleFor(["huarong", "linchong", "daizong"]);
+  const daizong = battle.heroes.find((unit) => unit.refId === "daizong");
+  daizong.cooldowns = {};
+  daizong.yiqi = 100;
+  battle.heroes[0].yiqi = 100;
+  battle.heroes[1].yiqi = 100;
+
+  const action = chooseAutoBattleAction(battle, daizong, "balanced");
+
+  assert.equal(action.skill.id, "dai_ult");
+});
+
+test("auto-battle gets a damage action after two unchanging support actions", () => {
+  const battle = battleFor(["huarong", "linchong", "andaoquan"]);
+  const healer = battle.heroes.find((unit) => unit.refId === "andaoquan");
+  const guardSkill = HEROES.andaoquan.skills.find(
+    (skill) => skill.id === "an_needle",
+  );
+  const action = { skill: guardSkill, target: battle.heroes[0] };
+
+  recordAutoBattleChoice(battle, action);
+  recordAutoBattleChoice(battle, action);
+
+  const memory = (() => {
+    battle.heroes.forEach((unit) => {
+      unit.hp = unit.maxHp;
+    });
+    healer.cooldowns = {};
+    return chooseAutoBattleAction(battle, healer, "balanced");
+  })();
+  assert.ok(memory.skill.power > 0);
 });
