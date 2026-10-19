@@ -385,11 +385,60 @@ function takeBattleFeedback(unitUid, type) {
   return feedback.splice(index, 1)[0];
 }
 
+const BATTLE_ROW_X = { 0: 0, 1: -1, 2: 1 };
+
+function battleUnitSpatialStyle(unitUid) {
+  const vfx = battleUi.vfx;
+  if (!battle || !vfx) return "";
+  const units = [...battle.heroes, ...battle.enemies];
+  const actor = units.find((unit) => unit.uid === vfx.actorUid);
+  const targetUids = vfx.targetUids || [];
+  const firstTarget = units.find((unit) => unit.uid === targetUids[0]);
+  const current = units.find((unit) => unit.uid === unitUid);
+  if (!actor || !current || !firstTarget) return "";
+  const isActor = current.uid === actor.uid;
+  const isTarget = targetUids.includes(current.uid);
+  if (!isActor && !isTarget) return "";
+
+  const relationTarget = isActor ? firstTarget : current;
+  const horizontal =
+    (BATTLE_ROW_X[relationTarget.row] || 0) -
+    (BATTLE_ROW_X[actor.row] || 0);
+  const depth =
+    (actor.row === 0 ? 0 : 1) + (relationTarget.row === 0 ? 0 : 1);
+  if (isActor) {
+    const rushY = 22 + depth * 4;
+    return [
+      `--strike-x:${horizontal * 9}vw`,
+      `--rush-up:-${rushY}vh`,
+      `--rush-down:${rushY}vh`,
+      `--strike-rotate:${horizontal * 2}deg`,
+    ].join(";");
+  }
+  return [
+    `--hit-x:${horizontal * 22}px`,
+    `--hit-x-mid:${horizontal * 9}px`,
+    `--hit-x-return:${horizontal * -3}px`,
+    `--hit-rotate:${horizontal * 2.2}deg`,
+    `--hit-rotate-mid:${horizontal * -1.2}deg`,
+    `--hit-depth:${depth}`,
+  ].join(";");
+}
+
 function renderBattleMotion(event, label, tone = "") {
   if (!event) return "";
+  const collision = event.type === "damage" || event.type === "combo";
   return `
-    <span class="battle-motion ${tone}" data-feedback-key="${event.key}" aria-hidden="true">
+    <span class="battle-motion ${tone} ${collision ? "is-collision" : ""}" data-feedback-key="${event.key}" aria-hidden="true">
       <span class="battle-motion-flash"></span>
+      ${
+        collision
+          ? `<span class="collision-burst">
+              <em></em>
+              ${Array.from({ length: 8 }, (_, index) => `<i style="--collision-index:${index};--collision-angle:${index * 45}deg;--collision-angle-end:${index * 45 + 22}deg"></i>`).join("")}
+            </span>`
+          : ""
+      }
       <b>${escapeHtml(label)}</b>
     </span>
   `;
@@ -410,12 +459,14 @@ function renderBattleSkillImpact(vfx, withVideo = false) {
       `
     : "";
   return `
-    <span class="skill-impact is-${vfx.kind} tone-${vfx.tone} ${vfx.heavy ? "is-heavy" : ""} ${media ? "has-video" : ""}" aria-hidden="true">
+    <span class="skill-impact is-${vfx.kind} tone-${vfx.tone} is-from-${vfx.actorSide || "hero"} ${vfx.heavy ? "is-heavy" : ""} ${media ? "has-video" : ""}" aria-hidden="true">
       ${
         media
           ? `<span class="skill-video" data-vfx-video="${vfx.videoKey}">${videoMarkup}</span>`
           : ""
       }
+      <span class="impact-core"></span>
+      <span class="impact-shockwave"></span>
       ${Array.from({ length: 7 }, (_, index) => `<i style="--vfx-index:${index}"></i>`).join("")}
       <em></em>
     </span>
@@ -4404,6 +4455,9 @@ function renderBattle() {
     Boolean(
       resultEvents.some((event) => event.targetUid?.startsWith("hero-")),
     );
+  const battleImpact = resultEvents.some(
+    (event) => event.type === "damage" || event.type === "combo",
+  );
   return `
     <main class="battle-screen">
       <div class="battle-background" style="background-image:url('${battle.backdrop}')"></div>
@@ -4446,7 +4500,7 @@ function renderBattle() {
             .join("")}
         </div>
       </header>
-      <section class="battle-field ${arenaBounty ? "has-arena-bounty" : ""} ${arenaEncounter ? "has-arena-encounter" : ""} ${battle.chainReady ? "is-chain-ready" : ""}">
+      <section class="battle-field ${arenaBounty ? "has-arena-bounty" : ""} ${arenaEncounter ? "has-arena-encounter" : ""} ${battle.chainReady ? "is-chain-ready" : ""} ${battleImpact ? "is-impacting" : ""}">
         ${
           battleSpecialRule
             ? `<div class="battle-legend-hud ${battle.mode === "recruitment" ? "is-recruitment" : ""} ${battle.mode === "campaign" ? "is-tactic" : ""}" aria-label="${battleSpecialRuleLabel}">
@@ -4515,49 +4569,51 @@ function renderBattle() {
             : ""
         }
         ${renderBattleSkillCallout()}
-        <div class="enemy-formation">
-          <div class="formation-caption"><span>${battle.mode === "arena" ? `演武第 ${battle.arenaWave} 阵` : "高俅爪牙"}</span><i></i><small>${battle.enemies.filter((unit) => unit.hp > 0).length} 人</small></div>
-          <div class="enemy-line ${enemyStriking ? "is-striking" : ""}">
-            ${renderFormationLine(battle.enemies, (unit) =>
-              renderEnemyUnit(
-                unit,
-                targetIds.has(unit.uid) &&
-                  !battleUi.processing &&
-                  !state.settings.autoBattle,
-                battle.currentUid === unit.uid,
-              ),
-            )}
+        <div class="battle-stage">
+          <div class="enemy-formation">
+            <div class="formation-caption"><span>${battle.mode === "arena" ? `演武第 ${battle.arenaWave} 阵` : "高俅爪牙"}</span><i></i><small>${battle.enemies.filter((unit) => unit.hp > 0).length} 人</small></div>
+            <div class="enemy-line ${enemyStriking ? "is-striking" : ""}">
+              ${renderFormationLine(battle.enemies, (unit) =>
+                renderEnemyUnit(
+                  unit,
+                  targetIds.has(unit.uid) &&
+                    !battleUi.processing &&
+                    !state.settings.autoBattle,
+                  battle.currentUid === unit.uid,
+                ),
+              )}
+            </div>
           </div>
-        </div>
-        <div class="battle-midline">
-          <span></span>
-          <div class="battle-chain ${battle.chainReady ? "is-ready" : ""}" aria-label="${chainLabel}">
-            <small>星命连携</small>
-            <span class="chain-path-slots">
-              ${Array.from({ length: 3 }, (_, index) =>
-                chainPathMark(chainPaths[index] || null),
-              ).join("")}
-            </span>
-            <b title="${chainFormation?.desc || chainLabel}">${chainHint}</b>
+          <div class="battle-midline">
+            <span></span>
+            <div class="battle-chain ${battle.chainReady ? "is-ready" : ""}" aria-label="${chainLabel}">
+              <small>星命连携</small>
+              <span class="chain-path-slots">
+                ${Array.from({ length: 3 }, (_, index) =>
+                  chainPathMark(chainPaths[index] || null),
+                ).join("")}
+              </span>
+              <b title="${chainFormation?.desc || chainLabel}">${chainHint}</b>
+            </div>
+            <div class="battle-phase-label">
+              ${battle.phase === "enemy" ? "敌军行动" : battle.phase === "select" ? "轮到我方" : battle.phase === "victory" ? "敌阵已破" : battle.phase === "defeat" ? "众人力竭" : "交锋"}
+            </div>
+            <span></span>
           </div>
-          <div class="battle-phase-label">
-            ${battle.phase === "enemy" ? "敌军行动" : battle.phase === "select" ? "轮到我方" : battle.phase === "victory" ? "敌阵已破" : battle.phase === "defeat" ? "众人力竭" : "交锋"}
-          </div>
-          <span></span>
-        </div>
-        <div class="hero-formation">
-          <div class="formation-caption"><span>梁山好汉</span><i></i><small>义气</small></div>
-          <div class="hero-line ${heroStriking ? "is-striking" : ""}">
-            ${renderFormationLine(battle.heroes, (unit) =>
-              renderBattleHero(
-                unit,
-                targetIds.has(unit.uid) &&
-                  !battleUi.processing &&
-                  !state.settings.autoBattle,
-                battle.currentUid === unit.uid,
-                heroStriking && battle.currentUid === unit.uid,
-              ),
-            )}
+          <div class="hero-formation">
+            <div class="formation-caption"><span>梁山好汉</span><i></i><small>义气</small></div>
+            <div class="hero-line ${heroStriking ? "is-striking" : ""}">
+              ${renderFormationLine(battle.heroes, (unit) =>
+                renderBattleHero(
+                  unit,
+                  targetIds.has(unit.uid) &&
+                    !battleUi.processing &&
+                    !state.settings.autoBattle,
+                  battle.currentUid === unit.uid,
+                  heroStriking && battle.currentUid === unit.uid,
+                ),
+              )}
+            </div>
           </div>
         </div>
         ${renderBattleResult()}
@@ -4582,6 +4638,7 @@ function renderEnemyUnit(unit, targetable, current) {
   const vfxTarget = Boolean(vfx?.targetUids?.includes(unit.uid));
   const damage = takeBattleFeedback(unit.uid, "damage");
   const evade = takeBattleFeedback(unit.uid, "evade");
+  const spatialStyle = battleUnitSpatialStyle(unit.uid);
   const feedbackLabel = damage
     ? `-${damage.damage}${damage.critical ? " 暴击" : ""}${
         damage.pathAdvantage ? " 克制" : ""
@@ -4590,7 +4647,7 @@ function renderEnemyUnit(unit, targetable, current) {
       ? "闪避"
       : "";
   return `
-    <button class="battle-unit enemy-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${evade ? "is-evading" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" aria-label="${unit.name}">
+    <button class="battle-unit enemy-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${evade ? "is-evading" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" data-row="${unit.row}" style="${spatialStyle}" aria-label="${unit.name}">
       ${renderBattleMotion(damage || evade, feedbackLabel, damage?.critical ? "is-critical" : evade ? "is-evade" : "")}
       ${vfxTarget ? renderBattleSkillImpact(vfx, vfx?.targetUids?.[0] === unit.uid) : ""}
       <div class="enemy-figure">
@@ -4621,7 +4678,7 @@ function renderFormationLine(units, renderer) {
     .map((row) => {
       const unit = units.find((candidate) => candidate.row === row);
       return `
-        <div class="formation-slot formation-slot-${row} ${unit ? "" : "is-empty"}">
+        <div class="formation-slot formation-slot-${row} ${unit ? "" : "is-empty"}" data-row="${row}">
           ${unit ? renderer(unit) : ""}
         </div>
       `;
@@ -4636,6 +4693,7 @@ function renderBattleHero(unit, targetable, current, striking) {
   const vfxTarget = Boolean(vfx?.targetUids?.includes(unit.uid));
   const damage = takeBattleFeedback(unit.uid, "damage");
   const heal = takeBattleFeedback(unit.uid, "heal");
+  const spatialStyle = battleUnitSpatialStyle(unit.uid);
   const feedbackLabel = damage
     ? `-${damage.damage}${damage.critical ? " 暴击" : ""}${
         damage.pathAdvantage ? " 克制" : ""
@@ -4644,7 +4702,7 @@ function renderBattleHero(unit, targetable, current, striking) {
       ? `+${heal.healing}`
       : "";
   return `
-    <button class="battle-unit hero-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${heal ? "is-healed" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" aria-label="${unit.name}">
+    <button class="battle-unit hero-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${heal ? "is-healed" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" data-row="${unit.row}" style="${spatialStyle}" aria-label="${unit.name}">
       ${renderBattleMotion(damage || heal, feedbackLabel, damage?.critical ? "is-critical" : heal ? "is-heal" : "")}
       ${vfxTarget ? renderBattleSkillImpact(vfx, vfx?.targetUids?.[0] === unit.uid) : ""}
       <span class="row-ribbon">${teamRow}</span>
@@ -4707,7 +4765,7 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
     !state.flags.tutorialSeen;
   const skills = heroSkillList(actor);
   return `
-    <aside class="battle-command ${tutorialPending ? "has-tutorial" : ""}">
+    <aside class="battle-command ${tutorialPending ? "has-tutorial" : ""} ${state.settings.autoBattle ? "is-auto" : ""}">
       <div class="current-actor">
         <span class="actor-portrait"><img src="${actor.portrait}" alt="" /></span>
         <div><small>${ROWS[actor.row].name} · ${PATHS[actor.path].name}</small><h2>${actor.name}</h2></div>
