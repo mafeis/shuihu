@@ -175,6 +175,10 @@ import {
   endingCinematicProfile,
   openingCinematicProfile,
 } from "./cinematic.js";
+import {
+  clickFeedbackOrigin,
+  currencyFeedback,
+} from "./ui-feedback.js";
 import { combatSfxCue, sound } from "./audio.js";
 
 const app = document.querySelector("#app");
@@ -1186,6 +1190,46 @@ function toast(message, tone = "default") {
   toastTimer = window.setTimeout(() => {
     layer.innerHTML = "";
   }, 2800);
+}
+
+function showClickFeedback(element, event) {
+  if (!element || reducedMotionFor(state)) return;
+  const origin = clickFeedbackOrigin(element, event);
+  if (!origin || origin.width <= 0 || origin.height <= 0) return;
+  const feedback = document.createElement("span");
+  const size = Math.max(
+    28,
+    Math.min(82, Math.min(origin.width, origin.height) * 0.78),
+  );
+  const tone =
+    element.classList.contains("primary") || element.closest(".topbar")
+      ? "bronze"
+      : "paper";
+  feedback.className = `ui-click-feedback tone-${tone}`;
+  feedback.style.setProperty("--feedback-x", `${origin.x}px`);
+  feedback.style.setProperty("--feedback-y", `${origin.y}px`);
+  feedback.style.setProperty("--feedback-size", `${size}px`);
+  document.body.append(feedback);
+  feedback.addEventListener("animationend", () => feedback.remove(), {
+    once: true,
+  });
+  window.setTimeout(() => feedback.remove(), 620);
+}
+
+function showCurrencyFeedback(previous, current) {
+  const feedback = currencyFeedback(previous, current);
+  const resource = document.querySelector(".topbar-resource");
+  if (!feedback || !resource) return;
+  resource.classList.add(`is-${feedback.tone}`);
+  const float = document.createElement("span");
+  float.className = `currency-feedback is-${feedback.tone}`;
+  float.setAttribute("aria-live", "polite");
+  float.textContent = `${feedback.label} 贯`;
+  resource.append(float);
+  window.setTimeout(() => {
+    resource.classList.remove(`is-${feedback.tone}`);
+    float.remove();
+  }, 1100);
 }
 
 function openModal({ title, body, actions = [], kind = "" }) {
@@ -7472,7 +7516,10 @@ app.addEventListener("click", (event) => {
     return;
   }
   event.stopPropagation();
+  showClickFeedback(target, event);
+  const previousCopper = state?.inventory?.copper;
   handleAction(target.dataset.action, target);
+  showCurrencyFeedback(previousCopper, state?.inventory?.copper);
 });
 
 const gamepadState = {
