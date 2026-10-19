@@ -1,3 +1,11 @@
+import {
+  HERO_RANKS as WATER_MARGIN_RANKS,
+} from "./lore/heroRoster.js";
+import {
+  WATER_MARGIN_CHAPTERS,
+  WATER_MARGIN_MEMORIES,
+} from "./lore/waterMarginChapters.js";
+
 export const PATHS = {
   gang: {
     id: "gang",
@@ -1120,7 +1128,7 @@ export const EQUIPMENT = {
   },
 };
 
-export const HEROES = {
+const CORE_HEROES = {
   linchong: {
     id: "linchong",
     name: "林冲",
@@ -4640,7 +4648,7 @@ export const HEROES = {
   },
 };
 
-export const HERO_ORDER = [
+const CORE_HERO_ORDER = [
   "linchong",
   "luzhishen",
   "wusong",
@@ -4683,7 +4691,7 @@ export const HERO_ORDER = [
   "jiangjing",
 ];
 
-export const HERO_BONDS = {
+const CORE_HERO_BONDS = {
   wind_snow: {
     id: "wind_snow",
     name: "风雪同袍",
@@ -5152,7 +5160,7 @@ export const HERO_TRIALS = [
   },
 ];
 
-export const HERO_QUESTS = {
+const CORE_HERO_QUESTS = {
   linchong: [
     {
       id: "linchong_old_tassel",
@@ -7035,7 +7043,7 @@ export const HERO_QUESTS = {
   ],
 };
 
-export const HERO_LEGENDS = {
+const CORE_HERO_LEGENDS = {
   linchong: {
     id: "linchong_broken_banner",
     heroId: "linchong",
@@ -9442,7 +9450,7 @@ export const HERO_LEGENDS = {
   },
 };
 
-export const HERO_RECRUITMENTS = {
+const CORE_HERO_RECRUITMENTS = {
   yangzhi: {
     heroId: "yangzhi",
     requiredChapter: 3,
@@ -11457,7 +11465,7 @@ export const HERO_RECRUITMENTS = {
   },
 };
 
-export const HERO_DOCTRINES = {
+const CORE_HERO_DOCTRINES = {
   linchong: {
     heroId: "linchong",
     unlockTrials: HERO_TRIALS.length,
@@ -12780,11 +12788,11 @@ export const ENEMIES = {
   },
 };
 
-export const HERO_CHRONICLES = Object.fromEntries(
-  HERO_ORDER.map((heroId) => {
-    const hero = HEROES[heroId];
-    const quests = HERO_QUESTS[heroId] || [];
-    const legend = HERO_LEGENDS[heroId];
+const CORE_HERO_CHRONICLES = Object.fromEntries(
+  CORE_HERO_ORDER.map((heroId) => {
+    const hero = CORE_HEROES[heroId];
+    const quests = CORE_HERO_QUESTS[heroId] || [];
+    const legend = CORE_HERO_LEGENDS[heroId];
     return [
       heroId,
       {
@@ -12824,7 +12832,432 @@ export const HERO_CHRONICLES = Object.fromEntries(
   }),
 );
 
-export const CHAPTERS = [
+const FULL_HERO_CUTOUT =
+  "/assets/characters/linchong/cutout.png";
+const FULL_HERO_KEYART =
+  "/assets/characters/linchong/keyart.png";
+const FULL_HERO_STATS = {
+  gang: { hp: 425, atk: 54, def: 37, spd: 35 },
+  ling: { hp: 365, atk: 50, def: 29, spd: 47 },
+  tao: { hp: 375, atk: 46, def: 32, spd: 43 },
+  shou: { hp: 470, atk: 46, def: 46, spd: 32 },
+};
+const FULL_HERO_PALETTES = {
+  gang: ["#405f67", "#733f37", "#5d503b"],
+  ling: ["#2f6255", "#56715c", "#70643f"],
+  tao: ["#53627d", "#665675", "#4e6f73"],
+  shou: ["#4b5e78", "#705234", "#3e6870"],
+};
+const FULL_HERO_ACTION_NAMES = {
+  gang: ["断锋横斩", "铁壁崩阵", "百战余勇", "孤军破关"],
+  ling: ["疾影穿隙", "借势回身", "乱阵夺锋", "电光制胜"],
+  tao: ["观阵识机", "移势换阵", "借风起火", "星火燎原"],
+  shou: ["持门守义", "横身护阵", "回护同袍", "一城不退"],
+};
+const FULL_HERO_EFFECTS = {
+  gang: {
+    mid: [
+      { type: "selfStatus", status: "inspiration", duration: 1 },
+      { type: "status", status: "armorBreak", duration: 2, chance: 0.8 },
+    ],
+    ultimate: [
+      { type: "status", status: "bleeding", duration: 2, chance: 1 },
+      { type: "status", status: "armorBreak", duration: 2, chance: 1 },
+    ],
+  },
+  ling: {
+    mid: [
+      { type: "status", status: "armorBreak", duration: 1, chance: 0.45 },
+      { type: "selfStatus", status: "inspiration", duration: 1 },
+    ],
+    ultimate: [
+      { type: "status", status: "armorBreak", duration: 2, chance: 0.9 },
+      { type: "status", status: "bleeding", duration: 1, chance: 0.7 },
+    ],
+  },
+  tao: {
+    mid: [
+      { type: "status", status: "stun", duration: 1, chance: 0.25 },
+      { type: "status", status: "sealed", duration: 1, chance: 0.4 },
+    ],
+    ultimate: [
+      { type: "status", status: "bleeding", duration: 2, chance: 1 },
+      { type: "status", status: "armorBreak", duration: 2, chance: 0.8 },
+    ],
+  },
+  shou: {
+    mid: [
+      { type: "teamStatus", status: "guard", duration: 1 },
+      { type: "teamYiqi", amount: 12 },
+    ],
+    ultimate: [
+      { type: "teamStatus", status: "guard", duration: 2 },
+      { type: "teamStatus", status: "inspiration", duration: 2 },
+    ],
+  },
+};
+const CORE_STORY_SCENES = {
+  songjiang: ["jiangzhou"],
+  lujunyi: ["damingfu"],
+  wuyong: ["boar_forest"],
+  gongsunsheng: ["qingfeng"],
+  guansheng: ["damingfu"],
+  linchong: ["boar_forest"],
+  qinming: ["qingfeng"],
+  huyanzhuo: ["zhujiazhuang"],
+  huarong: ["qingfeng"],
+  chaiin: ["boar_forest"],
+  liying: ["zhujiazhuang"],
+  zhutong: ["jiangzhou"],
+  luzhishen: ["boar_forest"],
+  wusong: ["jiangzhou"],
+  yangzhi: ["yellow_river_ferry"],
+  xuning: ["boar_forest"],
+  daizong: ["jiangzhou"],
+  likui: ["jiangzhou"],
+  shijin: ["qingfeng"],
+  leihang: ["jiangzhou"],
+  zhangshun: ["jiangzhou"],
+  ruanxiaoqi: ["liangshan"],
+  yangxiong: ["boar_forest"],
+  shixiu: ["boar_forest"],
+  jiejie: ["qingfeng"],
+  yanqing: ["damingfu"],
+  sunli: ["zhujiazhuang"],
+  xiaorang: ["jiangzhou"],
+  jiangjing: ["liangshan"],
+  andaoquan: ["jiangzhou"],
+  husanniang: ["zhujiazhuang"],
+  gudashao: ["zhujiazhuang"],
+  sunerniang: ["jiangzhou"],
+};
+const EXTRA_STORY_SCENES = [
+  "yellow_river_ferry",
+  "jiangzhou",
+  "qingfeng",
+  "zhujiazhuang",
+  "damingfu",
+  "boar_forest",
+  "liangshan",
+];
+const CORE_BONDED = new Set(["shenxing"]);
+const EXTRA_BONDS = [
+  ["zhujiazhuang", "独龙冈三杰", ["zhutong", "liying", "husanniang"], "前阵获得 1 层护御，反击身法提高 6%。", { openingGuard: 1, counterBonus: 0.06 }],
+  ["qingzhou", "青州旧部", ["qinming", "huangxin", "huarong"], "全队攻击与护势伤害提高 5%。", { atkPct: 0.05, poisePct: 0.05 }],
+  ["daming", "大名双雄", ["lujunyi", "suochao"], "卢俊义与索超开局获得鼓舞，攻击提高 4%。", { atkPct: 0.04, openingInspiration: 1 }],
+  ["shijie", "翠屏同行", ["yangxiong", "shixiu"], "前阵反击后为生命最低队友补 12 义气。", { counterBonus: 0.06, counterTeamYiqi: 12 }],
+  ["xiaobiao", "东昌三将", ["zhangqing", "gongwang", "dingdesun"], "全队身法提高 6%，开局义气提高 8。", { spdPct: 0.06, startYiqi: 8 }],
+  ["dengzhou", "登州劫牢", ["sunli", "sunxin", "gudashao"], "前阵护御与全队反击提高，支援队友更稳。", { openingGuard: 1, counterBonus: 0.08 }],
+  ["crossroads", "十字坡同行", ["zhangqing2", "sunerniang"], "全队治疗与开局义气提高 6%。", { healPct: 0.06, startYiqi: 6 }],
+  ["mingqing", "清风义契", ["huarong", "yanshun", "zhengtianshou"], "后排攻击提高 6%，全队暴击提高 2%。", { atkPct: 0.06, critPct: 0.02 }],
+];
+
+const FULL_HEROES = Object.fromEntries(
+  WATER_MARGIN_RANKS.map(([rank, id, name, nickname, star, path, row, role, identity, line, legendLine, quality]) => {
+    const existing = CORE_HEROES[id];
+    if (existing) return [id, existing];
+    const pathActions = FULL_HERO_ACTION_NAMES[path];
+    const effects = FULL_HERO_EFFECTS[path];
+    const tendency = {
+      gang: { brotherhood: 2 },
+      ling: { freedom: 2 },
+      tao: { order: 2 },
+      shou: { order: 1, brotherhood: 1 },
+    }[path];
+    const base = FULL_HERO_STATS[path];
+    const palette =
+      FULL_HERO_PALETTES[path][rank % FULL_HERO_PALETTES[path].length];
+    return [id, {
+      id,
+      rank,
+      name,
+      nickname,
+      star,
+      role,
+      path,
+      preferredRow: row,
+      cutout: `/assets/characters/${id}/cutout.png`,
+      keyart: `/assets/characters/${id}/keyart.png`,
+      palette,
+      base: {
+        hp: base.hp + (rank % 5) * 7,
+        atk: base.atk + (rank % 7),
+        def: base.def + (rank % 5),
+        spd: base.spd + (rank % 3),
+      },
+      passive: {
+        name: role,
+        desc: `开战时${path === "shou" ? "获得 1 层护御并提高护阵能力" : path === "ling" ? "提高身法，专攻敌阵侧翼" : path === "tao" ? "削弱敌阵护势，寻找破绽" : "提高破阵伤害与压制力"}。`,
+        effects: path === "shou" ? { teamOpeningGuard: 1 } : { teamPoisePct: 0.05 },
+      },
+      skills: [
+        {
+          id: `${id}_basic`,
+          name: pathActions[0],
+          desc: `${name}施展家传武艺，攻击单体并积累义气。`,
+          target: "enemy",
+          power: path === "ling" ? 0.96 : 0.9,
+          poise: 16,
+          yiqi: 22,
+          basic: true,
+          effects: path === "gang"
+            ? [{ type: "status", status: "armorBreak", duration: 1, chance: 0.55 }]
+            : [],
+        },
+        {
+          id: `${id}_skill`,
+          name: pathActions[1],
+          desc: `${name}借地势与时机出招，造成范围或单体伤害并压制敌阵。`,
+          target: path === "tao" ? "allEnemies" : path === "ling" ? "lowestEnemy" : "enemy",
+          power: path === "tao" ? 0.62 : 1.12,
+          poise: 20,
+          yiqi: 25,
+          cooldown: 2,
+          effects: effects.mid,
+        },
+        {
+          id: `${id}_support`,
+          name: pathActions[2],
+          desc: `${name}根据${role}稳住阵势，为同伴争取下一次出手。`,
+          target: path === "shou" ? "allAllies" : "self",
+          power: 0,
+          yiqi: 26,
+          cooldown: 3,
+          effects: path === "shou"
+            ? [{ type: "teamStatus", status: "guard", duration: 1 }, { type: "teamYiqi", amount: 12 }]
+            : [{ type: "selfStatus", status: "inspiration", duration: 1 }, { type: "selfYiqi", amount: 15 }],
+        },
+        {
+          id: `${id}_ult`,
+          name: pathActions[3],
+          desc: `${name}以${nickname}的经历结成义技，冲击敌阵核心。`,
+          target: path === "shou" ? "allAllies" : path === "tao" ? "allEnemies" : "enemy",
+          power: path === "shou" ? 0 : path === "tao" ? 0.92 : 1.65,
+          poise: 24,
+          yiqiCost: 100,
+          ultimate: true,
+          effects: effects.ultimate,
+        },
+      ],
+      bio: identity,
+      identity,
+      legendLine,
+      tendency,
+      alias: quality,
+    }];
+  }),
+);
+
+export const HEROES = FULL_HEROES;
+export const HERO_ORDER = WATER_MARGIN_RANKS.map((entry) => entry[1]);
+export const HERO_BONDS = Object.fromEntries(
+  Object.values(CORE_HERO_BONDS)
+    .filter((bond) => bond.heroIds.every((heroId) => HERO_ORDER.includes(heroId)))
+    .map((bond) => [bond.id, bond]),
+);
+const UNBONDED_HEROES = WATER_MARGIN_RANKS.filter(
+  ([, id]) => !Object.values(HERO_BONDS).some((bond) => bond.heroIds.includes(id)),
+);
+for (let index = 0; index < UNBONDED_HEROES.length; index += 2) {
+  const left = UNBONDED_HEROES[index];
+  const right = UNBONDED_HEROES[index + 1];
+  if (!right) continue;
+  const bondId = `water_margin_${left[1]}_${right[1]}`;
+  HERO_BONDS[bondId] = {
+    id: bondId,
+    name: `${left[3]}与${right[3]}`,
+    kind: "pair",
+    heroIds: [left[1], right[1]],
+    desc: `${left[2]}与${right[2]}在同一回旧事中互相接应，全队攻击与护势提高。`,
+    effects: { poisePct: 0.03, openingGuard: 1 },
+    reward: { copper: 80, xp: 40 },
+  };
+}
+export const HERO_QUESTS = Object.fromEntries(
+  WATER_MARGIN_RANKS.map(([rank, id, name, nickname, star, path, row, role, identity, line, legendLine, quality]) => {
+    const existing = CORE_HERO_QUESTS[id];
+    if (existing) return [id, existing];
+    const chapter = Math.min(9, 1 + (rank % 9));
+    return [id, [1, 2, 3].map((stage) => ({
+      id: `${id}_chronicle_${stage}`,
+      stage,
+      requiredChapter: Math.min(9, chapter + stage - 1),
+      title: ["初见义名", "旧事重提", "梁山归心"][stage - 1],
+      premise: `${name}在${identity}的旧事并未随梁山聚义结束。第${stage}段异闻里，他需要面对自己的名声、旧人和新的护寨责任。`,
+      objective: {
+        metric: stage === 1 ? "wins" : stage === 2 ? "ultimates" : "damage",
+        target: stage === 1 ? 2 : stage === 2 ? 1 : 1200 + rank * 8,
+        label: `${stage === 1 ? "携" : stage === 2 ? "发动" : "以"}${name}${stage === 1 ? "取得 2 场胜利" : stage === 2 ? "义技 1 次" : `累计造成 ${1200 + rank * 8} 伤害`}`,
+      },
+      epithet: `${nickname}·${stage === 1 ? "初义" : stage === 2 ? "旧约" : "归心"}`,
+      reward: { copper: 100 + rank * 3, xp: 60 + rank * 2 },
+    }))];
+  }),
+);
+export const HERO_LEGENDS = Object.fromEntries(
+  WATER_MARGIN_RANKS.map(([rank, id, name, nickname, star, path, row, role, identity, line, legendLine, quality]) => {
+    const existing = CORE_HERO_LEGENDS[id];
+    if (existing) return [id, existing];
+    const scene = EXTRA_STORY_SCENES[rank % EXTRA_STORY_SCENES.length];
+    return [id, {
+      id: `${id}_legend`,
+      heroId: id,
+      requiredChapter: Math.min(9, 2 + (rank % 8)),
+      minLevel: 3,
+      levelOffset: 1,
+      title: `${nickname}·梁山终章`,
+      location: typeof scene === "string" ? `水浒异闻 · ${scene}` : "梁山泊",
+      bg: `/assets/environments/${scene}.png`,
+      objective: `让${name}在梁山旧事中守住自己认下的义，并击败截断归路的人马。`,
+      readyText: `${legendLine}梁山众人把这段旧事重新摆到${name}面前，接下来要由他亲手决定，从前的名声要落在谁的身上。`,
+      rule: {
+        id: `${id}_legend_rule`,
+        name: `${nickname}·守心`,
+        icon: path === "shou" ? "shield" : path === "tao" ? "scroll-text" : "swords",
+        desc: path === "shou"
+          ? "前阵获得 1 层护御，反击后为同伴补义气。"
+          : path === "tao"
+            ? "开局敌军护势受损，我方全体获得少量义气。"
+            : "前阵攻击提高，并对破甲目标追加压制。",
+        effects: path === "shou"
+          ? { protagonist: { defPct: 0.08 }, teamModifiers: { openingGuard: 1 }, counterTeamYiqi: 8 }
+          : path === "tao"
+            ? { teamModifiers: { startYiqi: 10 }, enemyStartPoisePct: 0.08 }
+            : { protagonist: { atkPct: 0.1 }, brokenDamagePct: 0.12 },
+      },
+      intro: [
+        { speaker: "旁白", text: `${identity}的风雪没有停。${name}听说旧路被人封住，仍有百姓与梁山旧部困在那边。` },
+        { speaker: name, portrait: id, text: `我这一身名号，不该只在别人口中作响。今日先打开这条路，让该回去的人回去。` },
+        { speaker: "宋江", portrait: "songjiang", text: `梁山不会让一个人独自还旧债。${name}，你点三阵，我们同去。` },
+      ],
+      outro: [
+        { speaker: name, portrait: id, text: legendLine },
+        { speaker: "旁白", text: `${name}把旧旗收进包袱，回到了梁山的灯火里。此后再有人问起这名号，他总先说起当日一同过阵的兄弟。` },
+      ],
+      enemies: [
+        { id: "runner", row: 0 },
+        { id: "archer", row: 1 },
+        { id: "instructor", row: 2 },
+      ],
+      enemyScale: 1.02 + (rank % 5) * 0.01,
+      enemyModifiers: { defPct: 0.04 + (rank % 4) * 0.01 },
+      reward: { copper: 160 + rank * 5, xp: 100 + rank * 3, item: quality === "token" ? "crimson_tassel" : "imperial_seal" },
+    }];
+  }),
+);
+
+const GENERATED_HERO_RECRUITMENTS = Object.fromEntries(
+  WATER_MARGIN_RANKS.map(([rank, id, name, nickname, star, path, row, role, identity, line, legendLine, quality]) => {
+    const existing = CORE_HERO_RECRUITMENTS[id];
+    if (existing) return [id, existing];
+    const scene = EXTRA_STORY_SCENES[rank % EXTRA_STORY_SCENES.length];
+    const tendency = {
+      gang: { brotherhood: 2 },
+      ling: { freedom: 2 },
+      tao: { order: 2 },
+      shou: { order: 1, brotherhood: 1 },
+    }[path];
+    return [id, {
+      heroId: id,
+      requiredChapter: 1 + ((rank - 1) % 8),
+      title: `${nickname}聚义帖`,
+      location: `水浒群英 · ${scene}`,
+      bg: `/assets/environments/${scene}.png`,
+      teaser: identity,
+      choice: {
+        prompt: `${name}的旧路与梁山新路在${scene}前交汇。你要如何接应这位${nickname}？`,
+        options: [
+          {
+            text: "先护住路边的百姓，再与梁山合阵。",
+            effect: { brotherhood: 2 },
+            response: `梁山众人先把百姓送过险路。${name}看着最后一辆板车过桥，才把武器横到阵前，替所有人截住追兵。`,
+          },
+          {
+            text: "让${nickname}自行选路，梁山在后面接应。",
+            effect: tendency,
+            response: `${name}没有等别人替他决定归处。他先走向旧路，又在最危险的一刻回头，让梁山旗帜出现在身后。`,
+          },
+        ],
+      },
+      rule: {
+        id: `${id}_recruitment_rule`,
+        name: `${nickname}·初战`,
+        icon: path === "shou" ? "shield" : "swords",
+        desc: "全队开局获得少量义气，前阵护御提高，接应受伤同伴。",
+        effects: {
+          teamModifiers: { startYiqi: 8, openingGuard: path === "shou" ? 1 : 0 },
+          supportLowestGuard: 1,
+        },
+      },
+      intro: [
+        { speaker: "旁白", text: `${scene}的官道上，${name}没有立刻亮出武器。他先看着身后的人，再看着梁山来的旗。` },
+        { speaker: name, portrait: id, text: line },
+        { speaker: "林冲", portrait: "linchong", text: "梁山不只收一身武艺。你若还有不肯丢下的人，就带他们一起过阵。" },
+      ],
+      outro: [
+        { speaker: name, portrait: id, text: `${nickname}今日入梁山，不是为了换个名号。往后有人被旧路挡住，我也要在前面开一条新路。` },
+        { speaker: "旁白", text: `${name}收整衣甲，随梁山众人回到水泊。聚义簿上多了一个姓名，也多了一段还没有走完的水浒旧事。` },
+      ],
+      enemies: [
+        { id: "runner", row: 0 },
+        { id: "archer", row: 1 },
+        { id: "captain", row: 2 },
+      ],
+      enemyScale: 1.01 + (rank % 4) * 0.01,
+      enemyModifiers: { hpPct: 0.03 + (rank % 3) * 0.01 },
+      reward: { copper: 110 + rank * 4, xp: 80 + rank * 2, item: quality === "token" ? "bamboo_token" : "patrol_armor" },
+    }];
+  }),
+);
+
+export const HERO_RECRUITMENTS = {
+  ...GENERATED_HERO_RECRUITMENTS,
+  ...Object.fromEntries(
+    Object.entries(CORE_HERO_RECRUITMENTS).filter(([heroId]) =>
+      HERO_ORDER.includes(heroId),
+    ),
+  ),
+};
+
+export const HERO_CHRONICLES = Object.fromEntries(
+  HERO_ORDER.map((heroId) => {
+    const hero = HEROES[heroId];
+    const quests = HERO_QUESTS[heroId];
+    const legend = HERO_LEGENDS[heroId];
+    return [
+      heroId,
+      {
+        id: `${heroId}_chronicle`,
+        heroId,
+        title: `${hero.name}列传`,
+        subtitle: `${hero.star} · ${hero.nickname}`,
+        entries: [
+          { id: `${heroId}_origin`, kind: "origin", marker: "本传", title: hero.nickname, text: hero.bio },
+          ...quests.map((quest, index) => ({
+            id: quest.id,
+            kind: "quest",
+            marker: ["起势", "转折", "归心"][index],
+            title: quest.title,
+            text: quest.premise,
+            epithet: quest.epithet,
+          })),
+          {
+            id: `legend-${legend.id}`,
+            sourceId: legend.id,
+            kind: "legend",
+            marker: "终章",
+            title: legend.title,
+            text: legend.readyText,
+            objective: legend.objective,
+            location: legend.location,
+          },
+        ],
+      },
+    ];
+  }),
+);
+
+const CORE_CHAPTERS = [
   {
     id: "ferry",
     index: 0,
@@ -13583,6 +14016,20 @@ export const CHAPTERS = [
     ],
   },
 ];
+
+export const CHAPTERS = CORE_CHAPTERS;
+const WATER_MARGIN_CHAPTER_IDS = new Set(
+  WATER_MARGIN_CHAPTERS.map((chapter) => chapter.id),
+);
+export const CORE_CHAPTER_IDS = new Set(
+  CORE_CHAPTERS.map((chapter) => chapter.id),
+);
+export const STRATEGY_CHAPTERS = [
+  ...WATER_MARGIN_CHAPTERS.filter(
+    (chapter) => !CORE_CHAPTER_IDS.has(chapter.id),
+  ),
+];
+export const STORY_MEMORIES = WATER_MARGIN_MEMORIES;
 
 export const FACILITIES = {
   hall: {
@@ -14670,3 +15117,37 @@ export const STAT_LABELS = {
   def: "护御",
   spd: "身法",
 };
+
+export const HERO_DOCTRINES = Object.fromEntries(
+  WATER_MARGIN_RANKS.map(([rank, id, name, nickname, star, path]) => {
+    const existing = CORE_HERO_DOCTRINES[id];
+    if (existing) return [id, existing];
+    return [
+      id,
+      {
+        heroId: id,
+        unlockTrials: HERO_TRIALS.length,
+        paths: {
+          loyal: {
+            id: "loyal",
+            name: `${nickname}·守信`,
+            tone: "blue",
+            icon: "shield",
+            desc: "生命与护甲提高 5%，护阵能力提高。",
+            effects: { hpPct: 0.05, defPct: 0.05 },
+          },
+          sharp: {
+            id: "sharp",
+            name: `${nickname}·破阵`,
+            tone: "cinnabar",
+            icon: "swords",
+            desc: "攻击提高 5%，对破甲目标伤害提高。",
+            effects: { atkPct: 0.05 },
+            armorBreakDamagePct: 0.1,
+          },
+        },
+      },
+    ];
+  }),
+);
+

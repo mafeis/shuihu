@@ -38,6 +38,8 @@ import {
   ROWS,
   STAT_LABELS,
   STATUS_DEFS,
+  STORY_MEMORIES,
+  STRATEGY_CHAPTERS,
 } from "./data.js";
 import {
   ARENA_WEEK_MARKS,
@@ -849,6 +851,7 @@ function renderGame() {
   let content = "";
   if (screen === "title") content = renderTitle();
   if (screen === "map") content = renderMap();
+  if (screen === "story-hub") content = renderStoryHub();
   if (screen === "camp") content = renderCamp();
   if (screen === "roster") content = renderRoster();
   if (screen === "quests") content = renderQuestBoard();
@@ -1410,6 +1413,7 @@ function topbar(active = "", backAction = "") {
   const chapter = currentChapter(state);
   const navItems = [
     { id: "map", label: "江湖", icon: "map" },
+    { id: "story-hub", label: "长卷", icon: "book-open" },
     { id: "camp", label: "营寨", icon: "landmark" },
     { id: "arena", label: "演武", icon: "swords" },
     { id: "roster", label: "好汉", icon: "users" },
@@ -1503,7 +1507,7 @@ function renderTitle() {
         <p class="title-kicker"><span></span>北宋末年 · 梁山群像回合 RPG</p>
         <h1><span>星命</span>水浒</h1>
         <p class="title-subtitle">风雪山神庙</p>
-        <p class="title-copy">一纸冤案，${HERO_ORDER.length}位好汉，${CHAPTERS.length}场风雪。<br />从黄河夜渡到水泊聚义，替梁山选一条能走下去的路。</p>
+        <p class="title-copy">一百单八星，${CHAPTERS.length}卷梁山旧事，${STRATEGY_CHAPTERS.length}段可征战的群像。<br />从伏魔殿到六和寺，走完整部水浒。</p>
         <div class="title-actions">
           ${
             saved
@@ -1646,6 +1650,40 @@ function renderMap() {
             <button data-action="nav-camp">${icon("landmark", 19)}<span><b>经营营寨</b><small>${state.inventory.copper} 贯可用</small></span>${icon("chevron-right", 17)}</button>
           </div>
         </aside>
+      </main>
+    </div>
+  `;
+}
+
+function renderStoryHub() {
+  return `
+    <div class="app-screen story-hub-screen">
+      ${topbar("map")}
+      <main class="story-hub-layout">
+        <section class="story-hub-intro">
+          <p class="eyebrow">全篇回目 · 梁山群像</p>
+          <h1>水浒长卷</h1>
+          <p>从龙虎山星落、史进结义，到一百单八将聚义，再到征辽、征田虎、征王庆、征方腊与六和寺终章。每一段都可单独推进，每一战也会留在本地战卷。</p>
+          <div class="story-hub-stats">
+            <span><small>群像章节</small><b>${STRATEGY_CHAPTERS.length}</b></span>
+            <span><small>好汉</small><b>${HERO_ORDER.length}</b></span>
+            <span><small>列传</small><b>${HERO_ORDER.length}</b></span>
+            <span><small>聚义帖</small><b>${Object.keys(HERO_RECRUITMENTS).length}</b></span>
+          </div>
+        </section>
+        <section class="story-hub-list" aria-label="水浒完整回目">
+          ${STRATEGY_CHAPTERS.map((chapter, index) => `
+            <button class="story-hub-card" data-action="enter-story-memory" data-chapter="${chapter.id}">
+              <span class="story-hub-index">${String(index + 1).padStart(2, "0")}</span>
+              <span class="story-hub-copy">
+                <small>${chapter.label} · ${chapter.location}</small>
+                <b>${chapter.title}</b>
+                <em>${chapter.summary}</em>
+              </span>
+              ${icon("chevron-right", 18)}
+            </button>
+          `).join("")}
+        </section>
       </main>
     </div>
   `;
@@ -5505,7 +5543,7 @@ function renderEndingCinematic(cinematic) {
           .join("")}
       </div>
       <div class="ending-cinematic-seal">
-        <small>九回抉择 · 已记 ${cinematic.decisionCount} 笔</small>
+        <small>全篇抉择 · 已记 ${cinematic.decisionCount} 笔</small>
         <b>${cinematic.title}</b>
       </div>
       <button class="ending-cinematic-skip" data-action="skip-ending-cinematic">跳过过场 ${icon("chevrons-right", 15)}</button>
@@ -7059,6 +7097,25 @@ function handleAction(action, element) {
       focusedChapterId = currentChapter(state)?.id || focusedChapterId;
       setScreen("map");
       return;
+    case "nav-story-hub":
+      setScreen("story-hub");
+      return;
+    case "enter-story-memory": {
+      const chapter = STRATEGY_CHAPTERS.find(
+        (item) => item.id === element.dataset.chapter,
+      );
+      if (!chapter) return;
+      activeChapter = chapter;
+      story = {
+        stage: "intro",
+        line: 0,
+        choiceIndex: null,
+        replay: true,
+        reward: null,
+      };
+      setScreen("story");
+      return;
+    }
     case "nav-camp":
       setScreen("camp");
       return;
