@@ -25,6 +25,10 @@ test("combat audio exposes every battle and result cue", () => {
 test("scene music follows the campaign chapter and switches to the boss theme", () => {
   assert.equal(sceneMusicTrack("title"), "title_theme");
   assert.equal(
+    sceneMusicTrack("battle", { chapterId: "qingfeng" }),
+    "battle_theme",
+  );
+  assert.equal(
     sceneMusicTrack("story", { chapterId: "qingfeng" }),
     "qingfeng_theme",
   );
@@ -42,6 +46,14 @@ test("scene music follows the campaign chapter and switches to the boss theme", 
   );
   assert.equal(
     sceneMusicTrack("story", { chapterId: "liangshan" }),
+    "ending_theme",
+  );
+  assert.equal(
+    sceneMusicTrack("battle", { chapterId: "qingfeng" }),
+    "battle_theme",
+  );
+  assert.equal(
+    sceneMusicTrack("reward", { chapterId: "qingfeng" }),
     "ending_theme",
   );
 });

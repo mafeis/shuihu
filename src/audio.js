@@ -47,16 +47,23 @@ export function sceneMusicTrack(scene, context = {}) {
   }
   if (scene === "story" && chapterId === "liangshan") return "ending_theme";
   if (
-    ["battle", "arena", "arena-briefing"].includes(scene) &&
+    ["battle", "arena", "arena-briefing", "arena-reward"].includes(scene) &&
     context.boss
   ) {
     return "boss_theme";
   }
-  if (["story", "battle", "arena-briefing"].includes(scene)) {
-    const chapterTrack = CHAPTER_TRACKS[chapterId];
-    if (chapterTrack) return chapterTrack;
+  let track = SCENE_TRACKS[scene] || "jianghu_theme";
+  if (scene === "story" && CHAPTER_TRACKS[chapterId]) {
+    track = CHAPTER_TRACKS[chapterId];
   }
-  return SCENE_TRACKS[scene] || "jianghu_theme";
+  if (
+    chapterId !== "qingfeng" &&
+    ["battle", "arena-briefing", "arena-reward"].includes(scene) &&
+    CHAPTER_TRACKS[chapterId]
+  ) {
+    track = CHAPTER_TRACKS[chapterId];
+  }
+  return track;
 }
 
 export function combatSfxCue({ skill, result }) {
