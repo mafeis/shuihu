@@ -169,6 +169,7 @@ let story = null;
 let battle = null;
 let battleUi = createBattleUi();
 let battleTimer = null;
+let battleActorSide = null;
 let arenaAutoTimer = null;
 let titleVideoCleanup = null;
 let modal = null;
@@ -213,7 +214,46 @@ function createBattleUi() {
     processing: false,
     result: null,
     resultTone: "",
+    feedback: [],
   };
+}
+
+function presentBattleResult(result) {
+  battleUi.result = result;
+  battleUi.feedback = [];
+  if (!result?.ok || !Array.isArray(result.events)) return;
+  result.events.forEach((event, index) => {
+    if (!event.targetUid) return;
+    battleUi.feedback.push({
+      ...event,
+      key: `${Date.now()}-${index}`,
+    });
+  });
+}
+
+function clearBattleFeedback() {
+  battleUi.feedback = [];
+}
+
+function takeBattleFeedback(unitUid, type) {
+  const feedback = battleUi.feedback || [];
+  const index = feedback.findIndex(
+    (event) =>
+      event.targetUid === unitUid &&
+      (event.type === type || (type === "damage" && event.type === "combo")),
+  );
+  if (index < 0) return null;
+  return feedback.splice(index, 1)[0];
+}
+
+function renderBattleMotion(event, label, tone = "") {
+  if (!event) return "";
+  return `
+    <span class="battle-motion ${tone}" data-feedback-key="${event.key}" aria-hidden="true">
+      <span class="battle-motion-flash"></span>
+      <b>${escapeHtml(label)}</b>
+    </span>
+  `;
 }
 
 function escapeHtml(value) {
@@ -3701,6 +3741,24 @@ function renderBattle() {
       : chainPaths.length === 1
         ? `已记录${PATHS[chainPaths[0]].name}，再取两种不同路数`
         : "星命连携：使用三种不同路数后即可发动合击";
+  const currentSide = battleActorSide;
+  const resultEvents = battleUi.result?.events || [];
+  const heroStriking =
+    currentSide === "hero" &&
+    Boolean(battleUi.result) &&
+    (resultEvents.some(
+      (event) =>
+        event.targetUid !== actor?.uid &&
+        (event.targetUid.startsWith("enemy-") || event.type === "combo"),
+    ) ||
+      battleUi.result.targets?.some((targetUid) =>
+        targetUid.startsWith("enemy-"),
+      ));
+  const enemyStriking =
+    currentSide === "enemy" &&
+    Boolean(
+      resultEvents.some((event) => event.targetUid?.startsWith("hero-")),
+    );
   return `
     <main class="battle-screen">
       <div class="battle-background" style="background-image:url('${battle.backdrop}')"></div>
@@ -3813,18 +3871,16 @@ function renderBattle() {
         }
         <div class="enemy-formation">
           <div class="formation-caption"><span>${battle.mode === "arena" ? `演武第 ${battle.arenaWave} 阵` : "高俅爪牙"}</span><i></i><small>${battle.enemies.filter((unit) => unit.hp > 0).length} 人</small></div>
-          <div class="enemy-line">
-            ${battle.enemies
-              .map((unit) =>
-                renderEnemyUnit(
-                  unit,
-                  targetIds.has(unit.uid) &&
-                    !battleUi.processing &&
-                    !state.settings.autoBattle,
-                  battle.currentUid === unit.uid,
-                ),
-              )
-              .join("")}
+          <div class="enemy-line ${enemyStriking ? "is-striking" : ""}">
+            ${renderFormationLine(battle.enemies, (unit) =>
+              renderEnemyUnit(
+                unit,
+                targetIds.has(unit.uid) &&
+                  !battleUi.processing &&
+                  !state.settings.autoBattle,
+                battle.currentUid === unit.uid,
+              ),
+            )}
           </div>
         </div>
         <div class="battle-midline">
@@ -3845,18 +3901,17 @@ function renderBattle() {
         </div>
         <div class="hero-formation">
           <div class="formation-caption"><span>梁山好汉</span><i></i><small>义气</small></div>
-          <div class="hero-line">
-            ${battle.heroes
-              .map((unit) =>
-                renderBattleHero(
-                  unit,
-                  targetIds.has(unit.uid) &&
-                    !battleUi.processing &&
-                    !state.settings.autoBattle,
-                  battle.currentUid === unit.uid,
-                ),
-              )
-              .join("")}
+          <div class="hero-line ${heroStriking ? "is-striking" : ""}">
+            ${renderFormationLine(battle.heroes, (unit) =>
+              renderBattleHero(
+                unit,
+                targetIds.has(unit.uid) &&
+                  !battleUi.processing &&
+                  !state.settings.autoBattle,
+                battle.currentUid === unit.uid,
+                heroStriking && battle.currentUid === unit.uid,
+              ),
+            )}
           </div>
         </div>
         ${renderBattleResult()}
@@ -3875,8 +3930,19 @@ function turnPortrait(unit) {
 }
 
 function renderEnemyUnit(unit, targetable, current) {
+  const striking = current && battleActorSide === "enemy";
+  const damage = takeBattleFeedback(unit.uid, "damage");
+  const evade = takeBattleFeedback(unit.uid, "evade");
+  const feedbackLabel = damage
+    ? `-${damage.damage}${damage.critical ? " 暴击" : ""}${
+        damage.pathAdvantage ? " 克制" : ""
+      }`
+    : evade
+      ? "闪避"
+      : "";
   return `
-    <button class="battle-unit enemy-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${unit.hp <= 0 ? "is-defeated" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" aria-label="${unit.name}">
+    <button class="battle-unit enemy-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${evade ? "is-evading" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" aria-label="${unit.name}">
+      ${renderBattleMotion(damage || evade, feedbackLabel, damage?.critical ? "is-critical" : evade ? "is-evade" : "")}
       <div class="enemy-figure">
         <img src="${unit.sprite}" alt="" draggable="false" />
         <span class="target-reticle">${icon("crosshair", 28)}</span>
@@ -3896,10 +3962,37 @@ function renderEnemyUnit(unit, targetable, current) {
   `;
 }
 
-function renderBattleHero(unit, targetable, current) {
+function renderFormationLine(units, renderer) {
+  const occupiedRows = new Set(units.map((unit) => unit.row));
+  const visibleRows = occupiedRows.has(1)
+    ? [0, 1, 2]
+    : [0, 2];
+  return visibleRows
+    .map((row) => {
+      const unit = units.find((candidate) => candidate.row === row);
+      return `
+        <div class="formation-slot formation-slot-${row} ${unit ? "" : "is-empty"}">
+          ${unit ? renderer(unit) : ""}
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderBattleHero(unit, targetable, current, striking) {
   const teamRow = ROWS[unit.row]?.name || "";
+  const damage = takeBattleFeedback(unit.uid, "damage");
+  const heal = takeBattleFeedback(unit.uid, "heal");
+  const feedbackLabel = damage
+    ? `-${damage.damage}${damage.critical ? " 暴击" : ""}${
+        damage.pathAdvantage ? " 克制" : ""
+      }`
+    : heal
+      ? `+${heal.healing}`
+      : "";
   return `
-    <button class="battle-unit hero-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${unit.hp <= 0 ? "is-defeated" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" aria-label="${unit.name}">
+    <button class="battle-unit hero-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${heal ? "is-healed" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" aria-label="${unit.name}">
+      ${renderBattleMotion(damage || heal, feedbackLabel, damage?.critical ? "is-critical" : heal ? "is-heal" : "")}
       <span class="row-ribbon">${teamRow}</span>
       <div class="hero-figure">
         <img src="${unit.portrait}" alt="" draggable="false" />
@@ -3921,7 +4014,7 @@ function renderBattleHero(unit, targetable, current) {
 }
 
 function renderBattleResult() {
-  if (!battleUi.result) return "";
+  if (!battleUi.result || battleUi.feedback.length) return "";
   return `
     <div class="battle-result ${battleUi.resultTone}">
       <div class="result-mark">${icon(
@@ -4175,6 +4268,7 @@ function resolveChainAttack() {
   if (!actor || actor.side !== "hero" || !chainAttackReady(battle)) return;
   battleUi.processing = true;
   battleUi.selectedSkillId = null;
+  battleActorSide = actor.side;
   const result = performChainAttack(battle, actor.uid);
   if (!result.ok) {
     battleUi.processing = false;
@@ -4182,11 +4276,12 @@ function resolveChainAttack() {
     render();
     return;
   }
-  battleUi.result = result;
+  presentBattleResult(result);
   battleUi.resultTone = "combo";
   sound.confirm();
   sound.hit(true);
   render();
+  showBattleResult();
   scheduleBattle(() => advanceAfterResult(), 1120);
 }
 
@@ -4203,13 +4298,15 @@ function runEnemyTurn() {
     return;
   }
   const action = chooseEnemyAction(battle, actor);
+  battleActorSide = actor.side;
   const result = action.skill
     ? performAction(battle, actor.uid, action.skill, action.target?.uid || null)
     : { ok: false, lines: ["敌军阵脚已乱。"] };
-  battleUi.result = result.ok ? result : { lines: ["敌军阵脚已乱。"], kind: "damage" };
+  presentBattleResult(result.ok ? result : { lines: ["敌军阵脚已乱。"], kind: "damage" });
   battleUi.resultTone = "hostile";
   sound.hit(Boolean(action.skill?.power >= 1.2));
   render();
+  showBattleResult();
   scheduleBattle(() => advanceAfterResult(), 920);
 }
 
@@ -4240,6 +4337,7 @@ function resolveHeroAction(skill, targetUid = null) {
   if (!actor || actor.side !== "hero") return;
   battleUi.processing = true;
   battleUi.selectedSkillId = null;
+  battleActorSide = actor.side;
   const result = performAction(battle, actor.uid, skill, targetUid);
   if (!result.ok) {
     battleUi.processing = false;
@@ -4248,15 +4346,25 @@ function resolveHeroAction(skill, targetUid = null) {
     render();
     return;
   }
-  battleUi.result = result;
+  presentBattleResult(result);
   battleUi.resultTone = result.kind === "heal" ? "support" : "heroic";
   if (result.kind === "heal") sound.heal();
   else sound.hit(result.lines.some((line) => line.includes("暴击")));
   render();
+  showBattleResult();
   scheduleBattle(() => advanceAfterResult(), 900);
 }
 
+function showBattleResult() {
+  if (!battleUi.result) return;
+  scheduleBattle(() => {
+    clearBattleFeedback();
+    render();
+  }, battleUi.feedback.length ? 360 : 0);
+}
+
 function advanceAfterResult() {
+  clearBattleFeedback();
   battleUi.result = null;
   battleUi.resultTone = "";
   battleUi.processing = false;
