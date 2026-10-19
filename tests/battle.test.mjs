@@ -14,6 +14,8 @@ import {
   chainFormationForBattle,
   chainPathsForBattle,
   createBattle,
+  enemySkillList,
+  heroSkillList,
   performChainAttack,
   performAction,
   startNextTurn,
@@ -117,6 +119,63 @@ test("battle setup applies health ratios and enemy scaling", () => {
   assert.equal(hero.hp, Math.round(hero.maxHp * 0.5));
   assert.ok(enemy.maxHp > baseBattle.enemies[0].maxHp);
   assert.equal(battle.phase === "select" || battle.phase === "enemy", true);
+});
+
+test("battle actions expose hit, critical, evade and heal feedback", () => {
+  const state = stateWithTeam(["linchong", "wusong", "yanqing"]);
+  const chapter = CHAPTERS.find((item) => item.id === "ferry");
+
+  const damageBattle = createBattle(state, chapter);
+  const attacker = damageBattle.heroes.find((unit) => unit.refId === "linchong");
+  const target = damageBattle.enemies[0];
+  target.hp = target.maxHp = 1_000_000;
+  damageBattle.phase = "select";
+  damageBattle.currentUid = attacker.uid;
+  const strike = heroSkillList(attacker).find((skill) => skill.power > 0);
+  const damageResult = withRandom(0.5, () =>
+    performAction(damageBattle, attacker.uid, strike, target.uid),
+  );
+  const hit = damageResult.events.find(
+    (event) => event.type === "damage" && event.targetUid === target.uid,
+  );
+  assert.ok(hit, "an attack should emit damage feedback for its target");
+  assert.ok(hit.damage >= 5);
+  assert.equal(typeof hit.critical, "boolean");
+
+  const evadeBattle = createBattle(state, chapter);
+  const yanqing = evadeBattle.heroes.find((unit) => unit.refId === "yanqing");
+  const enemy = evadeBattle.enemies[0];
+  evadeBattle.phase = "enemy";
+  evadeBattle.currentUid = enemy.uid;
+  const enemyStrike = enemySkillList(enemy).find((skill) => skill.power > 0);
+  const evadeResult = withRandom(0, () =>
+    performAction(evadeBattle, enemy.uid, enemyStrike, yanqing.uid),
+  );
+  assert.deepEqual(
+    evadeResult.events.find((event) => event.targetUid === yanqing.uid),
+    { type: "evade", targetUid: yanqing.uid },
+  );
+
+  const healBattle = createBattle(state, chapter);
+  const healer = healBattle.heroes.find((unit) => unit.refId === "linchong");
+  healer.hp = Math.round(healer.maxHp * 0.5);
+  healBattle.phase = "select";
+  healBattle.currentUid = healer.uid;
+  const healSkill = {
+    id: "heal_probe",
+    name: "疗伤试招",
+    target: "ally",
+    heal: 0.2,
+  };
+  const healResult = performAction(
+    healBattle,
+    healer.uid,
+    healSkill,
+    healer.uid,
+  );
+  const healing = healResult.events.find((event) => event.type === "heal");
+  assert.equal(healing.targetUid, healer.uid);
+  assert.ok(healing.healing > 0);
 });
 
 test("weekly enemy modifiers affect enemy stats without changing hero scaling", () => {

@@ -594,6 +594,7 @@ export function performAction(battle, actorUid, skill, targetUid = null) {
     actorUid,
     skillId: skill.id,
     targets: [],
+    events: [],
     lines: [],
     kind: skill.power > 0 ? "damage" : skill.heal ? "heal" : "support",
   };
@@ -611,6 +612,13 @@ export function performAction(battle, actorUid, skill, targetUid = null) {
       Math.max(1, Math.round(actor.hp * clamp(skill.selfDamagePct, 0, 0.5))),
     );
     actor.hp -= selfDamage;
+    result.events.push({
+      type: "damage",
+      targetUid: actor.uid,
+      damage: selfDamage,
+      critical: false,
+      pathAdvantage: false,
+    });
     result.lines.push(
       `${actor.name}以伤换势，失去 ${selfDamage} 生命。`,
     );
@@ -637,11 +645,24 @@ export function performAction(battle, actorUid, skill, targetUid = null) {
           hitIndex,
         );
         result.targets.push(target.uid);
+        result.events.push(
+          ...damageInfo.events.map((event) => ({
+            ...event,
+            targetUid: target.uid,
+          })),
+        );
         result.lines.push(...damageInfo.lines);
         if (skill.rowBonus?.[target.row]) {
           const bonus = Math.round(damageInfo.damage * (skill.rowBonus[target.row] - 1));
           target.hp = Math.max(0, target.hp - bonus);
           battle.damageDealt += bonus;
+          result.events.push({
+            type: "damage",
+            targetUid: target.uid,
+            damage: bonus,
+            critical: false,
+            pathAdvantage: false,
+          });
           result.lines.push(
             `${target.name}身处${ROWS[target.row]?.name || "该阵位"}，额外受到 ${bonus} 伤害。`,
           );
@@ -659,6 +680,7 @@ export function performAction(battle, actorUid, skill, targetUid = null) {
     for (const target of healTargets) {
       const heal = healTarget(actor, target, skill.heal, skill, battle);
       result.targets.push(target.uid);
+      result.events.push({ type: "heal", targetUid: target.uid, healing: heal });
       result.lines.push(`${target.name}恢复 ${heal} 生命。`);
     }
   }
@@ -773,6 +795,10 @@ export function performChainAttack(battle, actorUid) {
     skillId: "chain-attack",
     formationId: formation.id,
     targets: [],
+    events: enemies.map((target) => ({
+      type: "combo",
+      targetUid: target.uid,
+    })),
     lines: [
       `${participants.map((unit) => unit.name).join("、")}踏星换位，结成「${formation.name}」。`,
     ],
@@ -801,6 +827,13 @@ export function performChainAttack(battle, actorUid) {
     const damage = Math.max(12, Math.round(raw));
     target.hp = Math.max(0, target.hp - damage);
     battle.damageDealt += damage;
+    result.events.push({
+      type: "damage",
+      targetUid: target.uid,
+      damage,
+      critical: false,
+      pathAdvantage: pathBonuses > 0,
+    });
     for (const unit of participants) {
       gainHeroMetric(
         battle,
@@ -1001,6 +1034,7 @@ function damageTarget(battle, actor, target, skill, forceCrit, hitIndex) {
     }
     return {
       damage: 0,
+      events: [{ type: "evade" }],
       lines: [
         `${target.name}借势闪避攻击，并获得 ${personalYiqi} 义气${
           teamYiqi || teamGuard
@@ -1184,6 +1218,14 @@ function damageTarget(battle, actor, target, skill, forceCrit, hitIndex) {
   }
 
   const damage = Math.max(5, Math.round(raw));
+  const events = [
+    {
+      type: "damage",
+      damage,
+      critical: crit,
+      pathAdvantage,
+    },
+  ];
   target.hp = Math.max(0, target.hp - damage);
   if (actor.side === "hero") {
     battle.damageDealt += damage;
@@ -1447,6 +1489,12 @@ function damageTarget(battle, actor, target, skill, forceCrit, hitIndex) {
       target.hp = Math.max(0, target.hp - chaseDamage);
       battle.damageDealt += chaseDamage;
       gainHeroMetric(battle, actor, "damage", chaseDamage);
+      events.push({
+        type: "damage",
+        damage: chaseDamage,
+        critical: false,
+        pathAdvantage: false,
+      });
       lines.push(
         `九龙追锋：${actor.name}顺势追刺${target.name}，追加 ${chaseDamage} 伤害。`,
       );
@@ -1481,6 +1529,12 @@ function damageTarget(battle, actor, target, skill, forceCrit, hitIndex) {
       ricochetTarget.hp = Math.max(0, ricochetTarget.hp - ricochetDamage);
       battle.damageDealt += ricochetDamage;
       gainHeroMetric(battle, actor, "damage", ricochetDamage);
+      events.push({
+        type: "damage",
+        damage: ricochetDamage,
+        critical: false,
+        pathAdvantage: false,
+      });
       const ricochetPoise = Math.round(
         (actorPassiveEffects.stoneRicochetPoise || 16) *
           (1 +
@@ -1534,6 +1588,12 @@ function damageTarget(battle, actor, target, skill, forceCrit, hitIndex) {
       hooked.hp = Math.max(0, hooked.hp - hookDamage);
       battle.damageDealt += hookDamage;
       gainHeroMetric(battle, actor, "damage", hookDamage);
+      events.push({
+        type: "damage",
+        damage: hookDamage,
+        critical: false,
+        pathAdvantage: false,
+      });
       const hookPoise = Math.max(
         1,
         Math.round(
@@ -1620,6 +1680,12 @@ function damageTarget(battle, actor, target, skill, forceCrit, hitIndex) {
     );
     actor.hp = Math.max(0, actor.hp - counter);
     battle.damageDealt += counter;
+    events.push({
+      type: "damage",
+      damage: counter,
+      critical: false,
+      pathAdvantage: false,
+    });
     lines.push(
       `${target.name}${target.refId === "guansheng" ? "挥刀" : "挺枪"}反击，造成 ${counter} 伤害。`,
     );
@@ -1724,9 +1790,15 @@ function damageTarget(battle, actor, target, skill, forceCrit, hitIndex) {
   if (hitIndex > 0 && (target.statuses.bleeding || 0) > 0) {
     const extra = Math.max(4, Math.round(target.maxHp * 0.02));
     target.hp = Math.max(0, target.hp - extra);
+    events.push({
+      type: "damage",
+      damage: extra,
+      critical: false,
+      pathAdvantage: false,
+    });
     lines.push(`旧伤崩裂，${target.name}额外失去 ${extra} 生命。`);
   }
-  return { damage, lines };
+  return { damage, events, lines };
 }
 
 function healTarget(actor, target, power, skill, battle) {
@@ -1875,6 +1947,7 @@ function applySkillEffects(battle, actor, targets, skill, result) {
       }
       case "selfHeal": {
         const heal = healTarget(actor, actor, effect.power || 0.2, skill, battle);
+        result.events.push({ type: "heal", targetUid: actor.uid, healing: heal });
         result.lines.push(`${actor.name}恢复 ${heal} 生命。`);
         break;
       }
