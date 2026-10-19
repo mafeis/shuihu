@@ -18,11 +18,14 @@ func _run() -> void:
 	main.state.delete_save()
 	main.show_settings()
 	await get_tree().process_frame
-	var native_available: bool = main.native_name_input.available
-	if DisplayServer.get_name() == "headless":
-		native_available = false
 	var input := main.settings_layer.find_child("PlayerName", true, false) as LineEdit
 	_check(input != null, "settings should provide a native text input")
+	_check(not main.has_method("_open_native_text_input"), "settings should use Godot's built-in text input path")
+	var options: Array = main.game_data.get("hero_quests", {}).get("linchong", [])
+	_check(options.size() == 3, "Lin Chong should have a three-part hero chronicle")
+	_check(load("res://addons/tnowe_extra_controls/elements/properties_box.gd") != null, "the pinned extra controls addon should load")
+	_check(load("res://addons/proton_control_animation/src/proton_control_animation.gd") != null, "the pinned UI animation addon should load")
+	_check(main.settings_layer.find_children("*", "UICollapsibleSection", true, false).size() == 1, "display settings should use the collapsible section")
 	var audio_rows := main.find_children("*", "HSlider", true, false).filter(func(slider): return slider.visible)
 	_check(audio_rows.size() >= 2, "volume controls should remain visible with native input focus")
 	_check(ResourceLoader.exists("res://assets/environments/yellow_river_ferry.png"), "campaign artwork should be packaged with the game")
@@ -30,7 +33,8 @@ func _run() -> void:
 	if input == null:
 		_finish()
 		return
-	_check(input.has_focus() or native_available, "opening settings should focus the active text input")
+	_check(input.visible, "settings should expose Godot's native text input")
+	_check(input.has_focus(), "opening settings should focus the active text input")
 	input.text = ""
 	input.caret_column = 0
 	input.grab_focus()
@@ -38,11 +42,7 @@ func _run() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().process_frame
-	if native_available:
-		main._native_text_input_action("inserted" + String.chr(31) + "星命测试")
-		await get_tree().process_frame
-	else:
-		_check(input.text == "星命测试", "native text events should preserve Chinese characters")
+	_check(input.text == "星命测试", "native text events should preserve Chinese characters")
 	_check(main.state.player_name.strip_edges() == "星命测试", "settings should keep Unicode player names")
 	await _key(KEY_ENTER)
 	_check(main.settings_layer.visible, "Enter while typing should not close settings")
@@ -114,7 +114,7 @@ func _key(keycode: Key) -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("Godot input passed: native Chinese text input, Enter handling and save persistence.")
+		print("Godot input passed: text focus, Unicode typing, Enter handling, clipboard and save persistence.")
 		get_tree().quit(0)
 	else:
 		for failure in failures:

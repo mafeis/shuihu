@@ -25,6 +25,7 @@ const BRONZE := Color("#d7bc7d")
 const BRONZE_DARK := Color("#96783f")
 const TEAL := Color("#91b4ae")
 const CINNABAR := Color("#df8877")
+const TOAST_RECT := Rect2(510, 22, 420, 46)
 
 const SANS_FONT := preload("res://ui/game_font.tres")
 
@@ -48,9 +49,10 @@ var music_player: AudioStreamPlayer
 var music_track := ""
 var music_target_db := -3.7
 var transition_tween: Tween
-var native_name_input: NativeTextInput
-var native_name_field: Control
-var native_name_preview: Label
+var _ambient_layer: CanvasLayer
+var _ambient_tween: Tween
+var _last_settings_preset := ""
+var _menu_back_callable := Callable()
 var player_name_input: LineEdit
 var selected_hero_id := "linchong"
 var selected_team_slot := 0
@@ -58,6 +60,8 @@ var arena_wave := 1
 var arena_offer: Array[String] = []
 var arena_encounter_id := ""
 var arena_running := false
+var chronicle_hero_id := ""
+var legend_running := false
 
 
 func _ready() -> void:
@@ -65,6 +69,7 @@ func _ready() -> void:
 	game_data = _load_game_data()
 	get_tree().auto_accept_quit = false
 	state = GameState.new(game_data)
+	_apply_settings()
 	_build_shell()
 	show_title()
 
@@ -122,7 +127,6 @@ func _build_shell() -> void:
 	add_child(toast_timer)
 	menu_layer = _overlay_root("MenuLayer")
 	settings_layer = _overlay_root("SettingsLayer")
-	native_name_input = NativeTextInput.new()
 	music_player = AudioStreamPlayer.new()
 	music_player.name = "MusicPlayer"
 	music_player.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -133,11 +137,14 @@ func _build_shell() -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed or event.echo:
 		return
+	if settings_layer.visible and _text_input_has_focus():
+		return
+	if event.keycode == KEY_ESCAPE and menu_layer.visible:
+		get_viewport().set_input_as_handled()
+		_dismiss_menu()
+		return
 	if event.keycode == KEY_ESCAPE and settings_layer.visible:
 		close_settings()
-		get_viewport().set_input_as_handled()
-	elif event.keycode == KEY_ESCAPE and menu_layer.visible:
-		menu_layer.visible = false
 		get_viewport().set_input_as_handled()
 	elif event.keycode == KEY_ESCAPE and (screen == SCREEN_BATTLE or screen == SCREEN_ARENA_REWARD):
 		if arena_running:
@@ -150,21 +157,18 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		if state:
+			state.settings.fullscreen = _is_fullscreen()
 			state.save()
+		if _ambient_tween:
+			_ambient_tween.kill()
+		if is_instance_valid(_ambient_layer):
+			remove_child(_ambient_layer)
+			_ambient_layer.queue_free()
 		if music_player:
 			music_player.stop()
 			music_player.stream = null
 		theme = null
 		get_tree().quit()
-
-
-func _native_text_input_action(payload: Variant) -> void:
-	var text = str(payload)
-	native_name_input.apply_native_event(text)
-
-
-func _open_native_text_input() -> bool:
-	return native_name_input.attach(screen_root, _on_native_name_commit, _on_native_name_preedit, _on_native_name_dismiss)
 
 
 func _make_theme() -> Theme:
@@ -246,9 +250,19 @@ func _clear_screen() -> void:
 func _new_screen() -> Control:
 	if transition_tween:
 		transition_tween.kill()
+	if _ambient_tween:
+		_ambient_tween.kill()
+	if is_instance_valid(_ambient_layer):
+		remove_child(_ambient_layer)
+		_ambient_layer.queue_free()
+	_ambient_layer = null
+	_ambient_tween = null
 	for child in screen_root.get_children():
 		screen_root.remove_child(child)
 		child.queue_free()
+	menu_layer.visible = false
+	menu_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	settings_layer.visible = false
 	var page := Control.new()
 	page.name = "Page"
 	page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -276,9 +290,32 @@ func _background_image(page: Control, path: String, dim := 0.42) -> void:
 	page.add_child(shade)
 
 
+func _apply_settings() -> void:
+	DisplayServer.window_set_mode(
+		DisplayServer.WINDOW_MODE_FULLSCREEN if bool(state.settings.get("fullscreen", false))
+		else DisplayServer.WINDOW_MODE_WINDOWED
+	)
+	if music_player:
+		music_target_db = linear_to_db(maxf(float(state.settings.get("music_volume", 0.65)), 0.001))
+		music_player.volume_db = music_target_db
+
+
+func _is_fullscreen() -> bool:
+	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+
+
+func _dismiss_menu() -> void:
+	var previous := _menu_back_callable
+	_menu_back_callable = Callable()
+	menu_layer.visible = false
+	_clear_menu_layer()
+	if previous.is_valid():
+		previous.call()
+
+
 func _topbar(page: Control, active := "") -> void:
 	var backdrop := ColorRect.new()
-	backdrop.color = Color(INK_950, 0.34)
+	backdrop.color = Color(INK_950, 0.24)
 	backdrop.position = Vector2(0, 70)
 	backdrop.size = Vector2(1440, 830)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -497,6 +534,41 @@ func enter_chapter() -> void:
 	story_line = 0
 	selected_choice = -1
 	show_story()
+	_make_immersive(not bool(state.settings.get("reduced_motion", false)))
+
+
+func _make_immersive(animate := true) -> void:
+	if is_instance_valid(_ambient_layer):
+		if _ambient_tween:
+			_ambient_tween.kill()
+			_ambient_tween = null
+		remove_child(_ambient_layer)
+		_ambient_layer.queue_free()
+	_ambient_layer = CanvasLayer.new()
+	_ambient_layer.layer = -1
+	add_child(_ambient_layer)
+	var background := TextureRect.new()
+	var path := str(state.chapter().get("bg", ""))
+	if ResourceLoader.exists(path):
+		background.texture = load(path)
+	background.scale = Vector2(0.97, 0.97)
+	background.pivot_offset = Vector2(720, 450)
+	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ambient_layer.add_child(background)
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.18)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ambient_layer.add_child(dim)
+	if animate:
+		background.modulate.a = 0.3
+		background.create_tween().tween_property(background, "modulate:a", 1.0, 0.28)
+		_ambient_tween = background.create_tween().set_loops()
+		_ambient_tween.tween_property(background, "scale", Vector2(1.03, 1.03), 8.0).set_trans(Tween.TRANS_SINE)
+		_ambient_tween.tween_property(background, "scale", Vector2.ONE, 8.0).set_trans(Tween.TRANS_SINE)
 
 
 func show_story() -> void:
@@ -626,9 +698,11 @@ func show_battle() -> void:
 		start_battle()
 		return
 	var page := _new_screen()
-	_background_image(page, state.chapter().get("bg", ""), 0.48)
+	var battle_bg := str(battle.chapter_data.get("bg", state.chapter().get("bg", "")))
+	_background_image(page, battle_bg, 0.48)
 	_topbar(page, "map")
-	var round_badge := "第 %d 回 · %s · 回合 %d" % [chapter_index + 1, state.chapter().get("title", ""), battle.round_number]
+	var battle_title := str(battle.chapter_data.get("title", state.chapter().get("title", "")))
+	var round_badge := ("好汉列传 · %s · 回合 %d" % [battle_title, battle.round_number]) if legend_running else ("第 %d 回 · %s · 回合 %d" % [chapter_index + 1, battle_title, battle.round_number])
 	var title := _label(round_badge, 17, PAPER_200)
 	title.position = Vector2(36, 86)
 	title.size = Vector2(996, 46)
@@ -659,10 +733,15 @@ func show_battle() -> void:
 	hero_row.add_theme_constant_override("separation", 12)
 	arena_box.add_child(hero_row)
 	var rule: Dictionary = battle.chapter_data.get("special_rule", {})
-	if not rule.is_empty():
-		var rule_label := _label("战法  %s  ·  %s" % [rule.get("name", ""), rule.get("desc", "")], 13, PAPER_300)
-		rule_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		arena_box.add_child(rule_label)
+	if not rule.is_empty() and bool(state.settings.get("battle_hints", true)):
+		var rule_panel := PanelContainer.new()
+		rule_panel.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.9), Color(BRONZE_DARK, 0.65), 1, 3))
+		var rule_label := _label("战法 · %s\n%s" % [rule.get("name", ""), rule.get("desc", "")], 14, PAPER_200)
+		rule_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		rule_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		rule_panel.custom_minimum_size.y = 52
+		rule_panel.add_child(rule_label)
+		arena_box.add_child(rule_panel)
 	if arena_running and battle.chain_ready:
 		var chain_hint := _label("星路已合 · " + battle.chain_formation().get("name", "三星同辉"), 15, BRONZE)
 		chain_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -674,16 +753,17 @@ func show_battle() -> void:
 	command.size = Vector2(364, 784)
 	page.add_child(command)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
+	box.add_theme_constant_override("separation", 6)
 	command.add_child(box)
 	if battle.battle_finished:
 		box.add_child(_label("战阵已结", 30, BRONZE))
 		box.add_child(_label("我军胜利。" if battle.victory else "我军败退。", 20, PAPER_100))
-		box.add_child(_button("查看战果" if battle.victory else "重新整备", show_reward if battle.victory else start_battle, true, 280))
+		var result_callback: Callable = _finish_legend_victory if battle.victory and legend_running else (show_reward if battle.victory else start_battle)
+		box.add_child(_button("查看战果" if battle.victory else "重新整备", result_callback, true, 280))
 		box.add_child(_button("返回行军图", show_map, false, 280))
 		return
 	var actor: Dictionary = battle.current_hero()
-	box.add_child(_label("行棋 · %s  Lv.%d\n生命 %d / %d     义气 %d / 100" % [actor.get("name", ""), actor.get("level", 1), actor.hp, actor.max_hp, actor.yiqi], 16, PAPER_100))
+	box.add_child(_label("行动 · %s  Lv.%d\n生命 %d / %d     义气 %d / 100" % [actor.get("name", ""), actor.get("level", 1), actor.hp, actor.max_hp, actor.yiqi], 16, PAPER_100))
 	var target_name := "无目标"
 	var targets := battle.valid_targets(battle.selected_skill())
 	if not targets.is_empty() and not battle.is_targeting_all():
@@ -713,7 +793,7 @@ func show_battle() -> void:
 			288
 		)
 		skill_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		skill_button.custom_minimum_size.y = 68
+		skill_button.custom_minimum_size.y = 62
 		if index == battle.selected_skill_index:
 			skill_button.add_theme_stylebox_override("normal", _panel_style(Color("#253433"), BRONZE_DARK, 2, 4))
 		if not battle.can_use_skill(skill_data):
@@ -722,11 +802,11 @@ func show_battle() -> void:
 	var attack := _button("施展「%s」" % battle.selected_skill().get("name", "招式"), perform_attack, true, 288)
 	attack.disabled = not battle.can_use_selected_skill()
 	box.add_child(attack)
-	box.add_child(_button("撤退" if arena_running else "返回行军图", abandon_battle, false, 288))
+	box.add_child(_button("撤退" if arena_running else ("离开列传" if legend_running else "返回行军图"), abandon_battle, false, 288))
 	var log_box := VBoxContainer.new()
 	log_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(_sep())
-	for line in battle.log_lines.slice(0, 7):
+	for line in battle.log_lines.slice(0, 5):
 		log_box.add_child(_label(line, 14, PAPER_300))
 	box.add_child(log_box)
 
@@ -980,6 +1060,10 @@ func abandon_battle() -> void:
 	if arena_running:
 		arena_running = false
 		show_arena()
+	elif legend_running:
+		legend_running = false
+		battle = null
+		show_camp()
 	else:
 		show_map()
 
@@ -1133,11 +1217,15 @@ func show_camp() -> void:
 		marker_size.y = minf(marker_size.y, 136.0 - float(maxi(0, int(building.get("row", 1)) - 4)) * 16.0)
 		var open_building := func(): show_camp_building(building_id)
 		var marker := _button(
-			"%s\n%s" % [building.get("name", ""), ("Lv.%d" % state.building_level(building_id)) if built else ("新建" if unlocked else "%d胜" % int(building.get("unlockVictories", 0)))],
+			"",
 			open_building,
 			false,
 			118,
 		)
+		marker.tooltip_text = "%s · %s" % [
+			building.get("name", ""),
+			("Lv.%d" % state.building_level(building_id)) if built else ("新建" if unlocked else "胜利 %d 场后解锁" % int(building.get("unlockVictories", 0))),
+		]
 		marker.position = Vector2(48 + float(int(building.get("col", 1)) - 1) * 167.0, 75 + float(int(building.get("row", 1)) - 1) * 112.0)
 		marker.size = marker_size
 		marker.custom_minimum_size = marker_size
@@ -1147,7 +1235,7 @@ func show_camp() -> void:
 		ground.add_child(marker)
 		var building_label := _label("%s\n%s" % [
 			building.get("name", ""),
-			("Lv.%d" % state.building_level(building_id)) if built else ("新建" if unlocked else "%d胜" % int(building.get("unlockVictories", 0))),
+			("Lv.%d" % state.building_level(building_id)) if built else ("新建" if unlocked else "胜利 %d 场解锁" % int(building.get("unlockVictories", 0))),
 		], 16, PAPER_100 if unlocked else PAPER_500)
 		building_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		building_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -1184,34 +1272,45 @@ func show_camp() -> void:
 
 func camp_rest_action() -> void:
 	var cost := state.camp_rest_cost()
+	if cost < 0:
+		_toast("存粮不足，需要至少一份馒头。")
+		return
 	var xp := state.camp_rest()
 	if xp == 0:
 		_toast("铜钱不足，无法休整。")
 		return
 	state.save()
-	_toast("众人休整完毕，各得 %d 历练，共耗 %d 贯。每次历练会优先用一份馒头补益。" % [xp, cost])
+	_toast("众人休整完毕，各得 %d 历练，共耗 %d 贯和一份馒头。" % [xp, cost])
 	show_camp()
 
 
 func show_chronicles() -> void:
 	menu_layer.visible = true
+	_menu_back_callable = show_camp
 	_clear_menu_layer()
 	var dim := ColorRect.new()
+	dim.name = "MenuDimmer"
 	dim.color = Color(INK_950, 0.8)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	menu_layer.add_child(dim)
-	var panel := PanelContainer.new()
+	var panel := UISlidePanel.new()
 	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
-	panel.position = Vector2(230, 98)
-	panel.size = Vector2(980, 704)
+	panel.position = Vector2(180, 86)
+	panel.size = Vector2(1080, 728)
 	menu_layer.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 9)
+	box.offset_left = 24
+	box.offset_right = -24
+	box.offset_top = 18
+	box.offset_bottom = -18
+	box.add_theme_constant_override("separation", 8)
 	panel.add_child(box)
-	box.add_child(_label("好汉列传", 36, PAPER_100))
-	box.add_child(_label("各人的旧事随战阵推进，列传开启后可结识新的好汉。", 15, PAPER_300))
+	var chronicle_heading := _label("好汉列传", 36, PAPER_100)
+	chronicle_heading.custom_minimum_size.y = 48
+	box.add_child(chronicle_heading)
+	box.add_child(_label("每人的列传按战阵推进。完成终章后可结识新的好汉。", 15, PAPER_300))
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(900, 560)
+	scroll.custom_minimum_size = Vector2(1016, 570)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	box.add_child(scroll)
 	var quest_list := VBoxContainer.new()
@@ -1226,22 +1325,70 @@ func show_chronicles() -> void:
 			var metric := str(objective.get("metric", "wins"))
 			var progress := int(state.quest_progress.get(hero_id, {}).get(metric, 0))
 			var target := int(objective.get("target", 1))
-			var status := "已领" if state.quest_claimed.has(quest_id) else "%d / %d" % [mini(progress, target), target]
-			var line := _button("%s · Lv.%d\n%s     %s\n%s" % [
+			var claimed := state.quest_claimed.has(quest_id)
+			var locked := state.current_chapter + 1 < int(quest.get("requiredChapter", 1))
+			var status := "已完成" if claimed else ("尚未开启" if locked else ("可领取" if progress >= target else "%d / %d" % [mini(progress, target), target]))
+			var action_label := "点击领取" if status == "可领取" else ("达成后领取" if not claimed and not locked else "")
+			var stage_titles := ["序章", "战功", "终章"]
+			var line := _button("%s · Lv.%d    %s · %s\n%s\n任务  %s    ·    %s" % [
 				state.hero(hero_id).get("name", ""),
 				int(state.derive_hero_stats(hero_id).level),
+				stage_titles[clampi(int(quest.get("stage", 1)) - 1, 0, 2)],
 				quest.get("title", ""),
 				objective.get("label", ""),
 				status,
-			], func(): claim_quest(hero_id, quest_id), false, 885)
-			line.custom_minimum_size.y = 78
+				action_label,
+			], func():
+				chronicle_hero_id = hero_id
+				claim_quest(hero_id, quest_id)
+			, false, 1010)
+			line.custom_minimum_size.y = 84
 			line.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			line.disabled = state.quest_claimed.has(quest_id) or progress < target or state.current_chapter + 1 < int(quest.get("requiredChapter", 1))
+			line.disabled = claimed or progress < target or locked
 			quest_list.add_child(line)
 			shown += 1
 	if shown == 0:
 		quest_list.add_child(_label("尚无列传。先携好汉取得战阵胜利。", 16, PAPER_500))
-	box.add_child(_button("回到营寨", func(): menu_layer.visible = false; show_camp(), false, 260))
+	if not chronicle_hero_id.is_empty():
+		var legend := state.hero_legend(chronicle_hero_id)
+		if not legend.is_empty():
+			var heading := PanelContainer.new()
+			heading.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.96), BRONZE_DARK, 1, 4))
+			var heading_copy := VBoxContainer.new()
+			heading_copy.add_theme_constant_override("separation", 4)
+			heading.add_child(heading_copy)
+			heading_copy.offset_left = 12
+			heading_copy.offset_right = -12
+			var legend_title := _label("%s列传 · %s" % [state.hero(chronicle_hero_id).get("name", ""), legend.get("title", "")], 20, PAPER_100)
+			legend_title.custom_minimum_size.y = 28
+			heading_copy.add_child(legend_title)
+			var legend_copy := _label("地点  %s\n%s" % [legend.get("location", ""), legend.get("readyText", "")], 15, PAPER_300)
+			legend_copy.custom_minimum_size.y = 58
+			legend_copy.max_lines_visible = 2
+			heading_copy.add_child(legend_copy)
+			var legend_rule := _label("终章战法 · %s\n%s" % [legend.get("rule", {}).get("name", ""), legend.get("rule", {}).get("desc", "")], 14, BRONZE)
+			legend_rule.custom_minimum_size.y = 42
+			legend_rule.max_lines_visible = 2
+			heading_copy.add_child(legend_rule)
+			var completed := state.legend_claimed.has(str(legend.get("id", "")))
+			var ready := state.hero_legend_ready(chronicle_hero_id)
+			var requirement := ""
+			if not ready and not completed:
+				requirement = "需完成本列传三篇异闻，当前 %d / 3；抵达第 %d 回且 Lv.%d。" % [
+					state.hero_legend_progress(chronicle_hero_id),
+					int(legend.get("requiredChapter", 1)),
+					int(legend.get("minLevel", 1)),
+				]
+			heading_copy.add_child(_label("终章  " + ("已录" if completed else ("可战" if ready else "未开启")) + ("    " + requirement if not requirement.is_empty() else ""), 14, PAPER_500))
+			var action := _button("已录列传" if completed else "迎战终章", func(): start_hero_legend(chronicle_hero_id), true, 250)
+			action.disabled = completed or not ready
+			heading_copy.add_child(action)
+			quest_list.add_child(heading)
+	var back_focus := _button("回到营寨", _dismiss_menu, false, 260)
+	box.add_child(back_focus)
+	panel.prepare(Vector2(180, 86), not bool(state.settings.get("reduced_motion", false)))
+	panel.reveal()
+	back_focus.grab_focus()
 
 
 func claim_quest(hero_id: String, quest_id: String) -> void:
@@ -1250,8 +1397,57 @@ func claim_quest(hero_id: String, quest_id: String) -> void:
 		_toast("列传尚未完成。")
 		return
 	state.save()
-	_toast("%s列传已领，铜钱与历练已入账。" % state.hero(hero_id).get("name", ""))
+	var unlocked_names: Array[String] = []
+	for new_hero_id in result.get("heroes", []):
+		unlocked_names.append(str(state.hero(new_hero_id).get("name", new_hero_id)))
+	_toast("%s列传完成，铜钱与历练已入账。%s" % [
+		state.hero(hero_id).get("name", ""),
+		"  新入伙：" + "、".join(unlocked_names) if not unlocked_names.is_empty() else "",
+	])
 	show_chronicles()
+
+
+func start_hero_legend(hero_id: String) -> void:
+	if not state.hero_legend_ready(hero_id):
+		_toast("列传三篇或所需等级尚未完成。")
+		return
+	var legend := state.hero_legend(hero_id)
+	var battle_data := {
+		"title": legend.get("title", ""),
+		"bg": legend.get("bg", state.chapter().get("bg", "")),
+		"battle": {
+			"boss": false,
+			"enemies": legend.get("enemies", []),
+		},
+		"special_rule": legend.get("rule", {}),
+	}
+	chronicle_hero_id = hero_id
+	legend_running = true
+	arena_running = false
+	menu_layer.visible = false
+	battle = BattleModel.new(state, battle_data, {}, legend.get("enemyModifiers", {}))
+	battle_target = 0
+	_set_screen(SCREEN_BATTLE)
+	_play_music("res://assets/audio/battle_theme.mp3")
+	show_battle()
+
+
+func _finish_legend_victory() -> void:
+	var legend := state.hero_legend(chronicle_hero_id)
+	if not legend.is_empty():
+		var legend_id := str(legend.get("id", ""))
+		if not state.legend_claimed.has(legend_id):
+			state.legend_claimed.append(legend_id)
+			var reward: Dictionary = legend.get("reward", {})
+			state.copper += int(reward.get("copper", 0))
+			state.grant_experience(chronicle_hero_id, int(reward.get("xp", 0)))
+			state.add_item(str(reward.get("item", "")), int(reward.get("amount", 1)))
+			state.record_battle_progress(battle)
+			state.save()
+	legend_running = false
+	show_camp()
+	show_chronicles()
+	_toast("%s列传终章已录，铜钱、历练与随身物已入账。" % state.hero(chronicle_hero_id).get("name", ""))
 
 
 func show_camp_building(building_id: String) -> void:
@@ -1857,43 +2053,39 @@ func show_settings() -> void:
 	dim.color = Color(3, 7, 8, 0.76)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	settings_layer.add_child(dim)
-	var panel := PanelContainer.new()
+	var panel := UISlidePanel.new()
 	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
-	panel.position = Vector2(390, 118)
-	panel.size = Vector2(660, 720)
+	panel.position = Vector2(390, 84)
+	panel.size = Vector2(660, 734)
 	settings_layer.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
+	box.offset_left = 18
+	box.offset_right = -18
+	box.offset_top = 16
+	box.offset_bottom = -16
+	box.add_theme_constant_override("separation", 7)
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.add_child(box)
-	box.add_child(_label("游戏设置", 34, PAPER_100))
-	box.add_child(_label("江湖称号", 17, BRONZE))
-	native_name_field = Control.new()
-	native_name_field.name = "NativeNameField"
-	native_name_field.custom_minimum_size = Vector2(0, 46)
-	native_name_field.mouse_filter = Control.MOUSE_FILTER_STOP
-	native_name_field.mouse_default_cursor_shape = Control.CURSOR_IBEAM
-	box.add_child(native_name_field)
-	native_name_preview = _label(state.player_name, 18, PAPER_100)
-	native_name_preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	native_name_preview.offset_left = 12
-	native_name_preview.offset_right = -12
-	native_name_preview.add_theme_stylebox_override("normal", _panel_style(INK_900, BRONZE, 2, 4))
-	native_name_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	native_name_field.add_child(native_name_preview)
+	var settings_title := _label("游戏设置", 32, PAPER_100)
+	settings_title.custom_minimum_size.y = 44
+	box.add_child(settings_title)
+	box.add_child(_label("江湖称号", 15, BRONZE))
 	var player_name := LineEdit.new()
 	player_name.name = "PlayerName"
 	player_name.text = state.player_name
 	player_name.placeholder_text = "输入称号"
 	player_name.max_length = 24
-	player_name.custom_minimum_size = Vector2(0, 46)
-	player_name.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	player_name.custom_minimum_size = Vector2(0, 42)
+	player_name.add_theme_font_override("font", SANS_FONT)
+	player_name.add_theme_font_size_override("font_size", 18)
+	player_name.add_theme_color_override("font_color", PAPER_100)
+	player_name.add_theme_color_override("font_placeholder_color", PAPER_500)
+	player_name.add_theme_color_override("caret_color", BRONZE)
+	player_name.add_theme_color_override("selection_color", Color(BRONZE_DARK, 0.55))
 	player_name.add_theme_stylebox_override("normal", _panel_style(INK_900, INK_700, 1, 4))
 	player_name.add_theme_stylebox_override("focus", _panel_style(INK_900, BRONZE, 2, 4))
-	var composition := _label("", 12, BRONZE)
-	composition.position = Vector2(0, 48)
-	composition.size = Vector2(398, 20)
-	composition.visible = false
-	native_name_field.add_child(composition)
+	player_name.add_theme_constant_override("caret_width", 2)
+	box.add_child(player_name)
 	player_name.text_changed.connect(func(value: String):
 		var trimmed: String = value.strip_edges()
 		state.player_name = trimmed if not trimmed.is_empty() else "无名星客"
@@ -1905,8 +2097,8 @@ func show_settings() -> void:
 	var paste_name := _button("粘贴中文", func():
 		player_name.text = DisplayServer.clipboard_get().left(24)
 		player_name.caret_column = player_name.text.length()
-		_on_native_name_preedit(player_name.text, "")
-		_on_native_name_commit(player_name.text)
+		player_name.text_changed.emit(player_name.text)
+		player_name.grab_focus()
 		_toast("已从剪贴板粘贴。")
 	, false, 192)
 	var clipboard_actions := HBoxContainer.new()
@@ -1914,58 +2106,40 @@ func show_settings() -> void:
 	clipboard_actions.add_child(copy_name)
 	clipboard_actions.add_child(paste_name)
 	box.add_child(clipboard_actions)
-	if not native_name_input.available:
-		box.add_child(_label("若键盘输入中文未进入游戏，可在此直接粘贴。", 14, PAPER_500))
-	native_name_field.set_meta("composition", composition)
-	native_name_field.add_child(player_name)
-	player_name.focus_entered.connect(func():
-		if native_name_input.available:
-			screen_root.mouse_filter = Control.MOUSE_FILTER_STOP
-			player_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			player_name.release_focus()
-	)
-	player_name.focus_exited.connect(func():
-		if native_name_input.available and settings_layer.visible:
-			player_name.call_deferred("grab_focus")
-	)
-	native_name_input.text = state.player_name
-	_on_native_name_preedit(state.player_name, "")
-	native_name_input.attach(self, _on_native_name_commit, _on_native_name_preedit, _on_native_name_dismiss)
-	if native_name_input.available:
-		player_name.visible = false
-		native_name_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		native_name_preview.mouse_default_cursor_shape = Control.CURSOR_ARROW
-		native_name_preview.gui_input.connect(func(event: InputEvent):
-			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-				_toast("输入法未转入游戏时，点击此处重新聚焦。")
-				focus_player_name()
-		)
-		native_name_field.call_deferred(
-			"set_meta",
-			"native_text_input",
-			native_name_input,
-		)
-		var apply_button := _button("保存称号", func(): state.save(); _toast("称号已保存。"), true, 300)
-		box.add_child(apply_button)
-	box.add_child(_label("音频", 20, BRONZE))
+	box.add_child(_label("键盘输入中文没有生效时，可直接粘贴。", 14, PAPER_500))
+	box.add_child(_label("音频", 17, BRONZE))
 	box.add_child(_volume_row("配乐音量", "music_volume"))
 	box.add_child(_volume_row("音效音量", "sfx_volume"))
-	var auto := CheckButton.new()
-	auto.text = "合击时显示阵形提示"
-	auto.button_pressed = bool(state.settings.get("battle_hints", true))
-	auto.add_theme_font_override("font", SANS_FONT)
-	auto.add_theme_font_size_override("font_size", 16)
-	auto.toggled.connect(func(value): state.settings.battle_hints = value; state.save())
-	box.add_child(auto)
-	var reduce := CheckButton.new()
-	reduce.text = "减少动态"
+	var display_section := UICollapsibleSection.new().setup("显示", true)
+	display_section.set_animated(not bool(state.settings.get("reduced_motion", false)))
+	var fullscreen := CheckBox.new()
+	fullscreen.text = "全屏显示"
+	fullscreen.button_pressed = bool(state.settings.get("fullscreen", false))
+	fullscreen.add_theme_font_override("font", SANS_FONT)
+	fullscreen.add_theme_font_size_override("font_size", 15)
+	fullscreen.toggled.connect(func(value):
+		state.settings.fullscreen = value
+		state.save()
+		_apply_settings()
+	)
+	display_section.content.add_child(fullscreen)
+	var reduce := CheckBox.new()
+	reduce.text = "减少界面动画"
 	reduce.button_pressed = bool(state.settings.get("reduced_motion", false))
 	reduce.add_theme_font_override("font", SANS_FONT)
-	reduce.add_theme_font_size_override("font_size", 16)
+	reduce.add_theme_font_size_override("font_size", 15)
 	reduce.toggled.connect(func(value): state.settings.reduced_motion = value; state.save())
-	box.add_child(reduce)
+	display_section.content.add_child(reduce)
+	var auto := CheckBox.new()
+	auto.text = "战斗中显示战法提示"
+	auto.button_pressed = bool(state.settings.get("battle_hints", true))
+	auto.add_theme_font_override("font", SANS_FONT)
+	auto.add_theme_font_size_override("font_size", 15)
+	auto.toggled.connect(func(value): state.settings.battle_hints = value; state.save())
+	display_section.content.add_child(auto)
+	box.add_child(display_section)
 	box.add_child(_sep())
-	box.add_child(_label("存档", 20, BRONZE))
+	box.add_child(_label("存档", 17, BRONZE))
 	var save_actions := HBoxContainer.new()
 	save_actions.add_theme_constant_override("separation", 6)
 	save_actions.add_child(_button("立即保存", func(): state.save(); _toast("战卷已保存。"), true, 196))
@@ -1977,39 +2151,19 @@ func show_settings() -> void:
 	, false, 398))
 	player_name_input = player_name
 	player_name.grab_focus()
+	panel.prepare(Vector2(390, 84), not bool(state.settings.get("reduced_motion", false)))
+	panel.reveal()
 
 
 func focus_player_name() -> void:
 	if player_name_input == null:
 		return
 	player_name_input.grab_focus()
-	if native_name_input.available and native_name_field:
-		native_name_input.attach_to_parent(native_name_field)
 
 
-func _on_native_name_commit(value: String) -> void:
-	if player_name_input == null:
-		return
-	player_name_input.text = value.left(24)
-	player_name_input.caret_column = player_name_input.text.length()
-	state.player_name = player_name_input.text.strip_edges()
-	if state.player_name.is_empty():
-		state.player_name = "无名星客"
-	player_name_input.text_changed.emit(player_name_input.text)
-
-
-func _on_native_name_preedit(value: String, marked: String) -> void:
-	if native_name_preview:
-		native_name_preview.text = value if not value.is_empty() else state.player_name
-	if native_name_field:
-		var composition := native_name_field.get_meta("composition", null) as Label
-		if composition:
-			composition.text = "候选  " + marked.strip_edges()
-			composition.visible = not marked.is_empty()
-
-
-func _on_native_name_dismiss() -> void:
-	close_settings()
+func _text_input_has_focus() -> bool:
+	var focus := get_viewport().gui_get_focus_owner()
+	return focus != null and (focus is LineEdit or focus is TextEdit)
 
 
 func _volume_row(text: String, key: String) -> HBoxContainer:
@@ -2081,6 +2235,8 @@ func confirm_delete_save() -> void:
 func _toast(text: String) -> void:
 	toast_label.text = text
 	toast_label.visible = true
+	toast_label.position = Vector2(round((get_viewport_rect().size.x - TOAST_RECT.size.x) / 2), TOAST_RECT.position.y)
+	toast_label.size = TOAST_RECT.size
 	toast_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toast_timer.start()
 

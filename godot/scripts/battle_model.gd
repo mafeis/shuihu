@@ -119,7 +119,8 @@ func _build_heroes() -> void:
 
 
 func _build_enemies() -> void:
-	var definitions: Array = chapter_data.get("battle", {}).get("enemies", [])
+	var battle_section: Dictionary = chapter_data.get("battle", {})
+	var definitions: Array = battle_section.get("enemies", [])
 	var used_rows: Array[int] = []
 	for definition in definitions:
 		var enemy_id := str(definition.get("id", "runner"))
@@ -160,7 +161,7 @@ func _build_enemies() -> void:
 		})
 		var built := enemies[-1]
 		built.boss = definition.get("boss", false) == true or (
-			chapter_data.get("battle", {}).get("boss", false) == true
+			battle_section.get("boss", false) == true
 			and enemies[-1] == enemies[0]
 		)
 		if int(modifiers.get("enemyStartPoisePct", 0)) > 0:

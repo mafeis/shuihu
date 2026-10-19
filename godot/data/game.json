@@ -11561,5 +11561,3214 @@
         }
       }
     ]
+  },
+  "hero_legends": {
+    "linchong": {
+      "id": "linchong_broken_banner",
+      "heroId": "linchong",
+      "requiredChapter": 2,
+      "minLevel": 3,
+      "levelOffset": 1,
+      "title": "雪夜残旗",
+      "location": "东京城外旧营",
+      "bg": "/assets/environments/boar_forest.png",
+      "objective": "夺回被篡改的禁军名册，让旧部看清高俅的伪令。",
+      "readyText": "林冲把旧枪横在门前。营中仍有被蒙蔽的禁军，他要先夺回名册，再让这些人自己决定跟谁走。",
+      "rule": {
+        "id": "broken_banner",
+        "name": "残旗不退",
+        "icon": "shield",
+        "desc": "林冲首次降至半血时获得 2 层护御与 15 义气；反击率提高 12%。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.12
+          },
+          "lowHp": {
+            "threshold": 0.5,
+            "guard": 2,
+            "yiqi": 15
+          },
+          "counterChance": 0.12
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "东京城外的旧营还挂着禁军旗。旗面被雪水浸透，名册却被高俅的人改成了追杀林冲的军令。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "我认得这面旗，也认得旗后那些人的家小。今日只夺名册，不伤旧部。"
+        },
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "你顾旧情，洒家替你挡刀。真要有人拿百姓邀功，禅杖可不认旧营。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "名册上少了三十七个名字。不是他们逃了，是高俅把他们的功劳尽数抹去。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "林冲把名册交给旧部，任他们各自离去。雪地上再也没有禁军教头，只剩一个肯替无名者留证的林冲。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.03,
+      "enemyModifiers": {
+        "defPct": 0.08
+      },
+      "reward": {
+        "copper": 420,
+        "xp": 260,
+        "item": "imperial_seal"
+      }
+    },
+    "luzhishen": {
+      "id": "luzhishen_bell_road",
+      "heroId": "luzhishen",
+      "requiredChapter": 2,
+      "minLevel": 3,
+      "levelOffset": 1,
+      "title": "古寺钟声",
+      "location": "野猪林废寺",
+      "bg": "/assets/environments/boar_forest.png",
+      "objective": "护住逃入废寺的流民，击退假借佛门之名敛财的恶徒。",
+      "readyText": "寺门破得挡不住风，却挡得住一群无家可归的人。鲁智深把禅杖插在门槛上，谁来赶人，就先过他这一关。",
+      "rule": {
+        "id": "temple_aegis",
+        "name": "古寺护民",
+        "icon": "shield-check",
+        "desc": "鲁智深生命提高 12%，全队开局获得 1 层护御。",
+        "effects": {
+          "protagonist": {
+            "hpPct": 0.12
+          },
+          "teamModifiers": {
+            "openingGuard": 1
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "野猪林深处有一座荒寺。恶徒披着僧衣，把逃难者堵在佛殿里，逼他们交出最后的口粮。"
+        },
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "佛门收的是香火，不是买路钱。你们披这身衣裳，倒比山里的狼更像吃人的东西。"
+        },
+        {
+          "speaker": "流民",
+          "text": "师父快走吧，他们说官差就在后头。"
+        },
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "洒家若走，这钟声以后就只替他们壮胆了。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "把粮食分了。钟也留着，往后有难处的人听见响，就知道这里还能进门。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "破钟响了一夜。鲁智深没有讲经，只把一条活路留给寺里每一个人。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.04,
+      "enemyModifiers": {
+        "hpPct": 0.06
+      },
+      "reward": {
+        "copper": 440,
+        "xp": 270,
+        "item": "monk_robe"
+      }
+    },
+    "wusong": {
+      "id": "wusong_tiger_wine",
+      "heroId": "wusong",
+      "requiredChapter": 3,
+      "minLevel": 5,
+      "levelOffset": 2,
+      "title": "冈下残酒",
+      "location": "景阳冈酒家",
+      "bg": "/assets/environments/boar_forest.png",
+      "objective": "查出借虎患勒索乡民的差役，并守住冈下酒家。",
+      "readyText": "店家说冈上有虎，官差说交钱便能保命。武松却看见虎皮挂在差役马后，真正吃人的另有其人。",
+      "rule": {
+        "id": "tiger_pressure",
+        "name": "虎威压阵",
+        "icon": "target",
+        "desc": "武松攻击提高 12%；开战时前阵敌人破甲 1 回合，武松击杀敌人后全队获得 8 义气。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.12
+          },
+          "enemyOpeningStatuses": [
+            {
+              "row": 0,
+              "status": "armorBreak",
+              "duration": 1
+            }
+          ],
+          "onKill": {
+            "teamYiqi": 8
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "景阳冈下，酒家被官差封了门。每户人家要交一贯钱买虎符，交不出便被赶进山里。"
+        },
+        {
+          "speaker": "武松",
+          "portrait": "wusong",
+          "text": "虎吃人还知道挑肉，你们吃人连骨头都要熬油。"
+        },
+        {
+          "speaker": "店家",
+          "text": "好汉别出头，他们腰里挂着县衙的牌。"
+        },
+        {
+          "speaker": "武松",
+          "portrait": "wusong",
+          "text": "那正好。今日打的不是虎，是借虎皮做官的畜生。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "武松",
+          "portrait": "wusong",
+          "text": "虎符烧了，钱按户还回去。谁再拿冈上的风声吓人，先来景阳冈问问这双拳头。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "乡民重新开了酒灶。武松没有留下姓名，只把那张假虎皮挂在门外挡风。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "runner",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.06,
+      "enemyModifiers": {
+        "atkPct": 0.08
+      },
+      "reward": {
+        "copper": 520,
+        "xp": 320,
+        "item": "tiger_tooth"
+      }
+    },
+    "daizong": {
+      "id": "daizong_fire_token",
+      "heroId": "daizong",
+      "requiredChapter": 3,
+      "minLevel": 5,
+      "levelOffset": 2,
+      "title": "驿路火牌",
+      "location": "汴京驿道",
+      "bg": "/assets/environments/bianjing_snow_night.png",
+      "objective": "截下送往沧州的加急密令，为梁山争取一夜时间。",
+      "readyText": "一封密令能让三座城门同时落锁。戴宗只有一条驿路和一双快腿，今夜要把时间从官府手里抢回来。",
+      "rule": {
+        "id": "fire_token_relay",
+        "name": "火牌夺时",
+        "icon": "wind",
+        "desc": "戴宗身法提高 12%；全队身法提高 8%，并额外获得 12 开局义气。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.12
+          },
+          "teamModifiers": {
+            "spdPct": 0.08,
+            "startYiqi": 12
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "驿骑沿雪道疾驰，马后插着三面火牌。戴宗在山坡上看见，知道这封信一旦进城，梁山接应必断。"
+        },
+        {
+          "speaker": "戴宗",
+          "portrait": "daizong",
+          "text": "我的甲马能追风，却追不过三座城同时关门。得先截令，再让假令多走半日。"
+        },
+        {
+          "speaker": "时迁",
+          "portrait": "shiqian",
+          "text": "你追前面，我换后面。等他们发现火牌是假的，我们已经喝完一壶热酒了。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "戴宗",
+          "portrait": "daizong",
+          "text": "密令改走青州，至少慢一夜。梁山的人能撤出来，这趟腿就没白跑。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "雪道上只留下一匹喘息的驿马。次日三城还在等那封永远不会抵达的密令。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "archer",
+          "row": 0
+        },
+        {
+          "id": "archer",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.04,
+      "enemyModifiers": {
+        "spdPct": 0.12
+      },
+      "reward": {
+        "copper": 500,
+        "xp": 310,
+        "item": "courier_token"
+      }
+    },
+    "andaoquan": {
+      "id": "andaoquan_plague_camp",
+      "heroId": "andaoquan",
+      "requiredChapter": 4,
+      "minLevel": 7,
+      "levelOffset": 2,
+      "title": "疫营青囊",
+      "location": "沧州流民营",
+      "bg": "/assets/environments/yellow_river_ferry.png",
+      "objective": "守住疫营药棚，阻止官差焚烧病患与药材。",
+      "readyText": "药棚里还有能救人的方子，营外却已经堆好柴薪。安道全必须让官差明白，病不是罪名。",
+      "rule": {
+        "id": "plague_camp_triage",
+        "name": "青囊分诊",
+        "icon": "heart-pulse",
+        "desc": "安道全生命提高 10%；全队治疗提高 15%，开局获得 1 层护御。",
+        "effects": {
+          "protagonist": {
+            "hpPct": 0.1
+          },
+          "teamModifiers": {
+            "healPct": 0.15,
+            "openingGuard": 1
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "沧州流民营起了寒疫。县令下令焚营，官差带着火油封住出口，连尚未病倒的人也不许离开。"
+        },
+        {
+          "speaker": "安道全",
+          "portrait": "andaoquan",
+          "text": "这不是疫，是饥寒交迫。给我三日药材，我能救下大半；你们一把火，只会把病赶到城里。"
+        },
+        {
+          "speaker": "官差",
+          "text": "上头只要营里不剩活人，谁管病从哪里来。"
+        },
+        {
+          "speaker": "安道全",
+          "portrait": "andaoquan",
+          "text": "那我便从你这里先救一条人命。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "安道全",
+          "portrait": "andaoquan",
+          "text": "柴薪改作药炭，病患按轻重分棚。今夜不要谢我，先把水烧开。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "火没有烧起来，药棚的灯却亮到天明。营门外留下第一块写着“可入”的木牌。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "runner",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.03,
+      "enemyModifiers": {
+        "hpPct": 0.08
+      },
+      "reward": {
+        "copper": 580,
+        "xp": 360,
+        "item": "herb_satchel"
+      }
+    },
+    "shiqian": {
+      "id": "shiqian_hundred_locks",
+      "heroId": "shiqian",
+      "requiredChapter": 4,
+      "minLevel": 7,
+      "levelOffset": 2,
+      "title": "百锁夜行",
+      "location": "东京军械库",
+      "bg": "/assets/environments/bianjing_snow_night.png",
+      "objective": "潜入军械库取走百姓被抄的冬衣，并让守军误以为盗匪在东门。",
+      "readyText": "库门有九道锁，墙上却没有一道裂缝。时迁说这正好，锁越多，守军越相信没人进得去。",
+      "rule": {
+        "id": "hundred_locks_marks",
+        "name": "百锁留痕",
+        "icon": "eye",
+        "desc": "时迁身法提高 12%；命中时有 65% 概率附加流血并夺取 8 义气。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.12
+          },
+          "onHit": {
+            "chance": 0.65,
+            "status": "bleeding",
+            "duration": 1,
+            "stealYiqi": 8
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "军械库临时堆放抄没的冬衣。三更后只有两组守军轮值，库门上却刚换了九道新锁。"
+        },
+        {
+          "speaker": "时迁",
+          "portrait": "shiqian",
+          "text": "九道锁不算多。难的是把一整库衣裳搬出去，还得让他们以为贼从东门来。"
+        },
+        {
+          "speaker": "安道全",
+          "portrait": "andaoquan",
+          "text": "营里孩子等不到天亮。若只能取一箱，先取最厚的。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "时迁",
+          "portrait": "shiqian",
+          "text": "东门留了三只空箱，守军现在正追一阵北风。衣裳先送回去，别让孩子再熬一夜。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "天亮时军械库账册一页未少，城外流民营却多了整整四十件冬衣。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "archer",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.05,
+      "enemyModifiers": {
+        "spdPct": 0.1,
+        "defPct": 0.05
+      },
+      "reward": {
+        "copper": 600,
+        "xp": 370,
+        "item": "lockpick_roll"
+      }
+    },
+    "huarong": {
+      "id": "huarong_moon_arrows",
+      "heroId": "huarong",
+      "requiredChapter": 5,
+      "minLevel": 9,
+      "levelOffset": 2,
+      "title": "月下三矢",
+      "location": "清风寨箭楼",
+      "bg": "/assets/environments/qingfeng_fort.png",
+      "objective": "在官军合围前射断三处号旗，为寨中百姓打开生路。",
+      "readyText": "月色太亮，箭楼上的花荣反倒成了最清楚的目标。他只有三支箭，要替整座清风寨改一次战局。",
+      "rule": {
+        "id": "three_flag_volley",
+        "name": "三矢定旗",
+        "icon": "crosshair",
+        "desc": "花荣暴击率提高 20%；攻击不受自身阵位与目标阵位的伤害修正影响。",
+        "effects": {
+          "protagonist": {
+            "critPct": 0.2
+          },
+          "ignoreRow": true
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "官军在清风寨外立起三面号旗，一旗传令，一旗封路，一旗催火。旗落之前，寨门随时会被攻破。"
+        },
+        {
+          "speaker": "花荣",
+          "portrait": "huarong",
+          "text": "第一箭断传令，第二箭断封路。第三箭若失手，我就站到箭楼上替他们当靶。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "三箭之后，寨中老少会先走。你不必一个人把胜负都背在肩上。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "花荣",
+          "portrait": "huarong",
+          "text": "旗断了，官军还在。但寨门已经关上，百姓走出去的路也开了。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "月光落在空箭壶上。花荣没有再射第四箭，清风寨的百姓已沿着山路消失在夜色里。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "archer",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.05,
+      "enemyModifiers": {
+        "spdPct": 0.08,
+        "hpPct": 0.05
+      },
+      "reward": {
+        "copper": 700,
+        "xp": 440,
+        "item": "horn_bow"
+      }
+    },
+    "likui": {
+      "id": "likui_black_whirlwind",
+      "heroId": "likui",
+      "requiredChapter": 5,
+      "minLevel": 9,
+      "levelOffset": 2,
+      "title": "黑风断后",
+      "location": "清风寨山道",
+      "bg": "/assets/environments/qingfeng_fort.png",
+      "objective": "守住山道石桥，让撤出的百姓和伤者先过河。",
+      "readyText": "桥只能过两个人，追兵却有整队。李逵把双斧往桥心一插，说今天谁也别想从这儿过去。",
+      "rule": {
+        "id": "bridge_last_stand",
+        "name": "断桥死战",
+        "icon": "flame",
+        "desc": "李逵攻击提高 8%；每损失 1% 生命便追加 0.4% 伤害。击杀后恢复 10% 生命、获得护御与 10 义气。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.08
+          },
+          "missingHpDamagePct": 0.4,
+          "onKill": {
+            "healPct": 0.1,
+            "guard": 1,
+            "yiqi": 10
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "清风寨百姓沿山道撤离，最后一座石桥下是涨水的河谷。官军已经追到桥头。"
+        },
+        {
+          "speaker": "李逵",
+          "portrait": "likui",
+          "text": "哥哥让我断后，我还嫌不够痛快。双斧往这里一插，他们来一个我劈一个。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "桥那头有老人和孩子。铁牛，今日不是杀得痛快，是让他们一个不少地过去。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "李逵",
+          "portrait": "likui",
+          "text": "人都过去了？好。桥还在，斧也还在，换他们不敢再追。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "李逵坐在桥头喘了半夜。身后没人再催他走，山道上只剩百姓远去的灯火。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.08,
+      "enemyModifiers": {
+        "atkPct": 0.1
+      },
+      "reward": {
+        "copper": 720,
+        "xp": 450,
+        "item": "black_axe_pair"
+      }
+    },
+    "songjiang": {
+      "id": "songjiang_rain_over_jiangzhou",
+      "heroId": "songjiang",
+      "requiredChapter": 6,
+      "minLevel": 11,
+      "levelOffset": 3,
+      "title": "江州夜雨",
+      "location": "江州城南",
+      "bg": "/assets/environments/jiangzhou_execution.png",
+      "objective": "护住刑场外受牵连的百姓，让梁山名号成为一条退路。",
+      "readyText": "法场已破，追捕未停。宋江要在雨里拦住官军，也要拦住那些把梁山当成另一座官府的人。",
+      "rule": {
+        "id": "rain_over_jiangzhou",
+        "name": "江州夜雨",
+        "icon": "users",
+        "desc": "宋江生命提高 8%；全队受到伤害降低 12%，开局获得 1 层护御。",
+        "effects": {
+          "protagonist": {
+            "hpPct": 0.08
+          },
+          "teamModifiers": {
+            "damageReductionPct": 0.12,
+            "openingGuard": 1
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "江州法场一战之后，城门封闭，数十户百姓被指为通贼。宋江没有走，反而带人回到雨中的刑场。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "梁山若只救自己人，与官军又有什么分别。今夜先把这些人的家门保住。"
+        },
+        {
+          "speaker": "李逵",
+          "portrait": "likui",
+          "text": "哥哥说保，我便保。谁敢点火，我先把他绑到雨里醒一醒。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "名册烧了，百姓散去。梁山今日救的不只是几个结义兄弟。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "雨停在黎明前。刑场边的草被踩成一条小路，路上写满无人识得的名字。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "archer",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.07,
+      "enemyModifiers": {
+        "hpPct": 0.12,
+        "defPct": 0.06
+      },
+      "reward": {
+        "copper": 820,
+        "xp": 520,
+        "item": "timely_cloak"
+      }
+    },
+    "husanniang": {
+      "id": "husanniang_red_lasso",
+      "heroId": "husanniang",
+      "requiredChapter": 7,
+      "minLevel": 12,
+      "levelOffset": 3,
+      "title": "红锦夺路",
+      "location": "祝家庄盘陀路",
+      "bg": "/assets/environments/zhujiazhuang_snow_night.png",
+      "objective": "活捉盘陀路向导，为梁山拆穿假路与伏兵。",
+      "readyText": "雪盖住了岔路，祝家庄的向导却故意留下三串脚印。扈三娘看出其中两串相同，决定先拿人，再问路。",
+      "rule": {
+        "id": "red_lasso_route",
+        "name": "红锦破路",
+        "icon": "route",
+        "desc": "扈三娘攻击提高 8%；对破甲目标伤害提高 20%，命中时有 70% 概率破甲 2 回合。开战时前阵敌人破甲 1 回合。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.08
+          },
+          "armorBreakDamagePct": 0.2,
+          "onHit": {
+            "chance": 0.7,
+            "status": "armorBreak",
+            "duration": 2
+          },
+          "enemyOpeningStatuses": [
+            {
+              "row": 0,
+              "status": "armorBreak",
+              "duration": 1
+            }
+          ]
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "盘陀路的雪越下越深。扈三娘发现印记每隔十步便重复一次，像是有人把旧脚印做成了路标。"
+        },
+        {
+          "speaker": "扈三娘",
+          "portrait": "husanniang",
+          "text": "前队若照这路走，只会自己走进伏口。红锦套索还在，我去把做记号的人带回来。"
+        },
+        {
+          "speaker": "王英",
+          "text": "我与你同去。真遇上伏兵，总得有人替你挡刀。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "扈三娘",
+          "portrait": "husanniang",
+          "text": "他说了三条假路和一处暗门。盘陀路不是不可破，只是以前没人肯问。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "红锦套索收回腕间，雪中的假脚印被踩成一条真正的进庄路。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "zhu_guard",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.06,
+      "enemyModifiers": {
+        "defPct": 0.12,
+        "spdPct": 0.05
+      },
+      "reward": {
+        "copper": 940,
+        "xp": 600,
+        "item": "red_brocade_armor"
+      }
+    },
+    "wuyong": {
+      "id": "wuyong_empty_fort",
+      "heroId": "wuyong",
+      "requiredChapter": 8,
+      "minLevel": 14,
+      "levelOffset": 3,
+      "title": "空城灯影",
+      "location": "大名府外仓",
+      "bg": "/assets/environments/damingfu_lantern_night.png",
+      "objective": "以假灯阵拖住守军，掩护梁山车队运走赈粮。",
+      "readyText": "仓里只有一百盏旧灯，没有一百个人。吴用要让每一盏灯看起来都像一名守军。",
+      "rule": {
+        "id": "empty_fort_lanterns",
+        "name": "空城灯影",
+        "icon": "sparkles",
+        "desc": "吴用暴击率提高 8%；全队额外获得 20 开局义气，并以鼓舞状态开阵。",
+        "effects": {
+          "protagonist": {
+            "critPct": 0.08
+          },
+          "teamModifiers": {
+            "startYiqi": 20
+          },
+          "teamOpeningInspiration": 1
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "大名府外仓被官军围住，梁山车队还在装粮。吴用命人点亮所有悬灯，却把真正的弓手藏在灯影之后。"
+        },
+        {
+          "speaker": "吴用",
+          "portrait": "wuyong",
+          "text": "兵少不是短处，只要让他们以为每一盏灯后都有人，空仓也能守成雄关。"
+        },
+        {
+          "speaker": "燕青",
+          "portrait": "yanqing",
+          "text": "灯影我来换，脚步也我来错。军师只需保证最后一声锣响时，车已经出门。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "吴用",
+          "portrait": "wuyong",
+          "text": "粮车已出西门。灯不必熄，留给他们自己猜一夜还剩多少人。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "官军直到天亮才敢进入空仓，只见地上摆着两百双草鞋和一封空白的战书。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "daming_captain",
+          "row": 0
+        },
+        {
+          "id": "archer",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 0.96,
+      "enemyModifiers": {
+        "hpPct": 0.08,
+        "atkPct": 0.05
+      },
+      "reward": {
+        "copper": 1080,
+        "xp": 680,
+        "item": "wisdom_fan"
+      }
+    },
+    "yanqing": {
+      "id": "yanqing_wrestling_ring",
+      "heroId": "yanqing",
+      "requiredChapter": 8,
+      "minLevel": 14,
+      "levelOffset": 3,
+      "title": "擂台不争名",
+      "location": "大名府河埠",
+      "bg": "/assets/environments/damingfu_lantern_night.png",
+      "objective": "在官军合围前击败守擂教头，带出被扣作诱饵的百姓。",
+      "readyText": "擂台上挂着彩头，河埠四周却藏着弓手。燕青要赢，但不能赢得太早，也不能让百姓先受惊。",
+      "rule": {
+        "id": "wrestling_ring_poise",
+        "name": "擂台借力",
+        "icon": "compass",
+        "desc": "燕青身法与暴击率提高 10%；每回合首次直击有 50% 概率闪避，闪避后获得 18 义气。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.1,
+            "critPct": 0.1
+          },
+          "evadeChance": 0.5,
+          "evadeYiqi": 18
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "大名府河埠设下擂台，台上悬着花红，台下押着十几名百姓。守擂教头放话，只要有人胜他，便放人。"
+        },
+        {
+          "speaker": "燕青",
+          "portrait": "yanqing",
+          "text": "他想要我摔得难看，也想要梁山在众人面前丢脸。那我便先让他明白，胜负不必用血来写。"
+        },
+        {
+          "speaker": "吴用",
+          "portrait": "wuyong",
+          "text": "你缠住教头，百姓自会有人接走。记住，莫追，莫杀，胜了便退。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "燕青",
+          "portrait": "yanqing",
+          "text": "彩头留给河埠，百姓已经上船。今日赢的是他们能回家，不是我这一场名声。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "燕青吹着短箫离开河埠。守擂教头站在原地，第一次觉得满场喝彩像一阵空风。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "archer",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.02,
+      "enemyModifiers": {
+        "spdPct": 0.14,
+        "atkPct": 0.06
+      },
+      "reward": {
+        "copper": 1100,
+        "xp": 700,
+        "item": "wrestling_belt"
+      }
+    },
+    "yangzhi": {
+      "id": "yangzhi_last_convoy",
+      "heroId": "yangzhi",
+      "requiredChapter": 5,
+      "minLevel": 9,
+      "levelOffset": 3,
+      "title": "最后一纲",
+      "location": "黄泥冈旧道",
+      "bg": "/assets/environments/yellow_river_ferry.png",
+      "objective": "护送流民粮车穿过黄泥冈，让旧日失纲之地成为新的守约之处。",
+      "readyText": "黄泥冈的旧路又落了一场雨。杨志把新军令插在车头，这一趟押的不是官府的寿礼，而是三座村子的过冬粮。",
+      "rule": {
+        "id": "last_convoy_oath",
+        "name": "新纲旧枪",
+        "icon": "shield-check",
+        "desc": "杨志护甲提高 12%；全队开局获得 1 层护御，前阵敌人开局破甲 2 回合。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.12
+          },
+          "teamModifiers": {
+            "openingGuard": 1
+          },
+          "enemyOpeningStatuses": [
+            {
+              "row": 0,
+              "status": "armorBreak",
+              "duration": 2
+            }
+          ]
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "旧日押纲的松林已经换了新叶。三车粮从黄泥冈下缓缓经过，树影里又出现了拦路的人。"
+        },
+        {
+          "speaker": "杨志",
+          "portrait": "yangzhi",
+          "text": "上一次我护的是生辰纲，丢了便只剩罪名。这一次车里每一袋粮都有人等，谁也不许再拿走。"
+        },
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "你守车前，洒家守车后。今日走完这道冈，旧账便算你自己清。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "杨志",
+          "portrait": "yangzhi",
+          "text": "粮车入村，封条一张没少。原来军令不是替官府压人，也可以替百姓护一条路。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "杨志把旧生辰纲的封条埋进黄泥。新军令留在村口，上面没有官印，只有所有押车人按下的手印。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "archer",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.04,
+      "enemyModifiers": {
+        "defPct": 0.1,
+        "atkPct": 0.05
+      },
+      "reward": {
+        "copper": 1180,
+        "xp": 760,
+        "item": "yellow_mud_writ"
+      }
+    },
+    "gongsunsheng": {
+      "id": "gongsunsheng_five_thunders",
+      "heroId": "gongsunsheng",
+      "requiredChapter": 8,
+      "minLevel": 13,
+      "levelOffset": 3,
+      "title": "五雷止兵",
+      "location": "大名府城外祭坛",
+      "bg": "/assets/environments/damingfu_lantern_night.png",
+      "objective": "破去借天象煽动百姓互斗的伪坛，让两营流民放下兵器。",
+      "readyText": "祭坛上供的不是神，而是军械。公孙胜必须让被煽动的人先看清火光背后的官印，再谈天意。",
+      "rule": {
+        "id": "five_thunders_truth",
+        "name": "五雷照心",
+        "icon": "cloud",
+        "desc": "公孙胜封穴概率与护势伤害提高；全队每回合首次受击有 18% 概率闪避，并开局获得护御。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.08,
+            "spdPct": 0.08
+          },
+          "teamModifiers": {
+            "openingGuard": 1,
+            "poisePct": 0.12
+          },
+          "evadeChance": 0.18,
+          "evadeYiqi": 10
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "城外祭坛夜夜雷火，两营流民被“神谕”驱赶着争夺一口井。公孙胜看见香灰里混着军械库的火药。"
+        },
+        {
+          "speaker": "公孙胜",
+          "portrait": "gongsunsheng",
+          "text": "真正的雷不会叫人互相砍杀。有人借天意遮掩官印，我便让这道雷落在该落的地方。"
+        },
+        {
+          "speaker": "吴用",
+          "portrait": "wuyong",
+          "text": "你先破坛，我带人收兵刃。百姓若看见自己拜的是一箱刀，这场仗便能少死许多人。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "公孙胜",
+          "portrait": "gongsunsheng",
+          "text": "雷火烧了伪符，也照亮井边的官印。天意从不替谁发粮，粮是活人一袋袋背来的。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "两营人合力拆掉祭坛，把木料改成水车。公孙胜收起法印，第一次觉得道术最像模像样的一刻，是它让人停了手。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "archer",
+          "row": 1
+        },
+        {
+          "id": "daming_captain",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.01,
+      "enemyModifiers": {
+        "hpPct": 0.1,
+        "spdPct": 0.08
+      },
+      "reward": {
+        "copper": 1260,
+        "xp": 820,
+        "item": "thunder_tablet"
+      }
+    },
+    "lujunyi": {
+      "id": "lujunyi_qilin_banner",
+      "heroId": "lujunyi",
+      "requiredChapter": 8,
+      "minLevel": 14,
+      "levelOffset": 3,
+      "title": "麒麟换旗",
+      "location": "大名府旧校场",
+      "bg": "/assets/environments/damingfu_lantern_night.png",
+      "objective": "击退拥立卢俊义为寨主的旧部与官军，让梁山帅旗由众义共同署名。",
+      "readyText": "旧部把玉麒麟帅旗送到校场，只等他点一次头。卢俊义却要先让所有人明白，名望不能高过聚义。",
+      "rule": {
+        "id": "qilin_shared_banner",
+        "name": "麒麟共旗",
+        "icon": "flag",
+        "desc": "卢俊义攻击与暴击提高 12%，正面招式无视阵位；全队护势伤害提高 10%。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.12,
+            "critPct": 0.12
+          },
+          "teamModifiers": {
+            "poisePct": 0.1
+          },
+          "ignoreRow": true
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "旧校场两边站满河北旧部与梁山好汉。中间只摆着一面空白帅旗，谁先写下姓名，谁便能号令众人。"
+        },
+        {
+          "speaker": "卢俊义",
+          "portrait": "lujunyi",
+          "text": "我在大名府有名望时，救不了被押走的人；上山之后若只争一个名位，不过换件衣裳。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "今日不比谁的名头大。谁能替众人挡下这一阵，谁便有资格谈帅旗。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "卢俊义",
+          "portrait": "lujunyi",
+          "text": "帅旗不写我一人。谁押粮、谁守夜、谁替伤者留下，就都写上去。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "空旗最终写满不同笔迹。卢俊义把自己的玉牌挂在旗角，从此不是帅旗托着他的名，而是众人托着这面旗。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "daming_captain",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.03,
+      "enemyModifiers": {
+        "atkPct": 0.1,
+        "defPct": 0.08
+      },
+      "reward": {
+        "copper": 1380,
+        "xp": 900,
+        "item": "qilin_golden_spear"
+      }
+    },
+    "zhangshun": {
+      "id": "zhangshun_white_wave_night",
+      "heroId": "zhangshun",
+      "requiredChapter": 8,
+      "minLevel": 13,
+      "levelOffset": 3,
+      "title": "白浪断索",
+      "location": "梁山泊水门",
+      "bg": "/assets/environments/liangshan_water_fort.png",
+      "objective": "潜入封锁水门，换掉绊索，救出被困在湖心的渔船与伤者。",
+      "readyText": "官军在水下布了三道铁索，只等梁山战船自己撞上来。张顺要在没有灯的黑水里，把整条生路换出来。",
+      "rule": {
+        "id": "white_wave_escape",
+        "name": "白浪换索",
+        "icon": "wind",
+        "desc": "张顺身法提高 14%，每回合首次直击有 35% 概率闪避；全队暴击率提高 8%。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.14,
+            "critPct": 0.08
+          },
+          "teamModifiers": {
+            "critPct": 0.08
+          },
+          "evadeChance": 0.35,
+          "evadeYiqi": 16
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "夜色压住水泊，湖心的渔船被铁索锁住。官军守在岸上，只等梁山来人便同时收网。"
+        },
+        {
+          "speaker": "张顺",
+          "portrait": "zhangshun",
+          "text": "三道索，水底各有一处死结。给我半刻，船便能走；岸上的人若发现，就替我挡住他们。"
+        },
+        {
+          "speaker": "燕青",
+          "portrait": "yanqing",
+          "text": "岸上的火把交给我。你在水里看不见光，我便让他们的光都照错地方。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "张顺",
+          "portrait": "zhangshun",
+          "text": "索换了，沉船改成浮桥。水门还在，可从今夜起，它拦谁不拦谁得由船户自己说。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "张顺从水里上岸时，天刚亮。湖面白浪一层压过一层，像给所有平安靠岸的人留了名字。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "archer",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.02,
+      "enemyModifiers": {
+        "spdPct": 0.14,
+        "hpPct": 0.06
+      },
+      "reward": {
+        "copper": 1240,
+        "xp": 810,
+        "item": "white_wave_trident"
+      }
+    },
+    "shijin": {
+      "id": "shijin_shaohua_oath",
+      "heroId": "shijin",
+      "requiredChapter": 2,
+      "minLevel": 4,
+      "levelOffset": 1,
+      "title": "少华旧誓",
+      "location": "少华山断墙",
+      "bg": "/assets/environments/boar_forest.png",
+      "objective": "夺回被官军挟持的少华名册，让旧部按自己的意愿决定去留。",
+      "readyText": "少华山的断墙后关着不愿降官的旧部。史进把枪立在门前，这一次他不替任何人决定前程，只先把锁劈开。",
+      "rule": {
+        "id": "shaohua_spear_oath",
+        "name": "九龙断甲",
+        "icon": "swords",
+        "desc": "史进攻击提高 10%；攻击破甲目标时伤害提高 18%，击败敌人后全队获得 6 义气。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.1
+          },
+          "armorBreakDamagePct": 0.18,
+          "onKill": {
+            "teamYiqi": 6
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "少华山寨门被官军反锁，墙上还留着史进年少时练枪的刻痕。旧部被逼交出名册，否则便要按匪属论罪。"
+        },
+        {
+          "speaker": "史进",
+          "portrait": "shijin",
+          "text": "我当年离开少华，是因为不想让山寨借我的名字害人。今日回来，也不会让官军借我的名字锁住你们。"
+        },
+        {
+          "speaker": "少华旧部",
+          "text": "山主若还认我们，便先劈了这道门。名册交出去，我们连家中老小都保不住。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "史进",
+          "portrait": "shijin",
+          "text": "名册上的名字一个没少。愿意留下的守寨，愿意回家的领路费，谁都不必再替另一人的旗号活着。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "断门被推到一旁，少华旧部第一次从正门走出山寨。史进把枪插在墙边，枪缨与旧刻痕一起迎风。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.04,
+      "enemyModifiers": {
+        "defPct": 0.08,
+        "hpPct": 0.05
+      },
+      "reward": {
+        "copper": 560,
+        "xp": 340,
+        "item": "dragon_spear_oath"
+      }
+    },
+    "qinming": {
+      "id": "qinming_qingzhou_thunder",
+      "heroId": "qinming",
+      "requiredChapter": 4,
+      "minLevel": 8,
+      "levelOffset": 2,
+      "title": "青州雷火",
+      "location": "青州军械库",
+      "bg": "/assets/environments/qingfeng_fort.png",
+      "objective": "拦下准备焚毁军粮的乱军，救出被军令胁迫的民夫与降卒。",
+      "readyText": "军械库外堆满火油，官军要把粮仓和民夫一起烧掉。秦明提棒站在门前，雷火应当落在持令纵火的人身上。",
+      "rule": {
+        "id": "qingzhou_thunder_breaker",
+        "name": "霹雳震军",
+        "icon": "flame",
+        "desc": "秦明攻击提高 8%；全队护势伤害提高 16%，前阵与中军敌人开局破甲 1 回合。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.08
+          },
+          "teamModifiers": {
+            "poisePct": 0.16
+          },
+          "enemyOpeningStatuses": [
+            {
+              "row": 0,
+              "status": "armorBreak",
+              "duration": 1
+            },
+            {
+              "row": 1,
+              "status": "armorBreak",
+              "duration": 1
+            }
+          ]
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "青州军械库已经起火。官军把粮袋与民夫一同锁进仓院，想用一场大火把失守的罪责烧成灰。"
+        },
+        {
+          "speaker": "秦明",
+          "portrait": "qinming",
+          "text": "我做过统制，也听过无数军令。今日谁敢点这把火，先问我的狼牙棒认不认那枚官印。"
+        },
+        {
+          "speaker": "民夫",
+          "text": "将军别进来，他们说仓门一开便以通匪论处。"
+        },
+        {
+          "speaker": "秦明",
+          "portrait": "qinming",
+          "text": "那就让他们先来问秦明，通匪的人为何要救你们的命。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "秦明",
+          "portrait": "qinming",
+          "text": "粮留下，人带走。军械库改成赈仓，谁敢再拿军令换百姓的命，青州这一路便由我挡着。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "大火只烧黑了仓门。秦明走出烟尘时，狼牙棒上的铁齿映着新铸的雷印，比军旗更醒目。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "captain",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.06,
+      "enemyModifiers": {
+        "atkPct": 0.07,
+        "hpPct": 0.08
+      },
+      "reward": {
+        "copper": 760,
+        "xp": 480,
+        "item": "thunder_mace_heirloom"
+      }
+    },
+    "chaiin": {
+      "id": "chaiin_righteous_granary",
+      "heroId": "chaiin",
+      "requiredChapter": 5,
+      "minLevel": 10,
+      "levelOffset": 2,
+      "title": "义仓风起",
+      "location": "沧州义仓",
+      "bg": "/assets/environments/yellow_river_ferry.png",
+      "objective": "守住准备分给流民的义仓，阻止豪强与官差合谋夺粮。",
+      "readyText": "义仓前挤满等粮的人，仓里却混进了官差安排的打手。柴进翻开账册，今日要守住的不只是粮袋，还有分粮的规矩。",
+      "rule": {
+        "id": "righteous_granary_guard",
+        "name": "散金护民",
+        "icon": "heart-pulse",
+        "desc": "柴进生命提高 8%；全队治疗提高 18%，开局获得 1 层护御，护御期间受到伤害更低。",
+        "effects": {
+          "protagonist": {
+            "hpPct": 0.08
+          },
+          "teamModifiers": {
+            "healPct": 0.18,
+            "openingGuard": 1,
+            "guardBonus": 0.05
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "沧州义仓外，流民按手印排成长队。官差却把最好的粮袋搬上私车，反说仓中账目亏空。"
+        },
+        {
+          "speaker": "柴进",
+          "portrait": "chaiin",
+          "text": "账可以重算，粮也可以再筹。若今日让拿刀的人先拿粮，明日这座仓便只剩一块好看的匾。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "你守仓门，我替流民作保。梁山不抢义仓，但谁想把义仓变成私库，今日便要留下名字。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "柴进",
+          "portrait": "chaiin",
+          "text": "每户按口分粮，病弱者先领。柴府名帖从今日起不再是通行凭证，只作为义仓欠账上的一枚印章。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "义仓开门到深夜，柴进把最后一片金叶压在账册里。风卷起纸页，没有一个领粮的人需要跪谢。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.05,
+      "enemyModifiers": {
+        "hpPct": 0.12,
+        "defPct": 0.05
+      },
+      "reward": {
+        "copper": 900,
+        "xp": 560,
+        "item": "righteous_ledger"
+      }
+    },
+    "guansheng": {
+      "id": "guansheng_daming_blade_oath",
+      "heroId": "guansheng",
+      "requiredChapter": 7,
+      "minLevel": 12,
+      "levelOffset": 2,
+      "title": "大名刀盟",
+      "location": "大名府南门",
+      "bg": "/assets/environments/damingfu_lantern_night.png",
+      "objective": "在官军闭城前护百姓撤离，并迫使守将放下借人头邀功的军令。",
+      "readyText": "大名府四门将闭，守军要以一队百姓换梁山退兵。关胜横刀立于门下，先让百姓过门，再与军令当面分个高低。",
+      "rule": {
+        "id": "green_dragon_frontline",
+        "name": "青龙镇门",
+        "icon": "shield",
+        "desc": "关胜护甲提高 12%，全队护甲提高 5%；关胜反击率提高 10%，反击后可稳住阵线。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.12
+          },
+          "teamModifiers": {
+            "defPct": 0.05
+          },
+          "counterChance": 0.1
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "大名府南门落下半截，城外百姓被夹在两军之间。守将传话，只要交出梁山旧将，便放所有人入城。"
+        },
+        {
+          "speaker": "关胜",
+          "portrait": "guansheng",
+          "text": "军令若拿活人做筹码，便只是一纸借刀杀人的契书。今日先开城门，谁要追责，关某一人接。"
+        },
+        {
+          "speaker": "卢俊义",
+          "portrait": "lujunyi",
+          "text": "我与你在门内断后，梁山守门外。百姓走完之前，谁的军令都不算数。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "关胜",
+          "portrait": "guansheng",
+          "text": "守将已交出印信，城门也还给城中百姓。刀可以镇军，却不能替百姓决定该怕谁。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "最后一名老人跨过门槛时，关胜才收刀。青龙刀身上的灯影静下来，像一户终于关上的门。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "daming_captain",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.04,
+      "enemyModifiers": {
+        "defPct": 0.1,
+        "atkPct": 0.06
+      },
+      "reward": {
+        "copper": 1120,
+        "xp": 720,
+        "item": "green_dragon_halberd"
+      }
+    },
+    "zhangqing": {
+      "id": "zhangqing_dongchang_stone_rain",
+      "heroId": "zhangqing",
+      "requiredChapter": 8,
+      "minLevel": 13,
+      "levelOffset": 3,
+      "title": "东昌飞石",
+      "location": "东昌府城下",
+      "bg": "/assets/environments/qingfeng_fort.png",
+      "objective": "击断城头四面传令旗，让被裹挟的民壮放下兵器。",
+      "readyText": "东昌府把百姓推上城头，又把梁山好汉的姓名挂成箭靶。张清摸了摸囊中石子，只挑传令兵与旗索下手。",
+      "rule": {
+        "id": "sky_jade_stone_rain",
+        "name": "天捷石雨",
+        "icon": "crosshair",
+        "desc": "张清身法提高 15%；飞石弹射率提高 20%，全队护势伤害提高 10%。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.15
+          },
+          "teamModifiers": {
+            "poisePct": 0.1
+          },
+          "stoneRicochetChance": 0.2
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "东昌府城头挂满木牌，每一块都写着一个梁山姓名。守军逼民壮躲在垛口后，只露出长枪与号旗。"
+        },
+        {
+          "speaker": "张清",
+          "portrait": "zhangqing",
+          "text": "我打将从不先取人命。旗一倒，令就断；令一断，城上这些人便不必再替官军送死。"
+        },
+        {
+          "speaker": "花荣",
+          "portrait": "huarong",
+          "text": "你打近处旗索，我替你封住箭楼。谁把百姓往城垛前推，先问过我这一箭。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "张清",
+          "portrait": "zhangqing",
+          "text": "四面旗都断了，民壮已经放下枪。守将若还想开城迎战，就让他自己站到城头上。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "城门的横闩从里面抬开。张清最后一枚石子没有出手，而是放回囊中，留给城中百姓一条不必再躲的天空。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "captain",
+          "row": 0
+        },
+        {
+          "id": "zhu_guard",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.05,
+      "enemyModifiers": {
+        "hpPct": 0.1,
+        "defPct": 0.08
+      },
+      "reward": {
+        "copper": 1180,
+        "xp": 760,
+        "item": "rain_stone_pouch"
+      }
+    },
+    "xuning": {
+      "id": "xuning_tokyo_drill_lock",
+      "heroId": "xuning",
+      "requiredChapter": 7,
+      "minLevel": 12,
+      "levelOffset": 2,
+      "title": "雁翎锁军",
+      "location": "东京禁军旧校场",
+      "bg": "/assets/environments/boar_forest.png",
+      "objective": "拆开官军以民夫充作前阵的连环枪阵，并夺回被篡改的教令。",
+      "readyText": "旧校场竖起一排新枪，枪后却绑着征来的民夫。徐宁提钩镰枪走入雪地，先要拆阵，也要让每一杆枪重新知道该护谁。",
+      "rule": {
+        "id": "goose_feather_lock",
+        "name": "雁翎锁阵",
+        "icon": "shield",
+        "desc": "徐宁护甲提高 12%，全队护势伤害提高 8%；钩镰溅射伤害与护势伤害提高。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.12
+          },
+          "teamModifiers": {
+            "poisePct": 0.08
+          },
+          "hookSplashPowerPct": 0.12,
+          "hookSplashPoise": 8
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "东京旧校场的雪被踩成一条条黑泥，官军把民夫绑在枪阵之间，逼梁山先伤百姓再碰军士。"
+        },
+        {
+          "speaker": "徐宁",
+          "portrait": "xuning",
+          "text": "钩镰枪先钩甲绦，再锁枪杆。谁敢拿百姓当盾，我便先让他手里的枪不听号令。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "我替你守住左翼。今日不必再向旧军旗低头，我们只把被绑在前阵的人接出来。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "徐宁",
+          "portrait": "xuning",
+          "text": "教令夺回来了，民夫也走了。枪谱若只教人如何杀人，便不配再称禁军家传。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "徐宁把篡改的军令折进枪谱末页，与“阵为人用”四字钉在一起。旧校场第一次在新雪里安静下来。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "captain",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.05,
+      "enemyModifiers": {
+        "defPct": 0.1,
+        "spdPct": 0.06
+      },
+      "reward": {
+        "copper": 1200,
+        "xp": 780,
+        "item": "golden_spear_manual"
+      }
+    },
+    "sunerniang": {
+      "id": "sunerniang_black_inn_trial",
+      "heroId": "sunerniang",
+      "requiredChapter": 4,
+      "minLevel": 5,
+      "levelOffset": 1,
+      "title": "十字坡最后一席",
+      "location": "十字坡旧店",
+      "bg": "/assets/environments/boar_forest.png",
+      "objective": "夺回被官差扣押的解毒药方，让十字坡不再靠害人守住生意。",
+      "readyText": "旧店门前坐满被药倒的官差，后厨却还熬着一锅真正的解药。孙二娘把账本压在刀下，等梁山替这一桌人定一条新规矩。",
+      "rule": {
+        "id": "black_inn_antidote",
+        "name": "解药先上",
+        "icon": "heart-pulse",
+        "desc": "孙二娘施加的敌方负面状态延长；全队开局获得 1 层护御与 12 义气。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.08
+          },
+          "teamModifiers": {
+            "openingGuard": 1,
+            "startYiqi": 12
+          },
+          "statusDurationBonus": 1
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "十字坡旧店被官差反锁，后厨药香混着火油味。押差要把解毒方烧掉，只留下能让人昏睡的蒙汗药。"
+        },
+        {
+          "speaker": "孙二娘",
+          "portrait": "sunerniang",
+          "text": "从前这店里，客人喝什么由我说了算。今日也一样，只不过先上的得是解药。"
+        },
+        {
+          "speaker": "顾大嫂",
+          "portrait": "gudashao",
+          "text": "你救人，我堵门。哪个官差想把药锅踢翻，先问过我手里这根门闩。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "孙二娘",
+          "portrait": "sunerniang",
+          "text": "药方留下了，旧账也烧了。以后十字坡只卖饭，谁要害人，就让他先尝尝自己的药。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "天亮时，被救醒的脚夫自己搬来新桌。孙二娘在门边挂了一块空木牌，等第一个真正付饭钱的人来写。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "runner",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.02,
+      "enemyModifiers": {
+        "atkPct": 0.05,
+        "spdPct": 0.06
+      },
+      "reward": {
+        "copper": 980,
+        "xp": 650,
+        "item": "ogress_medicine_cleaver"
+      }
+    },
+    "gudashao": {
+      "id": "gudashao_inn_gate",
+      "heroId": "gudashao",
+      "requiredChapter": 5,
+      "minLevel": 6,
+      "levelOffset": 1,
+      "title": "山门不倒",
+      "location": "登州山道",
+      "bg": "/assets/environments/zhujiazhuang_snow_night.png",
+      "objective": "守住被官军围攻的过路山店，接走伤员与不愿再从军的降卒。",
+      "readyText": "顾大嫂把山店门板卸下来挡在路中央，背后是伤员、妇孺与一锅还没盛完的热粥。官军要从这里过，就只能先撞开她。",
+      "rule": {
+        "id": "tigress_door_bar",
+        "name": "门闩镇路",
+        "icon": "shield-check",
+        "desc": "顾大嫂护甲提高 12%，前阵反击率提高 14%；反击会额外削减目标护势。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.12
+          },
+          "teamModifiers": {
+            "openingGuard": 1
+          },
+          "counterChance": 0.14,
+          "counterPoise": 14
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "登州山道被雪封住，一间无名山店却亮着灯。官军围住正门，店里没有一个客人，只有伤兵与逃出的降卒。"
+        },
+        {
+          "speaker": "顾大嫂",
+          "portrait": "gudashao",
+          "text": "开店的人若连门都守不住，还谈什么迎客。今日门闩落地之前，谁也别想跨过去。"
+        },
+        {
+          "speaker": "孙二娘",
+          "portrait": "sunerniang",
+          "text": "我在后厨备了药。你只管守，哪个敢从窗口翻进来，我替他把腿留下。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "顾大嫂",
+          "portrait": "gudashao",
+          "text": "人都走了。门板坏了三块，锅还热着。把最后一批伤员送下山，这店今日才算关门。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "雪盖住满地脚印，山店门闩却仍横在路中。后来过路的人不必知道谁守过这里，只需知道这扇门不会在半夜被官差踹开。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "captain",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.04,
+      "enemyModifiers": {
+        "hpPct": 0.08,
+        "defPct": 0.08
+      },
+      "reward": {
+        "copper": 1020,
+        "xp": 680,
+        "item": "tigress_iron_staff"
+      }
+    },
+    "lingzhen": {
+      "id": "lingzhen_thunder_forge",
+      "heroId": "lingzhen",
+      "requiredChapter": 6,
+      "minLevel": 8,
+      "levelOffset": 2,
+      "title": "雷不入城",
+      "location": "青州炮作",
+      "bg": "/assets/environments/qingfeng_fort.png",
+      "objective": "夺取官军炮作的药量簿，拆掉对准民村的炮位，并救出被强征的工匠。",
+      "readyText": "炮作院里三门火炮已经装药，城下却是民村。凌振提着一枚哑火雷走进院门，先把药线从官军手里夺回来。",
+      "rule": {
+        "id": "thunder_forge_calibration",
+        "name": "校定药线",
+        "icon": "flame",
+        "desc": "凌振炮火护势伤害提高 25%，炮击震晕概率提高；全队护势伤害提高 8%。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.1
+          },
+          "teamModifiers": {
+            "poisePct": 0.08
+          },
+          "artilleryPoisePct": 0.25,
+          "bombStunChance": 0.16
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "青州炮作的锤声整夜没停。三门炮口对着民村，工匠却被铁链锁在炮架旁，谁走便先点谁脚下的药包。"
+        },
+        {
+          "speaker": "凌振",
+          "portrait": "lingzhen",
+          "text": "炮造出来是轰门的，不是轰灶的。药量是我校的，药线也该由我拆。"
+        },
+        {
+          "speaker": "秦明",
+          "portrait": "qinming",
+          "text": "你救工匠，我砸炮架。雷火总得有个方向，今日只让它朝官军的锁链落。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "凌振",
+          "portrait": "lingzhen",
+          "text": "三门炮都哑了，药量簿也烧了。工匠愿意留的随梁山走，愿意回家的，每人带一包只够开石的工具药。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "最后一枚雷被凌振沉进井里。村里人天亮时只听见一声闷响，井水轻震，却没有一面屋墙倒下。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "captain",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.06,
+      "enemyModifiers": {
+        "hpPct": 0.1,
+        "atkPct": 0.06
+      },
+      "reward": {
+        "copper": 1120,
+        "xp": 730,
+        "item": "thunder_crash_bomb"
+      }
+    },
+    "ruanxiaoqi": {
+      "id": "ruanxiaoqi_reed_uprising",
+      "heroId": "ruanxiaoqi",
+      "requiredChapter": 6,
+      "minLevel": 8,
+      "levelOffset": 2,
+      "title": "芦荡阎罗",
+      "location": "石碣村芦荡",
+      "bg": "/assets/environments/yellow_river_ferry.png",
+      "objective": "炸开税船铁索，护送渔户撤离，并夺回被扣作人质的孩童。",
+      "readyText": "芦荡里每一道水汊都藏着渔舟。阮小七把最后一根火绳系在腰上，身后是被税船撞翻的网架与等不到父母的孩子。",
+      "rule": {
+        "id": "living_yama_net",
+        "name": "阎罗撒网",
+        "icon": "target",
+        "desc": "阮小七生命越低伤害越高；全队暴击率提高 6%，攻击流血敌人时伤害提高。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.1
+          },
+          "teamModifiers": {
+            "critPct": 0.06
+          },
+          "missingHpDamagePct": 0.35,
+          "bleedDamagePct": 0.16
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "石碣村芦荡被三道税船铁索封死。官差把孩童扣在船头，要渔户交出一整年的网银，否则便拖着船逐村搜人。"
+        },
+        {
+          "speaker": "阮小七",
+          "portrait": "ruanxiaoqi",
+          "text": "我这条命不值一整年的网银，但够把三根索子割断。谁再拿孩子挡船头，就让他先看看阎罗怎么撑船。"
+        },
+        {
+          "speaker": "李俊",
+          "portrait": "lijun",
+          "text": "船队我来调度，你只认孩子所在的那条船。水门一开，所有渔舟按舵号走。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "阮小七",
+          "portrait": "ruanxiaoqi",
+          "text": "孩子都回船了，税簿也沉了。以后石碣村谁来做主，不看官印，看谁愿意最后走。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "芦荡水面上浮着断索与纸税。阮小七把破网重新提起，网眼里还有一条小鱼，他笑着把它放回浪里。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "archer",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "instructor",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.05,
+      "enemyModifiers": {
+        "spdPct": 0.1,
+        "hpPct": 0.06
+      },
+      "reward": {
+        "copper": 1080,
+        "xp": 710,
+        "item": "yama_river_blades"
+      }
+    },
+    "lijun": {
+      "id": "lijun_three_river_gate",
+      "heroId": "lijun",
+      "requiredChapter": 8,
+      "minLevel": 13,
+      "levelOffset": 2,
+      "title": "三江开闸",
+      "location": "浔阳江水门",
+      "bg": "/assets/environments/liangshan_water_fort.png",
+      "objective": "打开私税水门，接出被扣船户，在水战中击退官军楼船。",
+      "readyText": "三江水门的铁闸已经落下，官军楼船挤在闸外。李俊站在最窄的一只小舟上，等潮水漫过最后一道暗礁。",
+      "rule": {
+        "id": "river_dragon_gate",
+        "name": "三江潮信",
+        "icon": "wind",
+        "desc": "全队身法与义气获取提高，开局获得护御；李俊闪避后会为全队续起航势。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.12,
+            "defPct": 0.08
+          },
+          "teamModifiers": {
+            "spdPct": 0.06,
+            "yiqiPct": 0.12,
+            "openingGuard": 1
+          },
+          "evadeChance": 0.14,
+          "evadeTeamYiqi": 8,
+          "evadeTeamGuard": 1
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "浔阳江水门上下两道铁闸同时闭死，几百艘渔船被扣在闸内。官军楼船居高临下，等梁山先撞上铁索。"
+        },
+        {
+          "speaker": "李俊",
+          "portrait": "lijun",
+          "text": "水门不是墙，潮水能从哪里进来，人就能从哪里出去。三路船按我的灯号走，不必抢这一时。"
+        },
+        {
+          "speaker": "阮小七",
+          "portrait": "ruanxiaoqi",
+          "text": "我去割明索，张顺去拆暗锁。你在水面上把楼船的眼睛引开，剩下的交给我们。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "李俊",
+          "portrait": "lijun",
+          "text": "闸开了，船户一个不少。从今天起，这门不归官军收税，也不归哪一位头领称王。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "三江船灯依次亮起，像一条从水面铺到山脚的星河。李俊把总舵交回船户共议，只留下潮汐与灯号作证。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "daming_captain",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.06,
+      "enemyModifiers": {
+        "hpPct": 0.12,
+        "spdPct": 0.06
+      },
+      "reward": {
+        "copper": 1320,
+        "xp": 850,
+        "item": "dragon_river_trident"
+      }
+    },
+    "huyanzhuo": {
+      "id": "huyanzhuo_chain_break",
+      "heroId": "huyanzhuo",
+      "requiredChapter": 8,
+      "minLevel": 14,
+      "levelOffset": 2,
+      "title": "连环改阵",
+      "location": "梁山雪原",
+      "bg": "/assets/environments/zhujiazhuang_snow_night.png",
+      "objective": "截住被督军驱使的旧部连环马，先破甲阵，再救出被锁在骑阵中的民夫。",
+      "readyText": "雪原上铁链拖过冻土，呼延灼的旧部被督军串成连环马阵。双鞭若落在马腿上，阵会散；若落在铁链上，人还能回来。",
+      "rule": {
+        "id": "chain_cavalry_reform",
+        "name": "三通退军鼓",
+        "icon": "shield",
+        "desc": "全队护势伤害提高 12%；呼延灼护甲与攻击提高，生命较高时双鞭威力更强。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.12,
+            "atkPct": 0.1
+          },
+          "teamModifiers": {
+            "poisePct": 0.12,
+            "openingGuard": 1
+          },
+          "fullHpDamagePct": 0.18
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "雪原尽头传来铁链声。旧部骑兵被锁成一排，马背间还绑着被强征的民夫，督军以他们为盾，逼梁山先伤自己人。"
+        },
+        {
+          "speaker": "呼延灼",
+          "portrait": "huyanzhuo",
+          "text": "连环马是我教他们的。今日便由我敲退军鼓，谁再向前一步，先看清链上绑的是谁。"
+        },
+        {
+          "speaker": "徐宁",
+          "portrait": "xuning",
+          "text": "钩镰拆链，双鞭压阵。先让民夫落地，再同旧部算这道军令的账。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "呼延灼",
+          "portrait": "huyanzhuo",
+          "text": "链断了，旧部也停了。愿意留下的重新编队，不愿留的领马回家。连环马从今日起只锁阵门，不锁人。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "三通退军鼓在雪原上滚了很远。最后一匹马掉头时，呼延灼把旧军旗折起，插进了梁山箭楼的台阶下。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "captain",
+          "row": 0
+        },
+        {
+          "id": "zhu_guard",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.08,
+      "enemyModifiers": {
+        "hpPct": 0.14,
+        "defPct": 0.1,
+        "spdPct": 0.04
+      },
+      "reward": {
+        "copper": 1380,
+        "xp": 900,
+        "item": "twin_iron_rods"
+      }
+    },
+    "liutang": {
+      "id": "liutang_first_flame_returns",
+      "heroId": "liutang",
+      "requiredChapter": 5,
+      "minLevel": 8,
+      "levelOffset": 2,
+      "title": "旧火归岸",
+      "location": "郓城河仓",
+      "bg": "/assets/environments/yellow_river_ferry.png",
+      "objective": "夺回生辰纲旧案的真实账簿，救出被当作替罪羊的纤夫。",
+      "readyText": "河仓里堆满新的寿礼，旧案却被塞进最底层。刘唐要在火起之前找到真账，让当年第一把火不烧向无辜的人。",
+      "rule": {
+        "id": "red_hair_flame_return",
+        "name": "赤发旧火",
+        "icon": "flame",
+        "desc": "刘唐攻击提高 12%，残血伤害更高；全队攻击流血目标时额外提高 12% 伤害。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.12
+          },
+          "missingHpDamagePct": 0.24,
+          "teamModifiers": {
+            "atkPct": 0.05,
+            "poisePct": 0.1
+          },
+          "onKill": {
+            "yiqi": 12,
+            "guard": 1
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "郓城河仓外，新的寿礼车队连夜装船，箱底却压着十年前被涂改的旧账。纤夫们被铁索穿上肩膀，准备替权臣背走最后一笔亏空。"
+        },
+        {
+          "speaker": "刘唐",
+          "portrait": "liutang",
+          "text": "当年我传出一句话，梁山便有人点了火。今日得先找到账，再问这把火该烧哪一箱。"
+        },
+        {
+          "speaker": "吴用",
+          "portrait": "wuyong",
+          "text": "你走前岸，我断后路。账簿与纤夫都要回来，一个名字也不能留给他们改。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "刘唐",
+          "portrait": "liutang",
+          "text": "真账找到了。旧案里果然有人替他们背罪，我们当年烧得太快，这一次要把名字一个个念完。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "纤夫解开铁索，把寿礼箱推入河中。刘唐却把旧账护在怀里，任河风吹散赤发，没有再点一把无名火。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.08,
+      "enemyModifiers": {
+        "hpPct": 0.12,
+        "defPct": 0.08
+      },
+      "reward": {
+        "copper": 1120,
+        "xp": 720,
+        "item": "red_hair_sash"
+      }
+    },
+    "zhutong": {
+      "id": "zhutong_prison_gate_open",
+      "heroId": "zhutong",
+      "requiredChapter": 6,
+      "minLevel": 10,
+      "levelOffset": 2,
+      "title": "牢门向义",
+      "location": "沧州旧牢",
+      "bg": "/assets/environments/boar_forest.png",
+      "objective": "守住被官军反锁的牢院，救出百姓并保住能够洗清旧案的案卷。",
+      "readyText": "旧牢门上锁着三道官印，门外却已经堆起柴薪。朱仝站在门内，这一次要决定先救活人，还是先保住那道早已不义的门。",
+      "rule": {
+        "id": "beautiful_beard_gate",
+        "name": "长髯守门",
+        "icon": "shield-check",
+        "desc": "朱仝护甲提高 14%，全队开局获得 2 层护御；治疗时额外净化一层伤势。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.14,
+            "hpPct": 0.1
+          },
+          "teamModifiers": {
+            "openingGuard": 2,
+            "healPct": 0.12
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "沧州旧牢被官军反锁，牢里关着曾被朱仝放走的人，也关着能洗清旧案的案卷。火油沿墙脚流进来，门闩却还贴着崭新的封条。"
+        },
+        {
+          "speaker": "朱仝",
+          "portrait": "zhutong",
+          "text": "我守过这扇门，也替他们锁过人。今日先把门打开，剩下的罪我一并背。"
+        },
+        {
+          "speaker": "雷横",
+          "portrait": "leiheng",
+          "text": "你开门，我砸锁。都头这身衣裳，今日总算能做件不亏心的事。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "朱仝",
+          "portrait": "zhutong",
+          "text": "案卷还在，人也都在。官印盖得再深，也压不住一张张活着走出去的脸。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "旧牢门被卸下来铺在院中，当作伤者上马的踏板。朱仝最后走出时，长髯上沾满烟灰，没有回头再看那块县衙匾额。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "zhu_guard",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.05,
+      "enemyModifiers": {
+        "defPct": 0.12,
+        "hpPct": 0.1
+      },
+      "reward": {
+        "copper": 1240,
+        "xp": 800,
+        "item": "prison_seal_armor"
+      }
+    },
+    "leiheng": {
+      "id": "leiheng_winged_tiger_leap",
+      "heroId": "leiheng",
+      "requiredChapter": 6,
+      "minLevel": 10,
+      "levelOffset": 2,
+      "title": "跃城归众",
+      "location": "郓城侧门",
+      "bg": "/assets/environments/bianjing_snow_night.png",
+      "objective": "越过封城拒马，打开侧门，让被强征的青壮与百姓一同撤出。",
+      "readyText": "城门从内封死，城外百姓被官军当作前阵。雷横只有一根铁棍和一段可以借力的城墙，要在鼓声落下前越过整座郓城。",
+      "rule": {
+        "id": "winged_tiger_leap",
+        "name": "插翅越城",
+        "icon": "wind",
+        "desc": "雷横身法提高 12%，反击率大幅提高；全队护势伤害提高 14%。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.12,
+            "defPct": 0.08
+          },
+          "teamModifiers": {
+            "poisePct": 0.14,
+            "counterBonus": 0.06
+          },
+          "counterChance": 0.16
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "郓城四门同时落锁，官军把青壮推上城墙，逼梁山从百姓身上破阵。雷横看见母亲住过的巷口，也看见门后那一排铁枷。"
+        },
+        {
+          "speaker": "雷横",
+          "portrait": "leiheng",
+          "text": "这墙我跳过无数次，今日再跳一次，落点得在锁链后面。"
+        },
+        {
+          "speaker": "朱仝",
+          "portrait": "zhutong",
+          "text": "你开侧门，我把守军拖在正街。别让青壮替官军填第一道门。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "雷横",
+          "portrait": "leiheng",
+          "text": "侧门开了，铁枷也砸了。以前我总替衙门追人，今天总算赶在城墙合拢前把一群活人送了出去。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "官军鼓声停在半空。雷横坐在门槛上喘气，铁棍横在膝头，身后的积雪被百姓踩成一条通向梁山的路。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "runner",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.06,
+      "enemyModifiers": {
+        "spdPct": 0.1,
+        "atkPct": 0.08
+      },
+      "reward": {
+        "copper": 1240,
+        "xp": 800,
+        "item": "winged_belt"
+      }
+    },
+    "liying": {
+      "id": "liying_eagle_accounts",
+      "heroId": "liying",
+      "requiredChapter": 7,
+      "minLevel": 11,
+      "levelOffset": 2,
+      "title": "飞刃对账",
+      "location": "独龙冈义仓",
+      "bg": "/assets/environments/zhujiazhuang_snow_night.png",
+      "objective": "截住被豪强转运的义仓粮车，逐户核对账册并送回存粮。",
+      "readyText": "义仓粮车正要连夜运走，账册被撕成三份藏在三名管事身上。李应必须在雪地上同时盯住粮、账和人。",
+      "rule": {
+        "id": "eagle_ledger",
+        "name": "雕眼对账",
+        "icon": "scroll-text",
+        "desc": "李应攻击与身法提高 12%，飞刃无视站位；全队义气获取提高 15%，暴击率提高 6%。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.12,
+            "spdPct": 0.1
+          },
+          "teamModifiers": {
+            "yiqiPct": 0.15,
+            "critPct": 0.06,
+            "startYiqi": 12
+          },
+          "ignoreRow": true
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "独龙冈义仓的粮袋上还留着庄客手印，豪强却已把粮车榜文改成军粮。雪夜里，三份账簿被三队人马分别带往不同寨门。"
+        },
+        {
+          "speaker": "李应",
+          "portrait": "liying",
+          "text": "粮可以追，账更得追。少一袋只是饿一户，少一页便能让整庄人永远说不清。"
+        },
+        {
+          "speaker": "解珍",
+          "portrait": "jiezhen",
+          "text": "山路我封，跑出去的车都会落进旧猎道。你只管把账接回来。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "李应",
+          "portrait": "liying",
+          "text": "三份账合上了，缺的粮也从私仓运回。义仓开门时，谁先领粮不看名帖，只按户册来。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "五口飞刀最后钉在义仓门柱上，刀旁挂着新账簿。李应亲手写下第一行，梁山借粮，来日由百姓公议偿还。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "zhu_guard",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.07,
+      "enemyModifiers": {
+        "defPct": 0.1,
+        "spdPct": 0.08,
+        "hpPct": 0.08
+      },
+      "reward": {
+        "copper": 1320,
+        "xp": 850,
+        "item": "manor_lamellar"
+      }
+    },
+    "jiezhen": {
+      "id": "jiezhen_snake_ridge_rescue",
+      "heroId": "jiezhen",
+      "requiredChapter": 7,
+      "minLevel": 11,
+      "levelOffset": 2,
+      "title": "蛇岭接索",
+      "location": "登州断崖",
+      "bg": "/assets/environments/boar_forest.png",
+      "objective": "在被官军封死的山岭上重搭索桥，接出猎户与被困乡民。",
+      "readyText": "断崖两岸都有官军火把，桥索却被提前割断。解珍必须借崖壁与夜色摸过去，把第一条绳送到对岸。",
+      "rule": {
+        "id": "two_headed_snake_rope",
+        "name": "双头接索",
+        "icon": "link",
+        "desc": "解珍身法提高 14%，对破甲目标伤害提高；全队开局获得护御，并额外获得 12 义气。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.14,
+            "atkPct": 0.08
+          },
+          "teamModifiers": {
+            "openingGuard": 1,
+            "startYiqi": 12,
+            "spdPct": 0.06
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "登州断崖下风急如刀，桥索被割成两截。对岸猎户护着乡民，后方官军正在放火烧林，只留下一条绝壁可以冒险。"
+        },
+        {
+          "speaker": "解珍",
+          "portrait": "jiezhen",
+          "text": "我熟悉这条崖，脚点在哪块石上都能摸出来。先把索送过去，人便一个都不会留在火里。"
+        },
+        {
+          "speaker": "解宝",
+          "portrait": "jiebao",
+          "text": "你搭索，我守崖口。等绳绷紧，我第一个过去接人。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "解珍",
+          "portrait": "jiezhen",
+          "text": "索桥接好了，猎户与乡民都过岸。官军只看见空崖，不知道这条旧猎道从此归所有人共用。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "解珍把最后一枚铁钩钉在岩壁上。绳结旁留着解宝的新刀痕，两兄弟没有多说什么，只并肩走向下一处火把。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "archer",
+          "row": 0
+        },
+        {
+          "id": "runner",
+          "row": 1
+        },
+        {
+          "id": "instructor",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.07,
+      "enemyModifiers": {
+        "spdPct": 0.12,
+        "hpPct": 0.08
+      },
+      "reward": {
+        "copper": 1320,
+        "xp": 850,
+        "item": "ridge_cloak"
+      }
+    },
+    "jiebao": {
+      "id": "jiebao_scorpion_rope_bridge",
+      "heroId": "jiebao",
+      "requiredChapter": 7,
+      "minLevel": 11,
+      "levelOffset": 2,
+      "title": "一索两命",
+      "location": "登州火崖",
+      "bg": "/assets/environments/zhujiazhuang_snow_night.png",
+      "objective": "守住被火势截断的崖口，接回解珍并让最后一批乡民撤出。",
+      "readyText": "火从林底烧上山脊，索桥只剩一根主绳。解宝这一头必须顶住官军，另一头还要替兄长留住可以落脚的结。",
+      "rule": {
+        "id": "scorpion_rope_bridge",
+        "name": "双尾护索",
+        "icon": "shield",
+        "desc": "解宝护甲与攻击提高 12%，反击附带破甲；全队生命提高 8%，开局获得护御。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.12,
+            "atkPct": 0.1
+          },
+          "teamModifiers": {
+            "hpPct": 0.08,
+            "openingGuard": 1
+          },
+          "counterChance": 0.14
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "山火沿着旧猎道烧上崖顶，解珍还在对岸接最后一批乡民。官军从下方射断两根副索，只剩主绳在风里绷得发响。"
+        },
+        {
+          "speaker": "解宝",
+          "portrait": "jiebao",
+          "text": "副索断了还有主索。兄长在那边接人，我在这边守结，谁也别想把这根绳再割一次。"
+        },
+        {
+          "speaker": "李应",
+          "portrait": "liying",
+          "text": "粮车已到崖下。你守一刻，我便把乡民多送走一车。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "解宝",
+          "portrait": "jiebao",
+          "text": "最后一车走了，兄长也回来了。主索还系着，咱们兄弟便都还有路。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "解宝把烧焦的副索缠在护胸上，转身与解珍一同截断追兵的山道。火光照亮两根并排的脚印，一直通向梁山。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "zhu_guard",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.08,
+      "enemyModifiers": {
+        "atkPct": 0.1,
+        "hpPct": 0.12
+      },
+      "reward": {
+        "copper": 1320,
+        "xp": 850,
+        "item": "hunter_rope_armor"
+      }
+    },
+    "yangxiong": {
+      "id": "yangxiong_nameless_writ",
+      "heroId": "yangxiong",
+      "requiredChapter": 7,
+      "minLevel": 11,
+      "levelOffset": 2,
+      "title": "朱笔无姓",
+      "location": "蓟州牢城",
+      "bg": "/assets/environments/boar_forest.png",
+      "objective": "夺回未改完的死囚名册，护住仍被锁在牢中的证人。",
+      "readyText": "牢城最后一盏灯还亮着，师爷正在把活人的名字改成死囚。杨雄握刀站在门外，这一次要审的是写判词的人。",
+      "rule": {
+        "id": "nameless_writ",
+        "name": "判词问心",
+        "icon": "gavel",
+        "desc": "杨雄护甲提高 12%，反击率提高 14%；反击破甲后，全队获得 8 义气。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.12
+          },
+          "counterChance": 0.14,
+          "counterArmorBreakChance": 0.5,
+          "counterTeamYiqi": 8
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "蓟州牢城封了内外两道门。师爷把死囚名册铺在灯下，只要再补上三个名字，天亮前就没人知道这些人曾经活过。"
+        },
+        {
+          "speaker": "杨雄",
+          "portrait": "yangxiong",
+          "text": "我替这座牢城握了多年刀，今日才发现最难断的不是人的命，是这张纸凭什么替人写命。"
+        },
+        {
+          "speaker": "石秀",
+          "portrait": "shixiu",
+          "text": "兄长审纸，我翻墙拿人。谁敢烧名册，我就先把他从火盆边拖出来。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "杨雄",
+          "portrait": "yangxiong",
+          "text": "名册留下了，活着的人也留下了。往后梁山若有判词，也得让被判的人先开口。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "杨雄把官印投进雪水，朱笔则在名册末页添上第一行证词。牢城门外，天边已经泛白。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "zhu_guard",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.06,
+      "enemyModifiers": {
+        "defPct": 0.1,
+        "atkPct": 0.06
+      },
+      "reward": {
+        "copper": 1260,
+        "xp": 820,
+        "item": "jizhou_falchion"
+      }
+    },
+    "shixiu": {
+      "id": "shixiu_rooftop_lantern",
+      "heroId": "shixiu",
+      "requiredChapter": 7,
+      "minLevel": 11,
+      "levelOffset": 2,
+      "title": "屋脊孤灯",
+      "location": "祝家庄盘陀巷",
+      "bg": "/assets/environments/zhujiazhuang_snow_night.png",
+      "objective": "从屋脊潜入盘陀巷，救出被当作诱饵的乡民与传信老人。",
+      "readyText": "整条巷子只留一盏灯，灯下却没有一个人。石秀知道那不是空门，而是祝家军等他跳下去的伏口。",
+      "rule": {
+        "id": "rooftop_desperation",
+        "name": "三郎越脊",
+        "icon": "wind",
+        "desc": "石秀攻击提高 10%，可越过阵位追击；生命越低伤害越高，击杀后恢复生命并获护御。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.1,
+            "spdPct": 0.08
+          },
+          "ignoreRow": true,
+          "lowHpDamagePct": 0.45,
+          "onKill": {
+            "healPct": 0.1,
+            "guard": 1
+          }
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "盘陀巷的雪地上只有一串脚印，通向那盏孤灯。两侧屋脊后却不断有甲片轻撞，像一群人刻意压低了呼吸。"
+        },
+        {
+          "speaker": "石秀",
+          "portrait": "shixiu",
+          "text": "他们想我看灯，我偏看灯后没有脚印的墙。先上屋，再从他们头顶走。"
+        },
+        {
+          "speaker": "扈三娘",
+          "portrait": "husanniang",
+          "text": "我替你封住巷口。若灯下有人，先救人；若只有刀，便把伏兵引到我这边。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "石秀",
+          "portrait": "shixiu",
+          "text": "人都从后墙走了。孤灯留给他们，正好照一照自己扑空的样子。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "灯在雪里烧到天亮。石秀最后一个落地，短刀没有沾血，墙头却多了七道被索镖磨出的白痕。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "zhu_guard",
+          "row": 0
+        },
+        {
+          "id": "archer",
+          "row": 2
+        },
+        {
+          "id": "runner",
+          "row": 1
+        }
+      ],
+      "enemyScale": 1.05,
+      "enemyModifiers": {
+        "spdPct": 0.12,
+        "atkPct": 0.06
+      },
+      "reward": {
+        "copper": 1260,
+        "xp": 820,
+        "item": "desperate_saber"
+      }
+    },
+    "sunli": {
+      "id": "sunli_snow_gate",
+      "heroId": "sunli",
+      "requiredChapter": 7,
+      "minLevel": 11,
+      "levelOffset": 2,
+      "title": "雪门不退",
+      "location": "登州北军门",
+      "bg": "/assets/environments/zhujiazhuang_snow_night.png",
+      "objective": "守住登州北军门，让解家兄弟与山中百姓全部撤出。",
+      "readyText": "北门只能容两人并行，追兵却有整营。孙立把长枪横在门槛上，身后每一盏灯都还照着正在撤离的人。",
+      "rule": {
+        "id": "dengzhou_snow_gate",
+        "name": "铁门双守",
+        "icon": "shield-check",
+        "desc": "全队护甲提高 8%，开局获得 2 层护御；孙立反击率提高 16%，反击额外削减护势。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.14,
+            "atkPct": 0.06
+          },
+          "teamModifiers": {
+            "defPct": 0.08,
+            "openingGuard": 2
+          },
+          "counterChance": 0.16,
+          "counterPoise": 14
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "登州北门的门闩已经被锯开一半，守军却仍在外列阵。孙立知道他们不是不想放人，而是怕那道追捕军令。"
+        },
+        {
+          "speaker": "孙立",
+          "portrait": "sunli",
+          "text": "军令追的是我，百姓只是从自己家门口走出去。你们若还认我这个提辖，便先让路。"
+        },
+        {
+          "speaker": "解珍",
+          "portrait": "jiezhen",
+          "text": "山里人已经过半。兄长守门，我在门后接最后一批伤者。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "孙立",
+          "portrait": "sunli",
+          "text": "门还在，军号没了。这样也好，往后谁想关门，得先问门外的人。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "孙立把残缺的门闩扛上梁山。雪落进旧衙门口，留下一串没有追兵的脚印。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "instructor",
+          "row": 0
+        },
+        {
+          "id": "zhu_guard",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.08,
+      "enemyModifiers": {
+        "atkPct": 0.1,
+        "hpPct": 0.08
+      },
+      "reward": {
+        "copper": 1320,
+        "xp": 850,
+        "item": "sick_yuchi_polearm"
+      }
+    },
+    "yuehe": {
+      "id": "yuehe_one_flute_river",
+      "heroId": "yuehe",
+      "requiredChapter": 7,
+      "minLevel": 11,
+      "levelOffset": 2,
+      "title": "一笛开江",
+      "location": "登州水门",
+      "bg": "/assets/environments/liangshan_water_fort.png",
+      "objective": "以旧曲传令，打开水门并掩护船户撤离。",
+      "readyText": "水门守军只认鼓点，船户只认旧曲。乐和必须在一首曲子里同时告诉两边：什么时候开闸，什么时候停桨。",
+      "rule": {
+        "id": "one_flute_opens_river",
+        "name": "夜调开江",
+        "icon": "wind",
+        "desc": "全队开局获得 18 义气与鼓舞；乐和每次补气，为生命最低的队友施加护御。",
+        "effects": {
+          "protagonist": {
+            "spdPct": 0.12
+          },
+          "teamModifiers": {
+            "startYiqi": 18
+          },
+          "teamOpeningInspiration": 1,
+          "supportLowestGuard": 1
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "登州水门的闸索藏在鼓楼后，守军以三长两短换岗。几十条渔船停在暗处，只等一个不会被听错的信号。"
+        },
+        {
+          "speaker": "乐和",
+          "portrait": "yuehe",
+          "text": "鼓点太硬，传不出巷子。我吹旧调，三拍急是开闸，两拍缓是停桨。"
+        },
+        {
+          "speaker": "戴宗",
+          "portrait": "daizong",
+          "text": "我替你送谱到每条船。你只管吹到最后一艘出去。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "乐和",
+          "portrait": "yuehe",
+          "text": "最后一艘走远了。今夜这曲子不替官军催船，只替回家的人报路。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "铁笛在晨雾里停了。水门仍半开着，守军却只顾寻找那支根本没有出现过的船队。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "archer",
+          "row": 0
+        },
+        {
+          "id": "zhu_guard",
+          "row": 1
+        },
+        {
+          "id": "runner",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.05,
+      "enemyModifiers": {
+        "spdPct": 0.1,
+        "defPct": 0.08
+      },
+      "reward": {
+        "copper": 1220,
+        "xp": 800,
+        "item": "iron_flute"
+      }
+    },
+    "xiaorang": {
+      "id": "xiaorang_ink_sea",
+      "heroId": "xiaorang",
+      "requiredChapter": 8,
+      "minLevel": 13,
+      "levelOffset": 3,
+      "title": "墨海换名",
+      "location": "大名府文书库",
+      "bg": "/assets/environments/damingfu_lantern_night.png",
+      "objective": "夺回被篡改的百姓名册，把替梁山开过门的人从死籍中改回活名。",
+      "readyText": "文书库里堆着三箱名册，最上面一本已经写满死字。萧让要在守军合围前找出原始底册，让每一个名字重新有来处。",
+      "rule": {
+        "id": "ink_sea_rewrite",
+        "name": "落墨改命",
+        "icon": "scroll-text",
+        "desc": "萧让施加的负面状态延长 2 回合；全队获得 12 义气，敌方负面状态延长 1 回合。",
+        "effects": {
+          "protagonist": {
+            "atkPct": 0.08,
+            "spdPct": 0.08
+          },
+          "teamModifiers": {
+            "yiqiPct": 0.12,
+            "startYiqi": 12
+          },
+          "statusDurationBonus": 2
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "大名府文书库灯火通明。三箱名册里，一本盖着县令私印，一本没有页码，最旧的一本则被墨汁整页涂黑。"
+        },
+        {
+          "speaker": "萧让",
+          "portrait": "xiaorang",
+          "text": "死字可以后添，纸的年份却改不了。先找底册，再让他们自己念出被涂掉的名字。"
+        },
+        {
+          "speaker": "蒋敬",
+          "portrait": "jiangjing",
+          "text": "我替你算守军巡到这里的时辰。三箱不必全搬，只拿能救人的那几页。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "萧让",
+          "portrait": "xiaorang",
+          "text": "底册已经抄出三份。官印能改一页纸，改不了所有活着的人一起记得的名字。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "文书库的灯被风吹灭。雪地上，抄本沿着不同城门流向整座大名府。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "daming_captain",
+          "row": 0
+        },
+        {
+          "id": "archer",
+          "row": 2
+        },
+        {
+          "id": "runner",
+          "row": 1
+        }
+      ],
+      "enemyScale": 1.07,
+      "enemyModifiers": {
+        "defPct": 0.1,
+        "hpPct": 0.1
+      },
+      "reward": {
+        "copper": 1380,
+        "xp": 900,
+        "item": "sacred_brush"
+      }
+    },
+    "jiangjing": {
+      "id": "jiangjing_open_ledger",
+      "heroId": "jiangjing",
+      "requiredChapter": 8,
+      "minLevel": 13,
+      "levelOffset": 3,
+      "title": "总账开门",
+      "location": "梁山泊义仓",
+      "bg": "/assets/environments/liangshan_water_fort.png",
+      "objective": "守住义仓与总账，阻止官军细作把赈粮伪造成梁山私产。",
+      "readyText": "义仓门外全是赶来领粮的百姓，门内却混进了持假令的官军细作。蒋敬必须在账册、粮袋和人命之间守住同一杆秤。",
+      "rule": {
+        "id": "grand_ledger_open",
+        "name": "一册清阵",
+        "icon": "scroll-text",
+        "desc": "开战时敌军护势已削减 12%；全队护势伤害提高 16%，蒋敬每次补气为全队施加护御。",
+        "effects": {
+          "protagonist": {
+            "defPct": 0.1,
+            "atkPct": 0.06
+          },
+          "teamModifiers": {
+            "poisePct": 0.16,
+            "enemyStartPoisePct": 0.12
+          },
+          "supportTeamGuard": 1
+        }
+      },
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "义仓前挤满领冬粮的人。蒋敬发现三袋军粮的封口换了线，账册上的签押也来自同一只假手。"
+        },
+        {
+          "speaker": "蒋敬",
+          "portrait": "jiangjing",
+          "text": "粮能分错，账不能写错。先把门守住，再当着所有人把每一笔来处念清。"
+        },
+        {
+          "speaker": "萧让",
+          "portrait": "xiaorang",
+          "text": "假令给我。我要让门外百姓看见，纸上哪些字是真的，哪些人又想拿字当刀。"
+        }
+      ],
+      "outro": [
+        {
+          "speaker": "蒋敬",
+          "portrait": "jiangjing",
+          "text": "账清了，粮也分完了。剩下一袋原是官军私藏，明日按户补给大家。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "义仓门重新打开。蒋敬把总账摊在雪光下，最后一列没有欠债者，只有每个领粮人的名字。"
+        }
+      ],
+      "enemies": [
+        {
+          "id": "daming_captain",
+          "row": 0
+        },
+        {
+          "id": "instructor",
+          "row": 1
+        },
+        {
+          "id": "archer",
+          "row": 2
+        }
+      ],
+      "enemyScale": 1.08,
+      "enemyModifiers": {
+        "hpPct": 0.12,
+        "atkPct": 0.08
+      },
+      "reward": {
+        "copper": 1420,
+        "xp": 920,
+        "item": "liangshan_grand_ledger"
+      }
+    }
   }
 }

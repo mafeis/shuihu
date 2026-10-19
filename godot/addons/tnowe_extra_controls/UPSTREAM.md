@@ -1,0 +1,12 @@
+# Vendored UI component
+
+don-tnowe/godot-extra-controls
+c95a3b79d11c89646345b6e892eda94bb310bae8
+godot/addons/tnowe_extra_controls/LICENSE.md
+f01669340ec14ef5af1952eeeb8df1981710fadf8c7d43120f85c098498160c4
+godot/addons/tnowe_extra_controls/plugin.cfg
+6655006d2db8a003d086e5bc2eed4f776ff5a345c1d536b0869f10f4065f4622
+godot/addons/tnowe_extra_controls/elements/properties_box.gd
+5c3a832e30752868969c14855d82a256da69504d67526ccde2f0569e535284ea
+godot/addons/tnowe_extra_controls/elements/unfolded_option_button.gd
+aa8d7f76aee9b2b6732a983f62b2936cf254d036f1af711c903d3854abd42413

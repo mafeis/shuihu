@@ -236,6 +236,7 @@ const payload = {
   stage_recruits: stageRecruits,
   chronicle_recruits: chronicleRecruits,
   hero_quests: data.HERO_QUESTS,
+  hero_legends: data.HERO_LEGENDS,
 };
 
 await writeFile(

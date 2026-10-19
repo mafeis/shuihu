@@ -39,10 +39,36 @@ func _run() -> void:
 	_check(ending_state.resolve_ending() == "order", "the ending should follow the strongest campaign alignment")
 	_check(ending_state.endings_unlocked.has("order"), "resolved endings should be archived")
 	main.state.quest_progress = {"linchong": {"wins": 22, "damage": 4200, "ultimates": 2}}
-	main.state.current_chapter = 0
-	var quest_result: Dictionary = main.state.claim_hero_quest("linchong", "linchong_old_tassel")
+	main.state.current_chapter = 5
+	main.state.quest_progress.qinming = {"wins": 22, "damage": 4200, "ultimates": 2}
+	main.state.recruited.append("qinming")
+	main.state.roster.qinming = {"level": 1, "xp": 0, "equipment": {}}
+	var recruit_before: int = main.state.recruited.size()
+	var quest_result: Dictionary = main.state.claim_hero_quest("qinming", "qinming_thunder_road")
 	_check(quest_result.ok, "completed hero quests should be claimable")
-	_check(main.state.quest_claimed.has("linchong_old_tassel"), "hero quest claims should be persisted")
+	_check(main.state.quest_claimed.has("qinming_thunder_road"), "hero quest claims should be persisted")
+	_check(main.state.recruited.size() > recruit_before, "chronicle completion should recruit new heroes")
+	_check(quest_result.get("heroes", []).size() > 0, "chronicle completion should report newly recruited heroes")
+	main.state.current_chapter = 2
+	main.state.roster.linchong.level = 3
+	main.state.quest_claimed.assign(["linchong_old_tassel", "linchong_imperial_seal", "linchong_temple_after"])
+	_check(main.state.hero_legend_ready("linchong"), "all chronicle chapters and level should unlock the hero legend battle")
+	var legend: Dictionary = main.state.hero_legend("linchong")
+	_check(not legend.is_empty() and not legend.enemies.is_empty(), "hero legends should load their own battle setup")
+	main.state.team.assign(["linchong", "", ""])
+	main.start_hero_legend("linchong")
+	_check(main.legend_running and main.battle != null, "the native chronicle should open its legend battle")
+	_check(main.battle.enemies.size() == legend.enemies.size(), "the legend battle should use its own enemy formation")
+	for enemy in main.battle.enemies:
+		enemy.hp = 0
+	main.battle.battle_finished = true
+	main.battle.victory = true
+	var copper_before: int = main.state.copper
+	main._finish_legend_victory()
+	_check(main.state.legend_claimed.has(str(legend.id)), "legend victories should be persisted")
+	_check(main.state.copper > copper_before, "legend victories should award their own loot")
+	main.state.roster.linchong.level = 2
+	_check(not main.state.hero_legend_ready("linchong"), "hero legends should respect the level gate")
 	main.state.delete_save()
 	_check(not main.state.has_save(), "deleting a campaign should remove current and backup saves")
 	main.music_player.stop()

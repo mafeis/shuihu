@@ -29,12 +29,14 @@ var ending := ""
 var best_arena_wave := 0
 var quest_progress: Dictionary = {}
 var quest_claimed: Array[String] = []
+var legend_claimed: Array[String] = []
 var statistics := {"battles_won": 0, "enemies_defeated": 0}
 var settings := {
 	"music_volume": 0.65,
 	"sfx_volume": 0.8,
-	"auto_battle": true,
+	"battle_hints": true,
 	"reduced_motion": false,
+	"fullscreen": false,
 }
 
 
@@ -352,10 +354,35 @@ func claim_hero_quest(hero_id: String, quest_id: String) -> Dictionary:
 	var reward: Dictionary = quest.get("reward", {})
 	copper += int(reward.get("copper", 0))
 	var levels := grant_experience(hero_id, int(reward.get("xp", 0)))
+	var unlocked_heroes: Array[String] = []
 	var recruit_map := {"qinming": "shijin", "zhangqing": "guansheng", "ruanxiaoqi": "lijun", "huyanzhuo": "lingzhen", "liying": "leiheng", "shixiu": "yangxiong", "xiaorang": "yuehe"}
 	if recruit_map.has(hero_id):
-		recruit(data.get("chronicle_recruits", {}).get(recruit_map[hero_id], []))
-	return {"ok": true, "levels": levels, "reward": reward}
+		var recruits: Array = data.get("chronicle_recruits", {}).get(recruit_map[hero_id], [])
+		for new_hero_id in recruits:
+			if not recruited.has(str(new_hero_id)):
+				unlocked_heroes.append(str(new_hero_id))
+		recruit(recruits)
+	return {"ok": true, "levels": levels, "reward": reward, "heroes": unlocked_heroes}
+
+
+func hero_legend(hero_id: String) -> Dictionary:
+	return data.get("hero_legends", {}).get(hero_id, {})
+
+
+func hero_legend_progress(hero_id: String) -> int:
+	var total := 0
+	for quest in data.get("hero_quests", {}).get(hero_id, []):
+		if quest_claimed.has(str(quest.get("id", ""))):
+			total += 1
+	return total
+
+
+func hero_legend_ready(hero_id: String) -> bool:
+	var legend := hero_legend(hero_id)
+	if legend.is_empty() or hero_legend_progress(hero_id) < 3:
+		return false
+	var level := int(derive_hero_stats(hero_id).get("level", 1))
+	return current_chapter + 1 >= int(legend.get("requiredChapter", 999)) and level >= int(legend.get("minLevel", 1))
 
 
 func set_team_slot(slot: int, hero_id: String) -> bool:
@@ -488,6 +515,7 @@ func save() -> void:
 		"best_arena_wave": best_arena_wave,
 		"quest_progress": quest_progress,
 		"quest_claimed": quest_claimed,
+		"legend_claimed": legend_claimed,
 		"alignment": alignment,
 		"choices": choices,
 		"rewards_granted": rewards_granted,
@@ -569,11 +597,17 @@ func _load_from_path(path: String) -> bool:
 	best_arena_wave = maxi(0, int(parsed.get("best_arena_wave", 0)))
 	quest_progress = parsed.get("quest_progress", {})
 	quest_claimed.assign(parsed.get("quest_claimed", []))
+	legend_claimed.assign(parsed.get("legend_claimed", []))
 	alignment.merge(parsed.get("alignment", {}), true)
 	choices = parsed.get("choices", {})
 	rewards_granted = parsed.get("rewards_granted", {})
 	statistics.merge(parsed.get("statistics", {}), true)
 	settings.merge(parsed.get("settings", {}), true)
+	settings.erase("auto_battle")
+	if not settings.has("battle_hints"):
+		settings.battle_hints = true
+	if not settings.has("fullscreen"):
+		settings.fullscreen = false
 	return true
 
 

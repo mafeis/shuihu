@@ -26,10 +26,24 @@ func _run() -> void:
 		printerr("Visual screenshot setup failed: text input missing")
 		get_tree().quit(1)
 		return
-	if not main.native_name_input.available:
-		player_name.text = "替天行道"
-		await _capture("settings_cjk")
+	player_name.text = "替天行道"
+	await _capture("settings_cjk")
 	main.close_settings()
+	main.show_chronicles()
+	await _capture("chronicles")
+	main._dismiss_menu()
+	main.screen_root.mouse_filter = Control.MOUSE_FILTER_PASS
+	main.chronicle_hero_id = "linchong"
+	main.state.current_chapter = 2
+	main.state.roster.linchong.level = 3
+	main.state.quest_claimed.assign(["linchong_old_tassel", "linchong_imperial_seal", "linchong_temple_after"])
+	main.show_chronicles()
+	await _capture("chronicles_legend")
+	main._dismiss_menu()
+	main.screen_root.mouse_filter = Control.MOUSE_FILTER_PASS
+	main.start_hero_legend("linchong")
+	await _capture("legend_battle")
+	main.legend_running = false
 	main.new_game()
 	await _capture("map")
 	main.enter_chapter()
@@ -52,14 +66,16 @@ func _run() -> void:
 	main.state.camp_built.append("tower")
 	main.show_camp_building("farmland")
 	await _capture("camp_detail")
-	main.menu_layer.visible = false
+	main._dismiss_menu()
+	main.screen_root.mouse_filter = Control.MOUSE_FILTER_PASS
 	main.show_roster()
 	await _capture("roster")
 	main.state.recruit(["luzhishen"])
 	main.state.team.assign(["linchong", "luzhishen", ""])
 	main.show_equipment("linchong")
 	await _capture("equipment")
-	main.menu_layer.visible = false
+	main._dismiss_menu()
+	main.screen_root.mouse_filter = Control.MOUSE_FILTER_PASS
 	if not main.state.camp_built.has("arena"):
 		main.state.camp_built.append("arena")
 	main.show_arena()
