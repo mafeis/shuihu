@@ -16750,6 +16750,8 @@ html[data-motion="reduced"] .ending-cinematic {
   .roster-screen .hero-card footer {
     min-height: 30px;
     padding: 0 10px;
+    background: #0b1314;
+    box-shadow: 0 -7px 16px rgba(4, 8, 9, 0.42);
   }
 
   .roster-screen .hero-card footer .stat-line {

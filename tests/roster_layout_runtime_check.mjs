@@ -72,6 +72,15 @@ async function measureRoster(page) {
     };
     const cards = [...document.querySelectorAll(".hero-card")].map((card) => {
       const box = card.getBoundingClientRect();
+      const hit = card.querySelector(".hero-card-hit");
+      const footer = card.querySelector("footer");
+      const hitStyle = hit ? getComputedStyle(hit) : null;
+      const footerStyle = footer ? getComputedStyle(footer) : null;
+      const footerBackground = footerStyle?.backgroundColor || "";
+      const backgroundAlpha = Number(
+        footerBackground.match(/rgba?\([^,]+,[^,]+,[^,]+(?:,\s*([^)]+))?\)/)?.[1] ??
+          1,
+      );
       return {
         top: Math.round(box.top),
         right: Math.round(box.right),
@@ -81,6 +90,10 @@ async function measureRoster(page) {
         clientWidth: card.clientWidth,
         scrollHeight: card.scrollHeight,
         clientHeight: card.clientHeight,
+        hitZIndex: Number(hitStyle?.zIndex || 0),
+        footerZIndex: Number(footerStyle?.zIndex || 0),
+        footerBackground,
+        footerBackgroundOpaque: backgroundAlpha === 1,
       };
     });
     const actionButtons = [
@@ -190,6 +203,17 @@ try {
           card.right <= report.gallery.right + 1,
         `${name}: hero card escapes gallery`,
       );
+      if (width > 920) {
+        assert.equal(
+          card.footerBackgroundOpaque,
+          true,
+          `${name}: hero stats need an opaque background ${JSON.stringify(card)}`,
+        );
+        assert.ok(
+          card.footerZIndex > card.hitZIndex,
+          `${name}: hero stats are not layered above the portrait ${JSON.stringify(card)}`,
+        );
+      }
     }
 
     if (width > 920) {
