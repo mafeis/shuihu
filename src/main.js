@@ -100,6 +100,7 @@ import {
   discoverHeroBonds,
   discoverChainFormations,
   equipItem,
+  equipmentMatchesCategory,
   evaluateChapterMedals,
   grantExperience,
   hasSavedGame,
@@ -208,6 +209,48 @@ let selectedEquipmentHero = "linchong";
 let selectedCodexHero = "linchong";
 let selectedQuestHero = "linchong";
 let codexArchives = { bonds: false, chains: false };
+let equipmentCategory = "all";
+let equipmentPathFilter = "all";
+let equipmentPage = 0;
+let rosterPathFilter = "all";
+let rosterPage = 0;
+
+const EQUIPMENT_CATEGORIES = [
+  { id: "all", name: "全部", icon: "layout-grid" },
+  { id: "weapon", name: "兵刃", icon: "swords" },
+  { id: "armor", name: "护甲", icon: "shield" },
+  { id: "token", name: "随身物", icon: "gem" },
+];
+
+const HERO_GROUPS = [
+  { id: "all", name: "全路数" },
+  ...Object.values(PATHS).map((path) => ({
+    id: path.id,
+    name: path.name,
+    color: path.color,
+  })),
+];
+
+function pageItems(items, page, pageSize) {
+  const pages = Math.max(1, Math.ceil(items.length / pageSize));
+  const current = Math.min(Math.max(0, page), pages - 1);
+  return {
+    current,
+    pages,
+    items: items.slice(current * pageSize, (current + 1) * pageSize),
+  };
+}
+
+function renderPagination(page, directionAction, label) {
+  if (page.pages <= 1) return "";
+  return `
+    <div class="list-pagination" aria-label="${label}">
+      <button class="icon-button" data-action="${directionAction}" data-direction="-1" aria-label="上一页" ${page.current === 0 ? "disabled" : ""}>${icon("chevron-left", 17)}</button>
+      <span>第 ${page.current + 1} / ${page.pages} 页</span>
+      <button class="icon-button" data-action="${directionAction}" data-direction="1" aria-label="下一页" ${page.current >= page.pages - 1 ? "disabled" : ""}>${icon("chevron-right", 17)}</button>
+    </div>
+  `;
+}
 
 function createBattleUi() {
   return {
@@ -2281,6 +2324,12 @@ function renderRoster() {
   const detail = state.roster[detailId];
   const detailStats = deriveHeroStats(state, detailId);
   const doctrine = heroDoctrine(state, detailId);
+  const filteredHeroes = state.recruited.filter(
+    (heroId) =>
+      rosterPathFilter === "all" || HEROES[heroId].path === rosterPathFilter,
+  );
+  const roster = pageItems(filteredHeroes, rosterPage, 16);
+  rosterPage = roster.current;
   return `
     <div class="app-screen roster-screen">
       ${topbar("roster")}
@@ -2296,8 +2345,16 @@ function renderRoster() {
             <button class="button ghost" data-action="auto-team">${icon("wand-sparkles", 18)}<span>军师荐阵</span></button>
           </div>
         </section>
-        <section class="hero-gallery">
-          ${HERO_ORDER.map((heroId) => heroCard(heroId, { showLocked: true })).join("")}
+        <section class="roster-list-panel">
+          <div class="roster-filters" aria-label="按路数筛选已结义好汉">
+            ${HERO_GROUPS.map(
+              (group) => `<button class="${group.id === rosterPathFilter ? "is-selected" : ""}" data-action="filter-roster-path" data-path="${group.id}" aria-pressed="${group.id === rosterPathFilter}" ${group.color ? `style="--path-color:${group.color}"` : ""}>${group.name}<small>${group.id === "all" ? state.recruited.length : state.recruited.filter((heroId) => HEROES[heroId].path === group.id).length}</small></button>`,
+            ).join("")}
+          </div>
+          <div class="hero-gallery">
+            ${roster.items.map((heroId) => heroCard(heroId)).join("") || `<div class="empty-state">${icon("users", 30)}<b>此路暂无好汉</b><p>继续推进聚义帖，会有新的好汉加入。</p></div>`}
+          </div>
+          ${renderPagination(roster, "roster-page", "名册分页")}
         </section>
         <aside class="hero-dossier">
           <div class="dossier-art">${heroKeyart(detailId, "")}</div>
@@ -2486,6 +2543,16 @@ function renderEquipment() {
   const entry = state.roster[heroId];
   const stats = deriveHeroStats(state, heroId);
   const items = inventoryItems(state);
+  const visibleItems = items.filter(({ item }) =>
+    equipmentMatchesCategory(item.id, equipmentCategory),
+  );
+  const inventoryPage = pageItems(visibleItems, equipmentPage, 5);
+  equipmentPage = inventoryPage.current;
+  const visibleHeroes = state.recruited.filter(
+    (id) =>
+      equipmentPathFilter === "all" ||
+      HEROES[id].path === equipmentPathFilter,
+  );
   return `
     <div class="app-screen equipment-screen">
       ${topbar("roster", "nav-roster")}
@@ -2495,7 +2562,7 @@ function renderEquipment() {
           <div class="equipment-wallet">${icon("coins", 18)}<b>${state.inventory.copper}</b><span>贯</span></div>
         </section>
         <section class="equipment-hero-tabs">
-          ${state.recruited
+          ${visibleHeroes
             .map(
               (id) => `
                 <button class="${id === heroId ? "is-selected" : ""}" data-action="select-equipment-hero" data-hero="${id}">
@@ -2504,6 +2571,20 @@ function renderEquipment() {
               `,
             )
             .join("")}
+        </section>
+        <section class="equipment-filters" aria-label="装备与武将分类">
+          <div class="equipment-filter-group">
+            <small>武备分类</small>
+            ${EQUIPMENT_CATEGORIES.map(
+              (category) => `<button class="${equipmentCategory === category.id ? "is-selected" : ""}" data-action="filter-equipment-item" data-slot="${category.id}" aria-pressed="${equipmentCategory === category.id}">${icon(category.icon, 14)}${category.name}</button>`,
+            ).join("")}
+          </div>
+          <div class="equipment-filter-group">
+            <small>将星路数</small>
+            ${HERO_GROUPS.map(
+              (group) => `<button class="${equipmentPathFilter === group.id ? "is-selected" : ""}" data-action="filter-equipment-path" data-path="${group.id}" aria-pressed="${equipmentPathFilter === group.id}">${group.name}<em>${group.id === "all" ? state.recruited.length : state.recruited.filter((id) => HEROES[id].path === group.id).length}</em></button>`,
+            ).join("")}
+          </div>
         </section>
         <section class="equipment-main">
           <article class="equipped-panel">
@@ -2538,13 +2619,13 @@ function renderEquipment() {
           </article>
           <aside class="inventory-panel">
             <div class="section-heading compact">
-              <div><p class="eyebrow">梁山行囊</p><h2>可用装备</h2></div>
-              <span>${items.length} 种</span>
+              <div><p class="eyebrow">梁山行囊 · ${hero.name}</p><h2>${EQUIPMENT_CATEGORIES.find((category) => category.id === equipmentCategory)?.name || "全部"}武备</h2></div>
+              <span>${visibleItems.length} 种</span>
             </div>
             <div class="inventory-list">
               ${
-                items.length
-                  ? items
+                inventoryPage.items.length
+                  ? inventoryPage.items
                       .map(
                         ({ item, amount }) => `
                           <button class="inventory-item" data-action="equip-item" data-item="${item.id}">
@@ -2559,9 +2640,10 @@ function renderEquipment() {
                         `,
                       )
                       .join("")
-                  : `<div class="empty-state">${icon("package-open", 30)}<b>行囊空空</b><p>战斗与章节奖励会获得新装备。</p></div>`
+                  : `<div class="empty-state">${icon("package-open", 30)}<b>此类暂无装备</b><p>切换装备分类或武将路数查看其他武备。</p></div>`
               }
             </div>
+            ${renderPagination(inventoryPage, "equipment-page", "装备分页")}
           </aside>
         </section>
       </main>
@@ -6408,6 +6490,9 @@ function handleAction(action, element) {
     }
     case "equipment-hero":
       selectedEquipmentHero = element.dataset.hero;
+      equipmentCategory = "all";
+      equipmentPathFilter = "all";
+      equipmentPage = 0;
       setScreen("equipment");
       return;
     case "formation-hero":
@@ -6458,6 +6543,63 @@ function handleAction(action, element) {
     }
     case "select-equipment-hero":
       selectedEquipmentHero = element.dataset.hero;
+      equipmentCategory = "all";
+      equipmentPage = 0;
+      sound.click();
+      render();
+      return;
+    case "filter-equipment-item":
+      equipmentCategory = EQUIPMENT_CATEGORIES.some(
+        (category) => category.id === element.dataset.slot,
+      )
+        ? element.dataset.slot
+        : "all";
+      equipmentPage = 0;
+      sound.click();
+      render();
+      return;
+    case "filter-equipment-path": {
+      const pathId = element.dataset.path;
+      equipmentPathFilter = ["all", ...Object.keys(PATHS)].includes(pathId)
+        ? pathId
+        : "all";
+      equipmentPage = 0;
+      if (
+        equipmentPathFilter !== "all" &&
+        HEROES[selectedEquipmentHero]?.path !== equipmentPathFilter
+      ) {
+        selectedEquipmentHero =
+          state.recruited.find(
+            (heroId) => HEROES[heroId].path === equipmentPathFilter,
+          ) || selectedEquipmentHero;
+      }
+      sound.click();
+      render();
+      return;
+    }
+    case "equipment-page":
+      equipmentPage += Number(element.dataset.direction) || 0;
+      sound.click();
+      render();
+      return;
+    case "filter-roster-path": {
+      const pathId = element.dataset.path;
+      rosterPathFilter = ["all", ...Object.keys(PATHS)].includes(pathId)
+        ? pathId
+        : "all";
+      rosterPage = 0;
+      selectedCodexHero =
+        state.recruited.find(
+          (heroId) =>
+            rosterPathFilter === "all" ||
+            HEROES[heroId].path === rosterPathFilter,
+        ) || selectedCodexHero;
+      sound.click();
+      render();
+      return;
+    }
+    case "roster-page":
+      rosterPage += Number(element.dataset.direction) || 0;
       sound.click();
       render();
       return;

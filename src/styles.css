@@ -1901,6 +1901,90 @@ small {
   gap: 8px;
 }
 
+.roster-list-panel {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.roster-list-panel > .roster-filters,
+.roster-list-panel > .hero-gallery,
+.roster-list-panel > .list-pagination,
+.roster-list-panel > .empty-state {
+  grid-column: 1 / -1;
+}
+
+.roster-filters,
+.equipment-filter-group {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.roster-filters button,
+.equipment-filter-group button {
+  display: inline-flex;
+  min-height: 31px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid var(--ink-600);
+  border-radius: 4px;
+  color: var(--paper-400);
+  background: rgba(14, 21, 22, 0.83);
+  font-size: 0.625rem;
+}
+
+.roster-filters button:hover,
+.equipment-filter-group button:hover {
+  border-color: var(--bronze-400);
+  color: var(--paper-100);
+}
+
+.roster-filters button.is-selected,
+.equipment-filter-group button.is-selected {
+  border-color: color-mix(
+    in srgb,
+    var(--path-color, var(--bronze-300)) 58%,
+    var(--ink-600)
+  );
+  color: var(--paper-100);
+  background: rgba(142, 110, 56, 0.13);
+}
+
+.roster-filters button small,
+.equipment-filter-group button em {
+  color: var(--paper-500);
+  font-size: 0.5rem;
+  font-style: normal;
+}
+
+.list-pagination {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  color: var(--paper-500);
+  font-size: 0.5625rem;
+}
+
+.list-pagination .icon-button {
+  width: 29px;
+  height: 29px;
+  border: 1px solid var(--ink-600);
+  background: var(--ink-850);
+}
+
+.list-pagination .icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.34;
+}
+
 .hero-gallery {
   display: grid;
   align-content: start;
@@ -2555,6 +2639,34 @@ small {
   font-size: 0.5rem;
 }
 
+.equipment-filters {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 9px 11px;
+  border: 1px solid var(--ink-700);
+  border-radius: 5px;
+  background: rgba(10, 16, 17, 0.64);
+}
+
+.equipment-filter-group {
+  flex: 1 1 auto;
+}
+
+.equipment-filter-group > small {
+  margin-right: 3px;
+  color: var(--paper-500);
+  font-size: 0.5rem;
+  white-space: nowrap;
+}
+
+.equipment-filter-group button {
+  min-height: 27px;
+  padding: 0 9px;
+}
+
 .equipment-main {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
@@ -2693,7 +2805,9 @@ small {
 
 .inventory-list {
   display: grid;
-  max-height: 590px;
+  min-height: 382px;
+  max-height: 382px;
+  align-content: start;
   gap: 6px;
   overflow-y: auto;
   padding-right: 2px;
@@ -2749,6 +2863,10 @@ small {
 
 .inventory-item > svg {
   color: var(--paper-500);
+}
+
+.inventory-pagination {
+  margin-top: 6px;
 }
 
 .empty-state {
@@ -10298,7 +10416,7 @@ html[data-motion="reduced"] *::after {
   }
 
   .equipment-hero-stage {
-    height: clamp(220px, 31dvh, 300px);
+    height: clamp(190px, calc(100dvh - 620px), 240px);
   }
 
   .arena-layout {
@@ -10365,14 +10483,6 @@ html[data-motion="reduced"] *::after {
   .roster-layout,
   .codex-layout {
     width: calc(100% - 32px);
-  }
-
-  .roster-layout {
-    grid-template-columns: minmax(0, 1fr) 330px;
-  }
-
-  .hero-gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .camp-layout {
@@ -10566,10 +10676,6 @@ html[data-motion="reduced"] *::after {
 
   .roster-heading {
     align-items: flex-start;
-  }
-
-  .hero-gallery {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .hero-card {
@@ -10775,6 +10881,62 @@ html[data-motion="reduced"] *::after {
 }
 
 @media (max-width: 680px) {
+  .equipment-hero-tabs {
+    width: 100%;
+    max-width: 100%;
+    display: grid;
+    min-width: 0;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    overflow-x: visible;
+  }
+
+  .equipment-hero-tabs button {
+    min-width: 0;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    justify-items: center;
+    padding: 3px 1px;
+  }
+
+  .equipment-hero-tabs img {
+    width: 28px;
+    height: 34px;
+    grid-row: 1;
+  }
+
+  .equipment-hero-tabs span,
+  .equipment-hero-tabs small {
+    display: none;
+  }
+
+  .roster-filters {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .roster-list-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .roster-filters button {
+    min-height: 37px;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1px;
+    padding: 3px 2px;
+    font-size: 0.5625rem;
+  }
+
+  .equipment-filters {
+    padding: 8px;
+  }
+
+  .inventory-list {
+    min-height: 0;
+    max-height: none;
+  }
+
   body {
     font-size: 0.875rem;
   }
@@ -10840,7 +11002,7 @@ html[data-motion="reduced"] *::after {
   .equipment-layout,
   .quests-layout,
   .settings-layout {
-    padding-bottom: 88px;
+    padding-bottom: 115px;
   }
 
   .modal-backdrop {
@@ -11424,7 +11586,7 @@ html[data-motion="reduced"] *::after {
   .settings-layout {
     width: calc(100% - 20px);
     padding-top: 15px;
-    padding-bottom: 90px;
+    padding-bottom: 115px;
   }
 
   .formation-heading,
@@ -12150,6 +12312,13 @@ html[data-motion="reduced"] *::after {
 }
 
 @media (max-width: 380px) {
+  .roster-filters button {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.5rem;
+    white-space: nowrap;
+  }
+
   .nav-button span {
     display: none;
   }
@@ -12981,6 +13150,12 @@ html[data-motion="reduced"] *::after {
 }
 
 @media (max-width: 1180px) {
+  .equipment-filters {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
   .quests-layout {
     width: calc(100% - 32px);
     grid-template-columns: 250px minmax(0, 1fr);
@@ -13012,6 +13187,87 @@ html[data-motion="reduced"] *::after {
 }
 
 @media (max-width: 920px) {
+  .equipment-hero-tabs:not([data-overflow]) {
+    max-width: 100%;
+  }
+
+  .equipment-filters {
+    flex-wrap: wrap;
+  }
+
+  .equipment-filter-group {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .equipment-filter-group > small {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding-right: 5px;
+    background: #0d1415;
+  }
+
+  .roster-list-panel .list-pagination {
+    justify-content: center;
+  }
+
+  .equipment-layout {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .equipment-hero-tabs {
+    flex: 0 0 auto;
+  }
+
+  .equipment-filters {
+    flex: 0 0 auto;
+  }
+
+  .equipment-main {
+    min-height: 0;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
+  }
+
+  .equipped-panel,
+  .inventory-panel {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .equipment-hero-stage {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .equipped-stats,
+  .inventory-panel > .section-heading {
+    flex: 0 0 auto;
+  }
+
+  .equipment-slots {
+    flex: 0 0 auto;
+  }
+
+  .equipment-slot {
+    min-height: 48px;
+  }
+
+  .inventory-list {
+    min-height: 0;
+    overflow-y: auto;
+    flex: 1 1 auto;
+  }
+
   .quests-layout {
     width: calc(100% - 24px);
     grid-template-columns: 1fr;
