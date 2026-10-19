@@ -23,10 +23,16 @@
   --cinnabar-700: #6e2927;
   --blue-400: #6f91a5;
   --character-outline:
-    drop-shadow(0 0 1px rgba(235, 228, 211, 0.8))
+    drop-shadow(-1px -1px 0 rgba(250, 242, 220, 0.92))
+    drop-shadow(1px -1px 0 rgba(250, 242, 220, 0.92))
+    drop-shadow(-1px 1px 0 rgba(250, 242, 220, 0.92))
+    drop-shadow(1px 1px 0 rgba(250, 242, 220, 0.92))
     drop-shadow(0 6px 8px rgba(0, 0, 0, 0.55));
   --character-outline-strong:
-    drop-shadow(0 0 1.5px rgba(235, 228, 211, 0.9))
+    drop-shadow(-1.5px -1.5px 0 rgba(250, 242, 220, 0.95))
+    drop-shadow(1.5px -1.5px 0 rgba(250, 242, 220, 0.95))
+    drop-shadow(-1.5px 1.5px 0 rgba(250, 242, 220, 0.95))
+    drop-shadow(1.5px 1.5px 0 rgba(250, 242, 220, 0.95))
     drop-shadow(0 8px 10px rgba(0, 0, 0, 0.62));
   --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
   --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
