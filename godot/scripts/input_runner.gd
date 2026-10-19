@@ -20,6 +20,8 @@ func _run() -> void:
 	await get_tree().process_frame
 	var input := main.settings_layer.find_child("PlayerName", true, false) as LineEdit
 	_check(input != null, "settings should provide a native text input")
+	var audio_rows := main.find_children("*", "HSlider", true, false).filter(func(slider): return slider.visible)
+	_check(audio_rows.size() >= 2, "volume controls should remain visible with native input focus")
 	_check(ResourceLoader.exists("res://assets/environments/yellow_river_ferry.png"), "campaign artwork should be packaged with the game")
 	_check(ResourceLoader.exists("res://assets/audio/title_theme.mp3"), "campaign music should be packaged with the game")
 	if input == null:

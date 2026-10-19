@@ -49,6 +49,7 @@ var music_target_db := -3.7
 func _ready() -> void:
 	_configure_input()
 	game_data = _load_game_data()
+	get_tree().auto_accept_quit = false
 	state = GameState.new(game_data)
 	_build_shell()
 	show_title()
@@ -112,6 +113,24 @@ func _build_shell() -> void:
 	music_player.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(music_player)
 	music_player.finished.connect(func(): music_player.play())
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	if event.keycode == KEY_ESCAPE and settings_layer.visible:
+		close_settings()
+		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_ESCAPE and screen == SCREEN_BATTLE:
+		show_map()
+		get_viewport().set_input_as_handled()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		if state:
+			state.save()
+		get_tree().quit()
 
 
 func _make_theme() -> Theme:
@@ -1058,6 +1077,7 @@ func confirm_delete_save() -> void:
 func _toast(text: String) -> void:
 	toast_label.text = text
 	toast_label.visible = true
+	toast_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toast_timer.start()
 
 
