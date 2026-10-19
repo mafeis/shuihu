@@ -1528,40 +1528,42 @@ small {
   gap: 20px;
 }
 
-.camp-banner {
-  position: relative;
+.camp-heading {
   display: flex;
-  min-height: 250px;
-  overflow: hidden;
+  min-height: 140px;
   align-items: flex-end;
+  justify-content: space-between;
   grid-column: 1 / -1;
-  padding: 38px 42px;
+  gap: 28px;
+  padding: 21px 25px;
   border: 1px solid rgba(222, 211, 187, 0.12);
   border-radius: 7px;
-  background: var(--camp-bg) center 72% / cover;
+  background:
+    linear-gradient(90deg, rgba(7, 12, 13, 0.94), rgba(7, 12, 13, 0.67)),
+    url("/assets/environments/liangshan_water_fort.png") center 62% / cover;
 }
 
-.camp-banner-shade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(7, 12, 13, 0.92), rgba(7, 12, 13, 0.22) 68%, rgba(7, 12, 13, 0.45));
+.camp-heading > div:first-child {
+  max-width: 620px;
 }
 
-.camp-banner-copy {
-  position: relative;
-  z-index: 2;
-  width: 55%;
+.camp-heading h1 {
+  margin-bottom: 8px;
+  font-size: 41px;
 }
 
-.camp-banner-copy h1 {
-  margin-bottom: 10px;
-  font-size: 47px;
-}
-
-.camp-banner-copy > p:not(.eyebrow) {
-  margin-bottom: 19px;
+.camp-heading > div:first-child > p:not(.eyebrow) {
+  margin: 0;
   color: var(--paper-300);
   font-family: var(--serif);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+.camp-heading-data {
+  display: grid;
+  justify-items: end;
+  gap: 9px;
 }
 
 .camp-resources {
@@ -1590,20 +1592,16 @@ small {
 }
 
 .camp-team {
-  position: absolute;
-  z-index: 2;
-  right: 35px;
-  bottom: 0;
   display: flex;
-  height: 214px;
+  height: 78px;
   align-items: flex-end;
 }
 
 .camp-team button {
   position: relative;
-  width: 122px;
+  width: 65px;
   height: 100%;
-  margin-left: -17px;
+  margin-left: -9px;
   padding: 0;
   border: 0;
   background: none;
@@ -1611,7 +1609,7 @@ small {
 }
 
 .camp-team button:nth-child(2) {
-  height: 94%;
+  height: 92%;
 }
 
 .camp-team button:nth-child(3) {
@@ -1629,14 +1627,14 @@ small {
 .camp-team button span {
   position: absolute;
   right: 50%;
-  bottom: 4px;
+  bottom: 1px;
   display: flex;
   gap: 5px;
   padding: 2px 7px;
   border-radius: 3px;
   background: rgba(7, 12, 13, 0.7);
   font-family: var(--serif);
-  font-size: 0.625rem;
+  font-size: 0.5rem;
   white-space: nowrap;
   transform: translateX(50%);
 }
@@ -1650,6 +1648,200 @@ small {
   border: 1px solid rgba(221, 211, 189, 0.12);
   border-radius: 7px;
   background: rgba(12, 19, 20, 0.85);
+}
+
+.camp-main-heading > span {
+  align-self: center;
+}
+
+.camp-main-heading > .button {
+  min-width: 153px;
+  align-self: center;
+  justify-content: center;
+}
+
+.camp-map {
+  position: relative;
+  display: grid;
+  width: 100%;
+  aspect-ratio: calc(var(--camp-cols) / var(--camp-rows));
+  overflow: hidden;
+  grid-template-columns: repeat(var(--camp-cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--camp-rows), minmax(0, 1fr));
+  border: 1px solid #46514b;
+  border-radius: 5px;
+  background:
+    linear-gradient(rgba(7, 16, 15, 0.52), rgba(7, 16, 15, 0.73)),
+    url("/assets/environments/liangshan_water_fort.png") center / cover;
+}
+
+.camp-grid-cell {
+  border-right: 1px solid rgba(212, 190, 140, 0.22);
+  border-bottom: 1px solid rgba(212, 190, 140, 0.22);
+  background: rgba(6, 14, 14, 0.14);
+}
+
+.camp-building {
+  position: absolute;
+  top: calc(var(--building-row) * var(--cell-height));
+  left: calc(var(--building-col) * var(--cell-width));
+  display: flex;
+  width: calc(var(--building-cols) * var(--cell-width));
+  height: calc(var(--building-rows) * var(--cell-height));
+  min-width: 0;
+  overflow: hidden;
+  align-items: flex-end;
+  gap: 7px;
+  padding: clamp(5px, 0.65vw, 10px);
+  border: 1px solid rgba(208, 187, 140, 0.46);
+  border-radius: 3px;
+  background: rgba(16, 28, 27, 0.85);
+  color: var(--paper-100);
+  text-align: left;
+}
+
+.camp-building:hover:not(:disabled) {
+  border-color: var(--bronze-300);
+  background: rgba(35, 55, 51, 0.93);
+}
+
+.camp-building.is-locked {
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  border-color: rgba(220, 207, 178, 0.2);
+  background: rgba(12, 20, 20, 0.52);
+  color: var(--paper-500);
+}
+
+.camp-building.is-available {
+  border-color: rgba(113, 170, 156, 0.6);
+  background: linear-gradient(135deg, rgba(67, 108, 96, 0.37), rgba(18, 29, 28, 0.94));
+}
+
+.camp-building-icon {
+  display: grid;
+  width: clamp(25px, 3.1vw, 41px);
+  height: clamp(25px, 3.1vw, 41px);
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(192, 164, 103, 0.36);
+  border-radius: 3px;
+  background: rgba(9, 17, 17, 0.51);
+  color: var(--bronze-300);
+}
+
+.camp-building-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.camp-building-copy b {
+  overflow: hidden;
+  font-family: var(--serif);
+  font-size: clamp(0.625rem, 1vw, 1rem);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.camp-building-copy small {
+  color: var(--paper-500);
+  font-size: 0.5rem;
+}
+
+.camp-building > em {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--bronze-300);
+  font-size: 0.5rem;
+  font-style: normal;
+}
+
+.camp-stock {
+  display: flex;
+  min-height: 35px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.camp-stock > span {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: 1px solid var(--ink-600);
+  border-radius: 3px;
+  background: var(--ink-850);
+  color: var(--paper-300);
+  font-size: 0.625rem;
+}
+
+.camp-stock .camp-stock-title {
+  padding-left: 0;
+  border-color: transparent;
+  background: none;
+  color: var(--bronze-300);
+}
+
+.camp-stock small {
+  color: var(--paper-500);
+  font-size: 0.625rem;
+}
+
+.camp-stock b {
+  color: var(--paper-100);
+  font-family: var(--serif);
+}
+
+.camp-side {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.camp-operation {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  padding: 16px;
+  border: 1px solid rgba(221, 211, 189, 0.12);
+  border-radius: 7px;
+  background: rgba(12, 19, 20, 0.9);
+}
+
+.camp-operation .section-heading {
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+}
+
+.camp-operation h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 1.0625rem !important;
+}
+
+.camp-operation .button {
+  min-height: 44px;
+  padding: 0 8px;
+  font-size: 0.6875rem;
+}
+
+.camp-operation .button svg {
+  width: 15px;
+  flex: 0 0 auto;
+}
+
+.camp-operation .button span {
+  white-space: nowrap;
 }
 
 .section-heading {
@@ -1857,6 +2049,37 @@ small {
 
 .camp-next .button {
   width: 100%;
+}
+
+.camp-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.camp-dialog-stock {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+  color: var(--paper-300);
+  font-size: 0.6875rem;
+}
+
+.camp-dialog-stock > b {
+  color: var(--bronze-300);
+}
+
+.camp-dialog-stock span {
+  padding: 4px 7px;
+  border: 1px solid var(--ink-600);
+  border-radius: 3px;
+}
+
+.camp-dialog-stock span b {
+  margin-left: 4px;
+  color: var(--paper-100);
 }
 
 /* Roster */
@@ -11481,6 +11704,47 @@ html[data-motion="reduced"] *::after {
 
   .camp-main {
     padding: 16px 12px;
+  }
+
+  .camp-building {
+    display: grid;
+    min-height: 0;
+    aspect-ratio: auto;
+    align-content: center;
+    justify-items: center;
+    gap: 2px;
+    padding: 3px 2px;
+    text-align: center;
+  }
+
+  .camp-building-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .camp-building-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .camp-building-copy b {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.5625rem;
+    line-height: 1.15;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .camp-building-copy small {
+    display: none;
+  }
+
+  .camp-building > em {
+    position: static;
+    font-size: 0.4375rem;
+    line-height: 1;
   }
 
   .facility-grid,
