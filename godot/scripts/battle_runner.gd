@@ -58,6 +58,15 @@ func _run() -> void:
 	_check(second_target.hp == 0, "the chosen enemy should take damage")
 	_check(not main.battle.living_enemies().has(second_target), "defeating the final enemy should end the battle")
 	_check(main.battle.chain_attacks == 0, "battle should not count a chain that was never performed")
+	var retry_battle := BattleModel.new(main.state, main.state.chapter())
+	for unit in retry_battle.heroes.slice(1):
+		unit.hp = 0
+	retry_battle.heroes[0].hp = 1
+	retry_battle.heroes[0].max_hp = 518
+	retry_battle.enemies[0].hp = 100000
+	retry_battle.enemies[0].max_hp = 100000
+	retry_battle.enemy_turn()
+	_check(retry_battle.battle_finished and not retry_battle.victory, "a wiped formation should finish in defeat")
 	main.battle.enemies[0].hp = 20
 	main.battle.enemies[0].max_hp = 20
 	var rounds := 0
@@ -68,6 +77,7 @@ func _run() -> void:
 		main.perform_attack()
 		rounds += 1
 	_check(main.battle.battle_finished and main.battle.victory, "a winning battle should settle")
+	_check(main.battle_result_continuation() == "reward", "victory should offer the campaign reward")
 	_check(main.screen == "reward", "victory should open native rewards")
 	_check(main.state.statistics.battles_won == 1, "victory should update saved campaign statistics")
 	main.state.roster_entry("linchong").level = 5

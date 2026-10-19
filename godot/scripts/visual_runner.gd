@@ -29,6 +29,29 @@ func _run() -> void:
 	player_name.text = "替天行道"
 	await _capture("settings_cjk")
 	main.close_settings()
+	main.show_map()
+	await _capture("map")
+	main.new_game()
+	await _capture("new_campaign_map")
+	main.enter_chapter()
+	await get_tree().process_frame
+	main.next_story()
+	await get_tree().process_frame
+	await _capture("story_character")
+	var final_line := 0
+	while main.screen == "story" and final_line < 30:
+		final_line += 1
+		main.next_story()
+	if main.screen == "choice":
+		main.choose_option(0)
+		main.battle.enemies[0].hp = 1000000
+		main.battle.enemies[0].max_hp = 1000000
+		main.battle.heroes[0].max_hp = maxi(100, int(main.battle.heroes[0].max_hp))
+		main.battle.heroes[0].hp = 1
+		main.perform_attack()
+		await get_tree().create_timer(0.16).timeout
+		await _capture("battle_defeat_feedback")
+	main.show_camp()
 	main.show_chronicles()
 	await _capture("chronicles")
 	main._dismiss_menu()
@@ -40,8 +63,9 @@ func _run() -> void:
 	main.show_chronicles()
 	await _capture("chronicles_legend")
 	main._dismiss_menu()
-	main.screen_root.mouse_filter = Control.MOUSE_FILTER_PASS
+	main._dismiss_menu()
 	main.start_hero_legend("linchong")
+	await get_tree().process_frame
 	await _capture("legend_battle")
 	main.legend_running = false
 	main.new_game()
@@ -58,6 +82,14 @@ func _run() -> void:
 	main.battle.select_skill(0)
 	main.show_battle()
 	await _capture("battle")
+	main.battle.enemies[0].hp = 10000000
+	main.battle.enemies[0].max_hp = 10000000
+	main.battle.heroes[0].yiqi = 100
+	main.perform_attack()
+	await get_tree().create_timer(0.16).timeout
+	await _capture("battle_feedback")
+	await get_tree().create_timer(0.35).timeout
+	await _capture("battle_feedback_second")
 	main.show_camp()
 	await _capture("camp")
 	main.state.statistics.battles_won = maxi(2, int(main.state.statistics.battles_won))

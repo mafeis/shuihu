@@ -38,6 +38,7 @@ var reward_lines: Array[String] = []
 var level_ups := 0
 var ultimate_uses: Dictionary = {}
 var damage_by_hero: Dictionary = {}
+var action_events: Array[Dictionary] = []
 
 
 func _init(game_state: GameState, chapter: Dictionary, battle_modifiers: Dictionary = {}, battle_enemy_modifiers: Dictionary = {}) -> void:
@@ -140,6 +141,7 @@ func _build_enemies() -> void:
 		enemies.append({
 			"side": "enemy",
 			"enemy_id": enemy_id,
+			"unit_uid": "e:%d:%s" % [enemies.size(), enemy_id],
 			"boss": bool(definition.get("boss", false)),
 			"name": config.get("name", "官军"),
 			"path": config.get("path", "gang"),
@@ -160,6 +162,7 @@ func _build_enemies() -> void:
 			"portrait": config.get("sprite", ""),
 		})
 		var built := enemies[-1]
+		built.enemy_index = enemies.size() - 1
 		built.boss = definition.get("boss", false) == true or (
 			battle_section.get("boss", false) == true
 			and enemies[-1] == enemies[0]
@@ -238,6 +241,7 @@ func all_enemies_defeated() -> bool:
 
 
 func hero_skill(target_index: int, skill_index := -1) -> Dictionary:
+	action_events.clear()
 	if battle_finished:
 		return {"ok": false, "reason": "finished"}
 	var actor := current_hero()
@@ -248,8 +252,85 @@ func hero_skill(target_index: int, skill_index := -1) -> Dictionary:
 		return {"ok": false, "reason": "yiqi"}
 	if int(actor.cooldowns.get(skill.get("id", ""), 0)) > 0:
 		return {"ok": false, "reason": "cooldown"}
+	var targets := valid_targets(skill)
+	var resolved_target_index := target_auto_index(skill, target_index)
+	var target_hint: Dictionary = targets[resolved_target_index] if not targets.is_empty() else {}
+	var before_enemies := _unit_snapshot(enemies)
+	var before_heroes := _unit_snapshot(heroes)
+	var resolved_skill := skill.duplicate(true)
+	var resolved_actor := actor.duplicate(true)
 	_apply_skill(actor, skill, target_index)
-	return {"ok": true}
+	action_events = _make_action_events("skill", resolved_actor, resolved_skill, before_enemies, before_heroes, -1, target_hint)
+	var action_event: Dictionary = action_events[0] if not action_events.is_empty() else {}
+	return {"ok": true, "events": action_events, "action": action_event, "kind": str(skill.get("role", "attack")), "skill": resolved_skill, "actor": resolved_actor}
+
+
+func _unit_snapshot(units: Array[Dictionary]) -> Dictionary:
+	var result := {}
+	for unit in units:
+		var uid := _unit_uid(unit)
+		result[uid] = {"hp": int(unit.get("hp", 0)), "statuses": unit.get("statuses", {}).duplicate(true)}
+	return result
+
+
+func _unit_uid(unit: Dictionary) -> String:
+	return str(unit.get("unit_uid", "")) if not str(unit.get("unit_uid", "")).is_empty() else ("h:" if str(unit.get("side", "")) == "hero" else "e:") + str(unit.get("hero_id", unit.get("enemy_id", "")))
+
+
+func _make_action_events(kind: String, actor: Dictionary, skill: Dictionary, before_enemies: Dictionary, before_heroes: Dictionary, enemy_index: int, target_hint: Dictionary = {}) -> Array[Dictionary]:
+	var events: Array[Dictionary] = []
+	var actor_uid := _unit_uid(actor)
+	var defeated_count := 0
+	var defeated_units: Array[Dictionary] = []
+	var after_enemies := _unit_snapshot(enemies)
+	var after_heroes := _unit_snapshot(heroes)
+	for side in [["enemy", enemies, before_enemies], ["hero", heroes, before_heroes]]:
+		for unit in side[1]:
+			var uid := _unit_uid(unit)
+			if not side[2].has(uid):
+				continue
+			var old: Dictionary = side[2][uid]
+			var delta := int(unit.get("hp", 0)) - int(old.get("hp", 0))
+			if delta < 0 and uid != actor_uid:
+				events.append({"kind": kind, "side": side[0], "target": uid, "target_name": unit.get("name", ""), "delta": delta, "defeated": int(unit.get("hp", 0)) <= 0})
+				if int(unit.get("hp", 0)) <= 0 and int(old.get("hp", 0)) > 0:
+					defeated_count += 1
+					defeated_units.append({"name": str(unit.get("name", "")), "row": int(unit.get("row", 1)), "target": uid})
+			elif delta > 0:
+				events.append({"kind": "heal", "side": side[0], "target": uid, "target_name": unit.get("name", ""), "delta": delta})
+			for status in unit.get("statuses", {}):
+				if int(unit.statuses.get(status, 0)) > int(old.get("statuses", {}).get(status, 0)) and status in ["armorBreak", "bleeding", "stun", "sealed", "guard", "inspiration"]:
+					events.append({"kind": "status", "side": side[0], "target": uid, "target_name": unit.get("name", ""), "status": status})
+	var target_uid := ""
+	var target_name := ""
+	if not target_hint.is_empty():
+		target_uid = _unit_uid(target_hint)
+		target_name = str(target_hint.get("name", ""))
+	elif skill.get("target", "") not in ["allEnemies", "allAllies", "self"]:
+		var targets := valid_targets(skill)
+		if not targets.is_empty():
+			var target := targets[clampi(target_auto_index(skill, actor.get("target_index", 0)), 0, targets.size() - 1)]
+			target_uid = _unit_uid(target)
+			target_name = target.get("name", "")
+	else:
+		for unit in valid_targets(skill):
+			if not target_uid.is_empty():
+				break
+			target_uid = _unit_uid(unit)
+			target_name = unit.get("name", "")
+			break
+	var path := str(skill.get("path", actor.get("path", "gang")))
+	var heavy := int(skill.get("yiqiCost", 0)) >= 60 or float(skill.get("power", 0)) >= 1.3 or int(skill.get("hits", 1)) > 1
+	var doomed := {"enemy": [], "hero": []}
+	for side in [["enemy", enemies, before_enemies, after_enemies], ["hero", heroes, before_heroes, after_heroes]]:
+		for unit in side[1]:
+			var uid := _unit_uid(unit)
+			if side[2].has(uid) and side[3].has(uid) and int(side[2][uid].get("hp", 0)) > 0 and int(side[3][uid].get("hp", 0)) <= 0:
+				doomed[side[0]].append({uid: maxi(0, int(side[2][uid].get("hp", 0)) - int(side[3][uid].get("hp", 0)))})
+	var effect := {"id": str(skill.get("id", "enemy_strike")), "name": str(skill.get("name", "出手")), "role": kind, "path": path, "heavy": heavy, "actor": actor_uid, "actor_name": str(actor.get("name", "")), "target": target_uid, "target_name": target_name, "events": events, "defeated": bool(defeated_count > 0), "defeated_count": defeated_count, "defeated_units": defeated_units, "doomed": doomed}
+	if enemy_index >= 0:
+		effect.enemy_index = enemy_index
+	return [effect]
 
 
 func _can_use_skill(actor: Dictionary, skill: Dictionary) -> bool:
@@ -416,6 +497,7 @@ func chain_formation() -> Dictionary:
 
 
 func chain_attack() -> Dictionary:
+	action_events.clear()
 	if battle_finished or not chain_ready:
 		return {"ok": false, "reason": "chain"}
 	var participants: Array[Dictionary] = []
@@ -436,6 +518,9 @@ func chain_attack() -> Dictionary:
 		names.append(str(actor.name))
 	log_lines.push_front("%s踏星换位，结成「%s」。" % ["、".join(names), formation.get("name", "三星同辉")])
 	var target_list := living_enemies()
+	var participants_before: Dictionary = _unit_snapshot(participants)
+	var before_enemies := _unit_snapshot(enemies)
+	var before_heroes := _unit_snapshot(heroes)
 	for target in target_list:
 		var damage := maxi(1, int(round(total_force * 1.58 - float(target.def) * 0.42)))
 		target.hp = maxi(0, int(target.hp) - damage)
@@ -469,7 +554,39 @@ func chain_attack() -> Dictionary:
 		log_lines.push_front("星命合击破阵，胜利。")
 	else:
 		_next_turn()
-	return {"ok": true}
+	var formation_paths: Array = formation.get("paths", [])
+	var combo_skill := {"id": "chain", "name": formation.get("name", "三星同辉"), "role": "combo", "path": str(formation_paths[0]) if not formation_paths.is_empty() else "gang", "heavy": true}
+	var formation_event := {"kind": "combo", "skill": combo_skill, "actor": _unit_uid(participants[0]) if not participants.is_empty() else "", "target": _unit_uid(target_list[0]) if not target_list.is_empty() else "", "events": []}
+	var combo_actor: Dictionary = participants[0] if not participants.is_empty() else {"hero_id": "linchong", "side": "hero"}
+	formation_event.events = _make_action_events("combo", combo_actor, combo_skill, before_enemies, before_heroes, -1, target_list[0] if not target_list.is_empty() else {})[0].get("events", [])
+	for actor_uid in participants_before:
+		var actor := _find_unit(actor_uid)
+		if actor.is_empty():
+			continue
+		var recovered := int(actor.hp) - int(participants_before[actor_uid].hp)
+		if recovered > 0:
+			formation_event.events.append({"kind": "heal", "side": "hero", "target": actor_uid, "target_name": actor.get("name", ""), "delta": recovered})
+	var combo_target_hint: Dictionary = target_list[0] if not target_list.is_empty() else {}
+	if not combo_target_hint.is_empty():
+		formation_event.target = _unit_uid(combo_target_hint)
+		formation_event.target_name = str(combo_target_hint.get("name", ""))
+	if formation_event.events.is_empty():
+		for target in target_list:
+			formation_event.events.append({"kind": "combo", "side": "enemy", "target": _unit_uid(target), "target_name": target.get("name", ""), "delta": -1})
+	action_events.clear()
+	action_events.append(formation_event)
+	return {"ok": true, "events": formation_event.events, "kind": "combo", "skill": formation_event.skill}
+
+
+func last_action_event() -> Dictionary:
+	return action_events[-1] if not action_events.is_empty() else {}
+
+
+func _find_unit(uid: String) -> Dictionary:
+	for unit in heroes + enemies:
+		if _unit_uid(unit) == uid:
+			return unit
+	return {}
 
 
 func _update_chain(actor: Dictionary, skill: Dictionary) -> void:
@@ -607,9 +724,12 @@ func _tick_statuses() -> void:
 
 
 func enemy_turn() -> bool:
+	action_events.clear()
 	if battle_finished:
 		return false
 	for enemy in living_enemies():
+		var enemy_before := _unit_snapshot(heroes)
+		var enemy_index := living_enemies().find(enemy)
 		_check_boss_phase(enemy)
 		enemy.broken = maxi(0, int(enemy.broken) - 1)
 		if int(enemy.statuses.get("bleeding", 0)) > 0:
@@ -644,11 +764,17 @@ func enemy_turn() -> bool:
 				)))
 				hero.hp = maxi(0, int(hero.hp) - all_damage)
 				log_lines.push_front("%s施展「%s」对%s造成 %d 伤害。" % [enemy.name, skill.get("name", "挥击"), hero.name, all_damage])
+			var all_event := _make_action_events("enemy", enemy, skill, {}, enemy_before, enemy_index)[0]
+			all_event.kind = "enemy"
+			action_events.append(all_event)
 			continue
 		if str(skill.get("target", "")) == "self":
 			enemy.hp = mini(enemy.max_hp, int(enemy.hp) + int(round(enemy.max_hp * 0.12)))
 			enemy.statuses["guard"] = maxi(int(enemy.statuses.get("guard", 0)), 1)
 			log_lines.push_front("%s整军，恢复生命并获得护御。" % enemy.name)
+			var restore_event := _make_action_events("enemy", enemy, skill, {}, enemy_before, enemy_index, target)[0]
+			restore_event.kind = "enemy"
+			action_events.append(restore_event)
 			continue
 		var raw := float(enemy.atk) * float(skill.get("power", 0.8))
 		var row_info: Dictionary = ROWS[clampi(target.row, 0, ROWS.size() - 1)]
@@ -656,6 +782,9 @@ func enemy_turn() -> bool:
 		var damage := maxi(1, int(round((raw - float(target.def) * 0.55) / float(row_info.defense) * guard_multiplier * difficulty_damage_taken)))
 		target.hp = maxi(0, target.hp - damage)
 		target.statuses.guard = maxi(0, int(target.statuses.get("guard", 0)) - 1)
+		var enemy_event := _make_action_events("enemy", enemy, skill, {}, enemy_before, enemy_index, target)[-1]
+		enemy_event.kind = "enemy"
+		action_events.append(enemy_event)
 		log_lines.push_front("%s施展「%s」对%s造成 %d 伤害。" % [enemy.name, skill.get("name", "挥击"), target.name, damage])
 		if target.hp <= 0:
 			log_lines.push_front("%s力竭倒下。" % target.name)
