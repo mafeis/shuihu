@@ -1,0 +1,36 @@
+{
+  "id": "/",
+  "name": "星命水浒：风雪山神庙",
+  "short_name": "星命水浒",
+  "description": "北宋末年梁山群像回合制角色扮演游戏。结义四十位好汉，经历九回战役，在招安、聚义与归隐之间作出选择。",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
+  "background_color": "#0c1112",
+  "theme_color": "#0c1112",
+  "categories": ["games", "role-playing-games"],
+  "icons": [
+    {
+      "src": "/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

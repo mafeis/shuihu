@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "buildVersion": "1.0.0",
+  "signedCandidate": false,
+  "testedAt": "",
+  "windowsX64": {
+    "installLaunch": false,
+    "fullCampaign": false
+  },
+  "macosArm64": {
+    "installLaunch": false,
+    "fullCampaign": false
+  },
+  "steamClient": {
+    "achievements": false,
+    "stats": false,
+    "cloudConflict": false,
+    "overlay": false,
+    "richPresence": false
+  },
+  "input": {
+    "physicalGamepad": false,
+    "physicalTouchDevice": false,
+    "steamDeck": false
+  }
+}

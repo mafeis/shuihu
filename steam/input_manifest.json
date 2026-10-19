@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "layout": "standard-gamepad",
+  "actions": [
+    {
+      "name": "confirm",
+      "buttonIndex": 0,
+      "binding": "A / Cross"
+    },
+    {
+      "name": "back",
+      "buttonIndex": 1,
+      "binding": "B / Circle"
+    },
+    {
+      "name": "auto_battle",
+      "buttonIndex": 2,
+      "binding": "X / Square"
+    },
+    {
+      "name": "battle_speed",
+      "buttonIndex": 3,
+      "binding": "Y / Triangle"
+    },
+    {
+      "name": "auto_tactic",
+      "buttonIndex": 4,
+      "binding": "LB / L1"
+    },
+    {
+      "name": "menu",
+      "buttonIndex": 6,
+      "binding": "View / Share"
+    },
+    {
+      "name": "journal",
+      "buttonIndex": 7,
+      "binding": "Menu / Options"
+    },
+    {
+      "name": "navigate_left",
+      "buttonIndex": 10,
+      "binding": "Left stick press"
+    },
+    {
+      "name": "navigate_right",
+      "buttonIndex": 11,
+      "binding": "Right stick press"
+    },
+    {
+      "name": "dpad_up",
+      "buttonIndex": 12,
+      "binding": "D-pad up"
+    },
+    {
+      "name": "dpad_down",
+      "buttonIndex": 13,
+      "binding": "D-pad down"
+    },
+    {
+      "name": "dpad_left",
+      "buttonIndex": 14,
+      "binding": "D-pad left"
+    },
+    {
+      "name": "dpad_right",
+      "buttonIndex": 15,
+      "binding": "D-pad right"
+    },
+    {
+      "name": "decrease_value",
+      "buttonIndex": 16,
+      "binding": "Left trigger"
+    },
+    {
+      "name": "increase_value",
+      "buttonIndex": 17,
+      "binding": "Right trigger"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "legalName": "发行主体法定名称",
+  "supportEmail": "support@example.com",
+  "supportUrl": "https://example.com/support",
+  "salesUrl": "https://example.com/game",
+  "privacyContact": "privacy@example.com",
+  "eulaGoverningLaw": "适用国家或地区法律",
+  "releaseTerritories": [
+    "CN"
+  ],
+  "priceCurrency": "CNY",
+  "legalReviewComplete": false,
+  "privacyReviewComplete": false,
+  "consumerRightsReviewComplete": false,
+  "aiCommercialTermsVerified": false
+}

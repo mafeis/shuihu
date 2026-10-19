@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>星命水浒 Steam Assets</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family:
+          "Songti SC",
+          "STSong",
+          "Noto Serif CJK SC",
+          "Source Han Serif SC",
+          serif;
+        background: transparent;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: var(--w);
+        height: var(--h);
+        margin: 0;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .asset {
+        position: relative;
+        width: var(--w);
+        height: var(--h);
+        overflow: hidden;
+        isolation: isolate;
+        color: #f3ead8;
+        background: #080d0e;
+      }
+
+      .background,
+      .background img,
+      .vignette,
+      .wash,
+      .grain,
+      .characters,
+      .brand,
+      .footer,
+      .seal {
+        position: absolute;
+      }
+
+      .background {
+        inset: 0;
+      }
+
+      .background img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 46%;
+        filter: saturate(0.82) contrast(1.04) brightness(0.76);
+      }
+
+      .vignette {
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(4, 8, 9, 0.96) 0%, rgba(4, 8, 9, 0.72) 32%, rgba(4, 8, 9, 0.18) 68%, rgba(4, 8, 9, 0.48) 100%),
+          linear-gradient(0deg, rgba(3, 7, 8, 0.92) 0%, rgba(3, 7, 8, 0.08) 45%, rgba(3, 7, 8, 0.18) 100%);
+      }
+
+      .wash {
+        inset: 0;
+        background:
+          radial-gradient(circle at 74% 44%, rgba(174, 119, 52, 0.16), transparent 31%),
+          linear-gradient(135deg, rgba(26, 52, 53, 0.18), transparent 56%);
+        mix-blend-mode: screen;
+      }
+
+      .grain {
+        inset: -50%;
+        opacity: 0.13;
+        background-image:
+          repeating-radial-gradient(circle at 12% 21%, rgba(255, 255, 255, 0.08) 0 0.5px, transparent 0.7px 4px);
+        background-size: 7px 7px;
+        transform: rotate(4deg);
+        mix-blend-mode: soft-light;
+        pointer-events: none;
+      }
+
+      .characters {
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .character {
+        position: absolute;
+        height: 82%;
+        object-fit: contain;
+        object-position: bottom center;
+        filter:
+          drop-shadow(0 22px 28px rgba(0, 0, 0, 0.76))
+          saturate(0.92)
+          contrast(1.03);
+      }
+
+      .character.linchong {
+        right: 24%;
+        bottom: -7%;
+        width: 30%;
+      }
+
+      .character.wusong {
+        right: 7%;
+        bottom: -8%;
+        width: 30%;
+      }
+
+      .character.likui {
+        right: 38%;
+        bottom: -11%;
+        width: 31%;
+        filter:
+          drop-shadow(0 22px 30px rgba(0, 0, 0, 0.82))
+          saturate(0.86)
+          contrast(1.05);
+      }
+
+      .brand {
+        z-index: 3;
+        left: 5.7%;
+        top: 7%;
+        width: 47%;
+        text-shadow: 0 4px 28px rgba(0, 0, 0, 0.92);
+      }
+
+      .kicker {
+        margin: 0 0 2.6%;
+        color: #c7a56d;
+        font-family:
+          "FZKai-Z03",
+          "Kaiti SC",
+          "STKaiti",
+          serif;
+        font-size: calc(var(--h) * 0.028);
+        letter-spacing: 0.22em;
+      }
+
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--h) * 0.026);
+      }
+
+      .title-row h1 {
+        margin: 0;
+        white-space: nowrap;
+        font-size: calc(var(--h) * 0.154);
+        font-weight: 900;
+        line-height: 0.93;
+        letter-spacing: 0.05em;
+        color: #f2e3c3;
+        text-shadow:
+          0 3px 0 rgba(37, 25, 16, 0.72),
+          0 12px 42px rgba(0, 0, 0, 0.95);
+      }
+
+      .asset.lang-en .seal {
+        display: none;
+      }
+
+      .asset.lang-en .kicker,
+      .asset.lang-en .subtitle,
+      .asset.lang-en .features,
+      .asset.lang-en .footer {
+        font-family:
+          "Iowan Old Style",
+          "Baskerville",
+          "Times New Roman",
+          serif;
+        letter-spacing: 0.13em;
+      }
+
+      .asset.lang-en .title-row h1 {
+        font-family:
+          "Iowan Old Style",
+          "Baskerville",
+          "Times New Roman",
+          serif;
+        font-size: calc(var(--h) * 0.082);
+        letter-spacing: 0.035em;
+      }
+
+      .asset.lang-en .subtitle {
+        font-size: calc(var(--h) * 0.038);
+      }
+
+      .asset.lang-en .tagline {
+        font-family:
+          "Iowan Old Style",
+          "Baskerville",
+          "Times New Roman",
+          serif;
+        letter-spacing: 0.035em;
+      }
+
+      .seal {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: calc(var(--h) * 0.112);
+        aspect-ratio: 0.72;
+        padding: 4% 2%;
+        border: max(1px, calc(var(--h) * 0.003)) solid rgba(200, 89, 60, 0.92);
+        color: #d66f54;
+        font-family:
+          "FZKai-Z03",
+          "Kaiti SC",
+          serif;
+        font-size: calc(var(--h) * 0.038);
+        font-weight: 800;
+        line-height: 1.12;
+        text-align: center;
+        writing-mode: vertical-rl;
+        background: rgba(83, 24, 17, 0.13);
+        box-shadow: inset 0 0 0 3px rgba(111, 32, 22, 0.18);
+      }
+
+      .subtitle {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--h) * 0.018);
+        margin: calc(var(--h) * 0.025) 0 0;
+        color: #ead9b8;
+        font-size: calc(var(--h) * 0.058);
+        font-weight: 700;
+        letter-spacing: 0.17em;
+      }
+
+      .subtitle::before,
+      .subtitle::after {
+        content: "";
+        width: calc(var(--h) * 0.07);
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #a7844f);
+      }
+
+      .tagline {
+        width: 92%;
+        margin: calc(var(--h) * 0.036) 0 0;
+        color: rgba(236, 228, 212, 0.82);
+        font-size: calc(var(--h) * 0.028);
+        line-height: 1.72;
+        letter-spacing: 0.08em;
+      }
+
+      .features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: calc(var(--h) * 0.012);
+        margin-top: calc(var(--h) * 0.036);
+      }
+
+      .features span {
+        padding: calc(var(--h) * 0.008) calc(var(--h) * 0.017);
+        border: 1px solid rgba(202, 169, 112, 0.38);
+        color: #d8c39c;
+        background: rgba(7, 13, 14, 0.48);
+        font-size: calc(var(--h) * 0.02);
+        letter-spacing: 0.08em;
+      }
+
+      .footer {
+        z-index: 3;
+        left: 5.7%;
+        bottom: 5.8%;
+        display: flex;
+        align-items: center;
+        gap: calc(var(--h) * 0.018);
+        color: rgba(214, 201, 177, 0.72);
+        font-family:
+          "PingFang SC",
+          "Noto Sans CJK SC",
+          sans-serif;
+        font-size: calc(var(--h) * 0.018);
+        letter-spacing: 0.14em;
+      }
+
+      .footer i {
+        width: calc(var(--h) * 0.04);
+        height: 1px;
+        background: #9f7b46;
+      }
+
+      .asset.header_capsule .brand {
+        top: 8%;
+        width: 48%;
+      }
+
+      .asset.header_capsule .title-row h1 {
+        font-size: calc(var(--h) * 0.18);
+      }
+
+      .asset.header_capsule.lang-en .title-row h1 {
+        font-size: calc(var(--h) * 0.095);
+      }
+
+      .asset.header_capsule .seal,
+      .asset.small_capsule .seal,
+      .asset.vertical_capsule .seal,
+      .asset.library_capsule .seal,
+      .asset.library_logo .seal {
+        display: none;
+      }
+
+      .asset.header_capsule .character {
+        height: 92%;
+      }
+
+      .asset.header_capsule .character.linchong {
+        right: 11%;
+        width: 34%;
+      }
+
+      .asset.header_capsule .character.wusong {
+        right: -1%;
+        width: 33%;
+      }
+
+      .asset.header_capsule .character.likui {
+        display: none;
+      }
+
+      .asset.small_capsule .brand {
+        left: 4.2%;
+        top: 9%;
+        width: 62%;
+      }
+
+      .asset.small_capsule .kicker,
+      .asset.small_capsule .tagline,
+      .asset.small_capsule .features,
+      .asset.small_capsule .footer {
+        display: none;
+      }
+
+      .asset.small_capsule .title-row {
+        gap: calc(var(--h) * 0.018);
+      }
+
+      .asset.small_capsule .title-row h1 {
+        font-size: calc(var(--h) * 0.27);
+      }
+
+      .asset.small_capsule.lang-en .title-row h1 {
+        font-size: calc(var(--h) * 0.17);
+      }
+
+      .asset.small_capsule.lang-en .subtitle {
+        font-size: calc(var(--h) * 0.07);
+      }
+
+      .asset.small_capsule .seal {
+        display: none;
+      }
+
+      .asset.small_capsule .subtitle {
+        margin-top: calc(var(--h) * 0.016);
+        font-size: calc(var(--h) * 0.088);
+      }
+
+      .asset.small_capsule .subtitle::before,
+      .asset.small_capsule .subtitle::after {
+        width: calc(var(--h) * 0.055);
+      }
+
+      .asset.small_capsule .character {
+        height: 118%;
+      }
+
+      .asset.small_capsule .character.linchong {
+        right: 2%;
+        bottom: -24%;
+        width: 36%;
+      }
+
+      .asset.small_capsule .character.wusong,
+      .asset.small_capsule .character.likui {
+        display: none;
+      }
+
+      .asset.main_capsule .brand {
+        top: 11%;
+        width: 49%;
+      }
+
+      .asset.main_capsule .character {
+        height: 93%;
+      }
+
+      .asset.main_capsule .character.linchong {
+        right: 15%;
+        width: 34%;
+      }
+
+      .asset.main_capsule .character.wusong {
+        right: -4%;
+        width: 34%;
+      }
+
+      .asset.main_capsule .character.likui {
+        right: 38%;
+        width: 34%;
+      }
+
+      .asset.vertical_capsule .background img {
+        object-position: 62% center;
+      }
+
+      .asset.vertical_capsule .vignette {
+        background:
+          linear-gradient(180deg, rgba(4, 8, 9, 0.96) 0%, rgba(4, 8, 9, 0.60) 36%, rgba(4, 8, 9, 0.08) 66%, rgba(3, 7, 8, 0.9) 100%),
+          linear-gradient(90deg, rgba(4, 8, 9, 0.78), transparent 72%);
+      }
+
+      .asset.vertical_capsule .brand {
+        left: 7%;
+        top: 5%;
+        width: 86%;
+      }
+
+      .asset.vertical_capsule .title-row h1 {
+        font-size: calc(var(--h) * 0.14);
+      }
+
+      .asset.vertical_capsule.lang-en .title-row h1 {
+        font-size: calc(var(--h) * 0.078);
+        line-height: 0.88;
+        white-space: normal;
+      }
+
+      .asset.vertical_capsule .tagline {
+        width: 100%;
+      }
+
+      .asset.vertical_capsule .character {
+        height: 62%;
+      }
+
+      .asset.vertical_capsule .character.linchong {
+        right: 17%;
+        bottom: -10%;
+        width: 57%;
+      }
+
+      .asset.vertical_capsule .character.wusong {
+        right: -20%;
+        bottom: -12%;
+        width: 57%;
+      }
+
+      .asset.vertical_capsule .character.likui {
+        display: none;
+      }
+
+      .asset.vertical_capsule .footer {
+        display: none;
+      }
+
+      .asset.library_capsule .background img {
+        object-position: 61% center;
+      }
+
+      .asset.library_capsule .vignette {
+        background:
+          linear-gradient(180deg, rgba(4, 8, 9, 0.97) 0%, rgba(4, 8, 9, 0.72) 33%, rgba(4, 8, 9, 0.1) 64%, rgba(3, 7, 8, 0.92) 100%),
+          linear-gradient(90deg, rgba(4, 8, 9, 0.74), transparent 74%);
+      }
+
+      .asset.library_capsule .brand {
+        left: 7%;
+        top: 5%;
+        width: 86%;
+      }
+
+      .asset.library_capsule .title-row h1 {
+        font-size: calc(var(--h) * 0.118);
+      }
+
+      .asset.library_capsule.lang-en .title-row h1 {
+        font-size: calc(var(--h) * 0.062);
+        line-height: 0.9;
+        white-space: normal;
+      }
+
+      .asset.library_capsule .tagline {
+        width: 100%;
+      }
+
+      .asset.library_capsule .character {
+        height: 58%;
+      }
+
+      .asset.library_capsule .character.linchong {
+        right: 12%;
+        bottom: -13%;
+        width: 64%;
+      }
+
+      .asset.library_capsule .character.wusong {
+        right: -28%;
+        bottom: -15%;
+        width: 64%;
+      }
+
+      .asset.library_capsule .character.likui {
+        display: none;
+      }
+
+      .asset.library_capsule .footer {
+        display: none;
+      }
+
+      .asset.library_hero .background img {
+        object-position: center 45%;
+      }
+
+      .asset.library_hero .vignette {
+        background:
+          linear-gradient(90deg, rgba(4, 8, 9, 0.98) 0%, rgba(4, 8, 9, 0.78) 33%, rgba(4, 8, 9, 0.12) 66%, rgba(4, 8, 9, 0.45) 100%),
+          linear-gradient(0deg, rgba(3, 7, 8, 0.82), transparent 44%, rgba(3, 7, 8, 0.08));
+      }
+
+      .asset.library_hero .brand {
+        top: 14%;
+        width: 43%;
+      }
+
+      .asset.library_hero .title-row h1 {
+        font-size: calc(var(--h) * 0.17);
+        letter-spacing: 0.08em;
+      }
+
+      .asset.library_hero.lang-en .title-row h1 {
+        font-size: calc(var(--h) * 0.12);
+        letter-spacing: 0.04em;
+      }
+
+      .asset.library_hero .character {
+        height: 110%;
+      }
+
+      .asset.library_hero .character.linchong {
+        right: 24%;
+        bottom: -18%;
+        width: 25%;
+      }
+
+      .asset.library_hero .character.wusong {
+        right: 3%;
+        bottom: -20%;
+        width: 25%;
+      }
+
+      .asset.library_hero .character.likui {
+        right: 41%;
+        bottom: -22%;
+        width: 26%;
+      }
+
+      .asset.page_background .vignette {
+        background:
+          linear-gradient(90deg, rgba(4, 8, 9, 0.92), rgba(4, 8, 9, 0.22) 58%, rgba(4, 8, 9, 0.52)),
+          linear-gradient(0deg, rgba(3, 7, 8, 0.82), transparent 54%);
+      }
+
+      .asset.page_background .characters {
+        opacity: 0.42;
+      }
+
+      .asset.page_background .brand,
+      .asset.page_background .footer {
+        display: none;
+      }
+
+      .asset.library_logo {
+        background: transparent;
+      }
+
+      .asset.library_logo .background,
+      .asset.library_logo .vignette,
+      .asset.library_logo .wash,
+      .asset.library_logo .grain,
+      .asset.library_logo .characters,
+      .asset.library_logo .footer {
+        display: none;
+      }
+
+      .asset.library_logo .brand {
+        left: 5%;
+        top: 9%;
+        width: 90%;
+      }
+
+      .asset.library_logo .kicker {
+        font-size: calc(var(--h) * 0.047);
+      }
+
+      .asset.library_logo .title-row h1 {
+        font-size: calc(var(--h) * 0.25);
+      }
+
+      .asset.library_logo.lang-en .title-row h1 {
+        font-size: calc(var(--h) * 0.145);
+      }
+
+      .asset.library_logo .seal {
+        display: none;
+      }
+
+      .asset.library_logo .subtitle {
+        font-size: calc(var(--h) * 0.088);
+      }
+
+      .asset.library_logo .tagline,
+      .asset.library_logo .features {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="asset" class="asset" aria-label="星命水浒商店素材">
+      <div class="background">
+        <img src="/assets/environments/liangshan_water_fort.png" alt="" />
+      </div>
+      <div class="vignette"></div>
+      <div class="wash"></div>
+      <div class="grain"></div>
+      <div class="characters">
+        <img class="character likui" src="/assets/characters/likui/cutout.png" alt="" />
+        <img class="character linchong" src="/assets/characters/linchong/cutout.png" alt="" />
+        <img class="character wusong" src="/assets/characters/wusong/cutout.png" alt="" />
+      </div>
+      <section class="brand">
+        <p class="kicker">北宋末年 · 梁山群像录</p>
+        <div class="title-row">
+          <h1>星命水浒</h1>
+          <span class="seal">替天行道</span>
+        </div>
+        <p class="subtitle">风雪山神庙</p>
+        <p class="tagline">聚四十位好汉，破四路星命。每一次出招，都在改写梁山泊的结局。</p>
+        <div class="features">
+          <span>三人阵位</span>
+          <span>四路克制</span>
+          <span>自动战斗</span>
+          <span>无尽演武</span>
+        </div>
+      </section>
+      <footer class="footer"><span class="footer-left">单机回合制 RPG</span><i></i><span class="footer-right">多结局 · 群像叙事 · 构筑挑战</span></footer>
+    </main>
+    <script>
+      const assetSizes = {
+        header_capsule: [920, 430],
+        small_capsule: [924, 348],
+        main_capsule: [1232, 706],
+        vertical_capsule: [748, 896],
+        library_capsule: [600, 900],
+        library_hero: [3840, 1240],
+        page_background: [1438, 810],
+        library_logo: [1280, 720],
+      };
+      const params = new URLSearchParams(location.search);
+      const assetName = params.get("asset") || "header_capsule";
+      const language = params.get("lang") || "zh-CN";
+      const [width, height] = assetSizes[assetName] || assetSizes.header_capsule;
+      document.documentElement.style.setProperty("--w", `${width}px`);
+      document.documentElement.style.setProperty("--h", `${height}px`);
+      document.querySelector("#asset").classList.add(assetName);
+      document.querySelector("#asset").dataset.asset = assetName;
+      if (language === "en-US") {
+        document.documentElement.lang = "en-US";
+        document.querySelector("#asset").classList.add("lang-en");
+        document.querySelector(".kicker").textContent = "A WATER MARGIN SAGA";
+        document.querySelector(".title-row h1").textContent = "XINGMING SHUHU";
+        document.querySelector(".subtitle").textContent = "SNOWBOUND VENGEANCE";
+        document.querySelector(".tagline").textContent =
+          "Rally forty outlaws. Master four disciplines. Rewrite the fate of Liangshan in a turn-based RPG.";
+        const features = document.querySelectorAll(".features span");
+        ["PARTY FORMATION", "FOUR DISCIPLINES", "AUTO-BATTLE", "ENDLESS ARENA"].forEach(
+          (label, index) => {
+            if (features[index]) features[index].textContent = label;
+          },
+        );
+        document.querySelector(".footer-left").textContent =
+          "SINGLE-PLAYER TURN-BASED RPG";
+        document.querySelector(".footer-right").textContent =
+          "MULTIPLE ENDINGS · PARTY BUILDING";
+      }
+      document.title = `星命水浒 · ${assetName}`;
+    </script>
+  </body>
+</html>

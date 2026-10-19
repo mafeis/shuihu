@@ -1,0 +1,14 @@
+"AppBuild"
+{
+  "AppID" "YOUR_APP_ID"
+  "Desc" "Xingming Shuihu 1.0.0 Windows x64"
+  "BuildOutput" "..\\steam_build_output"
+  "Preview" "0"
+  "Local" ""
+  "SetLive" ""
+  "Depots"
+  {
+    "YOUR_WINDOWS_DEPOT_ID" "depot_build_windows.vdf"
+    "YOUR_MACOS_DEPOT_ID" "depot_build_macos.vdf"
+  }
+}

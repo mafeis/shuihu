@@ -1,0 +1,12 @@
+"DepotBuildConfig"
+{
+  "DepotID" "YOUR_MACOS_DEPOT_ID"
+  "ContentRoot" "../release/mac-arm64"
+  "FileMapping"
+  {
+    "LocalPath" "星命水浒.app/*"
+    "DepotPath" "."
+    "recursive" "1"
+  }
+  "FileExclusion" "*.log"
+}

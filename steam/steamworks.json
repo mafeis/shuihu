@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "cloudSaveFile": "xingming-shuihu-save-v1.json",
+  "achievementMetadataFile": "achievement_metadata.json",
+  "achievementIconDirectory": "store/steam_achievements",
+  "achievements": {
+    "first_blood": "FIRST_BLOOD",
+    "ten_stands": "TEN_STANDS",
+    "hundred_stands": "HUNDRED_STANDS",
+    "all_sworn": "ALL_SWORN",
+    "full_chronicle": "FULL_CHRONICLE",
+    "three_endings": "THREE_ENDINGS",
+    "camp_complete": "CAMP_COMPLETE",
+    "arena_ten": "ARENA_TEN",
+    "arena_twenty": "ARENA_TWENTY",
+    "arena_thirty": "ARENA_THIRTY",
+    "mastery_path": "MASTERY_PATH",
+    "doctrine_path": "DOCTRINE_PATH",
+    "doctrine_all": "DOCTRINE_ALL",
+    "new_cycle": "NEW_CYCLE",
+    "medal_three": "MEDAL_THREE",
+    "medal_all": "MEDAL_ALL",
+    "arena_masteries": "ARENA_MASTERIES",
+    "arena_synergies": "ARENA_SYNERGIES",
+    "arena_encounters": "ARENA_ENCOUNTERS"
+  },
+  "stats": {
+    "battlesWon": "BATTLES_WON",
+    "enemiesDefeated": "ENEMIES_DEFEATED",
+    "heroesRecruited": "HEROES_RECRUITED",
+    "arenaBestWave": "ARENA_BEST_WAVE",
+    "chapterMedals": "CHAPTER_MEDALS",
+    "newGamePlus": "NEW_GAME_PLUS"
+  }
+}

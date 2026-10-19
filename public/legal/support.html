@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0c1112" />
+    <meta name="description" content="《星命水浒：风雪山神庙》浏览器版支持与技术排查说明。" />
+    <title>支持与版本更新｜星命水浒</title>
+    <link rel="stylesheet" href="/legal/legal.css" />
+  </head>
+  <body>
+    <header>
+      <nav class="legal-nav" aria-label="发行文档">
+        <a class="legal-brand" href="/">星命水浒 · 风雪山神庙</a>
+        <div class="legal-links">
+          <a href="/legal/privacy.html">隐私</a>
+          <a href="/legal/eula.html">许可</a>
+          <a href="/legal/support.html" aria-current="page">支持</a>
+          <a href="/legal/refund.html">退款</a>
+        </div>
+      </nav>
+    </header>
+    <main>
+      <p class="eyebrow">Browser Release / Support</p>
+      <h1>支持与版本更新</h1>
+      <p class="lede">
+        浏览器版本优先使用本地存档。遇到黑屏、无声音、离线失败或存档问题时，可以按以下顺序排查，并通过取得游戏的发行渠道提交问题。
+      </p>
+      <div class="meta">
+        <span>客户端版本：1.0.0</span>
+        <span>存档版本：25</span>
+        <span>语言：简体中文</span>
+      </div>
+
+      <div class="legal-grid">
+        <section>
+          <h2>黑屏或页面未更新</h2>
+          <ol>
+            <li>刷新页面一次，确认网络可访问游戏站点。</li>
+            <li>关闭其他占用大量内存的页面，再重新进入。</li>
+            <li>如果刚完成版本更新，等待 Service Worker 提示后刷新。</li>
+          </ol>
+        </section>
+        <section>
+          <h2>没有声音</h2>
+          <ol>
+            <li>打开设置，确认声音开关、配乐音量和音效音量。</li>
+            <li>先点击“踏入江湖”或其他游戏按钮，以满足浏览器自动播放策略。</li>
+            <li>检查系统静音、标签页静音和输出设备。</li>
+          </ol>
+        </section>
+        <section>
+          <h2>离线游玩</h2>
+          <p>
+            首次访问并加载过的章节、人物、场景和音乐可由 Service Worker
+            缓存。从未在线加载过的内容可能在断网时不可用。视频不进入离线缓存。
+          </p>
+        </section>
+        <section>
+          <h2>存档与迁移</h2>
+          <p>
+            设置页支持立即保存、导出和导入 JSON 存档。清除浏览器站点数据会删除本地进度；跨设备迁移前请先导出存档。
+          </p>
+        </section>
+      </div>
+
+      <section>
+        <h2>版本更新规则</h2>
+        <p>
+          修复性更新可以替换缓存中的静态资源。游戏使用版本化存档与旧档迁移，损坏的导入文件会被拒绝，主存档损坏时可尝试安全副本。大版本更新前仍建议导出一份 JSON 存档。
+        </p>
+      </section>
+      <section class="callout">
+        <h2>提交问题</h2>
+        <p>
+          请通过你购买或取得本游戏的商店、平台或发行页面的客服入口提交问题，并附上客户端版本、浏览器与应用版本、操作系统、发生问题的页面、复现步骤和无个人信息的截图。不要在公开问题单中上传完整存档、购买凭证或其他敏感信息。
+        </p>
+      </section>
+      <div class="actions">
+        <a class="primary" href="/">返回游戏</a>
+        <a href="/legal/refund.html">查看退款说明</a>
+      </div>
+    </main>
+    <footer>星命水浒制作组 · 浏览器发行候选文档</footer>
+  </body>
+</html>

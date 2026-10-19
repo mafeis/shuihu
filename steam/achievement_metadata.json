@@ -1,0 +1,353 @@
+{
+  "schemaVersion": 1,
+  "iconSize": 64,
+  "iconDirectory": "store/steam_achievements",
+  "steamLocales": [
+    "schinese",
+    "english"
+  ],
+  "achievements": [
+    {
+      "id": "first_blood",
+      "apiName": "FIRST_BLOOD",
+      "tone": "cinnabar",
+      "hidden": false,
+      "icon": "first_blood_unlocked.png",
+      "iconGray": "first_blood_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "初阵破晓",
+          "description": "取得第一场战斗胜利"
+        },
+        "english": {
+          "name": "First Dawn",
+          "description": "Win your first battle."
+        }
+      }
+    },
+    {
+      "id": "ten_stands",
+      "apiName": "TEN_STANDS",
+      "tone": "blue",
+      "hidden": false,
+      "icon": "ten_stands_unlocked.png",
+      "iconGray": "ten_stands_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "十阵不退",
+          "description": "累计取得 10 场战斗胜利"
+        },
+        "english": {
+          "name": "Ten Lines Unbroken",
+          "description": "Win 10 battles."
+        }
+      }
+    },
+    {
+      "id": "hundred_stands",
+      "apiName": "HUNDRED_STANDS",
+      "tone": "gold",
+      "hidden": false,
+      "icon": "hundred_stands_unlocked.png",
+      "iconGray": "hundred_stands_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "百战余生",
+          "description": "累计取得 100 场战斗胜利"
+        },
+        "english": {
+          "name": "Survivor of a Hundred",
+          "description": "Win 100 battles."
+        }
+      }
+    },
+    {
+      "id": "all_sworn",
+      "apiName": "ALL_SWORN",
+      "tone": "teal",
+      "hidden": false,
+      "icon": "all_sworn_unlocked.png",
+      "iconGray": "all_sworn_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "群星来义",
+          "description": "让22位好汉全部结义"
+        },
+        "english": {
+          "name": "Stars of the Marsh",
+          "description": "Recruit all twenty-two heroes."
+        }
+      }
+    },
+    {
+      "id": "full_chronicle",
+      "apiName": "FULL_CHRONICLE",
+      "tone": "gold",
+      "hidden": false,
+      "icon": "full_chronicle_unlocked.png",
+      "iconGray": "full_chronicle_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "风雪九回",
+          "description": "完成全部九回主线"
+        },
+        "english": {
+          "name": "Nine Chapters of Snow",
+          "description": "Complete all nine campaign chapters."
+        }
+      }
+    },
+    {
+      "id": "three_endings",
+      "apiName": "THREE_ENDINGS",
+      "tone": "gold",
+      "hidden": false,
+      "icon": "three_endings_unlocked.png",
+      "iconGray": "three_endings_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "一山三命",
+          "description": "收录聚义、招安与归隐三种结局"
+        },
+        "english": {
+          "name": "Three Fates of Liangshan",
+          "description": "Unlock the Brotherhood, Allegiance, and Renunciation endings."
+        }
+      }
+    },
+    {
+      "id": "camp_complete",
+      "apiName": "CAMP_COMPLETE",
+      "tone": "blue",
+      "hidden": false,
+      "icon": "camp_complete_unlocked.png",
+      "iconGray": "camp_complete_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "水泊根基",
+          "description": "将聚义厅、演武场和星台全部升至满级"
+        },
+        "english": {
+          "name": "Foundations of the Marsh",
+          "description": "Raise the Assembly Hall, Training Ground, and Star Terrace to maximum level."
+        }
+      }
+    },
+    {
+      "id": "arena_ten",
+      "apiName": "ARENA_TEN",
+      "tone": "cinnabar",
+      "hidden": false,
+      "icon": "arena_ten_unlocked.png",
+      "iconGray": "arena_ten_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "十阵扬名",
+          "description": "在梁山演武中突破第 10 阵"
+        },
+        "english": {
+          "name": "A Name Across Ten Waves",
+          "description": "Reach wave 10 in the Liangshan Arena."
+        }
+      }
+    },
+    {
+      "id": "arena_twenty",
+      "apiName": "ARENA_TWENTY",
+      "tone": "gold",
+      "hidden": false,
+      "icon": "arena_twenty_unlocked.png",
+      "iconGray": "arena_twenty_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "星火不熄",
+          "description": "在梁山演武中突破第 20 阵"
+        },
+        "english": {
+          "name": "Embers Unbroken",
+          "description": "Reach wave 20 in the Liangshan Arena."
+        }
+      }
+    },
+    {
+      "id": "arena_thirty",
+      "apiName": "ARENA_THIRTY",
+      "tone": "gold",
+      "hidden": false,
+      "icon": "arena_thirty_unlocked.png",
+      "iconGray": "arena_thirty_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "三十阵无双",
+          "description": "在梁山演武中突破第 30 阵"
+        },
+        "english": {
+          "name": "Unrivaled at Thirty",
+          "description": "Reach wave 30 in the Liangshan Arena."
+        }
+      }
+    },
+    {
+      "id": "mastery_path",
+      "apiName": "MASTERY_PATH",
+      "tone": "teal",
+      "hidden": false,
+      "icon": "mastery_path_unlocked.png",
+      "iconGray": "mastery_path_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "星命同辉",
+          "description": "完成任意好汉的全部三项星命试炼"
+        },
+        "english": {
+          "name": "Starlight in Accord",
+          "description": "Complete all three mastery trials for any hero."
+        }
+      }
+    },
+    {
+      "id": "doctrine_path",
+      "apiName": "DOCTRINE_PATH",
+      "tone": "teal",
+      "hidden": false,
+      "icon": "doctrine_path_unlocked.png",
+      "iconGray": "doctrine_path_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "命途初开",
+          "description": "为一位三试圆满的好汉选定星命命途"
+        },
+        "english": {
+          "name": "The First Path",
+          "description": "Choose a destiny doctrine for a hero who has completed every mastery trial."
+        }
+      }
+    },
+    {
+      "id": "doctrine_all",
+      "apiName": "DOCTRINE_ALL",
+      "tone": "gold",
+      "hidden": false,
+      "icon": "doctrine_all_unlocked.png",
+      "iconGray": "doctrine_all_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "群星分途",
+          "description": "为22位好汉全部选定星命命途"
+        },
+        "english": {
+          "name": "Twenty-One Stars, Twenty-One Paths",
+          "description": "Choose a destiny doctrine for all twenty-two heroes."
+        }
+      }
+    },
+    {
+      "id": "new_cycle",
+      "apiName": "NEW_CYCLE",
+      "tone": "teal",
+      "hidden": false,
+      "icon": "new_cycle_unlocked.png",
+      "iconGray": "new_cycle_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "再卷星图",
+          "description": "以星图传承开启第二周目"
+        },
+        "english": {
+          "name": "Chart the Stars Again",
+          "description": "Begin a New Game+ cycle."
+        }
+      }
+    },
+    {
+      "id": "medal_three",
+      "apiName": "MEDAL_THREE",
+      "tone": "teal",
+      "hidden": false,
+      "icon": "medal_three_unlocked.png",
+      "iconGray": "medal_three_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "星章初刻",
+          "description": "累计取得 3 枚战卷评鉴"
+        },
+        "english": {
+          "name": "First Seal",
+          "description": "Earn 3 chapter medals."
+        }
+      }
+    },
+    {
+      "id": "medal_all",
+      "apiName": "MEDAL_ALL",
+      "tone": "gold",
+      "hidden": false,
+      "icon": "medal_all_unlocked.png",
+      "iconGray": "medal_all_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "九卷全璧",
+          "description": "收齐九回全部 27 枚战卷评鉴"
+        },
+        "english": {
+          "name": "Nine Scrolls Complete",
+          "description": "Collect all 27 chapter medals."
+        }
+      }
+    },
+    {
+      "id": "arena_masteries",
+      "apiName": "ARENA_MASTERIES",
+      "tone": "teal",
+      "hidden": false,
+      "icon": "arena_masteries_unlocked.png",
+      "iconGray": "arena_masteries_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "十二阵通明",
+          "description": "在梁山演武中集齐十二种阵眼"
+        },
+        "english": {
+          "name": "Twelve Formations Illuminated",
+          "description": "Discover all twelve arena masteries."
+        }
+      }
+    },
+    {
+      "id": "arena_synergies",
+      "apiName": "ARENA_SYNERGIES",
+      "tone": "gold",
+      "hidden": false,
+      "icon": "arena_synergies_unlocked.png",
+      "iconGray": "arena_synergies_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "八法归宗",
+          "description": "在梁山演武中触发全部八种阵法"
+        },
+        "english": {
+          "name": "Eight Arts Return",
+          "description": "Trigger all eight arena formation synergies."
+        }
+      }
+    },
+    {
+      "id": "arena_encounters",
+      "apiName": "ARENA_ENCOUNTERS",
+      "tone": "gold",
+      "hidden": false,
+      "icon": "arena_encounters_unlocked.png",
+      "iconGray": "arena_encounters_locked.png",
+      "locales": {
+        "schinese": {
+          "name": "八阵尽观",
+          "description": "在梁山演武中收录全部八种官军军势"
+        },
+        "english": {
+          "name": "Eight Armies Observed",
+          "description": "Record all eight imperial army encounters."
+        }
+      }
+    }
+  ]
+}

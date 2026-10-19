@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "disclosureVersion": "2026-10-19",
+  "runtimeGeneration": false,
+  "generatedContentPresent": true,
+  "playerDataUsedForTraining": false,
+  "containsLiveGeneratedContent": false,
+  "categories": [
+    {
+      "id": "image",
+      "label": "Pre-generated image content",
+      "toolchain": [
+        "ComfyUI",
+        "Qwen Image 2.1",
+        "Qwen Image Edit"
+      ],
+      "assetCount": 155,
+      "usage": [
+        "forty hero key-art portraits",
+        "forty transparent hero battle cutouts",
+        "forty hero turnaround sheets",
+        "forty responsive transparent title thumbnails derived from battle cutouts",
+        "eight environment paintings",
+        "two enemy key-art portraits",
+        "seven enemy battle sprites",
+        "one enemy lineup sheet",
+        "three icon source sheets",
+        "fourteen transparent UI icons"
+      ]
+    },
+    {
+      "id": "video",
+      "label": "Pre-generated video content",
+      "toolchain": [
+        "ComfyUI",
+        "MiniMax H3"
+      ],
+      "assetCount": 2,
+      "usage": [
+        "one five-second animated title-environment shot",
+        "one static title poster with a compressed WebP runtime derivative"
+      ]
+    },
+    {
+      "id": "audio",
+      "label": "Pre-generated music content",
+      "toolchain": [
+        "ComfyUI",
+        "YuE2 3B"
+      ],
+      "assetCount": 10,
+      "usage": [
+        "ten loopable instrumental game themes"
+      ]
+    }
+  ],
+  "humanOversight": [
+    "Curated prompts, seeds, model versions, source masters, and hashes are retained in assets/manifest.json and workflows/api.",
+    "Generated hero and enemy cutouts were reviewed and corrected for silhouettes, alpha edges, weapons, hands, props, and readable scale.",
+    "All music was edited, crossfaded, loudness-mastered, loop-tested, and encoded before integration.",
+    "Human-authored game code, narrative, interface layout, rules, balancing, and final composition determine the shipped experience.",
+    "No player input, save data, telemetry, or personal data is sent to a generative model or developer-operated server at runtime."
+  ],
+  "runtimeBoundary": {
+    "networkRequired": false,
+    "comfyUiBundled": false,
+    "modelWeightsBundled": false,
+    "generationEndpointsInRuntime": false
+  },
+  "externalReview": {
+    "modelCommercialTermsVerified": false,
+    "finalSteamSurveySubmitted": false,
+    "requiredAction": "The release owner must confirm commercial terms for every model, LoRA, custom node, and training-data dependency before submitting the Steam generative-AI disclosure."
+  }
+}
