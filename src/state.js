@@ -1101,6 +1101,153 @@ export function activeHeroBonds(state) {
   );
 }
 
+function heroCanAttack(hero) {
+  return hero.skills.some((skill) => skill.power > 0);
+}
+
+function heroCanHeal(hero) {
+  return hero.skills.some((skill) => skill.heal > 0) ||
+    Object.values(HERO_DOCTRINES?.[hero.id]?.paths || {}).some(
+      (doctrine) => doctrine.supportHealPct > 0,
+    );
+}
+
+function heroCanControl(hero) {
+  return hero.skills.some((skill) =>
+    (skill.effects || []).some((effect) =>
+      ["stun", "sealed", "armorBreak", "bleeding"].includes(
+        effect.status,
+      ),
+    ),
+  );
+}
+
+function heroPassiveControl(hero) {
+  const effects = hero.passive?.effects || {};
+  return (
+    (effects.counterArmorBreakChance || 0) > 0 ||
+    (effects.comboChaseBrokenGuaranteed === true) ||
+    (effects.armorBreakChance || 0) > 0 ||
+    (effects.bleedChance || 0) > 0
+  );
+}
+
+function heroAreaDamage(hero) {
+  return hero.skills
+    .filter((skill) => skill.target === "allEnemies")
+    .reduce(
+      (total, skill) => total + Math.max(0, Number(skill.power) || 0),
+      0,
+    );
+}
+
+function heroTeamSupport(hero) {
+  return hero.skills.some((skill) =>
+    ["allAllies", "ally"].includes(skill.target) &&
+    (Number(skill.heal) > 0 ||
+      (skill.effects || []).some((effect) =>
+        [
+          "teamStatus",
+          "targetStatus",
+          "teamCleanse",
+          "targetCleanse",
+          "teamYiqi",
+          "targetYiqi",
+        ].includes(effect.type),
+      )),
+  );
+}
+
+function recommendFormationScore(
+  state,
+  heroIds,
+  team,
+  bonds,
+  preferredRowCount,
+  pathCount,
+) {
+  const stats = heroIds.map((heroId) => deriveHeroStats(state, heroId));
+  const damage =
+    stats.reduce((total, entry) => total + entry.atk * 2.4, 0) +
+    stats.reduce((total, entry) => total + entry.maxHp * 0.12, 0) +
+    stats.reduce(
+      (total, entry) => total + (entry.def + entry.spd) * 1.5,
+      0,
+    );
+  const heroes = team.map((heroId) => HEROES[heroId]);
+  const attackers = heroes.filter(heroCanAttack).length;
+  const healers = heroes.filter(heroCanHeal).length;
+  const controllers = heroes.filter(
+    (hero) => heroCanControl(hero) || heroPassiveControl(hero),
+  ).length;
+  const areaDamage = heroes.reduce(
+    (total, hero) => total + heroAreaDamage(hero),
+    0,
+  );
+  const teamSupport = heroes.filter(heroTeamSupport).length;
+  const synergy = bonds.reduce((total, bond) => {
+    const effects = bond.effects || {};
+    return (
+      total +
+      (effects.atkPct || 0) * 60000 +
+      (effects.hpPct || 0) * 1000 +
+      (effects.defPct || 0) * 1000 +
+      (effects.healPct || 0) * 1000 +
+      (effects.poisePct || 0) * 100 +
+      (effects.allEnemiesPowerPct || 0) * 60000 +
+      (effects.critPct || 0) * 1000
+    );
+  }, 0);
+  return (
+    bonds.length * 600 +
+    pathCount * 1200 +
+    preferredRowCount * 240 +
+    damage +
+    attackers * 3000 +
+    (areaDamage > 0 ? 2500 : 0) +
+    Math.min(1, healers) * 2500 +
+    Math.min(1, teamSupport) * 2000 +
+    Math.min(1, controllers) * 1000 +
+    Math.min(
+      3,
+      stats.reduce(
+        (total, entry) => total + Math.max(0, entry.level - 1),
+        0,
+      ),
+    ) * 2000 +
+    synergy * 1.5 +
+    (bonds.length >= 2 ? 5000 : 0)
+  );
+}
+
+function recommendFormationTieBreak(
+  state,
+  heroIds,
+  team,
+  pathCount,
+  preferredRowCount,
+  heroRank,
+) {
+  const supportCount = team.filter(
+    (heroId) => heroCanHeal(HEROES[heroId]),
+  ).length;
+  const areaDamage = team.reduce(
+    (total, heroId) => total + heroAreaDamage(HEROES[heroId]),
+    0,
+  );
+  const rank = heroIds.reduce(
+    (total, heroId) => total + (heroRank.get(heroId) || 0),
+    0,
+  );
+  return (
+    supportCount * 100000 +
+    areaDamage * 10000 +
+    (pathCount === 3 ? 1000000 : 0) +
+    preferredRowCount * 1000 +
+    rank
+  );
+}
+
 export function recommendTeam(state) {
   const available = [...new Set(state.recruited)].filter(
     (heroId) => HEROES[heroId] && state.roster[heroId],
@@ -1125,16 +1272,6 @@ export function recommendTeam(state) {
         );
         const pathCount = new Set(heroIds.map((heroId) => HEROES[heroId].path))
           .size;
-        const statPower = heroIds.reduce((total, heroId) => {
-          const stats = deriveHeroStats(state, heroId);
-          return (
-            total +
-            stats.maxHp * 0.12 +
-            stats.atk * 2.4 +
-            stats.def * 1.5 +
-            stats.spd * 1.5
-          );
-        }, 0);
         const rowOrders = [
           [0, 1, 2],
           [0, 2, 1],
@@ -1148,16 +1285,21 @@ export function recommendTeam(state) {
           const preferredRows = team.filter(
             (heroId, row) => HEROES[heroId].preferredRow === row,
           ).length;
-          const chainFormationBonus = pathCount === 3 ? 25000 : 0;
-          const score =
-            bonds.length * 10000 +
-            chainFormationBonus +
-            pathCount * 120 +
-            preferredRows * 80 +
-            statPower;
-          const tieBreak = heroIds.reduce(
-            (total, heroId) => total + (heroRank.get(heroId) || 0),
-            0,
+          const score = recommendFormationScore(
+            state,
+            heroIds,
+            team,
+            bonds,
+            preferredRows,
+            pathCount,
+          );
+          const tieBreak = recommendFormationTieBreak(
+            state,
+            heroIds,
+            team,
+            pathCount,
+            preferredRows,
+            heroRank,
           );
           if (
             !best ||

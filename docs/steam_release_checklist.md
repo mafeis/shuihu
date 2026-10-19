@@ -6,13 +6,9 @@
 
 | 平台 | 产物 | 大小 | 状态 |
 | --- | --- | ---: | --- |
-| macOS ARM64 | `release/mac-arm64/星命水浒.app` | 461.0 MiB | 可本地运行，未签名、未公证 |
-| macOS ARM64 | `release/XingmingShuihu-1.0.1-mac-arm64.dmg` | 待核验 | 未签名、未公证 |
-| macOS ARM64 | `release/XingmingShuihu-1.0.1-mac-arm64.zip` | 待核验 | 未签名、未公证 |
-| Windows x64 | `release/XingmingShuihu-1.0.1-win-x64.exe` | 待核验 | NSIS 安装包，未配置 Authenticode |
-| Windows x64 | `release/XingmingShuihu-1.0.1-win-x64.zip` | 待核验 | 免安装包，未配置 Authenticode |
-| Windows ARM64 | `release/XingmingShuihu-1.0.1-win-arm64.exe` | 待核验 | NSIS 安装包，未配置 Authenticode |
-| Windows ARM64 | `release/XingmingShuihu-1.0.1-win-arm64.zip` | 待核验 | 免安装包，未配置 Authenticode |
+| macOS ARM64 | `release/mac-arm64/星命水浒.app` | 461.0 MiB | 显式 ad-hoc 签名与 Hardened Runtime，未公证 |
+| macOS ARM64 | `release/XingmingShuihu-1.0.1-mac-arm64.dmg` | 待最终打包 | 显式 ad-hoc 签名与 Hardened Runtime，未公证 |
+| macOS ARM64 | `release/XingmingShuihu-1.0.1-mac-arm64.zip` | 待最终打包 | 显式 ad-hoc 签名与 Hardened Runtime，未公证 |
 
 当前产物用于内部测试与商店材料制作，不应直接作为正式 Steam 构建上传。
 
@@ -50,7 +46,7 @@
 - 22 项 Steam 商店素材通过尺寸、透明通道和视频编码校验。
 - `npm run steamworks:verify`：19 项成就、38 张 64x64 成就图标、6 项统计、3 个原生模块目标与 15 个手柄动作映射通过。
 - `npm run steam:ai:verify`：167 项运行时资产中 149 项生成式资产的披露清单通过，18 个运行时文件确认不含 ComfyUI、生成节点或模型端点。
-- `npm run security:verify`：62 项 CSP、PWA 安装边界、离线 Worker、权限拒绝、Electron 沙箱、macOS Hardened Runtime、Windows SHA-256 时间戳、公证集成与第三方许可检查通过。
+- `npm run security:verify`：93 项 CSP、PWA 安装边界、离线 Worker、权限拒绝、Electron 沙箱、macOS 显式 ad-hoc 身份、Hardened Runtime、主程序与辅助进程权限、Windows SHA-256 时间戳和第三方许可检查通过。
 - 设置页可读取 `THIRD_PARTY_NOTICES.txt`，其中包含 Electron、Chromium、steamworks.js、Valve Steamworks SDK 与 Lucide 许可说明。
 - Steam Achievements、Stats、Cloud、Rich Presence 与 Overlay 的桥接层已实现，无 Steam 环境自动降级为本地存档。
 - 本地诊断日志、渲染故障页、资源加载错误与存档写入失败提示已实现。
@@ -75,7 +71,7 @@ npm run steam:preflight
 - [ ] 完成 macOS notarization 与 stapling。
 - [ ] 使用 Windows Authenticode 代码签名证书签署安装包与主程序。
 - [ ] 为 Windows 签名配置可信时间戳。
-- [x] 预配置 macOS Hardened Runtime、Electron 权限文件与 notarization 集成。
+- [x] 预配置 macOS 显式 ad-hoc 签名、Hardened Runtime 与 Electron 主程序/辅助进程权限文件；本版本不声明 Developer ID 签名或公证。
 - [x] 预配置 Windows Authenticode SHA-256 与 RFC 3161 时间戳。
 - [ ] 在干净 macOS 与 Windows 机器或虚拟机上完成安装、卸载和启动测试。
 
@@ -108,11 +104,11 @@ npm run steam:preflight
 
 ### 最终 QA
 
-- [x] 用当前源码重新生成 macOS、Windows x64 与 Windows ARM64 候选包，并复核存档版本 25、四套自动战法、二十八帖聚义、40 位好汉与全部当前构建文件已进入桌面包。
+- [ ] 用当前源码生成 macOS ARM64、Windows x64 与 Windows ARM64 最终包，并复核存档版本 27、四套自动战法、二十八帖聚义、40 位好汉与全部当前构建文件已进入桌面包。
 - [ ] Windows x64 原生环境完整九章通关。
 - [ ] macOS 签名包完整九章通关。
 - [x] 存档导出、损坏导入拒绝、有效导入安全副本与主存档损坏恢复已通过真实浏览器回归；旧档迁移由单元测试覆盖。
-- [ ] 当前未签名桌面包已通过断网启动与打包态存档恢复；签名候选包仍需复验。
+- [ ] 当前 ad-hoc 签名候选包仍需完成断网启动与打包态存档恢复复验。
 - [x] 1080p、1440p、4K、16:10 与 390px 视口下，最大字号和高对比的地图、设置页无横向溢出或卡片裁切。
 - [x] 自动战斗、均衡 / 破阵 / 守势 / 追残战法、`1x / 2x / 4x`、演武自动续阵、奇遇暂停、键盘切换与触屏按钮回归。
 - [ ] 标准手柄全流程与实体触屏设备回归。

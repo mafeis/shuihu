@@ -167,6 +167,7 @@ import {
 import {
   chooseAutoBattleAction,
   normalizeAutoBattleTactic,
+  recordAutoBattleChoice,
 } from "./auto-battle.js";
 import { battleVfxProfile } from "./battle-vfx.js";
 import {
@@ -198,6 +199,7 @@ let titleProloguePlayed = false;
 let endingCinematicActive = false;
 let endingCinematicTimer = null;
 let modal = null;
+let pendingRecruitment = null;
 let toastTimer = null;
 let settingsOrigin = "nav";
 let arenaRun = null;
@@ -212,6 +214,7 @@ let lastMasteryUnlocks = [];
 let lastAchievementUnlocks = [];
 let lastBondUnlocks = [];
 let lastChainUnlocks = [];
+let lastBattleScreenOpenedAt = 0;
 let desktopStatus = {
   desktop: Boolean(gameShell?.isDesktop),
   platform: gameShell?.platform || "web",
@@ -4653,6 +4656,7 @@ function runAutoHeroTurn() {
     }, 220);
     return;
   }
+  recordAutoBattleChoice(battle, action);
   resolveHeroAction(action.skill, action.target?.uid || null);
 }
 
@@ -4698,6 +4702,12 @@ function runEnemyTurn() {
     return;
   }
   const action = chooseEnemyAction(battle, actor);
+  if (!action?.skill) {
+    battleUi.processing = false;
+    finishResolutionAndAdvance(battle);
+    render();
+    return;
+  }
   battleActorSide = actor.side;
   const result = action.skill
     ? performAction(battle, actor.uid, action.skill, action.target?.uid || null)
@@ -5495,6 +5505,42 @@ function startHeroRecruitment(heroId) {
     );
     return;
   }
+  const recommendation = recommendTeam(state);
+  const currentTeam = state.team.filter(Boolean);
+  const suggestedTeam = recommendation.team.filter(Boolean);
+  const usesRecommendedTeam =
+    currentTeam.length === suggestedTeam.length &&
+    currentTeam.every((heroId) => suggestedTeam.includes(heroId)) &&
+    currentTeam.every(
+      (heroId, index) => heroId === suggestedTeam[index],
+    );
+  if (!usesRecommendedTeam) {
+    pendingRecruitment = { heroId, recommendedTeam: recommendation.team };
+    const recommendedNames = recommendation.team
+      .filter(Boolean)
+      .map((heroId) => HEROES[heroId].name)
+      .join("、");
+    openModal({
+      title: "军师荐阵",
+      body: `<p>军师根据攻防、阵位、路数与羁绊，建议以「${recommendedNames}」迎战。可直接出征，也可保留当前三阵。</p>`,
+      actions: [
+        {
+          label: "军师荐阵",
+          action: "recommend-recruitment-team",
+          tone: "primary",
+          icon: "wand-sparkles",
+        },
+        {
+          label: "以当前三阵出征",
+          action: "recruitment-battle",
+          tone: "ghost",
+          icon: "swords",
+        },
+      ],
+    });
+    return;
+  }
+  pendingRecruitment = null;
   persist();
   activeChapter = createRecruitmentChapter(heroId);
   story = {
@@ -5509,8 +5555,15 @@ function startHeroRecruitment(heroId) {
   setScreen("story");
 }
 
+function continuePendingRecruitment() {
+  const heroId = pendingRecruitment?.heroId;
+  pendingRecruitment = null;
+  if (!state || !heroId) return;
+  startHeroRecruitment(heroId);
+}
+
 function storyNext() {
-  if (!story || !activeChapter) return;
+  if (screen !== "story" || !story || !activeChapter) return;
   if (story.stage === "intro" || story.stage === "outro") {
     const lines = story.stage === "intro" ? activeChapter.intro : activeChapter.outro;
     sound.click();
@@ -5561,6 +5614,7 @@ function finishHeroRecruitment() {
 }
 
 function chooseStoryOption(index) {
+  if (screen !== "story" || !story || story.stage !== "choice") return;
   const option = activeChapter.choice.options[index];
   if (!option) return;
   story.choiceIndex = index;
@@ -5572,7 +5626,16 @@ function chooseStoryOption(index) {
 }
 
 function startChapterBattle() {
+  if (!activeChapter || screen === "battle") return;
+  const priorStage = story?.stage;
+  story.stage = "battle";
+  launchStoryBattle();
+  if (story) story.stage = priorStage;
+}
+
+function launchStoryBattle() {
   if (!activeChapter) return;
+  if (screen === "battle") return;
   lastMasteryUnlocks = [];
   lastAchievementUnlocks = [];
   lastBondUnlocks = [];
@@ -5607,6 +5670,7 @@ function startChapterBattle() {
   setBattleFacilityContext(battle, state);
   battleUi = createBattleUi();
   sound.playCombatCue("battle-start");
+  lastBattleScreenOpenedAt = performance.now();
   setScreen("battle");
 }
 
@@ -6753,6 +6817,21 @@ function handleAction(action, element) {
     case "start-hero-recruitment":
       startHeroRecruitment(element.dataset.hero);
       return;
+    case "recommend-recruitment-team": {
+      const heroId = pendingRecruitment?.heroId;
+      if (!heroId) return;
+      state.team = [...pendingRecruitment.recommendedTeam];
+      pendingRecruitment = null;
+      persist();
+      sound.confirm();
+      modal = null;
+      startHeroRecruitment(heroId);
+      return;
+    }
+    case "recruitment-battle":
+      modal = null;
+      continuePendingRecruitment();
+      return;
     case "nav-formation":
       setScreen("formation");
       return;
@@ -7299,7 +7378,7 @@ function handleAction(action, element) {
     case "retry-battle":
       battle = null;
       battleUi = createBattleUi();
-      startChapterBattle();
+      launchStoryBattle();
       return;
     case "story-outro":
       story.stage = "outro";
@@ -7334,6 +7413,7 @@ function handleAction(action, element) {
       return;
     case "close-modal":
       modal = null;
+      pendingRecruitment = null;
       render();
       return;
     default:
@@ -7625,7 +7705,8 @@ window.setInterval(() => {
     screen !== "battle" ||
     !battle ||
     battleTimer ||
-    modal
+    modal ||
+    performance.now() - lastBattleScreenOpenedAt < 2000
   ) {
     return;
   }

@@ -371,6 +371,18 @@ async function completeRecruitmentScroll(heroId) {
   await click(
     `button[data-action="start-hero-recruitment"][data-hero="${heroId}"]`,
   );
+  await waitFor(
+    'document.querySelector(".game-frame")?.classList.contains("screen-story") || Boolean(document.querySelector("[data-modal-panel]"))',
+  );
+  if (await evaluate('Boolean(document.querySelector("[data-modal-panel]"))')) {
+    await click('[data-modal-panel] button[data-action="recommend-recruitment-team"]');
+    await waitFor(
+      'document.querySelector(".game-frame")?.classList.contains("screen-story") || Boolean(document.querySelector("[data-modal-panel]"))',
+    );
+    if (await evaluate('Boolean(document.querySelector("[data-modal-panel]"))')) {
+      await click('[data-modal-panel] button[data-action="recruitment-battle"]');
+    }
+  }
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
   assertEqual(
     await evaluate("document.documentElement.dataset.music || ''"),
@@ -1398,10 +1410,7 @@ try {
   assertEqual(imageState.broken, 0, "battle images should not be broken");
   assertEqual(imageState.stretched, 0, "battle images should not be stretched");
 
-  await waitFor(
-    'document.querySelector(".game-frame")?.classList.contains("screen-reward")',
-    35000,
-  );
+  await waitForReward("Qingfeng doctrine regression battle", 35000);
   const rewardLayout = await evaluate(`(() => {
     const panel = document.querySelector(".medal-reward-panel");
     const items = panel ? [...panel.querySelectorAll(".medal-reward-list > span")] : [];
@@ -1583,6 +1592,23 @@ try {
       true,
       `${endingId} ending should enter the permanent archive`,
     );
+  }
+
+  for (const endingId of ["brotherhood", "order", "freedom"]) {
+    await setSave({ ...newGamePlusFixture(), ending: endingId, endingsUnlocked: [endingId] });
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
+    const replayOpening = await evaluate(`(() => {
+      const scenes = [...document.querySelectorAll(".title-prologue-frame")];
+      return {
+        variant: document.querySelector(".title-prologue")?.className || "",
+        scenes: scenes.length,
+        first: scenes[0]?.querySelector("small")?.textContent || "",
+        last: scenes.at(-1)?.querySelector("b")?.textContent || "",
+      };
+    })()`);
+    assertEqual(replayOpening.scenes, 4, `${endingId} replay should show the full opening`);
+    assertEqual(replayOpening.first, `旧卷回响 · ${endingId === "brotherhood" ? "梁山不散" : endingId === "order" ? "风雪入长安" : "江湖归舟"}`, `${endingId} replay should echo its previous ending`);
+    assertEqual(replayOpening.last, "星命开卷", `${endingId} replay should still land on the title frame`);
   }
 
   await setSave(bondFixture());

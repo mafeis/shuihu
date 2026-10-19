@@ -527,6 +527,7 @@ export function enemySkillList(actor) {
 }
 
 export function validTargets(battle, actorUid, skill) {
+  if (!skill) return [];
   const actor = combatantById(battle, actorUid);
   if (!actor) return [];
   const enemies = opponentsOf(battle, actor);
@@ -535,13 +536,20 @@ export function validTargets(battle, actorUid, skill) {
     case "enemy":
     case "allEnemies":
       return enemies;
-    case "frontEnemy":
-      return enemies.filter((unit) => unit.row === 0).slice(0, 1);
-    case "backEnemy":
-      return enemies
-        .filter((unit) => unit.row === 2)
-        .sort((a, b) => b.spd - a.spd)
-        .slice(0, 1);
+    case "frontEnemy": {
+      const target =
+        enemies.find((unit) => unit.row === 0) ||
+        [...enemies].sort((a, b) => a.row - b.row)[0];
+      return target ? [target] : [];
+    }
+    case "backEnemy": {
+      const target =
+        enemies
+          .filter((unit) => unit.row === 2)
+          .sort((a, b) => b.spd - a.spd)[0] ||
+        [...enemies].sort((a, b) => b.row - a.row)[0];
+      return target ? [target] : [];
+    }
     case "lowestEnemy":
       return [...enemies].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, 1);
     case "ally":
@@ -558,16 +566,21 @@ export function chooseEnemyAction(battle, actor) {
   const skills = enemySkillList(actor).filter(
     (skill) =>
       (!skill.minRound || battle.round >= skill.minRound) &&
-      skillUsable(actor, skill),
+      skillUsable(actor, skill) &&
+      validTargets(battle, actor.uid, skill).length > 0,
   );
   const weighted = [];
   for (const skill of skills) {
     for (let i = 0; i < (skill.weight || 1); i += 1) weighted.push(skill);
   }
-  const skill = pick(weighted.length ? weighted : enemySkillList(actor)[0]);
+  if (!weighted.length) return null;
+  const skill = pick(weighted);
   const targets = validTargets(battle, actor.uid, skill);
   let target = targets[0] || null;
-  if (skill.target === "enemy" || skill.target === "allEnemies") {
+  if (
+    skill &&
+    (skill.target === "enemy" || skill.target === "allEnemies")
+  ) {
     const weightedTargets = [];
     for (const unit of targets) {
       const rowWeight = ROWS[unit.row]?.aggro || 1;
@@ -955,13 +968,12 @@ function resolveTargets(battle, actor, skill, selectedTargetUid) {
     case "self":
       return [actor];
     case "frontEnemy":
-      return enemies.filter((unit) => unit.row === 0).slice(0, 1);
-    case "backEnemy": {
-      const candidates = enemies.filter((unit) => unit.row === 2);
-      return candidates.length
-        ? [candidates.sort((a, b) => b.spd - a.spd)[0]]
-        : [[...enemies].sort((a, b) => b.row - a.row)[0]];
-    }
+      return [enemies.find((unit) => unit.row === 0) || enemies[0]];
+    case "backEnemy":
+      return [
+        enemies.filter((unit) => unit.row === 2).sort((a, b) => b.spd - a.spd)[0] ||
+          [...enemies].sort((a, b) => b.row - a.row)[0],
+      ];
     case "lowestEnemy":
       return [[...enemies].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0]];
     case "ally": {

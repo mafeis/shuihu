@@ -6,7 +6,10 @@
 | --- | --- | --- |
 | macOS Apple 芯片 | `XingmingShuihu-1.0.1-mac-arm64.dmg` | macOS 13.0+，Apple M 系列 |
 | Windows x64 | `XingmingShuihu-1.0.1-win-x64.exe` | Windows 10/11 x64 |
+| Windows ARM64 | `XingmingShuihu-1.0.1-win-arm64.exe` | Windows 11 ARM64 |
 | 通用本地分享 | `XingmingShuihu-local-1.0.1.zip` | Node.js 20+ |
+
+每个桌面平台同时提供 ZIP 免安装包。请按机器架构选择安装包：Apple M 系列使用 macOS ARM64，Intel Mac 当前没有对应桌面包。Windows x64 适用于大多数 PC，Windows ARM64 适用于 Snapdragon 等 ARM 设备。
 
 macOS 本地测试包使用 ad-hoc 签名，没有 Apple Developer ID 签名和公证。首次打开时请右键应用并选择“打开”，或参考发行页中的说明。
 
