@@ -1003,6 +1003,19 @@ export function difficultyConfig(state) {
   return DIFFICULTIES[state.difficulty] || DIFFICULTIES.normal;
 }
 
+export function campaignEnemyScale(state) {
+  const completed = new Set(state?.completedChapters || []);
+  const victories = Math.max(
+    0,
+    Number(state?.stats?.battlesWon) || 0,
+  );
+  return Math.min(1.22, 1 + completed.size * 0.012 + victories * 0.002);
+}
+
+export function battleEnemyScale(state) {
+  return campaignEnemyScale(state);
+}
+
 export function facilityMultiplier(state, facilityId) {
   const level = state.facilities[facilityId] || 1;
   return 1 + (level - 1) * 0.05;
@@ -1022,6 +1035,11 @@ export function equipmentStats(equipment) {
     }
   }
   return totals;
+}
+
+export function equipmentMatchesCategory(itemId, category = "all") {
+  if (category === "all") return Boolean(EQUIPMENT[itemId]);
+  return EQUIPMENT[itemId]?.slot === category;
 }
 
 export function deriveHeroStats(state, heroId) {

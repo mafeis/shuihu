@@ -11,6 +11,7 @@ import {
   CAMP_RECIPES,
   CHAPTERS,
   CHAIN_FORMATIONS,
+  EQUIPMENT,
   HERO_BONDS,
   HERO_LEGENDS,
   HERO_ORDER,
@@ -24,6 +25,7 @@ import {
   activeHeroBonds,
   applyBattleRewards,
   applyHeroRecruitmentRewards,
+  battleEnemyScale,
   buildCampBuilding,
   campAreaSize,
   campBuildingStatus,
@@ -37,6 +39,7 @@ import {
   deriveHeroStats,
   discoverHeroBonds,
   discoverChainFormations,
+  equipmentMatchesCategory,
   evaluateChapterMedals,
   expandCampArea,
   heroDoctrineUnlocked,
@@ -53,6 +56,36 @@ import {
   setHeroDoctrine,
   validateSaveText,
 } from "../src/state.js";
+
+test("campaign victories raise enemy scaling within a fixed safety ceiling", () => {
+  const state = createInitialState();
+  const baseline = battleEnemyScale(state);
+  const upgradedHero = state.team[0];
+  const statsBeforeProgress = deriveHeroStats(state, upgradedHero);
+  const chapterRewards = [];
+  for (const chapter of CHAPTERS.slice(0, 3)) {
+    chapterRewards.push(applyBattleRewards(state, chapter));
+  }
+  const statsAfterProgress = deriveHeroStats(state, upgradedHero);
+  assert.ok(chapterRewards.every((reward) => reward.xp > 0));
+  assert.ok(state.roster[upgradedHero].level > 1);
+  assert.ok(statsAfterProgress.maxHp > statsBeforeProgress.maxHp);
+  assert.ok(statsAfterProgress.atk > statsBeforeProgress.atk);
+
+  state.completedChapters = [
+    ...new Set(CHAPTERS.slice(0, 3).map((chapter) => chapter.id)),
+  ];
+  state.stats.battlesWon = 8;
+  assert.ok(battleEnemyScale(state) > baseline);
+  assert.ok(battleEnemyScale(state) < 1.1);
+
+  state.completedChapters = CHAPTERS.map((chapter) => chapter.id).concat(
+    CHAPTERS.map((chapter) => chapter.id),
+    ["not-a-chapter"],
+  );
+  state.stats.battlesWon = 1000;
+  assert.equal(battleEnemyScale(state), 1.22);
+});
 
 test("recommended formation keeps chain-ready path diversity while stacking bonds", () => {
   const state = createInitialState();
@@ -653,6 +686,19 @@ test("campaign rewards recruit heroes and advance the chapter", () => {
   assert.equal(state.currentChapter, 1);
   assert.equal(state.stats.battlesWon, 1);
   assert.equal(reward.item, "bamboo_token");
+});
+
+test("equipment categories are derived from item slots", () => {
+  for (const item of Object.values(EQUIPMENT)) {
+    assert.equal(equipmentMatchesCategory(item.id, "all"), true);
+    assert.equal(equipmentMatchesCategory(item.id, item.slot), true);
+    for (const slot of ["weapon", "armor", "token"]) {
+      if (slot !== item.slot) {
+        assert.equal(equipmentMatchesCategory(item.id, slot), false);
+      }
+    }
+  }
+  assert.equal(equipmentMatchesCategory("not-an-item", "all"), false);
 });
 
 test("replaying a chapter reduces rewards without duplicating completion", () => {
