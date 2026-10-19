@@ -212,7 +212,7 @@ export function createBattle(state, chapter, options = {}) {
   const enemies = chapter.battle.enemies.map((config, index) => {
     const enemy = ENEMIES[config.id];
     const stats = deriveEnemyStats(enemy, config.level);
-    const enemyScale = options.enemyScale || 1;
+    const enemyScale = options.enemyScale ?? 1;
     const openingStatuses = Object.fromEntries(
       (specialRuleEffects.enemyOpeningStatuses || [])
         .filter((effect) => effect.row === undefined || effect.row === config.row)

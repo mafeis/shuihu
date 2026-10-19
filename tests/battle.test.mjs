@@ -121,6 +121,13 @@ test("battle setup applies health ratios and enemy scaling", () => {
   assert.equal(battle.phase === "select" || battle.phase === "enemy", true);
 });
 
+test("a zero enemy scale remains valid for newly skipped combat", () => {
+  const state = createInitialState();
+  const chapter = CHAPTERS.find((item) => item.id === "ferry");
+  const battle = createBattle(state, chapter, { enemyScale: 0 });
+  assert.equal(battle.enemies.every((unit) => unit.hp === 0), true);
+});
+
 test("battle actions expose hit, critical, evade and heal feedback", () => {
   const state = stateWithTeam(["linchong", "wusong", "yanqing"]);
   const chapter = CHAPTERS.find((item) => item.id === "ferry");
