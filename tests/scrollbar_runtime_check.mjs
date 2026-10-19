@@ -231,7 +231,10 @@ try {
       if (action === "equipment-check") {
         await page.evaluate(() => document.querySelector('button[data-action="nav-map"]')?.click());
         await page.click('button[data-action="nav-roster"]');
-        await page.locator("button[data-action='equipment-hero']").first().click();
+        await page.locator(".hero-card-hit").first().click();
+        await page
+          .locator(".hero-dossier button[data-action='equipment-hero']")
+          .click();
         await page.waitForSelector(".screen-equipment");
       } else if (action) {
         await page.evaluate((name) => {
