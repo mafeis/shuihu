@@ -2665,11 +2665,12 @@ function renderArenaReward() {
           ${renderArenaBuild(arenaRun.boons)}
           <div class="arena-current-booms">
             ${(arenaRun.lastUnlocks || [])
-              .map(
-                ({ relic, wave: unlockWave }) => `
-                  <span class="is-relic">${icon(relic.icon, 16)}第 ${unlockWave} 阵 · ${relic.name}</span>
-                `,
-              )
+              .map(({ relicId, wave: unlockWave }) => {
+                const relic = ARENA_RELICS[relicId];
+                return relic
+                  ? `<span class="is-relic">${icon(relic.icon, 16)}第 ${unlockWave} 阵 · ${relic.name}</span>`
+                  : "";
+              })
               .join("")}
           </div>
           ${renderMasteryUnlocks()}
