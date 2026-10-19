@@ -3416,43 +3416,45 @@ function renderQuestBoard() {
             <span>结义好汉</span>
             <b>${state.recruited.length}/${HERO_ORDER.length}</b>
           </div>
-          ${HERO_ORDER.map((heroId) => {
-            const itemHero = HEROES[heroId];
-            const itemQuests = HERO_QUESTS[heroId] || [];
-            const unlocked = state.recruited.includes(heroId);
-            const claimed = itemQuests.filter((quest) =>
-              state.heroQuests?.claimed?.includes(quest.id),
-            ).length;
-            const title = [...itemQuests]
-              .reverse()
-              .find((quest) =>
+          <div class="quest-hero-track">
+            ${HERO_ORDER.map((heroId) => {
+              const itemHero = HEROES[heroId];
+              const itemQuests = HERO_QUESTS[heroId] || [];
+              const unlocked = state.recruited.includes(heroId);
+              const claimed = itemQuests.filter((quest) =>
                 state.heroQuests?.claimed?.includes(quest.id),
-              )?.epithet;
-            return `
-              <button
-                class="quest-hero-button ${heroId === selectedId ? "is-selected" : ""} ${unlocked ? "" : "is-locked"}"
-                data-action="${unlocked ? "quest-hero" : "locked-hero"}"
-                data-hero="${heroId}"
-              >
-                <span class="quest-hero-thumb">
-                  ${
-                    unlocked
-                      ? heroPortrait(heroId)
-                      : icon("lock-keyhole", 18)
-                  }
-                </span>
-                <span class="quest-hero-copy">
-                  <small>${unlocked ? `${itemHero.star} · ${itemHero.nickname}` : "星位未明"}</small>
-                  <b>${unlocked ? itemHero.name : "未结义"}</b>
-                  <em>${unlocked ? title || itemHero.role : "继续推进战役"}</em>
-                </span>
-                <span class="quest-hero-count">
-                  <b>${claimed}</b><small>/3</small>
-                  <i><span style="width:${pct(claimed, 3)}"></span></i>
-                </span>
-              </button>
-            `;
-          }).join("")}
+              ).length;
+              const title = [...itemQuests]
+                .reverse()
+                .find((quest) =>
+                  state.heroQuests?.claimed?.includes(quest.id),
+                )?.epithet;
+              return `
+                <button
+                  class="quest-hero-button ${heroId === selectedId ? "is-selected" : ""} ${unlocked ? "" : "is-locked"}"
+                  data-action="${unlocked ? "quest-hero" : "locked-hero"}"
+                  data-hero="${heroId}"
+                >
+                  <span class="quest-hero-thumb">
+                    ${
+                      unlocked
+                        ? heroPortrait(heroId)
+                        : icon("lock-keyhole", 18)
+                    }
+                  </span>
+                  <span class="quest-hero-copy">
+                    <small>${unlocked ? `${itemHero.star} · ${itemHero.nickname}` : "星位未明"}</small>
+                    <b>${unlocked ? itemHero.name : "未结义"}</b>
+                    <em>${unlocked ? title || itemHero.role : "继续推进战役"}</em>
+                  </span>
+                  <span class="quest-hero-count">
+                    <b>${claimed}</b><small>/3</small>
+                    <i><span style="width:${pct(claimed, 3)}"></span></i>
+                  </span>
+                </button>
+              `;
+            }).join("")}
+          </div>
         </aside>
 
         <section class="quest-board" style="--quest-hero-color:${hero.palette}">

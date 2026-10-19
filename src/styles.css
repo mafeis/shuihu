@@ -3665,7 +3665,7 @@ button[aria-pressed="true"] {
   width: min(1480px, calc(100% - 48px));
   margin: 0 auto;
   padding: 26px 0 42px;
-  grid-template-columns: 286px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -3674,6 +3674,7 @@ button[aria-pressed="true"] {
   align-items: flex-end;
   justify-content: space-between;
   grid-column: 1 / -1;
+  order: 1;
   gap: 24px;
   padding: 0 0 18px;
   border-bottom: 1px solid var(--ink-700);
@@ -3982,37 +3983,44 @@ button[aria-pressed="true"] {
 }
 
 .quest-hero-list {
-  position: sticky;
-  top: 88px;
-  display: flex;
-  height: fit-content;
-  max-height: calc(100vh - 104px);
-  max-height: calc(100dvh - 104px);
+  position: relative;
+  display: block;
+  order: 2;
   min-width: 0;
-  overflow-y: auto;
-  flex-direction: column;
-  gap: 6px;
-  align-self: start;
+  overflow: hidden;
   padding: 10px;
   border: 1px solid rgba(221, 211, 189, 0.13);
   border-radius: 6px;
   background: rgba(10, 16, 17, 0.88);
-  overscroll-behavior: contain;
-  scrollbar-color: var(--ink-600) transparent;
-  scrollbar-width: thin;
 }
 
 .quest-list-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2px 4px 9px;
+  padding: 2px 4px 10px;
   color: var(--paper-500);
   font-size: 0.625rem;
 }
 
 .quest-list-heading b {
   color: var(--bronze-300);
+}
+
+.quest-hero-track {
+  display: grid;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0 2px 5px;
+  grid-auto-columns: minmax(224px, 250px);
+  grid-auto-flow: column;
+  gap: 7px;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 2px;
+  scroll-snap-type: x proximity;
+  scrollbar-color: var(--ink-600) transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
 }
 
 .quest-hero-button {
@@ -4026,6 +4034,7 @@ button[aria-pressed="true"] {
   border: 1px solid transparent;
   border-radius: 4px;
   background: rgba(22, 31, 31, 0.68);
+  scroll-snap-align: start;
   text-align: left;
 }
 
@@ -4123,6 +4132,11 @@ button[aria-pressed="true"] {
 
 .quest-board {
   min-width: 0;
+  order: 3;
+}
+
+.recruitment-board {
+  order: 4;
 }
 
 .quest-board-hero {
@@ -12900,11 +12914,9 @@ html[data-motion="reduced"] *::after {
   .quest-hero-list {
     position: relative;
     top: auto;
-    display: grid;
-    max-height: 180px;
-    overflow-y: auto;
+    display: block;
     flex: 0 0 auto;
-    grid-template-columns: 1fr;
+    overflow: hidden;
   }
 
   .camp-layout {
@@ -15967,14 +15979,12 @@ html[data-motion="reduced"] *::after {
 
   .quest-hero-list {
     position: static;
-    display: grid;
-    max-height: none;
-    overflow: visible;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    display: block;
+    overflow: hidden;
   }
 
   .quest-list-heading {
-    grid-column: 1 / -1;
+    width: 100%;
   }
 
   .recruitment-board {
@@ -16045,8 +16055,11 @@ html[data-motion="reduced"] *::after {
   }
 
   .quest-hero-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 7px;
+  }
+
+  .quest-hero-track {
+    grid-auto-columns: minmax(190px, 72vw);
   }
 
   .quest-hero-button {
@@ -16141,8 +16154,8 @@ html[data-motion="reduced"] *::after {
 }
 
 @media (max-width: 380px) {
-  .quest-hero-list {
-    grid-template-columns: 1fr;
+  .quest-hero-track {
+    grid-auto-columns: minmax(180px, 82vw);
   }
 
   .quest-board-copy {
