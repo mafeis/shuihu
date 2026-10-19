@@ -44,15 +44,15 @@ Playwright WebKit 是 Safari 引擎级自动化，不等同于真实 Safari 人�
 
 `npm run release:browser` 会先重建生产站点，再生成：
 
-- `release/browser/XingmingShuihu-web-1.0.1/site/`：可直接上传到站点根目录的完整游戏。
-- `release/browser/XingmingShuihu-web-1.0.1/XingmingShuihu-web-1.0.1.zip`：约 135 MiB 的浏览器发行压缩包。
-- `release-manifest.json`：版本、作用域、构建哈希、203 个站点文件的大小与 SHA-256。
+- `release/browser/XingmingShuihu-web-1.0.2/site/`：可直接上传到站点根目录的完整游戏。
+- `release/browser/XingmingShuihu-web-1.0.2/XingmingShuihu-web-1.0.2.zip`：135,271,542 字节（约 129.00 MiB）的浏览器发行压缩包。
+- `release/browser/XingmingShuihu-web-1.0.2/release-manifest.json`：版本、作用域、构建哈希、214 个站点文件的大小与 SHA-256。
 - `SHA256SUMS.txt`：发行 ZIP 校验和。
 - `deploy/_headers`：Netlify、Cloudflare Pages 等平台使用的 CSP、缓存与 MIME 响应头。
 - `deploy/nginx.conf.sample`：Nginx HTTPS 配置样例，部署前需替换域名、证书与站点根目录。
 - `DEPLOYMENT.md`：上传与发布后检查清单。
 
-生产站点约 141.9 MB，包含 40 位好汉的运行时立绘、关键原画、缩略图、章节场景、敌人、UI、视频和 10 首音乐。角色转身设定图属于制作参考，不进入浏览器包；内部 `assets/manifest.json` 含生成记录与提示词，也不进入玩家站点。
+生产站点为 136,179,776 字节（约 129.87 MiB），包含 40 位好汉的运行时立绘、关键原画、缩略图、章节场景、敌人、UI、视频、10 首音乐与 10 枚战斗音效。角色转身设定图属于制作参考，不进入浏览器包；内部 `assets/manifest.json` 含生成记录与提示词，也不进入玩家站点。
 
 `npm run release:browser:verify` 会逐文件复核大小和 SHA-256、ZIP 校验和、PWA 入口、四份发行文档、40 位好汉的 `cutout/keyart/thumb` 三套运行时资产、Service Worker 版本，并拒绝转身设定图、源图、Source Map、开发服务器地址和内部生产资产清单进入发行包。
 
@@ -120,7 +120,7 @@ X-Content-Type-Options: nosniff
 - [x] Playwright Firefox 157.0 通过桌面、移动视口、离线、减少动态与资产缩放回归。
 - [x] Playwright WebKit 27.2 通过桌面、移动视口、离线、减少动态与资产缩放回归。
 - [x] 生产标题首屏实测约 2.63 MB，其中八张人物缩略图约 365 KB，116 KB WebP 海报只请求一次。
-- [x] 生成可部署站点、约 135 MiB ZIP、逐文件 SHA-256、构建哈希和部署响应头配置。
+- [x] 生成可部署站点、约 129 MiB ZIP、逐文件 SHA-256、构建哈希和部署响应头配置。
 - [x] 浏览器包排除约 72 MB 制作转身图、内部生成提示词清单、源图与 Source Map。
 - [x] 浏览器预检在正式身份、法务确认和真实设备回执缺失时返回 `blocked`。
 - [ ] 正式域名、HTTPS 证书与 CDN 缓存策略。

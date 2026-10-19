@@ -222,7 +222,6 @@ const readme = `# 星命水浒：风雪山神庙
 
 此分享包需要 Node.js 20 或更高版本。若要免安装、免 Node.js 直接游玩，请使用同一发行版中的桌面安装包。
 Windows x64 版：\`XingmingShuihu-${version}-win-x64.exe\`
-Windows ARM64 版：\`XingmingShuihu-${version}-win-arm64.exe\`
 macOS Apple 芯片版：\`XingmingShuihu-${version}-mac-arm64.dmg\`
 `;
 

@@ -44,15 +44,12 @@ const requiredArtifacts = [
   `release/XingmingShuihu-${version}-mac-arm64.zip`,
   `release/XingmingShuihu-${version}-win-x64.exe`,
   `release/XingmingShuihu-${version}-win-x64.zip`,
-  `release/XingmingShuihu-${version}-win-arm64.exe`,
-  `release/XingmingShuihu-${version}-win-arm64.zip`,
   "release/mac-arm64/星命水浒.app/Contents/Resources/app.asar",
   "release/mac-arm64/星命水浒.app/Contents/Resources/app.asar.unpacked/node_modules/steamworks.js/dist/osx/steamworksjs.darwin-arm64.node",
   "release/mac-arm64/星命水浒.app/Contents/Resources/app.asar.unpacked/node_modules/steamworks.js/dist/osx/libsteam_api.dylib",
   "release/win-unpacked/resources/app.asar",
   "release/win-unpacked/resources/app.asar.unpacked/node_modules/steamworks.js/dist/win64/steamworksjs.win32-x64-msvc.node",
   "release/win-unpacked/resources/app.asar.unpacked/node_modules/steamworks.js/dist/win64/steam_api64.dll",
-  "release/win-arm64-unpacked/resources/app.asar",
   "release/SHA256SUMS-macOS.txt",
   "release/SHA256SUMS-Windows.txt",
 ];
@@ -105,7 +102,6 @@ const distFiles = walkFiles(path.join(root, "dist"));
 const asarArtifacts = [
   "release/mac-arm64/星命水浒.app/Contents/Resources/app.asar",
   "release/win-unpacked/resources/app.asar",
-  "release/win-arm64-unpacked/resources/app.asar",
 ];
 
 for (const asarArtifact of asarArtifacts) {

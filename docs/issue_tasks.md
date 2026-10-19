@@ -1,6 +1,6 @@
 # GitHub Issue 处理清单
 
-更新于 2026-10-19。已处理的 issue 均保留在下方清单中，GitHub 当前仍有 #22、#23 处于 OPEN 状态。点击动效和推荐装备功能尚未完成。
+更新于 2026-10-19。已处理的 issue 均保留在下方清单中；截至 1.0.2 发布准备，清单内 issue 均已关闭。
 
 | Issue | 分支 | 状态 | 验证与合并 |
 | --- | --- | --- | --- |
@@ -14,8 +14,8 @@
 | #17 好汉介绍页面 | `fix/issue-17-hero-biography` | 已完成 | PR 已合并，issue 已关闭 |
 | #18 战斗特效与阵容表现 | `fix/issue-18-battle-vfx-layout` | 已完成 | 分支已合入主线，issue 已关闭 |
 | #19 开局的动画不够精细 | `fix/issue-19-opening-cinematic-endings` | 已完成 | 分支已合入主线，issue 已关闭 |
-| #22 增加 UI 点击动效 | 待独立分支 | OPEN | 尚无独立实现，不计入 1.0.1 完成项 |
-| #23 增加推荐装备功能 | 待独立分支 | OPEN | 尚无独立实现，不计入 1.0.1 完成项 |
+| #22 增加 UI 点击动效 | `fix/issue-22-ui-feedback` | 已完成 | 合并提交 `0f24ebc`，点击、货币变化与选中态反馈已进入 1.0.2 |
+| #23 增加推荐装备功能 | `fix/issue-23-recommended-equipment` | 已完成 | 合并提交 `4ea8854`，按路数、阵位和占用边界推荐装备并进入 1.0.2 |
 | #24 npm run desktop:dev 报错 | `fix/issue-24-desktop-dev` | 已完成 | 已合并发布分支，开发模式同时启动 Vite 与 Electron |
 
-每个 issue 使用独立分支和 PR。完成标准为相关测试、构建与 GitHub Actions 全部通过，并在合并后确认 issue 自动关闭。1.0.1 桌面发行不宣称解决 #22、#23。
+每个 issue 使用独立分支和 PR。完成标准为相关测试、构建与 GitHub Actions 全部通过，并在合并后确认 issue 自动关闭。相关功能已纳入 1.0.2 发行验收。

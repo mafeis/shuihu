@@ -80,4 +80,4 @@ npm run steamworks:verify
 - 验证 Overlay、Cloud 冲突和成就服务器写入。
 - 在干净 Windows x64 与签名 macOS 环境完成上传分支测试。
 
-Windows ARM64 包是额外兼容产物。`steamworks.js` 当前不提供 Windows ARM64 原生绑定，因此 Steam 正式 Depot 应以 Windows x64 与 macOS ARM64 为主；ARM64 包会安全回退到本地模式和本地存档。
+Windows 发行只使用 x64 Depot。1.0.2 起不再构建或发布 Windows ARM64 产物，避免维护缺少 Steamworks 原生绑定的额外兼容包。

@@ -43,14 +43,16 @@
     },
     {
       "id": "audio",
-      "label": "Pre-generated music content",
+      "label": "Pre-generated audio content",
       "toolchain": [
         "ComfyUI",
-        "YuE2 3B"
+        "YuE2 3B",
+        "deterministic transient mastering"
       ],
-      "assetCount": 10,
+      "assetCount": 20,
       "usage": [
-        "ten loopable instrumental game themes"
+        "ten loopable instrumental game themes",
+        "ten mastered one-shot combat sound effects"
       ]
     }
   ],
@@ -58,6 +60,7 @@
     "Curated prompts, seeds, model versions, source masters, and hashes are retained in assets/manifest.json and workflows/api.",
     "Generated hero and enemy cutouts were reviewed and corrected for silhouettes, alpha edges, weapons, hands, props, and readable scale.",
     "All music was edited, crossfaded, loudness-mastered, loop-tested, and encoded before integration.",
+    "All combat sound effects were reviewed for semantic fit, trimmed, transient-shaped, loudness-mastered, peak-limited, and play-tested in battle.",
     "Human-authored game code, narrative, interface layout, rules, balancing, and final composition determine the shipped experience.",
     "No player input, save data, telemetry, or personal data is sent to a generative model or developer-operated server at runtime."
   ],

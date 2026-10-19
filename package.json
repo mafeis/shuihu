@@ -1,7 +1,7 @@
 {
   "name": "xingming-shuihu",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "星命水浒：风雪山神庙，一款水浒群像回合制角色扮演游戏",
   "author": "Xingming Shuihu Team",
   "main": "electron/main.cjs",
@@ -59,8 +59,7 @@
     "desktop:dir": "npm run build && electron-builder --dir",
     "desktop:pack": "npm run build && electron-builder",
     "desktop:pack:mac": "npm run build && electron-builder --mac",
-    "desktop:pack:win": "npm run build && electron-builder --win --x64",
-    "desktop:pack:win:arm64": "npm run build && electron-builder --win --arm64"
+    "desktop:pack:win": "npm run build && electron-builder --win --x64"
   },
   "dependencies": {
     "lucide": "^0.468.0",

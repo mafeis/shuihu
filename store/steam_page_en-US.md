@@ -66,8 +66,8 @@ The game contains cold-weapon combat, blood, imprisonment, wrongful prosecution,
 
 ## Generative AI Disclosure
 
-During development, the team used a ComfyUI pipeline to pre-generate selected character, environment, enemy, UI icon-sheet, title-video, and music assets. Human developers reviewed, corrected, composed, and mastered the final results. The shipped game does not generate content at runtime, does not require a ComfyUI connection, and does not send saves or personal data to a generative model.
+During development, the team used a ComfyUI pipeline to pre-generate selected character, environment, enemy, UI icon-sheet, title-video, music, and combat sound-effect assets. Human developers reviewed, corrected, composed, and mastered the final results. The shipped game does not generate content at runtime, does not require a ComfyUI connection, and does not send saves or personal data to a generative model.
 
 ## Copyright
 
-© 2026 Xingming Shuihu Team. The characters and underlying stories of Water Margin are public-domain material. This game's code, interface, character designs, music, and art assets were produced through the project's own pipeline.
+© 2026 Xingming Shuihu Team. The characters and underlying stories of Water Margin are public-domain material. This game's code, interface, character designs, music, sound effects, and art assets were produced through the project's own pipeline.

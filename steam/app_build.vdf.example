@@ -1,7 +1,7 @@
 "AppBuild"
 {
   "AppID" "YOUR_APP_ID"
-  "Desc" "Xingming Shuihu 1.0.1 Windows x64"
+  "Desc" "Xingming Shuihu 1.0.2 Windows x64"
   "BuildOutput" "..\\steam_build_output"
   "Preview" "0"
   "Local" ""

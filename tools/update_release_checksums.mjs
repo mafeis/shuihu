@@ -25,8 +25,6 @@ const groups = [
     artifacts: [
       artifact("win-x64", "exe"),
       artifact("win-x64", "zip"),
-      artifact("win-arm64", "exe"),
-      artifact("win-arm64", "zip"),
     ],
   },
 ];
