@@ -9,6 +9,7 @@ import {
   ARENA_SYNERGIES,
   CHAPTERS,
   CHAIN_FORMATIONS,
+  EQUIPMENT,
   HERO_BONDS,
   HERO_LEGENDS,
   HERO_ORDER,
@@ -29,6 +30,7 @@ import {
   deriveHeroStats,
   discoverHeroBonds,
   discoverChainFormations,
+  equipmentMatchesCategory,
   evaluateChapterMedals,
   heroDoctrineUnlocked,
   heroLegendCompleted,
@@ -586,6 +588,19 @@ test("campaign rewards recruit heroes and advance the chapter", () => {
   assert.equal(state.currentChapter, 1);
   assert.equal(state.stats.battlesWon, 1);
   assert.equal(reward.item, "bamboo_token");
+});
+
+test("equipment categories are derived from item slots", () => {
+  for (const item of Object.values(EQUIPMENT)) {
+    assert.equal(equipmentMatchesCategory(item.id, "all"), true);
+    assert.equal(equipmentMatchesCategory(item.id, item.slot), true);
+    for (const slot of ["weapon", "armor", "token"]) {
+      if (slot !== item.slot) {
+        assert.equal(equipmentMatchesCategory(item.id, slot), false);
+      }
+    }
+  }
+  assert.equal(equipmentMatchesCategory("not-an-item", "all"), false);
 });
 
 test("replaying a chapter reduces rewards without duplicating completion", () => {
