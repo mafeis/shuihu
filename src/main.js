@@ -5319,48 +5319,52 @@ function renderReward() {
       <div class="reward-background"></div>
       <div class="reward-shade"></div>
       <section class="reward-panel">
-        <div class="victory-seal">${icon("sparkles", 33)}<span>胜</span></div>
-        <p class="eyebrow">${activeChapter.label} · 战事已定</p>
-        <h1>${activeChapter.title}</h1>
-        <p class="reward-lead">${activeChapter.outro?.[0]?.text || "敌阵已破，水泊暂安。"}</p>
-        <div class="reward-grid">
-          <div class="reward-item">${icon("coins", 23)}<small>铜钱</small><b>+${reward.copper}</b><span>贯</span></div>
-          <div class="reward-item">${icon("trending-up", 23)}<small>全队历练</small><b>+${reward.xp}</b><span>经验</span></div>
-          <div class="reward-item">${icon("gem", 23)}<small>获得装备</small><b>${reward.item ? EQUIPMENT[reward.item]?.name : "旧战重游"}</b><span>${reward.item ? EQUIPMENT[reward.item]?.rarity : ""}</span></div>
+        <div class="reward-scroll">
+          <div class="victory-seal">${icon("sparkles", 33)}<span>胜</span></div>
+          <p class="eyebrow">${activeChapter.label} · 战事已定</p>
+          <h1>${activeChapter.title}</h1>
+          <p class="reward-lead">${activeChapter.outro?.[0]?.text || "敌阵已破，水泊暂安。"}</p>
+          <div class="reward-grid">
+            <div class="reward-item">${icon("coins", 23)}<small>铜钱</small><b>+${reward.copper}</b><span>贯</span></div>
+            <div class="reward-item">${icon("trending-up", 23)}<small>全队历练</small><b>+${reward.xp}</b><span>经验</span></div>
+            <div class="reward-item">${icon("gem", 23)}<small>获得装备</small><b>${reward.item ? EQUIPMENT[reward.item]?.name : "旧战重游"}</b><span>${reward.item ? EQUIPMENT[reward.item]?.rarity : ""}</span></div>
+          </div>
+          ${renderChapterMedalRewards(reward.medals)}
+          ${renderChapterTacticReward(reward.tactic)}
+          ${renderLegendReward(reward.legend)}
+          ${renderRecruitmentReward(reward.recruitment)}
+          ${renderMasteryUnlocks()}
+          ${renderBondUnlocks()}
+          ${renderChainUnlocks()}
+          ${renderAchievementUnlocks()}
+          ${
+            reward.recruits?.length
+              ? `<div class="recruit-section">
+                  <p class="eyebrow">新入伙</p>
+                  <div class="recruit-cards">
+                    ${reward.recruits
+                      .map(
+                        (heroId) => `
+                          <article>
+                            ${heroPortrait(heroId, "")}
+                            <span><small>${HEROES[heroId].star} · ${HEROES[heroId].nickname}</small><b>${HEROES[heroId].name}</b></span>
+                          </article>
+                        `,
+                      )
+                      .join("")}
+                  </div>
+                </div>`
+              : ""
+          }
+          ${
+            reward.levelUps?.length
+              ? `<p class="level-up-line">${icon("arrow-up", 16)} ${reward.levelUps.map((entry) => `${HEROES[entry.heroId].name}提升 ${entry.levels} 级`).join(" · ")}</p>`
+              : ""
+          }
         </div>
-        ${renderChapterMedalRewards(reward.medals)}
-        ${renderChapterTacticReward(reward.tactic)}
-        ${renderLegendReward(reward.legend)}
-        ${renderRecruitmentReward(reward.recruitment)}
-        ${renderMasteryUnlocks()}
-        ${renderBondUnlocks()}
-        ${renderChainUnlocks()}
-        ${renderAchievementUnlocks()}
-        ${
-          reward.recruits?.length
-            ? `<div class="recruit-section">
-                <p class="eyebrow">新入伙</p>
-                <div class="recruit-cards">
-                  ${reward.recruits
-                    .map(
-                      (heroId) => `
-                        <article>
-                          ${heroPortrait(heroId, "")}
-                          <span><small>${HEROES[heroId].star} · ${HEROES[heroId].nickname}</small><b>${HEROES[heroId].name}</b></span>
-                        </article>
-                      `,
-                    )
-                    .join("")}
-                </div>
-              </div>`
-            : ""
-        }
-        ${
-          reward.levelUps?.length
-            ? `<p class="level-up-line">${icon("arrow-up", 16)} ${reward.levelUps.map((entry) => `${HEROES[entry.heroId].name}提升 ${entry.levels} 级`).join(" · ")}</p>`
-            : ""
-        }
-        <button class="button primary large" data-action="story-outro">${icon("book-open", 19)}<span>${reward.legend ? "继续列传" : reward.recruitment ? "继续聚义帖" : "继续本章"}</span></button>
+        <div class="reward-actions">
+          <button class="button primary large" data-action="story-outro">${icon("book-open", 19)}<span>${reward.legend ? "继续列传" : reward.recruitment ? "继续聚义帖" : "继续本章"}</span></button>
+        </div>
       </section>
     </main>
   `;

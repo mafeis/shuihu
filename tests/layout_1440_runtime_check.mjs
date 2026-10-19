@@ -140,7 +140,7 @@ async function measureScreen(page, name) {
         };
       });
     const screen = document.querySelector(
-      ".app-screen, .story-screen, .battle-screen",
+      ".app-screen, .story-screen, .battle-screen, .reward-screen",
     );
     const screenRect = screen?.getBoundingClientRect();
     return {
@@ -341,6 +341,51 @@ try {
   metrics = await measureScreen(page, "battle");
   await captureScreen(page, "battle", metrics);
   reports.push({ name: "battle", controls: metrics.controls.length });
+  if (!(await page.locator('button[data-action="toggle-auto-battle"].is-active').count())) {
+    await page.click('button[data-action="toggle-auto-battle"]');
+  }
+  await page.click('.battle-speed-control button[data-speed="4"]');
+  if (await page.locator('button[data-action="dismiss-battle-tutorial"]').count()) {
+    await page.click('button[data-action="dismiss-battle-tutorial"]');
+  }
+  await page.waitForSelector(".screen-reward", { timeout: 60000 });
+  await page.waitForTimeout(160);
+  metrics = await measureScreen(page, "story-reward");
+  await captureScreen(page, "story-reward", metrics);
+  const rewardAction = await page.evaluate(() => {
+    const button = document.querySelector(
+      '.screen-reward .reward-actions button[data-action="story-outro"]',
+    );
+    if (!button) return null;
+    const rect = button.getBoundingClientRect();
+    const scroll = document.querySelector(".screen-reward .reward-scroll");
+    return {
+      top: rect.top,
+      right: rect.right,
+      bottom: rect.bottom,
+      left: rect.left,
+      visible:
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.right <= innerWidth &&
+        rect.bottom <= innerHeight,
+      scrollHeight: scroll?.scrollHeight || 0,
+      clientHeight: scroll?.clientHeight || 0,
+    };
+  });
+  assert.ok(rewardAction, "story reward: continue action is missing");
+  assert.equal(
+    rewardAction.visible,
+    true,
+    `story reward: continue action is outside the viewport ${JSON.stringify(
+      rewardAction,
+    )}`,
+  );
+  assert.ok(
+    rewardAction.scrollHeight > rewardAction.clientHeight,
+    "story reward: long reward content should scroll independently",
+  );
+  reports.push({ name: "story-reward", controls: rewardAction.visible ? 1 : 0 });
 
   await page.evaluate(
     ([key, save]) => localStorage.setItem(key, save),
