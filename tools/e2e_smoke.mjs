@@ -3382,6 +3382,16 @@ try {
     ["steamDeck", 1280, 800, false],
     ["mobile", 390, 844, true],
   ];
+  const assertPageScrolling = (layout, label, mobile) => {
+    assertEqual(layout.overflow, 0, `${label} should not overflow horizontally`);
+    if (!mobile) {
+      assertEqual(
+        layout.documentHeight,
+        layout.height,
+        `${label} should keep page scrolling out of the desktop viewport`,
+      );
+    }
+  };
   for (const [name, width, height, mobile] of releaseViewports) {
     await setViewport(width, height, mobile);
     const layout = await evaluate(`(() => {
@@ -3392,6 +3402,7 @@ try {
       return {
         width: innerWidth,
         height: innerHeight,
+        documentHeight: document.documentElement.scrollHeight,
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         mainOutside: mainRect
           ? mainRect.left < -0.5 || mainRect.right > innerWidth + 0.5
@@ -3404,7 +3415,7 @@ try {
     })()`);
     assertEqual(layout.width, width, `${name} map should use requested viewport width`);
     assertEqual(layout.height, height, `${name} map should use requested viewport height`);
-    assertEqual(layout.overflow, 0, `${name} map should not overflow horizontally`);
+    assertPageScrolling(layout, `${name} map`, mobile);
     assertEqual(layout.mainOutside, false, `${name} map should stay inside the viewport`);
     assertEqual(layout.topbarOutside, false, `${name} top bar should stay inside the viewport`);
     assertEqual(layout.chapters, CHAPTERS.length, `${name} map should expose every chapter`);
@@ -3432,6 +3443,7 @@ try {
       return {
         width: innerWidth,
         height: innerHeight,
+        documentHeight: document.documentElement.scrollHeight,
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         mainOutside: mainRect
           ? mainRect.left < -0.5 || mainRect.right > innerWidth + 0.5
@@ -3472,7 +3484,7 @@ try {
     })()`);
     assertEqual(layout.width, width, `${name} quests should use requested viewport width`);
     assertEqual(layout.height, height, `${name} quests should use requested viewport height`);
-    assertEqual(layout.overflow, 0, `${name} quests should not overflow horizontally`);
+    assertPageScrolling(layout, `${name} quests`, mobile);
     assertEqual(layout.mainOutside, false, `${name} quests should stay inside the viewport`);
     assertEqual(layout.topbarOutside, false, `${name} quest top bar should stay inside the viewport`);
     assertEqual(layout.cards, 3, `${name} quests should expose the full three-stage chain`);
@@ -3589,6 +3601,7 @@ try {
       return {
         width: innerWidth,
         height: innerHeight,
+        documentHeight: document.documentElement.scrollHeight,
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         mainOutside: mainRect
           ? mainRect.left < -0.5 || mainRect.right > innerWidth + 0.5
@@ -3599,7 +3612,7 @@ try {
     })()`);
     assertEqual(layout.width, width, `${name} settings should use requested viewport width`);
     assertEqual(layout.height, height, `${name} settings should use requested viewport height`);
-    assertEqual(layout.overflow, 0, `${name} settings should not overflow horizontally`);
+    assertPageScrolling(layout, `${name} settings`, mobile);
     assertEqual(layout.mainOutside, false, `${name} settings should stay inside the viewport`);
     assertEqual(layout.cards >= 9, true, `${name} settings should render every preferences card`);
     assertEqual(layout.clippedCards, 0, `${name} settings should not clip preference cards`);

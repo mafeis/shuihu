@@ -73,6 +73,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
   color: var(--paper-100);
   background: var(--ink-950);
   font-family: var(--sans);
@@ -151,6 +152,7 @@ small {
 #app,
 .game-frame {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .game-frame {
@@ -160,6 +162,7 @@ small {
 
 .app-screen {
   min-height: 100vh;
+  min-height: 100dvh;
   background:
     linear-gradient(rgba(8, 13, 14, 0.92), rgba(8, 13, 14, 0.98)),
     var(--screen-bg) center / cover fixed;
@@ -826,6 +829,7 @@ small {
 .map-layout {
   display: grid;
   min-height: calc(100vh - 70px);
+  min-height: calc(100dvh - 70px);
   grid-template-columns: minmax(0, 1fr) minmax(330px, 26vw);
 }
 
@@ -833,6 +837,7 @@ small {
   position: relative;
   display: flex;
   min-height: calc(100vh - 70px);
+  min-height: calc(100dvh - 70px);
   overflow: hidden;
   align-items: flex-end;
   padding: 58px 5vw 40px;
@@ -2895,6 +2900,18 @@ small {
   gap: 10px;
 }
 
+.recruitment-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-color: var(--ink-600) transparent;
+  scrollbar-width: thin;
+}
+
+.recruitment-scroll .recruitment-grid {
+  grid-template-columns: repeat(8, minmax(168px, 1fr));
+}
+
 .recruitment-card {
   position: relative;
   display: flex;
@@ -3091,6 +3108,7 @@ small {
   display: flex;
   height: fit-content;
   max-height: calc(100vh - 104px);
+  max-height: calc(100dvh - 104px);
   min-width: 0;
   overflow-y: auto;
   flex-direction: column;
@@ -4800,6 +4818,7 @@ small {
 .story-screen {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background: var(--ink-950);
 }
@@ -7453,6 +7472,7 @@ small {
 .battle-screen {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background: var(--ink-950);
 }
@@ -7696,6 +7716,7 @@ small {
   position: relative;
   z-index: 2;
   min-height: calc(100vh - 67px);
+  min-height: calc(100dvh - 67px);
   padding: 14px 430px 18px 28px;
 }
 
@@ -9074,6 +9095,7 @@ small {
 .ending-screen {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
 }
 
@@ -10113,6 +10135,196 @@ html[data-motion="reduced"] *::after {
   margin-top: 18px;
 }
 
+/* Recommended desktop resolutions keep page chrome fixed and scroll only the working area. */
+
+@media (min-width: 921px) and (min-height: 720px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #app,
+  .game-frame {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .title-screen {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .app-screen {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    position: relative;
+    height: 70px;
+    min-height: 70px;
+    flex: 0 0 70px;
+  }
+
+  .roster-layout,
+  .formation-layout,
+  .equipment-layout,
+  .quests-layout,
+  .codex-layout,
+  .settings-layout,
+  .arena-layout {
+    min-height: 0;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--ink-600) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .roster-layout,
+  .codex-layout,
+  .settings-layout {
+    align-content: start;
+  }
+
+  .codex-layout {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .codex-layout > .star-map-panel,
+  .codex-layout > .alignment-panel {
+    min-height: 0;
+  }
+
+  .codex-layout > .star-map-panel {
+    height: 100%;
+    overflow-y: auto;
+    align-self: start;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--ink-600) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .map-layout {
+    height: calc(100% - 70px);
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .chapter-focus {
+    min-height: 0;
+  }
+
+  .campaign-rail {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--ink-600) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .chapter-list {
+    flex: 0 0 auto;
+  }
+
+  .map-layout > .chapter-focus,
+  .map-layout > .campaign-rail {
+    min-height: 100%;
+  }
+
+  .quests-layout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .quest-hero-list {
+    position: relative;
+    top: auto;
+    display: grid;
+    max-height: 180px;
+    overflow-y: auto;
+    flex: 0 0 auto;
+    grid-template-columns: 1fr;
+  }
+
+  .recruitment-scroll .recruitment-grid {
+    grid-template-columns: repeat(8, minmax(220px, 1fr));
+  }
+
+  .camp-layout {
+    display: flex;
+    min-height: 0;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--ink-600) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .story-screen,
+  .battle-screen,
+  .reward-screen,
+  .final-choice-screen,
+  .ending-screen {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .story-screen,
+  .final-choice-screen {
+    overflow-y: auto;
+  }
+
+  .reward-screen,
+  .ending-screen {
+    overflow-y: auto;
+  }
+
+  .battle-field {
+    min-height: calc(100% - 67px);
+  }
+
+  .equipment-hero-stage {
+    height: clamp(220px, 31dvh, 300px);
+  }
+
+  .arena-layout {
+    padding: 18px 0 28px;
+  }
+
+  .arena-hero-panel {
+    min-height: clamp(300px, 34dvh, 430px);
+  }
+
+  .arena-briefing-panel,
+  .arena-locked {
+    min-height: 0;
+  }
+
+  .quest-board-copy {
+    min-width: 0;
+  }
+
+  .quest-overview {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
 /* Responsive */
 
 @media (max-width: 1180px) {
@@ -10218,6 +10430,10 @@ html[data-motion="reduced"] *::after {
     grid-template-columns: minmax(150px, 1fr) auto auto;
     gap: 8px;
     padding: 0 12px;
+  }
+
+  .topbar-leading {
+    gap: 10px;
   }
 
   .arena-layout {
@@ -10619,6 +10835,21 @@ html[data-motion="reduced"] *::after {
 
   .app-screen {
     padding-bottom: 72px;
+  }
+
+  .equipment-layout,
+  .quests-layout,
+  .settings-layout {
+    padding-bottom: 88px;
+  }
+
+  .modal-backdrop {
+    padding: 74px 10px 73px;
+  }
+
+  .modal-panel {
+    max-height: calc(100svh - 147px);
+    overflow-y: auto;
   }
 
   .title-screen {
@@ -12076,8 +12307,7 @@ html[data-motion="reduced"] *::after {
     var(--ink-850);
 }
 
-.bond-panel-heading,
-.bond-archive-heading {
+.bond-panel-heading {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -12085,14 +12315,12 @@ html[data-motion="reduced"] *::after {
   margin-bottom: 12px;
 }
 
-.bond-panel-heading h2,
-.bond-archive-heading h2 {
+.bond-panel-heading h2 {
   margin: 2px 0 0;
   font-size: 1.35rem;
 }
 
-.bond-panel-heading > span,
-.bond-archive-heading > span {
+.bond-panel-heading > span {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -12303,31 +12531,60 @@ html[data-motion="reduced"] *::after {
     rgba(8, 13, 14, 0.62);
 }
 
-.chain-archive-heading {
+.codex-archive-toggle {
   display: flex;
+  width: 100%;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
 }
 
-.chain-archive-heading .eyebrow {
-  margin-bottom: 3px;
+.codex-archive-toggle .eyebrow {
+  margin-bottom: 2px;
 }
 
-.chain-archive-heading h2 {
-  margin: 0;
+.codex-archive-toggle h2 {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
   font-size: 1.15rem;
+  font-weight: 500;
 }
 
-.chain-archive-heading > span {
+.codex-archive-toggle > span {
+  display: inline-flex;
   flex: 0 0 auto;
-  color: var(--cinnabar-300);
+  align-items: center;
+  gap: 5px;
+  color: var(--bronze-300);
   font-family: var(--serif);
   font-size: 0.625rem;
 }
 
+.codex-archive-toggle:hover h2,
+.codex-archive-toggle:focus-visible h2 {
+  color: var(--bronze-200);
+}
+
+.codex-chains .codex-archive-toggle > span {
+  color: var(--cinnabar-300);
+}
+
+.codex-archive-body {
+  margin-top: 12px;
+}
+
+.codex-archive-body[hidden] {
+  display: none;
+}
+
 .chain-archive-lead {
-  margin: 7px 0 11px;
+  margin: 0 0 11px;
   color: var(--paper-500);
   font-size: 0.5625rem;
   line-height: 1.7;
@@ -12631,6 +12888,10 @@ html[data-motion="reduced"] *::after {
 }
 
 @media (max-width: 920px) {
+  .recruitment-scroll .recruitment-grid {
+    grid-template-columns: repeat(8, 220px);
+  }
+
   .bond-grid,
   .bond-archive-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -12643,8 +12904,7 @@ html[data-motion="reduced"] *::after {
   }
 
   .bond-panel-heading,
-  .bond-archive-heading,
-  .chain-archive-heading,
+  .codex-archive-toggle,
   .chain-team-heading {
     align-items: flex-start;
     flex-direction: column;
@@ -12724,6 +12984,16 @@ html[data-motion="reduced"] *::after {
   .quests-layout {
     width: calc(100% - 32px);
     grid-template-columns: 250px minmax(0, 1fr);
+  }
+
+  .quests-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .quest-overview {
+    width: 100%;
   }
 
   .recruitment-grid {

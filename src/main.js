@@ -207,6 +207,7 @@ let selectedFormationRow = 0;
 let selectedEquipmentHero = "linchong";
 let selectedCodexHero = "linchong";
 let selectedQuestHero = "linchong";
+let codexArchives = { bonds: false, chains: false };
 
 function createBattleUi() {
   return {
@@ -2638,62 +2639,64 @@ function renderQuestBoard() {
             </div>
             <span>${availableRecruitments ? `${availableRecruitments} 帖可接` : "推进回目或完成前帖"}</span>
           </div>
-          <div class="recruitment-grid">
-            ${recruitmentEntries
-              .map((recruitment) => {
-                const hero = HEROES[recruitment.heroId];
-                const completed = heroRecruitmentCompleted(
-                  state,
-                  recruitment.heroId,
-                );
-                const unlocked = heroRecruitmentUnlocked(
-                  state,
-                  recruitment.heroId,
-                );
-                const prerequisite = recruitment.prerequisite
-                  ? HEROES[recruitment.prerequisite]
-                  : null;
-                const chapterReady =
-                  state.currentChapter >= recruitment.requiredChapter;
-                const status = completed
-                  ? "已结义"
-                  : unlocked
-                    ? "可接帖"
-                    : !chapterReady
-                      ? `第 ${recruitment.requiredChapter} 回`
-                      : prerequisite
-                        ? `需先结义${prerequisite.name}`
-                        : "尚未开放";
-                return `
-                  <article class="recruitment-card ${completed ? "is-complete" : unlocked ? "is-ready" : "is-locked"}" style="--recruit-color:${hero.palette};--recruit-bg:url('${recruitment.bg}')">
-                    <div class="recruitment-card-art">${heroKeyart(recruitment.heroId, "")}</div>
-                    <div class="recruitment-card-top">
-                      <span>${icon(completed ? "badge-check" : unlocked ? "scroll-text" : "lock-keyhole", 15)}${status}</span>
-                      <em>${hero.star}</em>
-                    </div>
-                    <div class="recruitment-card-copy">
-                      <small>${hero.nickname} · ${hero.role}</small>
-                      <h3>${hero.name}</h3>
-                      <p>${recruitment.teaser}</p>
-                    </div>
-                    <div class="recruitment-rule">
-                      <span>${icon(recruitment.rule.icon, 14)}${recruitment.rule.name}</span>
-                      <p>${recruitment.rule.desc}</p>
-                    </div>
-                    <footer>
-                      <span>${icon("map-pin", 13)}${recruitment.location}</span>
-                      ${
-                        completed
-                          ? `<em>${icon("check", 14)} 已入聚义簿</em>`
-                          : unlocked
-                            ? `<button class="button primary" data-action="start-hero-recruitment" data-hero="${recruitment.heroId}">${icon("swords", 15)}<span>接帖出征</span></button>`
-                            : `<em>${chapterReady && prerequisite ? `${prerequisite.name}尚未结义` : `第 ${recruitment.requiredChapter} 回后开启`}</em>`
-                      }
-                    </footer>
-                  </article>
-                `;
-              })
-              .join("")}
+          <div class="recruitment-scroll">
+            <div class="recruitment-grid">
+              ${recruitmentEntries
+                .map((recruitment) => {
+                  const hero = HEROES[recruitment.heroId];
+                  const completed = heroRecruitmentCompleted(
+                    state,
+                    recruitment.heroId,
+                  );
+                  const unlocked = heroRecruitmentUnlocked(
+                    state,
+                    recruitment.heroId,
+                  );
+                  const prerequisite = recruitment.prerequisite
+                    ? HEROES[recruitment.prerequisite]
+                    : null;
+                  const chapterReady =
+                    state.currentChapter >= recruitment.requiredChapter;
+                  const status = completed
+                    ? "已结义"
+                    : unlocked
+                      ? "可接帖"
+                      : !chapterReady
+                        ? `第 ${recruitment.requiredChapter} 回`
+                        : prerequisite
+                          ? `需先结义${prerequisite.name}`
+                          : "尚未开放";
+                  return `
+                    <article class="recruitment-card ${completed ? "is-complete" : unlocked ? "is-ready" : "is-locked"}" style="--recruit-color:${hero.palette};--recruit-bg:url('${recruitment.bg}')">
+                      <div class="recruitment-card-art">${heroKeyart(recruitment.heroId, "")}</div>
+                      <div class="recruitment-card-top">
+                        <span>${icon(completed ? "badge-check" : unlocked ? "scroll-text" : "lock-keyhole", 15)}${status}</span>
+                        <em>${hero.star}</em>
+                      </div>
+                      <div class="recruitment-card-copy">
+                        <small>${hero.nickname} · ${hero.role}</small>
+                        <h3>${hero.name}</h3>
+                        <p>${recruitment.teaser}</p>
+                      </div>
+                      <div class="recruitment-rule">
+                        <span>${icon(recruitment.rule.icon, 14)}${recruitment.rule.name}</span>
+                        <p>${recruitment.rule.desc}</p>
+                      </div>
+                      <footer>
+                        <span>${icon("map-pin", 13)}${recruitment.location}</span>
+                        ${
+                          completed
+                            ? `<em>${icon("check", 14)} 已入聚义簿</em>`
+                            : unlocked
+                              ? `<button class="button primary" data-action="start-hero-recruitment" data-hero="${recruitment.heroId}">${icon("swords", 15)}<span>接帖出征</span></button>`
+                              : `<em>${chapterReady && prerequisite ? `${prerequisite.name}尚未结义` : `第 ${recruitment.requiredChapter} 回后开启`}</em>`
+                        }
+                      </footer>
+                    </article>
+                  `;
+                })
+                .join("")}
+            </div>
           </div>
         </section>
 
@@ -2945,51 +2948,55 @@ function renderCodex() {
               `;
             }).join("")}
           </div>
-          <section class="bond-archive">
-            <div class="bond-archive-heading">
+          <section class="bond-archive codex-archive codex-bonds">
+            <button class="codex-archive-toggle" type="button" data-action="toggle-codex-archive" data-archive="bonds" aria-expanded="${codexArchives.bonds}" aria-controls="codex-bond-archive">
               <div>
                 <p class="eyebrow">阵谱 · 兄弟契</p>
                 <h2>人与人的合阵之法</h2>
               </div>
-              <span>${archivedBonds.size}/${Object.keys(HERO_BONDS).length} 已录</span>
-            </div>
-            <div class="bond-archive-grid">
-              ${Object.values(HERO_BONDS)
-                .map((bond) =>
-                  renderBondCard(bond, {
-                    active: activeBondIds.has(bond.id),
-                    discovered: archivedBonds.has(bond.id),
-                    compact: true,
-                  }),
-                )
-                .join("")}
+              <span>${archivedBonds.size}/${Object.keys(HERO_BONDS).length} 已录 ${icon(codexArchives.bonds ? "chevron-up" : "chevron-down", 17)}</span>
+            </button>
+            <div id="codex-bond-archive" class="codex-archive-body" data-archive-body="bonds" ${codexArchives.bonds ? "" : "hidden"}>
+              <div class="bond-archive-grid">
+                ${Object.values(HERO_BONDS)
+                  .map((bond) =>
+                    renderBondCard(bond, {
+                      active: activeBondIds.has(bond.id),
+                      discovered: archivedBonds.has(bond.id),
+                      compact: true,
+                    }),
+                  )
+                  .join("")}
+              </div>
             </div>
           </section>
-          <section class="chain-archive">
-            <div class="chain-archive-heading">
+          <section class="chain-archive codex-archive codex-chains">
+            <button class="codex-archive-toggle" type="button" data-action="toggle-codex-archive" data-archive="chains" aria-expanded="${codexArchives.chains}" aria-controls="codex-chain-archive">
               <div>
                 <p class="eyebrow">战谱 · 星命合击</p>
                 <h2>三路星火，四象成阵</h2>
               </div>
-              <span>${archivedChains.size}/${Object.keys(CHAIN_FORMATIONS).length} 已录</span>
-            </div>
-            <p class="chain-archive-lead">同一场战斗中依次施展三种不同路数，下一次我方行动即可发动合击。最后三段武学决定结成哪一种阵。</p>
-            <div class="chain-archive-grid">
-              ${Object.values(CHAIN_FORMATIONS)
-                .map(
-                  (formation) => `
-                    <article class="chain-formation tone-${formation.tone} ${archivedChains.has(formation.id) ? "is-discovered" : ""}">
-                      <span>${icon(archivedChains.has(formation.id) ? formation.icon : "lock-keyhole", 18)}</span>
-                      <div>
-                        <small>${formation.paths.map((pathId) => PATHS[pathId]?.name || pathId).join(" · ")}</small>
-                        <b>${formation.name}</b>
-                        <p>${formation.desc}</p>
-                      </div>
-                      <em>${archivedChains.has(formation.id) ? "已录战谱" : "尚未结成"}</em>
-                    </article>
-                  `,
-                )
-                .join("")}
+              <span>${archivedChains.size}/${Object.keys(CHAIN_FORMATIONS).length} 已录 ${icon(codexArchives.chains ? "chevron-up" : "chevron-down", 17)}</span>
+            </button>
+            <div id="codex-chain-archive" class="codex-archive-body" data-archive-body="chains" ${codexArchives.chains ? "" : "hidden"}>
+              <p class="chain-archive-lead">同一场战斗中依次施展三种不同路数，下一次我方行动即可发动合击。最后三段武学决定结成哪一种阵。</p>
+              <div class="chain-archive-grid">
+                ${Object.values(CHAIN_FORMATIONS)
+                  .map(
+                    (formation) => `
+                      <article class="chain-formation tone-${formation.tone} ${archivedChains.has(formation.id) ? "is-discovered" : ""}">
+                        <span>${icon(archivedChains.has(formation.id) ? formation.icon : "lock-keyhole", 18)}</span>
+                        <div>
+                          <small>${formation.paths.map((pathId) => PATHS[pathId]?.name || pathId).join(" · ")}</small>
+                          <b>${formation.name}</b>
+                          <p>${formation.desc}</p>
+                        </div>
+                        <em>${archivedChains.has(formation.id) ? "已录战谱" : "尚未结成"}</em>
+                      </article>
+                    `,
+                  )
+                  .join("")}
+              </div>
             </div>
           </section>
           <div class="codex-hero-detail">
@@ -6373,6 +6380,14 @@ function handleAction(action, element) {
       if (screen === "codex") render();
       else setScreen("roster");
       return;
+    case "toggle-codex-archive": {
+      const archive = element.dataset.archive;
+      if (!["bonds", "chains"].includes(archive)) return;
+      codexArchives[archive] = !codexArchives[archive];
+      sound.click();
+      render();
+      return;
+    }
     case "choose-doctrine": {
       const heroId = element.dataset.hero;
       const doctrineId = element.dataset.doctrine;
