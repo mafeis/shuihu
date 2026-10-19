@@ -68,6 +68,26 @@ function arenaRewardFixture() {
   return state;
 }
 
+function recruitmentRewardFixture() {
+  const state = progressedFixture();
+  const targetHero = "shijin";
+  state.currentChapter = 4;
+  state.completedChapters = CHAPTERS.slice(0, 4).map((chapter) => chapter.id);
+  state.recruited = HERO_ORDER.filter((heroId) => heroId !== targetHero);
+  state.roster = Object.fromEntries(
+    state.recruited.map((heroId) => {
+      const entry = createRosterEntry(heroId);
+      entry.level = 16;
+      return [heroId, entry];
+    }),
+  );
+  state.team = ["likui", "linchong", "huarong"];
+  state.heroRecruitments = { completed: [] };
+  state.settings.autoBattle = true;
+  state.settings.battleSpeed = 4;
+  return state;
+}
+
 function finalChoiceFixture() {
   const state = progressedFixture();
   state.currentChapter = CHAPTERS.length;
@@ -173,6 +193,97 @@ async function measureScreen(page, name) {
           bottom: rect.bottom,
         };
       });
+    const activeModal = document.querySelector("[data-modal-panel]");
+    const textRects = [
+      ...document.querySelectorAll(
+        "h1, h2, h3, h4, h5, h6, p, small, b, strong, em, span, button, label, dt, dd, li",
+      ),
+    ]
+      .filter((node) => {
+        if (!visible(node) || node.closest('[aria-hidden="true"]')) return false;
+        if (activeModal && !activeModal.contains(node)) return false;
+        return [...node.childNodes].some(
+          (child) => child.nodeType === Node.TEXT_NODE && child.textContent.trim(),
+        );
+      })
+      .map((node) => {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const rect = range.getBoundingClientRect();
+        let clipLeft = 0;
+        let clipRight = innerWidth;
+        let clipTop = 0;
+        let clipBottom = innerHeight;
+        let ancestor = node.parentElement;
+        while (ancestor) {
+          const style = getComputedStyle(ancestor);
+          const bounds = ancestor.getBoundingClientRect();
+          if (["auto", "scroll", "hidden", "clip"].includes(style.overflowX)) {
+            clipLeft = Math.max(clipLeft, bounds.left);
+            clipRight = Math.min(clipRight, bounds.right);
+          }
+          if (["auto", "scroll", "hidden", "clip"].includes(style.overflowY)) {
+            clipTop = Math.max(clipTop, bounds.top);
+            clipBottom = Math.min(clipBottom, bounds.bottom);
+          }
+          ancestor = ancestor.parentElement;
+        }
+        const visibleWidth = Math.max(
+          0,
+          Math.min(rect.right, clipRight) - Math.max(rect.left, clipLeft),
+        );
+        const visibleHeight = Math.max(
+          0,
+          Math.min(rect.bottom, clipBottom) - Math.max(rect.top, clipTop),
+        );
+        return {
+          node,
+          text: node.textContent.trim().replace(/\s+/g, " ").slice(0, 80),
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+          visibleRatio:
+            (visibleWidth * visibleHeight) /
+            Math.max(1, (rect.right - rect.left) * (rect.bottom - rect.top)),
+        };
+      })
+      .filter(
+        (entry) =>
+          entry.right > entry.left + 1 &&
+          entry.bottom > entry.top + 1 &&
+          entry.right > 0 &&
+          entry.left < innerWidth &&
+          entry.bottom > 0 &&
+          entry.top < innerHeight &&
+          entry.visibleRatio >= 0.9,
+      );
+    const textOverlaps = [];
+    for (let first = 0; first < textRects.length; first += 1) {
+      for (let second = first + 1; second < textRects.length; second += 1) {
+        const a = textRects[first];
+        const b = textRects[second];
+        if (a.node.contains(b.node) || b.node.contains(a.node)) continue;
+        const width = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const height = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (width <= 4 || height <= 8) continue;
+        const overlapArea = width * height;
+        const smallerArea = Math.min(
+          (a.right - a.left) * (a.bottom - a.top),
+          (b.right - b.left) * (b.bottom - b.top),
+        );
+        if (overlapArea / Math.max(1, smallerArea) < 0.2) continue;
+        textOverlaps.push({
+          first: a.text,
+          second: b.text,
+          firstClass: a.node.className || a.node.tagName,
+          secondClass: b.node.className || b.node.tagName,
+          overlapWidth: Math.round(width),
+          overlapHeight: Math.round(height),
+          overlapArea: Math.round(overlapArea),
+        });
+      }
+    }
     const screen = document.querySelector(
       ".app-screen, .title-screen, .story-screen, .battle-screen, .reward-screen, .final-choice-screen, .ending-screen",
     );
@@ -201,6 +312,7 @@ async function measureScreen(page, name) {
       videos,
       backdrops,
       headings,
+      textOverlaps: textOverlaps.slice(0, 20),
       modalRect: modalRect
         ? {
             top: modalRect.top,
@@ -291,6 +403,11 @@ async function captureScreen(page, name, metrics) {
       `${name}: full-screen backdrop has no image (${backdrop.className})`,
     );
   }
+  assert.deepEqual(
+    metrics.textOverlaps,
+    [],
+    `${name}: visible text overlaps ${JSON.stringify(metrics.textOverlaps)}`,
+  );
   if (metrics.modalRect) {
     assert.ok(
       metrics.modalRect.left >= -1 &&
@@ -449,6 +566,78 @@ try {
   await page.waitForTimeout(160);
   metrics = await measureScreen(page, "story-reward");
   await captureScreen(page, "story-reward", metrics);
+  const chapterRecruit = await page.evaluate(() => {
+    const card = document.querySelector(".recruit-section article");
+    const image = card?.querySelector("img");
+    if (!card || !image) return null;
+    const cardRect = card.getBoundingClientRect();
+    const imageRect = image.getBoundingClientRect();
+    return {
+      card: {
+        top: cardRect.top,
+        right: cardRect.right,
+        bottom: cardRect.bottom,
+        left: cardRect.left,
+      },
+      image: {
+        top: imageRect.top,
+        right: imageRect.right,
+        bottom: imageRect.bottom,
+        left: imageRect.left,
+      },
+      visible:
+        cardRect.top >= 0 &&
+        cardRect.left >= 0 &&
+        cardRect.right <= innerWidth &&
+        cardRect.bottom <= innerHeight,
+      imageComplete: image.complete,
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+      objectFit: getComputedStyle(image).objectFit,
+      cardScrollWidth: card.scrollWidth,
+      cardClientWidth: card.clientWidth,
+      cardScrollHeight: card.scrollHeight,
+      cardClientHeight: card.clientHeight,
+    };
+  });
+  assert.ok(chapterRecruit, "story reward: new recruit card is missing");
+  assert.equal(
+    chapterRecruit.visible,
+    true,
+    `story reward: new recruit card is outside the first viewport ${JSON.stringify(
+      chapterRecruit.card,
+    )}`,
+  );
+  assert.equal(
+    chapterRecruit.imageComplete,
+    true,
+    "story reward: new recruit portrait did not load",
+  );
+  assert.ok(
+    chapterRecruit.naturalWidth > 0 && chapterRecruit.naturalHeight > 0,
+    "story reward: new recruit portrait has invalid metadata",
+  );
+  assert.equal(
+    chapterRecruit.objectFit,
+    "contain",
+    "story reward: new recruit portrait should preserve its silhouette",
+  );
+  assert.ok(
+    chapterRecruit.image.top >= chapterRecruit.card.top - 1 &&
+      chapterRecruit.image.bottom <= chapterRecruit.card.bottom + 1 &&
+      chapterRecruit.image.left >= chapterRecruit.card.left - 1 &&
+      chapterRecruit.image.right <= chapterRecruit.card.right + 1,
+    `story reward: new recruit portrait is clipped ${JSON.stringify(
+      chapterRecruit,
+    )}`,
+  );
+  assert.ok(
+    chapterRecruit.cardScrollWidth <= chapterRecruit.cardClientWidth + 1 &&
+      chapterRecruit.cardScrollHeight <= chapterRecruit.cardClientHeight + 1,
+    `story reward: new recruit card clips its content ${JSON.stringify(
+      chapterRecruit,
+    )}`,
+  );
   const rewardAction = await page.evaluate(() => {
     const button = document.querySelector(
       '.screen-reward .reward-actions button[data-action="story-outro"]',
@@ -499,6 +688,123 @@ try {
   metrics = await measureScreen(page, "arena-reward");
   await captureScreen(page, "arena-reward", metrics);
   reports.push({ name: "arena-reward", controls: metrics.controls.length });
+
+  await page.evaluate(
+    ([key, save]) => localStorage.setItem(key, save),
+    [SAVE_KEY, JSON.stringify(recruitmentRewardFixture())],
+  );
+  await page.reload({ waitUntil: "networkidle" });
+  await page.click('button[data-action="continue-game"]');
+  await page.waitForSelector(".screen-map");
+  await page.click('.topbar button[data-action="nav-quests"]');
+  await page.waitForSelector(".screen-quests");
+  await page.click(
+    'button[data-action="start-hero-recruitment"][data-hero="shijin"]',
+  );
+  await page.waitForTimeout(160);
+  if (
+    await page
+      .locator('button[data-action="recommend-recruitment-team"]')
+      .count()
+  ) {
+    await page.click('button[data-action="recommend-recruitment-team"]');
+  }
+  await page.waitForSelector(".screen-story");
+  await page.click('button[data-action="story-skip"]');
+  const recruitmentChoice = page.locator(
+    'button[data-action="story-choice"]',
+  ).first();
+  if (await recruitmentChoice.count()) await recruitmentChoice.click();
+  await page.click('button[data-action="story-to-battle"]');
+  await page.waitForSelector(".screen-battle");
+  if (
+    await page.locator('button[data-action="dismiss-battle-tutorial"]').count()
+  ) {
+    await page.click('button[data-action="dismiss-battle-tutorial"]');
+  }
+  await page.waitForSelector(".screen-reward", { timeout: 60000 });
+  await page.waitForTimeout(260);
+  metrics = await measureScreen(page, "recruitment-reward");
+  await captureScreen(page, "recruitment-reward", metrics);
+  const recruitmentReward = await page.evaluate(() => {
+    const panel = document.querySelector(".recruitment-reward-panel");
+    const art = panel?.querySelector(".recruitment-reward-art");
+    const image = art?.querySelector("img");
+    const copy = panel?.querySelector(".recruitment-reward-copy");
+    if (!panel || !art || !image || !copy) return null;
+    const rect = (node) => {
+      const bounds = node.getBoundingClientRect();
+      return {
+        top: bounds.top,
+        right: bounds.right,
+        bottom: bounds.bottom,
+        left: bounds.left,
+        width: bounds.width,
+        height: bounds.height,
+      };
+    };
+    return {
+      panel: rect(panel),
+      art: rect(art),
+      image: rect(image),
+      copy: rect(copy),
+      imageComplete: image.complete,
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+      objectFit: getComputedStyle(image).objectFit,
+      duplicateRecruitCard: Boolean(document.querySelector(".recruit-cards")),
+      copyScrollWidth: copy.scrollWidth,
+      copyClientWidth: copy.clientWidth,
+      copyScrollHeight: copy.scrollHeight,
+      copyClientHeight: copy.clientHeight,
+    };
+  });
+  assert.ok(recruitmentReward, "recruitment reward: hero panel is missing");
+  assert.equal(
+    recruitmentReward.imageComplete,
+    true,
+    "recruitment reward: hero portrait did not load",
+  );
+  assert.ok(
+    recruitmentReward.naturalWidth > 0 && recruitmentReward.naturalHeight > 0,
+    "recruitment reward: hero portrait has invalid metadata",
+  );
+  assert.equal(
+    recruitmentReward.objectFit,
+    "contain",
+    "recruitment reward: hero portrait should preserve its full silhouette",
+  );
+  assert.ok(
+    recruitmentReward.image.top >= recruitmentReward.panel.top - 1 &&
+      recruitmentReward.image.bottom <= recruitmentReward.panel.bottom + 1 &&
+      recruitmentReward.image.left >= recruitmentReward.panel.left - 1 &&
+      recruitmentReward.image.right <= recruitmentReward.panel.right + 1,
+    `recruitment reward: hero portrait is clipped by its panel ${JSON.stringify(
+      recruitmentReward,
+    )}`,
+  );
+  assert.ok(
+    recruitmentReward.copy.left >= recruitmentReward.art.right - 1,
+    "recruitment reward: copy overlaps the hero portrait",
+  );
+  assert.equal(
+    recruitmentReward.duplicateRecruitCard,
+    false,
+    "recruitment reward: the same hero should not appear twice",
+  );
+  assert.ok(
+    recruitmentReward.copyScrollWidth <=
+      recruitmentReward.copyClientWidth + 1 &&
+      recruitmentReward.copyScrollHeight <=
+        recruitmentReward.copyClientHeight + 1,
+    `recruitment reward: copy is clipped by its column ${JSON.stringify(
+      recruitmentReward,
+    )}`,
+  );
+  reports.push({
+    name: "recruitment-reward",
+    controls: metrics.controls.length,
+  });
 
   await page.evaluate(
     ([key, save]) => localStorage.setItem(key, save),

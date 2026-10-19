@@ -10876,6 +10876,160 @@ button[aria-pressed="true"] {
   font-size: 0.5rem;
 }
 
+.legend-reward-panel {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 13px 14px;
+  border: 1px solid rgba(215, 188, 125, 0.28);
+  border-left: 3px solid var(--bronze-300);
+  background:
+    linear-gradient(90deg, rgba(189, 156, 89, 0.11), transparent 66%),
+    rgba(8, 13, 14, 0.82);
+  text-align: left;
+}
+
+.legend-reward-panel > span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(215, 188, 125, 0.32);
+  border-radius: 50%;
+  color: var(--bronze-300);
+}
+
+.legend-reward-panel > div {
+  min-width: 0;
+}
+
+.legend-reward-panel small {
+  color: var(--bronze-300);
+  font-size: 0.5rem;
+}
+
+.legend-reward-panel b {
+  display: block;
+  color: var(--paper-100);
+  font-family: var(--serif);
+  font-size: 0.9375rem;
+}
+
+.legend-reward-panel p {
+  margin: 3px 0 0;
+  color: var(--paper-500);
+  font-size: 0.5625rem;
+  line-height: 1.55;
+}
+
+.legend-reward-panel em {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--bronze-300);
+  font-size: 0.5625rem;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.recruitment-reward-panel {
+  position: relative;
+  display: grid;
+  min-height: 196px;
+  align-items: center;
+  overflow: hidden;
+  margin: 16px 0;
+  padding: 12px 24px 12px 8px;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 22px;
+  border: 1px solid rgba(215, 188, 125, 0.42);
+  border-left: 3px solid var(--bronze-300);
+  background:
+    linear-gradient(90deg, rgba(189, 156, 89, 0.16), rgba(8, 13, 14, 0.72) 54%, rgba(8, 13, 14, 0.94)),
+    radial-gradient(circle at 15% 50%, rgba(189, 156, 89, 0.18), transparent 42%),
+    rgba(8, 13, 14, 0.9);
+  text-align: left;
+}
+
+.recruitment-reward-panel::after {
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  color: rgba(215, 188, 125, 0.08);
+  font-family: var(--serif);
+  font-size: 106px;
+  line-height: 1;
+  pointer-events: none;
+  content: "义";
+  transform: translateY(-50%);
+}
+
+.recruitment-reward-art {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  height: 172px;
+  align-items: end;
+  justify-items: center;
+}
+
+.recruitment-reward-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter:
+    drop-shadow(0 9px 14px rgba(0, 0, 0, 0.62))
+    drop-shadow(0 0 1px rgba(240, 232, 215, 0.5));
+}
+
+.recruitment-reward-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.recruitment-reward-copy .eyebrow {
+  margin-bottom: 5px;
+  color: var(--bronze-300);
+}
+
+.recruitment-reward-copy h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 34px;
+}
+
+.recruitment-reward-copy h2 small {
+  color: var(--paper-300);
+  font-family: var(--sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.recruitment-reward-copy > p:not(.eyebrow) {
+  max-width: 490px;
+  margin-bottom: 13px;
+  color: var(--paper-300);
+  font-family: var(--serif);
+  font-size: 0.6875rem;
+  line-height: 1.7;
+}
+
+.recruitment-reward-copy > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid rgba(215, 188, 125, 0.24);
+  color: var(--bronze-300);
+  font-size: 0.5625rem;
+}
+
 .chapter-tactic-reward {
   display: grid;
   align-items: center;
@@ -10983,37 +11137,43 @@ button[aria-pressed="true"] {
 }
 
 .recruit-cards {
-  display: flex;
+  display: grid;
   justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 260px));
   gap: 8px;
 }
 
 .recruit-cards article {
   position: relative;
   display: flex;
-  width: 160px;
-  height: 84px;
-  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: 168px;
+  align-items: flex-end;
   overflow: hidden;
-  padding: 8px;
+  padding: 16px;
   border: 1px solid rgba(189, 156, 89, 0.34);
-  background: rgba(145, 109, 48, 0.08);
+  background:
+    radial-gradient(circle at 78% 48%, rgba(189, 156, 89, 0.18), transparent 42%),
+    rgba(145, 109, 48, 0.08);
   text-align: left;
 }
 
 .recruit-cards img {
   position: absolute;
-  right: -4px;
-  bottom: -20px;
-  width: 105px;
-  height: 130px;
+  right: 4px;
+  bottom: 5px;
+  width: 46%;
+  height: calc(100% - 10px);
   object-fit: contain;
+  object-position: right bottom;
 }
 
 .recruit-cards span {
   position: relative;
   z-index: 2;
   display: flex;
+  max-width: 48%;
   flex-direction: column;
 }
 
@@ -14744,7 +14904,7 @@ html[data-motion="reduced"] *::after {
   }
 
   .recruit-cards {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .recruit-cards article {
