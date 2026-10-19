@@ -22,6 +22,12 @@
   --cinnabar-500: #a9453c;
   --cinnabar-700: #6e2927;
   --blue-400: #6f91a5;
+  --character-outline:
+    drop-shadow(0 0 1px rgba(235, 228, 211, 0.8))
+    drop-shadow(0 6px 8px rgba(0, 0, 0, 0.55));
+  --character-outline-strong:
+    drop-shadow(0 0 1.5px rgba(235, 228, 211, 0.9))
+    drop-shadow(0 8px 10px rgba(0, 0, 0, 0.62));
   --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
   --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
   --sans: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -1104,6 +1110,7 @@ small {
   height: 100%;
   object-fit: contain;
   object-position: bottom center;
+  filter: var(--character-outline);
 }
 
 .chapter-party-figures button > span {
@@ -1605,6 +1612,7 @@ small {
   height: 100%;
   object-fit: contain;
   object-position: bottom;
+  filter: var(--character-outline);
 }
 
 .camp-team button span {
@@ -1928,7 +1936,7 @@ small {
   height: 100%;
   object-fit: contain;
   object-position: center bottom;
-  filter: drop-shadow(0 9px 15px rgba(0, 0, 0, 0.55));
+  filter: var(--character-outline);
 }
 
 .hero-card-top {
@@ -2322,7 +2330,7 @@ small {
   height: 100%;
   object-fit: contain;
   object-position: bottom;
-  filter: drop-shadow(0 8px 13px rgba(0, 0, 0, 0.6));
+  filter: var(--character-outline);
 }
 
 .formation-hero-copy {
@@ -3247,7 +3255,7 @@ small {
   height: 100%;
   object-fit: contain;
   object-position: right bottom;
-  filter: saturate(0.78) drop-shadow(-12px 10px 22px rgba(0, 0, 0, 0.46));
+  filter: var(--character-outline) saturate(0.78);
 }
 
 .quest-board-copy {
@@ -4899,6 +4907,7 @@ small {
   height: 100%;
   object-fit: contain;
   object-position: bottom center;
+  filter: var(--character-outline-strong);
 }
 
 .story-enemy-portrait {
@@ -4907,7 +4916,10 @@ small {
   margin-left: auto;
   object-fit: contain;
   object-position: center bottom;
-  filter: saturate(0.65) contrast(1.08);
+  filter:
+    var(--character-outline-strong)
+    saturate(0.65)
+    contrast(1.08);
   clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 100%);
 }
 
@@ -5445,7 +5457,7 @@ small {
   height: 100%;
   object-fit: contain;
   object-position: center bottom;
-  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.62));
+  filter: var(--character-outline);
 }
 
 .arena-team span {
@@ -8184,6 +8196,7 @@ small {
   height: 100%;
   object-fit: contain;
   object-position: center bottom;
+  filter: var(--character-outline-strong);
 }
 
 .enemy-figure::after {
@@ -8213,7 +8226,7 @@ small {
   max-height: 100%;
   object-fit: contain;
   object-position: bottom center;
-  filter: drop-shadow(0 14px 17px rgba(0, 0, 0, 0.62));
+  filter: var(--character-outline-strong);
 }
 
 .battle-unit.is-targetable .enemy-figure,
@@ -9951,7 +9964,7 @@ small {
     transform: translateY(-6px);
   }
   100% {
-    filter: drop-shadow(0 14px 17px rgba(0, 0, 0, 0.62));
+    filter: var(--character-outline-strong);
     transform: translateY(0);
   }
 }
