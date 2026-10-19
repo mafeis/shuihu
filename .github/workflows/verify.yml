@@ -22,6 +22,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check:js
+      - run: npm run assets:verify
       - run: npm test
       - run: npm run build
       - run: npm run security:verify

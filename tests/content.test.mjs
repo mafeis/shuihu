@@ -386,6 +386,10 @@ test("runtime asset manifest hashes are current", async () => {
     const file = assetPath(asset.file);
     assert.ok(existsSync(file), `missing manifest asset ${asset.file}`);
     const contents = await readFile(file);
+    assert.ok(
+      !contents.subarray(0, 64).toString().startsWith("version https://git-lfs.github.com/spec/v1"),
+      `${asset.file} is a Git LFS pointer; run git lfs pull`,
+    );
     assert.equal(contents.byteLength, asset.bytes, `${asset.file} byte size changed`);
     assert.equal(
       createHash("sha256").update(contents).digest("hex"),

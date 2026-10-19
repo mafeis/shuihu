@@ -4,12 +4,17 @@
 
 浏览器与 Electron 共用同一套游戏源码。桌面版支持 macOS、Windows 与 Linux 打包，浏览器版支持 PWA 离线启动。
 
+![林冲角色原画](assets/characters/linchong/keyart.png)
+
 ## 运行
 
-需要 Node.js 20 或更高版本，以及 Git LFS。
+需要 Node.js 20 或更高版本，以及 Git LFS。首次使用时先启用 Git LFS，再克隆项目：
 
 ```bash
 git lfs install
+git clone https://github.com/mafeis/shuihu.git
+cd shuihu
+git lfs pull
 npm ci
 npm run dev
 ```
@@ -19,6 +24,7 @@ npm run dev
 ## 验证
 
 ```bash
+npm run assets:verify
 npm test
 npm run build
 npm run check:js
@@ -67,14 +73,6 @@ npm run desktop:pack:win      # Windows x64 NSIS 安装包与 ZIP
 ## 素材与制作
 
 游戏使用 AI 辅助生产的美术、音乐和视频素材，生成式资产披露见 [store/steam_ai_disclosure.json](store/steam_ai_disclosure.json)。正式角色素材、音频与商店图由 Git LFS 管理；原始生成稿、QA 截图和内部 ComfyUI 工作流不进入公开仓库。
-
-首次使用 Git LFS 的设备需要先初始化：
-
-```bash
-git lfs install
-git clone https://github.com/mafeis/shuihu.git
-git lfs pull
-```
 
 GitHub 自动生成的 “Download ZIP” 只包含 LFS 指针，不包含实际素材。需要完整源码时请使用 Git 克隆；只想直接运行或分享时，请下载 [发行页](https://github.com/mafeis/shuihu/releases/latest)中的完整安装包。
 
