@@ -25,11 +25,22 @@ const PATH_VFX = {
   },
 };
 
+const PATH_VIDEO_KEYS = Object.freeze({
+  gang: "gang",
+  ling: "ling",
+  tao: "tao",
+  shou: "shou",
+});
+
 const RESULT_VFX = {
   combo: { kind: "starfall", tone: "gold", icon: "sparkles" },
   heal: { kind: "mend", tone: "teal", icon: "heart-pulse" },
   support: { kind: "ward", tone: "blue", icon: "shield" },
 };
+
+export function battleVfxVideoKey(pathId) {
+  return PATH_VIDEO_KEYS[pathId] || null;
+}
 
 function uniqueTargets(result) {
   return [
@@ -70,6 +81,7 @@ export function battleVfxProfile({ skill, actor, result } = {}) {
     actorUid: result.actorUid || actor?.uid || null,
     actorSide: actor?.side || null,
     pathId,
+    videoKey: battleVfxVideoKey(pathId),
     kind: visual.kind,
     tone: visual.tone,
     icon: visual.icon,
