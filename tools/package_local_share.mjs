@@ -221,8 +221,8 @@ const readme = `# 星命水浒：风雪山神庙
 游戏首次启动不需要联网。存档保存在浏览器本地，清理浏览器站点数据前请从游戏设置中导出存档。
 
 此分享包需要 Node.js 20 或更高版本。若要免安装、免 Node.js 直接游玩，请使用同一发行版中的桌面安装包。
-Windows x64 版：\`XingmingShuihu-1.0.0-win-x64.exe\`
-macOS Apple 芯片版：\`XingmingShuihu-1.0.0-mac-arm64.dmg\`
+Windows x64 版：\`XingmingShuihu-${version}-win-x64.exe\`
+macOS Apple 芯片版：\`XingmingShuihu-${version}-mac-arm64.dmg\`
 `;
 
 const windowsLauncher = `@echo off

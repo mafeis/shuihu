@@ -1,7 +1,7 @@
 {
   "name": "xingming-shuihu",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "星命水浒：风雪山神庙，一款水浒群像回合制角色扮演游戏",
   "author": "Xingming Shuihu Team",
   "main": "electron/main.cjs",

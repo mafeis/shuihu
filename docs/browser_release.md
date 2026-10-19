@@ -44,8 +44,8 @@ Playwright WebKit 是 Safari 引擎级自动化，不等同于真实 Safari 人�
 
 `npm run release:browser` 会先重建生产站点，再生成：
 
-- `release/browser/XingmingShuihu-web-1.0.0/site/`：可直接上传到站点根目录的完整游戏。
-- `release/browser/XingmingShuihu-web-1.0.0/XingmingShuihu-web-1.0.0.zip`：约 135 MiB 的浏览器发行压缩包。
+- `release/browser/XingmingShuihu-web-1.0.1/site/`：可直接上传到站点根目录的完整游戏。
+- `release/browser/XingmingShuihu-web-1.0.1/XingmingShuihu-web-1.0.1.zip`：约 135 MiB 的浏览器发行压缩包。
 - `release-manifest.json`：版本、作用域、构建哈希、203 个站点文件的大小与 SHA-256。
 - `SHA256SUMS.txt`：发行 ZIP 校验和。
 - `deploy/_headers`：Netlify、Cloudflare Pages 等平台使用的 CSP、缓存与 MIME 响应头。

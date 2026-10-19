@@ -2,34 +2,43 @@
 
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+const root = process.cwd();
+const packageJson = JSON.parse(
+  await readFile(path.join(root, "package.json"), "utf8"),
+);
+const version = packageJson.version;
+const artifact = (platform, extension) =>
+  `release/XingmingShuihu-${version}-${platform}.${extension}`;
 
 const groups = [
   {
     file: "release/SHA256SUMS-macOS.txt",
     artifacts: [
-      "release/XingmingShuihu-1.0.0-mac-arm64.dmg",
-      "release/XingmingShuihu-1.0.0-mac-arm64.zip",
+      artifact("mac-arm64", "dmg"),
+      artifact("mac-arm64", "zip"),
     ],
   },
   {
     file: "release/SHA256SUMS-Windows.txt",
     artifacts: [
-      "release/XingmingShuihu-1.0.0-win-x64.exe",
-      "release/XingmingShuihu-1.0.0-win-x64.zip",
-      "release/XingmingShuihu-1.0.0-win-arm64.exe",
-      "release/XingmingShuihu-1.0.0-win-arm64.zip",
+      artifact("win-x64", "exe"),
+      artifact("win-x64", "zip"),
+      artifact("win-arm64", "exe"),
+      artifact("win-arm64", "zip"),
     ],
   },
 ];
 
 for (const group of groups) {
   const lines = [];
-  for (const artifact of group.artifacts) {
-    const contents = await readFile(artifact);
+  for (const artifactPath of group.artifacts) {
+    const contents = await readFile(path.join(root, artifactPath));
     const hash = createHash("sha256").update(contents).digest("hex");
-    lines.push(`${hash}  ${artifact}`);
+    lines.push(`${hash}  ${artifactPath}`);
   }
-  await writeFile(group.file, `${lines.join("\n")}\n`);
+  await writeFile(path.join(root, group.file), `${lines.join("\n")}\n`);
 }
 
 console.log(

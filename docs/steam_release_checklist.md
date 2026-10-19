@@ -2,17 +2,17 @@
 
 ## 当前候选包
 
-版本：`1.0.0`，候选构建日期：`2026-10-19`
+版本：`1.0.1`，候选构建日期：`2026-10-19`
 
 | 平台 | 产物 | 大小 | 状态 |
 | --- | --- | ---: | --- |
 | macOS ARM64 | `release/mac-arm64/星命水浒.app` | 461.0 MiB | 可本地运行，未签名、未公证 |
-| macOS ARM64 | `release/XingmingShuihu-1.0.0-mac-arm64.dmg` | 261.0 MiB | 未签名、未公证 |
-| macOS ARM64 | `release/XingmingShuihu-1.0.0-mac-arm64.zip` | 271.3 MiB | 未签名、未公证 |
-| Windows x64 | `release/XingmingShuihu-1.0.0-win-x64.exe` | 254.3 MiB | NSIS 安装包，未配置 Authenticode |
-| Windows x64 | `release/XingmingShuihu-1.0.0-win-x64.zip` | 294.8 MiB | 免安装包，未配置 Authenticode |
-| Windows ARM64 | `release/XingmingShuihu-1.0.0-win-arm64.exe` | 248.3 MiB | NSIS 安装包，未配置 Authenticode |
-| Windows ARM64 | `release/XingmingShuihu-1.0.0-win-arm64.zip` | 292.8 MiB | 免安装包，未配置 Authenticode |
+| macOS ARM64 | `release/XingmingShuihu-1.0.1-mac-arm64.dmg` | 待核验 | 未签名、未公证 |
+| macOS ARM64 | `release/XingmingShuihu-1.0.1-mac-arm64.zip` | 待核验 | 未签名、未公证 |
+| Windows x64 | `release/XingmingShuihu-1.0.1-win-x64.exe` | 待核验 | NSIS 安装包，未配置 Authenticode |
+| Windows x64 | `release/XingmingShuihu-1.0.1-win-x64.zip` | 待核验 | 免安装包，未配置 Authenticode |
+| Windows ARM64 | `release/XingmingShuihu-1.0.1-win-arm64.exe` | 待核验 | NSIS 安装包，未配置 Authenticode |
+| Windows ARM64 | `release/XingmingShuihu-1.0.1-win-arm64.zip` | 待核验 | 免安装包，未配置 Authenticode |
 
 当前产物用于内部测试与商店材料制作，不应直接作为正式 Steam 构建上传。
 
@@ -32,7 +32,7 @@
 - Windows x64 与 ARM64 安装包和免安装包均已从最新生产构建重新生成，三个桌面包内的 141 个构建文件与当前 `dist` 逐文件哈希一致。
 - 桌面包通过自定义 `game://` 协议启动。
 - 最新 macOS 原生包在隔离配置下使用不可用代理断网启动成功，首战教学与自动战斗正常推进。
-- 当前源码存档版本为 25。现有三个桌面包仍封装旧版存档构建，正式发行前必须用当前源码重新打包并复验。
+- 当前源码存档版本为 27。1.0.0 的三个桌面包仍封装旧版存档构建；1.0.1 候选包必须用当前源码重新打包并复验。
 - 最新 macOS 原生包在隔离存档中破坏主存档后，可从备份恢复到“黄河夜渡”进度。
 - `assets/manifest.json` 中 167 项运行时资产均可读取，共 212,998,078 字节。
 - 最终战 17 张可见图片无损坏；敌我与好汉立绘均保持等比缩放。
