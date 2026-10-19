@@ -40,7 +40,7 @@ func _run() -> void:
 	_check(ending_state.endings_unlocked.has("order"), "resolved endings should be archived")
 	main.state.quest_progress = {"linchong": {"wins": 22, "damage": 4200, "ultimates": 2}}
 	main.state.current_chapter = 0
-	var quest_result := main.state.claim_hero_quest("linchong", "linchong_old_tassel")
+	var quest_result: Dictionary = main.state.claim_hero_quest("linchong", "linchong_old_tassel")
 	_check(quest_result.ok, "completed hero quests should be claimable")
 	_check(main.state.quest_claimed.has("linchong_old_tassel"), "hero quest claims should be persisted")
 	main.state.delete_save()
