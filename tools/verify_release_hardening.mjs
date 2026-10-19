@@ -24,6 +24,8 @@ const webManifest = JSON.parse(read("public/manifest.webmanifest"));
 const serviceWorker = read("public/sw.js");
 const mainSource = read("src/main.js");
 const entitlementsPath = "build/entitlements.mac.plist";
+const inheritEntitlementsPath = "build/entitlements.mac.inherit.plist";
+const macSigningHookPath = "tools/after-pack-macos.mjs";
 
 assert(packageJson.private === true, "package must remain private");
 assert(
@@ -176,29 +178,76 @@ assert(
   "macOS hardened runtime must be enabled",
 );
 assert(
-  packageJson.build?.mac?.notarize === true,
-  "electron-builder notarization integration must be enabled",
+  packageJson.build?.mac?.identity === "-",
+  "macOS public candidate must use an explicit ad-hoc identity",
+);
+assert(
+  packageJson.build?.mac?.minimumSystemVersion === "13.0",
+  "macOS candidate must retain its declared macOS 13.0 minimum",
+);
+assert(
+  packageJson.build?.mac?.notarize === false,
+  "an ad-hoc candidate must not request notarization",
 );
 assert(
   packageJson.build?.mac?.entitlements === entitlementsPath,
   "macOS main executable entitlements are not configured",
 );
 assert(
-  packageJson.build?.mac?.entitlementsInherit === entitlementsPath,
+  packageJson.build?.mac?.entitlementsInherit === inheritEntitlementsPath,
   "macOS inherited entitlements are not configured",
 );
-assert(existsSync(path.join(root, entitlementsPath)), `missing ${entitlementsPath}`);
-if (existsSync(path.join(root, entitlementsPath))) {
-  const entitlements = read(entitlementsPath);
-  for (const entitlement of [
-    "com.apple.security.cs.allow-jit",
-    "com.apple.security.cs.allow-unsigned-executable-memory",
-    "com.apple.security.cs.allow-dyld-environment-variables",
-    "com.apple.security.cs.disable-library-validation",
+assert(
+  packageJson.build?.afterPack === `./${macSigningHookPath}`,
+  "macOS afterPack signing hook is not configured",
+);
+assert(
+  existsSync(path.join(root, macSigningHookPath)),
+  `missing ${macSigningHookPath}`,
+);
+if (existsSync(path.join(root, macSigningHookPath))) {
+  const macSigningHook = read(macSigningHookPath);
+  for (const requirement of [
+    "signAsync",
+    'identity: "-"',
+    "identityValidation: false",
+    "preAutoEntitlements: false",
+    "hardenedRuntime: true",
+    'timestamp: "none"',
+    "mainEntitlements",
+    "inheritEntitlements",
+    "codesign",
+    "--verify",
   ]) {
     assert(
+      macSigningHook.includes(requirement),
+      `macOS signing hook is missing: ${requirement}`,
+    );
+  }
+}
+for (const entitlementPath of [entitlementsPath, inheritEntitlementsPath]) {
+  assert(
+    existsSync(path.join(root, entitlementPath)),
+    `missing ${entitlementPath}`,
+  );
+}
+for (const entitlementPath of [entitlementsPath, inheritEntitlementsPath]) {
+  if (!existsSync(path.join(root, entitlementPath))) continue;
+  const entitlements = read(entitlementPath);
+  const requiredEntitlements = [
+    "com.apple.security.cs.allow-jit",
+    "com.apple.security.cs.allow-unsigned-executable-memory",
+    "com.apple.security.cs.disable-library-validation",
+  ];
+  if (entitlementPath === entitlementsPath) {
+    requiredEntitlements.push(
+      "com.apple.security.cs.allow-dyld-environment-variables",
+    );
+  }
+  for (const entitlement of requiredEntitlements) {
+    assert(
       entitlements.includes(entitlement),
-      `macOS entitlements missing: ${entitlement}`,
+      `macOS ${entitlementPath} missing: ${entitlement}`,
     );
   }
 }
