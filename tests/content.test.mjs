@@ -15,6 +15,7 @@ import {
   ENEMIES,
   EQUIPMENT,
   HERO_BONDS,
+  HERO_CHRONICLES,
   HERO_DOCTRINES,
   HERO_LEGENDS,
   HERO_QUESTS,
@@ -210,6 +211,41 @@ test("every hero has a three-stage personal quest chain", () => {
       assert.ok(quest.reward.xp > 0);
       previousChapter = quest.requiredChapter;
     }
+  }
+});
+
+test("every hero has one readable five-part biography chronicle", () => {
+  assert.deepEqual(
+    Object.keys(HERO_CHRONICLES).sort(),
+    [...HERO_ORDER].sort(),
+  );
+  for (const heroId of HERO_ORDER) {
+    const chronicle = HERO_CHRONICLES[heroId];
+    assert.equal(chronicle.heroId, heroId);
+    assert.equal(chronicle.title, `${HEROES[heroId].name}列传`);
+    assert.equal(chronicle.entries.length, 5);
+    assert.deepEqual(
+      chronicle.entries.map((entry) => entry.kind),
+      ["origin", "quest", "quest", "quest", "legend"],
+    );
+    assert.equal(
+      new Set(chronicle.entries.map((entry) => entry.id)).size,
+      chronicle.entries.length,
+    );
+    for (const entry of chronicle.entries) {
+      assert.ok(entry.title.length >= 2);
+      assert.ok(entry.text.length >= 30);
+    }
+    assert.deepEqual(
+      chronicle.entries
+        .filter((entry) => entry.kind === "quest")
+        .map((entry) => entry.id),
+      HERO_QUESTS[heroId].map((quest) => quest.id),
+    );
+    assert.equal(
+      chronicle.entries.find((entry) => entry.kind === "legend").sourceId,
+      HERO_LEGENDS[heroId].id,
+    );
   }
 });
 
