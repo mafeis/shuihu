@@ -40,6 +40,7 @@
 - 存档版本升级至 27，兼容旧版招募、演武、装备、营寨与结局归档数据。
 - 修复 macOS 打包时被误判为“无需签名”的配置；1.0.1 使用显式 ad-hoc 签名、Hardened Runtime 与分层权限配置，确保应用与 Electron 辅助进程能够正常启动。
 - 补齐全套 Electron Helper 与 Framework 的签名、主程序及继承权限差异，并在打包后执行 `codesign --verify --deep --strict`；macOS 最低系统版本固定为 13.0。
+- 修复 `npm run desktop:dev` 只启动 Electron、未启动前端开发服务器的问题；现在会自动启动 Vite，并把开发地址传给 Electron。
 - Windows x64 与 Windows ARM64 均在同一版本中提供 NSIS 安装包和免安装 ZIP，供不同架构的机器选择。
 - 本次发布前已通过 JavaScript 语法检查、93 项安全加固校验和 167 项运行时资源校验；安装包会附带 SHA-256 校验文件。
 
