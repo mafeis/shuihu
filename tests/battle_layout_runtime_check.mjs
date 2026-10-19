@@ -253,7 +253,21 @@ try {
     .locator('button[data-action="battle-target"]:not([disabled])')
     .first();
   if (await target.count()) await target.click();
-  await page.waitForTimeout(240);
+  await page.waitForFunction(
+    (start) => {
+      const figure = document.querySelector(
+        ".hero-unit.is-striking .hero-figure",
+      );
+      if (!figure) return false;
+      const rect = figure.getBoundingClientRect();
+      return (
+        Math.abs(rect.y - start.y) >= 70 ||
+        Math.abs(rect.bottom - start.bottom) >= 70
+      );
+    },
+    before,
+    { timeout: 1200 },
+  );
 
   const striking = page.locator(".battle-unit.is-striking");
   assert.equal(

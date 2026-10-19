@@ -281,6 +281,9 @@ let equipmentPathFilter = "all";
 let equipmentPage = 0;
 let rosterPathFilter = "all";
 let rosterPage = 0;
+let rosterDetailOpen = false;
+let rosterGalleryScrollTop = 0;
+let rosterResetScroll = false;
 
 const EQUIPMENT_CATEGORIES = [
   { id: "all", name: "全部", icon: "layout-grid" },
@@ -849,6 +852,12 @@ function statusList(unit) {
 }
 
 function renderGame() {
+  const currentRosterGallery = document.querySelector(
+    ".roster-screen .hero-gallery",
+  );
+  if (screen === "roster" && currentRosterGallery && !rosterResetScroll) {
+    rosterGalleryScrollTop = currentRosterGallery.scrollTop;
+  }
   pendingInputRestore ||= captureInputRestore(document.activeElement);
   clearBattleTimerIfLeavingBattle();
   titleVideoCleanup?.();
@@ -889,6 +898,13 @@ function renderGame() {
     },
   });
   window.scrollTo({ top: 0, behavior: "instant" });
+  if (screen === "roster") {
+    const gallery = document.querySelector(".roster-screen .hero-gallery");
+    if (gallery) {
+      gallery.scrollTop = rosterResetScroll ? 0 : rosterGalleryScrollTop;
+    }
+  }
+  rosterResetScroll = false;
   restoreInputFocus();
   if (screen === "title") bindTitleVideo();
   if (screen === "battle") {
@@ -1052,6 +1068,7 @@ function battleVfxTransitionDelay(defaultDelay) {
 }
 
 function setScreen(nextScreen) {
+  const previousScreen = screen;
   if (screen === "battle" || screen === "story") {
     if (battleTimer) window.clearTimeout(battleTimer);
     battleTimer = null;
@@ -1061,6 +1078,11 @@ function setScreen(nextScreen) {
   if (nextScreen !== "ending") endingCinematicActive = false;
   clearArenaAutoTimer();
   screen = nextScreen;
+  rosterDetailOpen = false;
+  if (previousScreen !== "roster" || nextScreen !== "roster") {
+    rosterGalleryScrollTop = 0;
+    rosterResetScroll = true;
+  }
   pendingInputRestore = null;
   updateSteamPresence();
   render();
@@ -2869,7 +2891,7 @@ function renderRoster() {
     (heroId) =>
       rosterPathFilter === "all" || HEROES[heroId].path === rosterPathFilter,
   );
-  const roster = pageItems(filteredHeroes, rosterPage, 16);
+  const roster = pageItems(filteredHeroes, rosterPage, 12);
   rosterPage = roster.current;
   return `
     <div class="app-screen roster-screen">
@@ -2882,8 +2904,8 @@ function renderRoster() {
             <p>${HERO_ORDER.length}人各有路数。前阵护住中军，后阵才有余裕蓄起义气。</p>
           </div>
           <div class="roster-heading-actions">
-            <button class="button secondary" data-action="nav-formation">${icon("layout-grid", 18)}<span>三阵编成</span></button>
-            <button class="button ghost" data-action="auto-team">${icon("wand-sparkles", 18)}<span>军师荐阵</span></button>
+            <button class="button secondary" data-action="nav-formation" aria-label="三阵编成">${icon("layout-grid", 18)}<span class="roster-action-wide">三阵编成</span><span class="roster-action-compact">编成</span></button>
+            <button class="button ghost" data-action="auto-team" aria-label="军师荐阵">${icon("wand-sparkles", 18)}<span class="roster-action-wide">军师荐阵</span><span class="roster-action-compact">荐阵</span></button>
           </div>
         </section>
         <section class="roster-list-panel">
@@ -2897,7 +2919,9 @@ function renderRoster() {
           </div>
           ${renderPagination(roster, "roster-page", "名册分页")}
         </section>
-        <aside class="hero-dossier">
+        <button class="roster-detail-backdrop ${rosterDetailOpen ? "is-open" : ""}" data-action="close-roster-detail" aria-label="收起好汉详情" tabindex="${rosterDetailOpen ? "0" : "-1"}"></button>
+        <aside class="hero-dossier ${rosterDetailOpen ? "is-open" : ""}">
+          <button class="roster-detail-close" data-action="close-roster-detail" aria-label="收起好汉详情">${icon("x", 18)}</button>
           <div class="dossier-art">${heroKeyart(detailId, "")}</div>
           <div class="dossier-overlay"></div>
           <div class="dossier-top">
@@ -2937,11 +2961,11 @@ function renderRoster() {
                   </div>`
                 : ""
             }
-            <div class="dossier-actions">
-              <button class="button secondary" data-action="equipment-hero" data-hero="${detailId}">${icon("shield", 17)}<span>整理装备</span></button>
-              <button class="button ghost" data-action="nav-formation">${icon("layout-grid", 17)}<span>调整站位</span></button>
-              <button class="button ghost chronicle-action" data-action="open-hero-chronicle" data-hero="${detailId}">${icon("book-open", 17)}<span>阅人物生平</span></button>
-            </div>
+          </div>
+          <div class="dossier-actions">
+            <button class="button secondary" data-action="equipment-hero" data-hero="${detailId}">${icon("shield", 17)}<span>整理装备</span></button>
+            <button class="button ghost" data-action="nav-formation">${icon("layout-grid", 17)}<span>调整站位</span></button>
+            <button class="button ghost chronicle-action" data-action="open-hero-chronicle" data-hero="${detailId}">${icon("book-open", 17)}<span>人物生平</span></button>
           </div>
         </aside>
       </main>
@@ -7328,7 +7352,16 @@ function handleAction(action, element) {
     case "locked-hero":
       selectedCodexHero = element.dataset.hero;
       if (screen === "codex") render();
-      else setScreen("roster");
+      else {
+        rosterDetailOpen = screen === "roster";
+        if (rosterDetailOpen) render();
+        else setScreen("roster");
+      }
+      return;
+    case "close-roster-detail":
+      rosterDetailOpen = false;
+      sound.click();
+      render();
       return;
     case "open-hero-chronicle":
       showHeroChronicle(element.dataset.hero);
@@ -7478,6 +7511,8 @@ function handleAction(action, element) {
         ? pathId
         : "all";
       rosterPage = 0;
+      rosterDetailOpen = false;
+      rosterResetScroll = true;
       selectedCodexHero =
         state.recruited.find(
           (heroId) =>
@@ -7490,6 +7525,8 @@ function handleAction(action, element) {
     }
     case "roster-page":
       rosterPage += Number(element.dataset.direction) || 0;
+      rosterDetailOpen = false;
+      rosterResetScroll = true;
       sound.click();
       render();
       return;

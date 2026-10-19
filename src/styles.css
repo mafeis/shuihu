@@ -16399,3 +16399,600 @@ html[data-motion="reduced"] .ending-cinematic {
     max-height: min(224px, 31dvh);
   }
 }
+
+/* Roster workbench: browse and inspect without cross-scrolling the page. */
+
+.roster-detail-backdrop,
+.roster-detail-close {
+  display: none;
+}
+
+.roster-action-compact {
+  display: none;
+}
+
+.roster-screen .hero-card::after {
+  position: absolute;
+  z-index: 1;
+  inset: 32% 0 0;
+  content: "";
+  background:
+    linear-gradient(0deg, rgba(8, 13, 14, 0.98) 2%, rgba(8, 13, 14, 0.83) 48%, transparent 100%);
+  pointer-events: none;
+}
+
+.roster-screen .hero-card.is-locked::after {
+  display: none;
+}
+
+@media (min-width: 921px) {
+  .roster-screen {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .roster-screen .roster-layout {
+    width: min(1480px, calc(100% - 32px));
+    height: calc(100dvh - 70px);
+    min-height: 0;
+    margin: 0 auto;
+    padding: 14px 0 16px;
+    overflow: hidden;
+    grid-template-columns: minmax(0, 1fr) clamp(350px, 27vw, 410px);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 12px 16px;
+  }
+
+  .roster-screen .roster-heading {
+    min-width: 0;
+    align-items: center;
+    padding: 0 0 11px;
+  }
+
+  .roster-screen .roster-heading h1 {
+    margin: 0 0 2px;
+    font-size: 34px;
+  }
+
+  .roster-screen .roster-heading > div > p:last-child {
+    overflow: hidden;
+    font-size: 0.6875rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .roster-screen .roster-heading-actions .button {
+    min-height: 38px;
+  }
+
+  .roster-screen .roster-list-panel {
+    display: grid;
+    height: 100%;
+    min-height: 0;
+    align-content: stretch;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .roster-screen .roster-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 1px;
+    scrollbar-width: none;
+  }
+
+  .roster-screen .roster-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .roster-screen .hero-gallery {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 7px 3px 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-content: start;
+    gap: 8px;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--ink-600) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .roster-screen .hero-card {
+    min-height: 252px;
+  }
+
+  .roster-screen .hero-card-copy {
+    padding: 0 11px 8px;
+  }
+
+  .roster-screen .hero-card-copy h3 {
+    font-size: 1.3125rem;
+  }
+
+  .roster-screen .hero-card-copy p {
+    margin-bottom: 5px;
+    font-size: 0.5625rem;
+  }
+
+  .roster-screen .hero-card footer {
+    min-height: 30px;
+    padding: 0 10px;
+  }
+
+  .roster-screen .hero-card footer .stat-line {
+    gap: 7px;
+  }
+
+  .roster-screen .hero-card-actions {
+    padding: 0 7px 7px;
+  }
+
+  .roster-screen .hero-card-actions .button {
+    min-height: 32px;
+    gap: 5px;
+    padding: 0 8px;
+  }
+
+  .roster-screen .list-pagination {
+    min-height: 30px;
+  }
+
+  .roster-screen .hero-dossier {
+    position: relative;
+    top: auto;
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(190px, 35%) minmax(0, 1fr) auto;
+    align-self: stretch;
+  }
+
+  .roster-screen .dossier-art {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 48%;
+    overflow: hidden;
+  }
+
+  .roster-screen .dossier-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 16%;
+  }
+
+  .roster-screen .dossier-overlay {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 50%;
+    background:
+      linear-gradient(0deg, #11191a 0%, rgba(17, 25, 26, 0.78) 42%, rgba(17, 25, 26, 0.05) 86%);
+  }
+
+  .roster-screen .dossier-top {
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    right: 0;
+    left: 0;
+  }
+
+  .roster-screen .dossier-copy {
+    position: relative;
+    z-index: 3;
+    inset: auto;
+    min-height: 0;
+    overflow-y: auto;
+    grid-row: 2;
+    padding: 15px 17px 10px;
+    background: #11191a;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--ink-600) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .roster-screen .dossier-copy h2 {
+    margin-bottom: 6px;
+    font-size: 31px;
+  }
+
+  .roster-screen .dossier-copy > p:not(.eyebrow) {
+    margin-bottom: 10px;
+    font-size: 0.625rem;
+    line-height: 1.65;
+  }
+
+  .roster-screen .dossier-meta {
+    margin-bottom: 9px;
+  }
+
+  .roster-screen .xp-block {
+    margin-bottom: 9px;
+  }
+
+  .roster-screen .dossier-stats {
+    margin-bottom: 9px;
+  }
+
+  .roster-screen .dossier-stats > span {
+    padding: 6px;
+  }
+
+  .roster-screen .passive-box {
+    margin-bottom: 8px;
+    padding: 8px 9px;
+  }
+
+  .roster-screen .dossier-actions {
+    position: relative;
+    z-index: 5;
+    grid-row: 3;
+    padding: 11px 15px 14px;
+    border-top: 1px solid rgba(223, 213, 193, 0.12);
+    background:
+      linear-gradient(0deg, #11191a 70%, rgba(17, 25, 26, 0.96));
+  }
+}
+
+@media (max-width: 920px) {
+  .roster-screen {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+
+  .roster-screen .roster-layout {
+    display: grid;
+    width: calc(100% - 20px);
+    height: calc(100dvh - 62px);
+    min-height: 0;
+    margin: 0 auto;
+    padding: 8px 0 10px;
+    overflow: hidden;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .roster-screen .roster-heading {
+    display: grid;
+    min-width: 0;
+    align-items: end;
+    padding: 0 2px 9px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .roster-screen .roster-heading .eyebrow {
+    margin-bottom: 1px;
+    font-size: 0.5625rem;
+  }
+
+  .roster-screen .roster-heading h1 {
+    margin: 0;
+    font-size: 31px;
+    line-height: 1.12;
+  }
+
+  .roster-screen .roster-heading > div > p:last-child {
+    display: none;
+  }
+
+  .roster-screen .roster-heading-actions {
+    margin: 0;
+    gap: 5px;
+  }
+
+  .roster-screen .roster-heading-actions .button {
+    flex: 0 0 auto;
+    min-height: 36px;
+    gap: 5px;
+    padding: 0 9px;
+    font-size: 0.625rem;
+    white-space: nowrap;
+  }
+
+  .roster-screen .roster-heading-actions .roster-action-wide {
+    display: none;
+  }
+
+  .roster-screen .roster-heading-actions .roster-action-compact {
+    display: inline;
+  }
+
+  .roster-screen .roster-heading-actions .button svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .roster-screen .roster-list-panel {
+    display: grid;
+    height: 100%;
+    min-height: 0;
+    align-content: stretch;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+
+  .roster-screen .roster-filters {
+    display: grid;
+    flex: none;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .roster-screen .roster-filters button {
+    min-width: 0;
+    min-height: 34px;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0;
+    padding: 2px 1px;
+    font-size: 0.5625rem;
+    line-height: 1.15;
+  }
+
+  .roster-screen .hero-gallery {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 2px 4px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 206px;
+    align-content: start;
+    gap: 7px;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--ink-600) transparent;
+    scrollbar-width: thin;
+  }
+
+  .roster-screen .hero-card {
+    width: 100%;
+    height: 206px;
+    min-height: 0;
+  }
+
+  .roster-screen .hero-card-art {
+    inset: 0;
+    height: 100%;
+  }
+
+  .roster-screen .hero-card-copy {
+    padding: 0 10px 10px;
+  }
+
+  .roster-screen .hero-card-copy small {
+    font-size: 0.5625rem;
+  }
+
+  .roster-screen .hero-card-copy h3 {
+    margin: 0 0 3px;
+    font-size: 1.25rem;
+    line-height: 1.15;
+  }
+
+  .roster-screen .hero-card-copy p {
+    overflow: hidden;
+    margin-bottom: 5px;
+    font-size: 0.5625rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .roster-screen .hero-card-copy .path-badge {
+    min-height: 23px;
+    padding: 1px 7px 1px 3px;
+    font-size: 0.5625rem;
+  }
+
+  .roster-screen .hero-card footer,
+  .roster-screen .hero-card-actions {
+    display: none;
+  }
+
+  .roster-screen .list-pagination {
+    min-height: 28px;
+  }
+
+  .roster-screen .list-pagination .icon-button {
+    width: 27px;
+    height: 27px;
+  }
+
+  .roster-detail-backdrop {
+    position: fixed;
+    z-index: 72;
+    inset: 62px 0 0;
+    display: none;
+    border: 0;
+    background: rgba(4, 8, 9, 0.72);
+    backdrop-filter: blur(5px);
+  }
+
+  .roster-detail-backdrop.is-open {
+    display: block;
+  }
+
+  .roster-screen .hero-dossier {
+    display: none;
+  }
+
+  .roster-screen .hero-dossier.is-open {
+    position: fixed;
+    z-index: 76;
+    top: 68px;
+    right: 8px;
+    bottom: 12px;
+    left: 8px;
+    display: grid;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(150px, 31%) minmax(0, 1fr) auto;
+    border-color: rgba(215, 188, 125, 0.34);
+    box-shadow: 0 24px 65px rgba(0, 0, 0, 0.62);
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-art {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 48%;
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 14%;
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-overlay {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 51%;
+    background:
+      linear-gradient(0deg, #11191a 0%, rgba(17, 25, 26, 0.8) 44%, rgba(17, 25, 26, 0.08) 88%);
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-top {
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    right: 46px;
+    left: 0;
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-copy {
+    position: relative;
+    inset: auto;
+    min-height: 0;
+    overflow-y: auto;
+    grid-row: 2;
+    padding: 14px 15px 10px;
+    background: #11191a;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--ink-600) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-copy h2 {
+    margin-bottom: 5px;
+    font-size: 29px;
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-copy > p:not(.eyebrow) {
+    margin-bottom: 10px;
+    font-size: 0.625rem;
+    line-height: 1.65;
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-meta,
+  .roster-screen .hero-dossier.is-open .xp-block,
+  .roster-screen .hero-dossier.is-open .dossier-stats,
+  .roster-screen .hero-dossier.is-open .passive-box {
+    margin-bottom: 9px;
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-actions {
+    position: relative;
+    z-index: 5;
+    grid-row: 3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    padding: 10px 12px 12px;
+    border-top: 1px solid rgba(223, 213, 193, 0.12);
+    background: #11191a;
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-actions .chronicle-action {
+    grid-column: auto;
+  }
+
+  .roster-screen .hero-dossier.is-open .dossier-actions .button {
+    min-width: 0;
+    min-height: 40px;
+    gap: 4px;
+    padding: 0 4px;
+    font-size: 0.5625rem;
+  }
+
+  .roster-detail-close {
+    position: absolute;
+    z-index: 8;
+    top: 10px;
+    right: 10px;
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid rgba(223, 213, 193, 0.23);
+    border-radius: 4px;
+    background: rgba(6, 11, 12, 0.78);
+    color: var(--paper-200);
+  }
+}
+
+@media (min-width: 681px) and (max-width: 920px) {
+  .roster-screen .hero-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 238px;
+  }
+
+  .roster-screen .hero-card {
+    height: 238px;
+  }
+
+  .roster-screen .hero-dossier.is-open {
+    top: 72px;
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+  }
+}
+
+@media (max-width: 680px) {
+  .roster-screen .roster-layout {
+    height: calc(100dvh - 126px);
+    padding-bottom: 0;
+  }
+
+  .roster-detail-backdrop {
+    bottom: 64px;
+  }
+
+  .roster-screen .hero-dossier.is-open {
+    bottom: 68px;
+  }
+}
+
+@media (max-width: 380px) {
+  .roster-screen .roster-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .roster-screen .roster-heading-actions {
+    grid-column: 1;
+  }
+
+  .roster-screen .hero-gallery {
+    grid-auto-rows: 198px;
+  }
+
+  .roster-screen .hero-card {
+    height: 198px;
+  }
+}
