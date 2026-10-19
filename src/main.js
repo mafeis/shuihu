@@ -85,6 +85,7 @@ import {
   alignmentSummary,
   applyHeroRecruitmentRewards,
   applyBattleRewards,
+  battleEnemyScale,
   campRest,
   campRestCost,
   CHAPTER_MEDALS,
@@ -5123,7 +5124,9 @@ function startChapterBattle() {
     legendRule: legend?.rule || null,
     specialRule: recruitment?.rule || chapterTactic,
     specialRuleLabel: chapterTactic ? "临阵战意" : undefined,
-    enemyScale: legend?.enemyScale || recruitment?.enemyScale || 1,
+    enemyScale:
+      battleEnemyScale(state) *
+      (legend?.enemyScale || recruitment?.enemyScale || 1),
     enemyModifiers:
       legend?.enemyModifiers || recruitment?.enemyModifiers || {},
   });
@@ -5603,9 +5606,10 @@ function launchArenaWave() {
   if (encounter) arenaRun.encounterId = encounter.id;
   activeChapter = createArenaChapter(arenaRun.wave);
   const enemyScale =
-    1 +
-    Math.max(0, arenaRun.wave - 1) * 0.085 +
-    (arenaRun.wave % 5 === 0 ? 0.16 : 0);
+    battleEnemyScale(state) *
+    (1 +
+      Math.max(0, arenaRun.wave - 1) * 0.085 +
+      (arenaRun.wave % 5 === 0 ? 0.16 : 0));
   const modifiers = arenaModifiers([
     ...arenaRelicIds(),
     ...arenaRun.boons,

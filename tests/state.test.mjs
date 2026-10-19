@@ -22,6 +22,7 @@ import {
   activeHeroBonds,
   applyBattleRewards,
   applyHeroRecruitmentRewards,
+  battleEnemyScale,
   checkAchievements,
   chooseNewestSaveText,
   claimHeroQuest,
@@ -44,6 +45,36 @@ import {
   setHeroDoctrine,
   validateSaveText,
 } from "../src/state.js";
+
+test("campaign victories raise enemy scaling within a fixed safety ceiling", () => {
+  const state = createInitialState();
+  const baseline = battleEnemyScale(state);
+  const upgradedHero = state.team[0];
+  const statsBeforeProgress = deriveHeroStats(state, upgradedHero);
+  const chapterRewards = [];
+  for (const chapter of CHAPTERS.slice(0, 3)) {
+    chapterRewards.push(applyBattleRewards(state, chapter));
+  }
+  const statsAfterProgress = deriveHeroStats(state, upgradedHero);
+  assert.ok(chapterRewards.every((reward) => reward.xp > 0));
+  assert.ok(state.roster[upgradedHero].level > 1);
+  assert.ok(statsAfterProgress.maxHp > statsBeforeProgress.maxHp);
+  assert.ok(statsAfterProgress.atk > statsBeforeProgress.atk);
+
+  state.completedChapters = [
+    ...new Set(CHAPTERS.slice(0, 3).map((chapter) => chapter.id)),
+  ];
+  state.stats.battlesWon = 8;
+  assert.ok(battleEnemyScale(state) > baseline);
+  assert.ok(battleEnemyScale(state) < 1.1);
+
+  state.completedChapters = CHAPTERS.map((chapter) => chapter.id).concat(
+    CHAPTERS.map((chapter) => chapter.id),
+    ["not-a-chapter"],
+  );
+  state.stats.battlesWon = 1000;
+  assert.equal(battleEnemyScale(state), 1.22);
+});
 
 test("recommended formation keeps chain-ready path diversity while stacking bonds", () => {
   const state = createInitialState();
