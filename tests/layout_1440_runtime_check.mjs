@@ -487,6 +487,7 @@ try {
 
   const screens = [
     ["map", 'button[data-action="nav-map"]', ".screen-map"],
+    ["story-hub", 'button[data-action="nav-story-hub"]', ".screen-story-hub"],
     ["camp", 'button[data-action="nav-camp"]', ".screen-camp"],
     ["arena", 'button[data-action="nav-arena"]', ".screen-arena"],
     ["roster", 'button[data-action="nav-roster"]', ".screen-roster"],
@@ -498,10 +499,39 @@ try {
     await page.click(`.topbar ${selector}`);
     await page.waitForSelector(screenSelector);
     await page.waitForTimeout(160);
+    await page.evaluate(() =>
+      Promise.all(
+        [...document.querySelectorAll("img")]
+          .filter((image) => {
+            const rect = image.getBoundingClientRect();
+            return rect.width > 1 && rect.height > 1;
+          })
+          .map(
+            (image) =>
+              image.complete
+                ? image.decode().catch(() => {})
+                : new Promise((resolve) => {
+                    image.addEventListener("load", resolve, { once: true });
+                    image.addEventListener("error", resolve, { once: true });
+                  }),
+          ),
+      ),
+    );
     const metrics = await measureScreen(page, name);
     await captureScreen(page, name, metrics);
     reports.push({ name, controls: metrics.controls.length });
   }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => {
+    document.querySelector('button[data-action="nav-story-hub"]')?.click();
+  });
+  await page.waitForSelector(".screen-story-hub");
+  await page.waitForTimeout(160);
+  metrics = await measureScreen(page, "story-hub-mobile");
+  await captureScreen(page, "story-hub-mobile", metrics);
+  reports.push({ name: "story-hub-mobile", controls: metrics.controls.length });
+  await page.setViewportSize({ width: 1440, height: 900 });
 
   await page.click('.topbar button[data-action="nav-roster"]');
   await page.waitForSelector(".screen-roster");

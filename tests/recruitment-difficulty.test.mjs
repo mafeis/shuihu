@@ -486,7 +486,7 @@ test("first playthrough gives every chapter and recruitment a reachable route", 
   for (const endingId of ["brotherhood", "order", "freedom"]) {
     assert.equal(
       openingCinematicProfile({ ending: endingId }).scenes.length,
-      4,
+      7,
       `${endingId} should not hide the next opening cinematic`,
     );
   }

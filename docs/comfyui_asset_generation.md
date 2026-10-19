@@ -35,6 +35,31 @@ export COMFY_URL=http://127.0.0.1:8188
 
 ## 2. 生成角色主视觉
 
+108 位好汉的批量立绘、透明抠图与转身图可使用：
+
+```bash
+export COMFY_URL=http://127.0.0.1:8188
+node tools/generate_hero_assets.mjs --concurrency=2
+```
+
+脚本按好汉 ID 生成主视觉，用 Apple Vision 抠出前景，再规范化为
+896×1024 RGBA 立绘与 320px 缩略图。转身图以对应主视觉为身份和服饰
+参考，避免不同姓名之间发生服装漂移。
+
+背景旗帜或匾额出现可辨识文字时，可对指定好汉做局部清理。
+脚本只重跑选中的好汉，并兼容 ComfyUI 因同名输出而追加序号的文件：
+
+```bash
+node tools/clean_hero_text.mjs --heroes=linchong,muhong
+```
+
+主视觉与转身图复核页可用：
+
+```bash
+python3 tools/audit_hero_keyart.py
+python3 tools/audit_hero_keyart.py --asset=turnaround
+```
+
 ```bash
 python3 tools/comfy_asset_pipeline.py \
   --model qwen \
@@ -77,7 +102,7 @@ python3 tools/comfy_asset_pipeline.py \
 - 只改幌子文字，保留街道建筑、行人、马匹与灯笼。
 - 只生成透明背景，保留角色和武器轮廓。
 
-## 4. 生成四视图
+## 4. 生成转身图
 
 ```bash
 python3 tools/comfy_asset_pipeline.py \
@@ -85,18 +110,18 @@ python3 tools/comfy_asset_pipeline.py \
   --input-image assets/characters/wusong/keyart.png \
   --width 1536 \
   --height 1024 \
-  --steps 30 \
+  --steps 25 \
   --seed 802108 \
-  --prefix shuihu_wusong_turnaround_v1 \
-  --workflow-out workflows/api/qwen_wusong_turnaround_v1.json \
-  --prompt 'Using <image1> strictly as the identity and costume reference, create four full-body views: front, three-quarter, side and back. Neutral A-pose, identical scale, clean studio background, preserve identity and costume exactly.'
+  --prefix shuihu_wusong_turnaround_v2 \
+  --workflow-out workflows/api/qwen_wusong_turnaround_v2.json \
+  --prompt 'Using <image1> strictly as the identity and costume reference, create exactly three full-body views: front, side profile, and back. Identical scale, clean studio background, preserve identity and costume exactly, no text.'
 ```
 
-四视图验收：
+转身图验收：
 
-- 四人的发际线、脸型、胡须与体态一致。
+- 三个视角的发际线、脸型、胡须与体态一致。
 - 服装层次和左右配件不交换。
-- 武器在四个视角中的长度和结构一致。
+- 武器在三个视角中的长度和结构一致。
 - 双脚完整，没有裁切。
 - 图中没有文字、标签、边框和水印。
 

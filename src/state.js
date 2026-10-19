@@ -22,8 +22,10 @@ import {
   HERO_QUESTS,
   HERO_RECRUITMENTS,
   HEROES,
+  HERO_ID_ALIASES,
   HERO_ORDER,
   HERO_TRIALS,
+  STORY_ARCHIVE_CHAPTERS,
 } from "./data.js";
 import { ARENA_WEEK_MARKS, getIsoWeekKey } from "./arena-week.js";
 import { sanitizeArenaTrialIds } from "./arena-trials.js";
@@ -34,13 +36,35 @@ import {
 
 export const SAVE_KEY = "xingming-shuihu-save-v1";
 export const SAVE_BACKUP_KEY = `${SAVE_KEY}-backup`;
-export const SAVE_VERSION = 27;
+export const SAVE_VERSION = 28;
 
 const HERO_QUEST_LIST = Object.values(HERO_QUESTS).flat();
 const HERO_QUEST_IDS = new Set(HERO_QUEST_LIST.map((quest) => quest.id));
 const HERO_LEGEND_IDS = new Set(
   Object.values(HERO_LEGENDS).map((legend) => legend.id),
 );
+const STORY_ARCHIVE_IDS = new Set(
+  STORY_ARCHIVE_CHAPTERS.map((chapter) => chapter.id),
+);
+
+function normalizeHeroId(heroId) {
+  return HERO_ID_ALIASES[heroId] || heroId;
+}
+
+function normalizeHeroRecord(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) {
+    return {};
+  }
+  const normalized = {};
+  for (const [heroId, value] of Object.entries(record)) {
+    normalized[normalizeHeroId(heroId)] = value;
+  }
+  return normalized;
+}
+
+export function recruitmentChallengeComplete(state, heroId) {
+  return Boolean(state?.heroRecruitments?.completed?.includes(heroId));
+}
 
 export const CHAPTER_MEDALS = [
   {
@@ -511,6 +535,7 @@ export function createInitialState(options = {}) {
     currentChapter: 0,
     completedChapters: [],
     chapterMedals: {},
+    storyArchive: [],
     recruited: ["linchong"],
     roster: {
       linchong: createRosterEntry("linchong"),
@@ -606,6 +631,7 @@ export function createInitialState(options = {}) {
     },
     heroRecruitments: {
       completed: [],
+      joined: [],
     },
     heroMastery: Object.fromEntries(
       HERO_ORDER.map((heroId) => [
@@ -726,6 +752,8 @@ function migrateSave(saved) {
   const hadHeroMastery = Boolean(
     saved.heroMastery && typeof saved.heroMastery === "object",
   );
+  const savedHeroMastery = normalizeHeroRecord(saved.heroMastery);
+  const savedDoctrines = normalizeHeroRecord(saved.doctrines);
   const merged = {
     ...base,
     ...saved,
@@ -749,16 +777,28 @@ function migrateSave(saved) {
   };
   merged.recruited = [
     ...new Set(
-      (Array.isArray(saved.recruited) ? saved.recruited : base.recruited).filter(
-        (heroId) => HERO_ORDER.includes(heroId),
-      ),
+      (Array.isArray(saved.recruited) ? saved.recruited : base.recruited)
+        .map(normalizeHeroId)
+        .filter((heroId) => HERO_ORDER.includes(heroId)),
     ),
   ];
   if (!merged.recruited.includes("linchong")) {
     merged.recruited.unshift("linchong");
   }
-  merged.roster =
-    saved.roster && typeof saved.roster === "object" ? { ...saved.roster } : {};
+  merged.roster = Object.fromEntries(
+    Object.entries(normalizeHeroRecord(saved.roster)).filter(([heroId]) =>
+      HERO_ORDER.includes(heroId),
+    ),
+  );
+  merged.storyArchive = Array.isArray(saved.storyArchive)
+    ? [
+        ...new Set(
+          saved.storyArchive.filter((chapterId) =>
+            STORY_ARCHIVE_IDS.has(chapterId),
+          ),
+        ),
+      ]
+    : [];
   for (const chapter of CHAPTERS) {
     merged.chapterMedals[chapter.id] = Array.isArray(
       merged.chapterMedals[chapter.id],
@@ -769,11 +809,12 @@ function migrateSave(saved) {
       : [];
   }
   for (const heroId of HERO_ORDER) {
+    const savedMastery = savedHeroMastery[heroId] || {};
     merged.heroMastery[heroId] = {
       ...base.heroMastery[heroId],
-      ...(saved.heroMastery?.[heroId] || {}),
-      trials: Array.isArray(saved.heroMastery?.[heroId]?.trials)
-        ? saved.heroMastery[heroId].trials
+      ...savedMastery,
+      trials: Array.isArray(savedMastery.trials)
+        ? savedMastery.trials
         : [],
     };
   }
@@ -808,15 +849,11 @@ function migrateSave(saved) {
         ),
       ]
     : [];
-  merged.doctrines =
-    saved.doctrines && typeof saved.doctrines === "object"
-      ? Object.fromEntries(
-          Object.entries(saved.doctrines).filter(
-            ([heroId, doctrineId]) =>
-              Boolean(HERO_DOCTRINES[heroId]?.paths?.[doctrineId]),
-          ),
-        )
-      : {};
+  merged.doctrines = Object.fromEntries(
+    Object.entries(savedDoctrines).filter(([heroId, doctrineId]) =>
+      Boolean(HERO_DOCTRINES[heroId]?.paths?.[doctrineId]),
+    ),
+  );
   merged.heroQuests = {
     claimed: Array.isArray(saved.heroQuests?.claimed)
       ? [
@@ -844,14 +881,29 @@ function migrateSave(saved) {
       ? [
           ...new Set(
             saved.heroRecruitments.completed.filter(
-              (heroId) =>
-                HERO_RECRUITMENTS[heroId] &&
-                merged.recruited.includes(heroId),
+              (heroId) => HERO_RECRUITMENTS[heroId],
+            ),
+          ),
+        ]
+      : [],
+    joined: Array.isArray(saved.heroRecruitments?.joined)
+      ? [
+          ...new Set(
+            saved.heroRecruitments.joined.filter(
+              (heroId) => HERO_RECRUITMENTS[heroId],
             ),
           ),
         ]
       : [],
   };
+  for (const heroId of merged.recruited) {
+    if (
+      HERO_RECRUITMENTS[heroId] &&
+      !merged.heroRecruitments.joined.includes(heroId)
+    ) {
+      merged.heroRecruitments.joined.push(heroId);
+    }
+  }
   merged.flags.tutorialSeen = Boolean(merged.flags.tutorialSeen);
   merged.camp.built = [
     ...new Set(
@@ -992,6 +1044,14 @@ function migrateSave(saved) {
   }
   if (merged.completedChapters.includes("liangshan")) {
     merged.currentChapter = CHAPTERS.length;
+  }
+  if (Array.isArray(saved.team)) {
+    merged.team = saved.team
+      .slice(0, 3)
+      .map((heroId) => {
+        const normalized = heroId ? normalizeHeroId(heroId) : null;
+        return HERO_ORDER.includes(normalized) ? normalized : null;
+      });
   }
   if (!Array.isArray(merged.team) || merged.team.length !== 3) {
     merged.team = fillTeam(merged, merged.team || []);
@@ -1181,35 +1241,143 @@ const TEAM_RECOMMENDATION_PROFILES = [
   },
 ];
 const recommendationCache = new Map();
+const FORMATION_ORDERS = [
+  [0, 1, 2],
+  [0, 2, 1],
+  [1, 0, 2],
+  [1, 2, 0],
+  [2, 0, 1],
+  [2, 1, 0],
+];
+
+function bondLookupKey(heroIds) {
+  return [...heroIds].sort().join("|");
+}
+
+const HERO_BOND_PAIR_INDEX = new Map();
+const HERO_BOND_TRIO_INDEX = new Map();
+for (const bond of Object.values(HERO_BONDS)) {
+  const index =
+    bond.heroIds.length === 2
+      ? HERO_BOND_PAIR_INDEX
+      : bond.heroIds.length === 3
+        ? HERO_BOND_TRIO_INDEX
+        : null;
+  if (!index) continue;
+  const key = bondLookupKey(bond.heroIds);
+  const matches = index.get(key) || [];
+  matches.push(bond);
+  index.set(key, matches);
+}
+
+const HERO_RECOMMENDATION_FEATURES = new Map(
+  HERO_ORDER.map((heroId) => {
+    const hero = HEROES[heroId];
+    return [
+      heroId,
+      {
+        attackers: heroCanAttack(hero) ? 1 : 0,
+        healers: heroCanHeal(hero) ? 1 : 0,
+        controllers:
+          heroCanControl(hero) || heroPassiveControl(hero) ? 1 : 0,
+        areaDamage: heroAreaDamage(hero),
+        teamSupport: heroTeamSupport(hero) ? 1 : 0,
+        preferredRow: hero.preferredRow,
+        path: hero.path,
+      },
+    ];
+  }),
+);
+
+function activeBondsForTrio(first, second, third) {
+  const bonds = [];
+  for (const key of [
+    bondLookupKey([first, second]),
+    bondLookupKey([first, third]),
+    bondLookupKey([second, third]),
+  ]) {
+    const matches = HERO_BOND_PAIR_INDEX.get(key);
+    if (matches) bonds.push(...matches);
+  }
+  const trioMatches = HERO_BOND_TRIO_INDEX.get(
+    bondLookupKey([first, second, third]),
+  );
+  if (trioMatches) bonds.push(...trioMatches);
+  return bonds;
+}
+
+function precomputeRecommendationContext(state, available) {
+  return {
+    stats: new Map(
+      available.map((heroId) => [heroId, deriveHeroStats(state, heroId)]),
+    ),
+    levels: new Map(
+      available.map((heroId) => [
+        heroId,
+        Math.max(0, Number(state.roster[heroId]?.level) || 1) - 1,
+      ]),
+    ),
+    heroRank: new Map(HERO_ORDER.map((heroId, index) => [heroId, index])),
+  };
+}
+
+function bestFormationOrder(heroIds) {
+  let bestOrder = FORMATION_ORDERS[0];
+  let bestPreferredRows = -1;
+  for (const order of FORMATION_ORDERS) {
+    const preferredRows = order.reduce(
+      (count, heroIndex, row) =>
+        count +
+        (HERO_RECOMMENDATION_FEATURES.get(heroIds[heroIndex]).preferredRow ===
+        row
+          ? 1
+          : 0),
+      0,
+    );
+    if (preferredRows > bestPreferredRows) {
+      bestPreferredRows = preferredRows;
+      bestOrder = order;
+    }
+  }
+  return { order: bestOrder, preferredRows: bestPreferredRows };
+}
 
 function recommendFormationMetrics(
-  state,
+  context,
   heroIds,
   team,
   bonds,
   preferredRowCount,
   pathCount,
 ) {
-  const stats = heroIds.map((heroId) => deriveHeroStats(state, heroId));
-  const atk = stats.reduce((total, entry) => total + entry.atk, 0);
-  const maxHp = stats.reduce((total, entry) => total + entry.maxHp, 0);
-  const def = stats.reduce((total, entry) => total + entry.def, 0);
-  const spd = stats.reduce((total, entry) => total + entry.spd, 0);
+  let atk = 0;
+  let maxHp = 0;
+  let def = 0;
+  let spd = 0;
+  let attackers = 0;
+  let healers = 0;
+  let controllers = 0;
+  let areaDamage = 0;
+  let teamSupport = 0;
+  let totalLevels = 0;
+  for (const heroId of heroIds) {
+    const stats = context.stats.get(heroId);
+    const features = HERO_RECOMMENDATION_FEATURES.get(heroId);
+    atk += stats.atk;
+    maxHp += stats.maxHp;
+    def += stats.def;
+    spd += stats.spd;
+    attackers += features.attackers;
+    healers += features.healers;
+    controllers += features.controllers;
+    areaDamage += features.areaDamage;
+    teamSupport += features.teamSupport;
+    totalLevels += context.levels.get(heroId);
+  }
   const damage =
     atk * 2.4 +
     maxHp * 0.12 +
     (def + spd) * 1.5;
-  const heroes = team.map((heroId) => HEROES[heroId]);
-  const attackers = heroes.filter(heroCanAttack).length;
-  const healers = heroes.filter(heroCanHeal).length;
-  const controllers = heroes.filter(
-    (hero) => heroCanControl(hero) || heroPassiveControl(hero),
-  ).length;
-  const areaDamage = heroes.reduce(
-    (total, hero) => total + heroAreaDamage(hero),
-    0,
-  );
-  const teamSupport = heroes.filter(heroTeamSupport).length;
   const synergy = bonds.reduce((totals, bond) => {
     const effects = bond.effects || {};
     totals.attack +=
@@ -1223,11 +1391,6 @@ function recommendFormationMetrics(
       (effects.healPct || 0) * 1000;
     return totals;
   }, { attack: 0, defense: 0 });
-  const totalLevels = heroIds.reduce(
-    (total, heroId) =>
-      total + Math.max(0, Number(state.roster[heroId]?.level) || 1) - 1,
-    0,
-  );
   const balanced =
     bonds.length * 600 +
     (pathCount === 3 ? 12000 : pathCount * 1200) +
@@ -1294,22 +1457,20 @@ function recommendFormationProfileScores(metrics) {
 }
 
 function recommendFormationTieBreak(
-  state,
+  context,
   heroIds,
-  team,
   pathCount,
   preferredRowCount,
-  heroRank,
 ) {
-  const supportCount = team.filter(
-    (heroId) => heroCanHeal(HEROES[heroId]),
-  ).length;
-  const areaDamage = team.reduce(
-    (total, heroId) => total + heroAreaDamage(HEROES[heroId]),
-    0,
-  );
+  let supportCount = 0;
+  let areaDamage = 0;
+  for (const heroId of heroIds) {
+    const features = HERO_RECOMMENDATION_FEATURES.get(heroId);
+    supportCount += features.healers;
+    areaDamage += features.areaDamage;
+  }
   const rank = heroIds.reduce(
-    (total, heroId) => total + (heroRank.get(heroId) || 0),
+    (total, heroId) => total + (context.heroRank.get(heroId) || 0),
     0,
   );
   return (
@@ -1321,23 +1482,69 @@ function recommendFormationTieBreak(
   );
 }
 
-function recommendationSignature(state, available) {
+function recommendationIdentitySignature(state, available) {
+  const baseSignature = JSON.stringify({
+    available,
+    masteryTrials: Object.fromEntries(
+      HERO_ORDER.map((heroId) => [
+        heroId,
+        state.heroMastery?.[heroId]?.trials?.length || 0,
+      ]),
+    ),
+    doctrines: state.doctrines,
+    facilities: state.facilities,
+    difficulty: state.difficulty,
+  });
+  return baseSignature;
+}
+
+function recommendationCompactSignature(state, available) {
+  const masteryTrials = available.map(
+    (heroId) => state.heroMastery?.[heroId]?.trials?.length || 0,
+  );
+  const equipment = available.map((heroId) =>
+    Object.values(state.roster[heroId]?.equipment || {})
+      .filter((itemId) => EQUIPMENT[itemId])
+      .sort(),
+  );
   return JSON.stringify({
     available,
-    roster: available.map((heroId) => state.roster[heroId]),
-    mastery: state.heroMastery,
-    doctrines: state.doctrines,
-    quests: state.heroQuests,
+    masteryTrials,
+    doctrines: available.map((heroId) => state.doctrines?.[heroId] || null),
+    facilities: state.facilities,
+    difficulty: state.difficulty,
+    equipment,
+    questClaims: available.map((heroId) =>
+      (HERO_QUESTS[heroId] || []).filter((quest) =>
+        heroQuestClaimed(state, quest.id),
+      ).length
+    ),
   });
 }
 
-function insertRecommendation(list, candidate, limit = 12) {
-  list.push(candidate);
-  list.sort(
-    (a, b) =>
-      b.profileScore - a.profileScore ||
-      a.tieBreak - b.tieBreak,
+function isBetterRecommendation(left, right) {
+  return (
+    left.profileScore > right.profileScore ||
+    (left.profileScore === right.profileScore &&
+      left.tieBreak < right.tieBreak)
   );
+}
+
+function insertRecommendation(list, candidate, limit = 12) {
+  if (
+    list.length >= limit &&
+    !isBetterRecommendation(candidate, list[list.length - 1])
+  ) {
+    return;
+  }
+  let index = 0;
+  while (
+    index < list.length &&
+    !isBetterRecommendation(candidate, list[index])
+  ) {
+    index += 1;
+  }
+  list.splice(index, 0, candidate);
   if (list.length > limit) list.pop();
 }
 
@@ -1376,11 +1583,15 @@ export function recommendTeams(state, limit = 4) {
     ].slice(0, limit);
   }
 
-  const signature = recommendationSignature(state, available);
+  const signature = recommendationCompactSignature(state, available);
   const cached = recommendationCache.get(signature);
-  if (cached) return cached.slice(0, limit);
+  if (cached?.recommendations) {
+    return cached.recommendations.slice(0, limit);
+  }
 
-  const heroRank = new Map(HERO_ORDER.map((heroId, index) => [heroId, index]));
+  const identitySignature = recommendationIdentitySignature(state, available);
+  if (recommendationCache.size >= 16) recommendationCache.clear();
+  const context = precomputeRecommendationContext(state, available);
   const profileTop = Object.fromEntries(
     TEAM_RECOMMENDATION_PROFILES.map((profile) => [profile.id, []]),
   );
@@ -1388,52 +1599,41 @@ export function recommendTeams(state, limit = 4) {
     for (let second = first + 1; second < available.length - 1; second += 1) {
       for (let third = second + 1; third < available.length; third += 1) {
         const heroIds = [available[first], available[second], available[third]];
-        const members = new Set(heroIds);
-        const bonds = Object.values(HERO_BONDS).filter((bond) =>
-          bond.heroIds.every((heroId) => members.has(heroId)),
+        const bonds = activeBondsForTrio(
+          heroIds[0],
+          heroIds[1],
+          heroIds[2],
         );
-        const pathCount = new Set(heroIds.map((heroId) => HEROES[heroId].path))
-          .size;
-        const rowOrders = [
-          [0, 1, 2],
-          [0, 2, 1],
-          [1, 0, 2],
-          [1, 2, 0],
-          [2, 0, 1],
-          [2, 1, 0],
-        ];
-        for (const order of rowOrders) {
-          const team = order.map((index) => heroIds[index]);
-          const preferredRows = team.filter(
-            (heroId, row) => HEROES[heroId].preferredRow === row,
-          ).length;
-          const metrics = recommendFormationMetrics(
-            state,
-            heroIds,
+        const pathCount = new Set(
+          heroIds.map(
+            (heroId) => HERO_RECOMMENDATION_FEATURES.get(heroId).path,
+          ),
+        ).size;
+        const { order, preferredRows } = bestFormationOrder(heroIds);
+        const team = order.map((index) => heroIds[index]);
+        const metrics = recommendFormationMetrics(
+          context,
+          heroIds,
+          team,
+          bonds,
+          preferredRows,
+          pathCount,
+        );
+        const profileScores = recommendFormationProfileScores(metrics);
+        const tieBreak = recommendFormationTieBreak(
+          context,
+          heroIds,
+          pathCount,
+          preferredRows,
+        );
+        for (const profile of TEAM_RECOMMENDATION_PROFILES) {
+          insertRecommendation(profileTop[profile.id], {
             team,
             bonds,
-            preferredRows,
-            pathCount,
-          );
-          const profileScores =
-            recommendFormationProfileScores(metrics);
-          const tieBreak = recommendFormationTieBreak(
-            state,
-            heroIds,
-            team,
-            pathCount,
-            preferredRows,
-            heroRank,
-          );
-          for (const profile of TEAM_RECOMMENDATION_PROFILES) {
-            insertRecommendation(profileTop[profile.id], {
-              team,
-              bonds,
-              metrics,
-              tieBreak,
-              profileScore: profileScores[profile.id],
-            });
-          }
+            metrics,
+            tieBreak,
+            profileScore: profileScores[profile.id],
+          });
         }
       }
     }
@@ -1465,8 +1665,9 @@ export function recommendTeams(state, limit = 4) {
     }
   }
 
-  if (recommendationCache.size >= 8) recommendationCache.clear();
-  recommendationCache.set(signature, recommendations);
+  const rankingEntry = { recommendations };
+  recommendationCache.set(identitySignature, rankingEntry);
+  recommendationCache.set(signature, rankingEntry);
   return recommendations.slice(0, limit);
 }
 
@@ -1568,21 +1769,33 @@ export function heroLegendCompleted(state, heroId) {
 
 export function heroRecruitmentCompleted(state, heroId) {
   if (!state || !HERO_RECRUITMENTS[heroId]) return false;
+  return Boolean(state.heroRecruitments?.completed?.includes(heroId));
+}
+
+export function heroRecruitmentJoined(state, heroId) {
   return Boolean(
-    state.recruited?.includes(heroId) ||
-      state.heroRecruitments?.completed?.includes(heroId),
+    state?.recruited?.includes(heroId) ||
+      state?.heroRecruitments?.joined?.includes(heroId),
   );
 }
 
 export function heroRecruitmentUnlocked(state, heroId) {
   const recruitment = HERO_RECRUITMENTS[heroId];
-  if (!recruitment || heroRecruitmentCompleted(state, heroId)) return false;
+  if (!recruitment) return false;
+  if (recruitmentChallengeComplete(state, heroId)) return false;
   if ((state.currentChapter || 0) < recruitment.requiredChapter) return false;
-  return (
-    !recruitment.prerequisite ||
-    heroRecruitmentCompleted(state, recruitment.prerequisite)
-  );
+  return !recruitment.prerequisite ||
+    heroRecruitmentJoined(state, recruitment.prerequisite);
 }
+
+export const recruitmentIsChapterReady = (state, heroId) =>
+  (state?.currentChapter || 0) >=
+  (HERO_RECRUITMENTS[heroId]?.requiredChapter || Infinity);
+
+export const recruitmentIsPrerequisiteReady = (state, heroId) => {
+  const prerequisite = HERO_RECRUITMENTS[heroId]?.prerequisite;
+  return !prerequisite || heroRecruitmentJoined(state, prerequisite);
+};
 
 export function applyHeroRecruitmentRewards(state, heroId, battle = null) {
   const recruitment = HERO_RECRUITMENTS[heroId];
@@ -1608,14 +1821,21 @@ export function applyHeroRecruitmentRewards(state, heroId, battle = null) {
       recruits: [],
     };
   }
-  state.heroRecruitments ||= { completed: [] };
+  state.heroRecruitments ||= { completed: [], joined: [] };
   if (!Array.isArray(state.heroRecruitments.completed)) {
     state.heroRecruitments.completed = [];
+  }
+  if (!Array.isArray(state.heroRecruitments.joined)) {
+    state.heroRecruitments.joined = [];
   }
   if (!state.heroRecruitments.completed.includes(heroId)) {
     state.heroRecruitments.completed.push(heroId);
   }
+  const joinedBefore = heroRecruitmentJoined(state, heroId);
   recruitHero(state, heroId);
+  if (!state.heroRecruitments.joined.includes(heroId)) {
+    state.heroRecruitments.joined.push(heroId);
+  }
   state.inventory.copper += recruitment.reward.copper;
   addItem(state, recruitment.reward.item, 1);
   state.stats.battlesWon += 1;
@@ -1648,7 +1868,7 @@ export function applyHeroRecruitmentRewards(state, heroId, battle = null) {
     xp: recruitment.reward.xp,
     item: recruitment.reward.item,
     levelUps,
-    recruits: [heroId],
+    recruits: joinedBefore ? [] : [heroId],
   };
 }
 
@@ -1921,6 +2141,12 @@ export function applyBattleRewards(state, chapter, replay = false) {
   }
   for (const heroId of chapter.battle.recruit || []) {
     recruitHero(state, heroId);
+    if (!replay && HERO_RECRUITMENTS[heroId] && state.heroRecruitments) {
+      state.heroRecruitments.joined ||= [];
+      if (!state.heroRecruitments.joined.includes(heroId)) {
+        state.heroRecruitments.joined.push(heroId);
+      }
+    }
   }
   if (!replay && !state.completedChapters.includes(chapter.id)) {
     state.completedChapters.push(chapter.id);
@@ -2000,6 +2226,14 @@ export function chapterStatus(state, chapter) {
 
 export function currentChapter(state) {
   return CHAPTERS[Math.min(state.currentChapter, CHAPTERS.length - 1)];
+}
+
+export function recordStoryArchive(state, chapterId) {
+  if (!state || !STORY_ARCHIVE_IDS.has(chapterId)) return false;
+  if (!Array.isArray(state.storyArchive)) state.storyArchive = [];
+  if (state.storyArchive.includes(chapterId)) return false;
+  state.storyArchive.push(chapterId);
+  return true;
 }
 
 export function recordChoice(state, chapterId, optionIndex, effect) {

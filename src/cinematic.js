@@ -7,7 +7,7 @@ const TITLE_FINAL_FRAME = {
   text: "旧路已断，新的星命从这一夜写起。",
 };
 
-const OPENING_COMMON_SCENES = [
+const ORIGINAL_OPENING_SCENES = [
   {
     id: "bianjing-edict",
     asset: "/assets/environments/bianjing_snow_night.png",
@@ -33,6 +33,34 @@ const OPENING_COMMON_SCENES = [
     text: "官差封了渡口。鲁智深却把船撑向不肯认命的人。",
   },
   TITLE_FINAL_FRAME,
+];
+
+const OPENING_COMMON_SCENES = [
+  {
+    id: "longhu-prologue",
+    asset: "/assets/environments/longhu_mountain.png",
+    focal: "center",
+    label: "楔子 · 龙虎山",
+    title: "星落人间",
+    text: "伏魔殿封条被揭，一百单八星从此散入北宋山河。",
+  },
+  {
+    id: "shijia-village",
+    asset: "/assets/environments/shijia_village.png",
+    focal: "center",
+    label: "少华山 · 史家村",
+    title: "少年结义",
+    text: "史进烧掉家业，带着一身枪棒走上江湖。",
+  },
+  {
+    id: "huangni-ridge",
+    asset: "/assets/environments/huangni_ridge.png",
+    focal: "center",
+    label: "黄泥冈 · 夏日",
+    title: "七星聚义",
+    text: "一担生辰纲，把七位好汉的名字写进同一条路。",
+  },
+  ...ORIGINAL_OPENING_SCENES,
 ];
 
 const ENDING_OPENING_ECHO = {
@@ -164,20 +192,24 @@ const ENDING_CINEMATICS = {
   },
 };
 
-export function openingCinematicProfile(state) {
+export function openingCinematicProfile(state, options = {}) {
+  const titleAsset = options.titleAsset || TITLE_FINAL_FRAME.asset;
+  const scenes = OPENING_COMMON_SCENES.map((scene) =>
+    scene === TITLE_FINAL_FRAME ? { ...scene, asset: titleAsset } : scene,
+  );
   const endingId = state?.ending;
   const echo = ENDING_OPENING_ECHO[endingId];
   if (!echo) {
     return {
       variant: "first-cycle",
-      scenes: OPENING_COMMON_SCENES,
+      scenes,
     };
   }
   return {
     variant: endingId,
     scenes: [
       echo,
-      ...OPENING_COMMON_SCENES.slice(1),
+      ...scenes.slice(1),
     ],
   };
 }

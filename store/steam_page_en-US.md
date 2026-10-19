@@ -6,7 +6,7 @@ Xingming Shuihu: Snowbound Vengeance
 
 ## Short Description
 
-Rally forty outlaws, master a three-slot party and four combat disciplines, and carve your own path through a Water Margin-inspired turn-based RPG.
+Rally all 108 heroes of Liangshan, master a three-slot party and four combat disciplines, and carve your own path through a Water Margin-inspired turn-based RPG.
 
 ## Long Description
 
@@ -20,12 +20,12 @@ Take direct control or enable the tactical auto-battler with `1x / 2x / 4x` spee
 
 ### Features
 
-- A nine-chapter campaign with Brotherhood, Allegiance, and Renunciation endings.
-- Forty recruitable heroes with unique skills, ultimates, permanent mastery trials, and two switchable destiny doctrines.
-- One hundred and twenty personal side stories and forty capstone legend battles, each with a dedicated encounter rule, narrative payoff, and unique equipment reward.
-- Twenty-eight recruitment scrolls. The four-part Yang Zhi, Gongsun Sheng, Lu Junyi, and Zhang Shun chain joins standalone oaths for Shi Jin, Qin Ming, Chai Jin, Guan Sheng, Zhang Qing, and Xu Ning, plus trials for Sun Erniang, Gu Dasao, Ling Zhen, Ruan Xiaoqi, Li Jun, Huyan Zhuo, Liu Tang, Lei Heng, Zhu Tong, Li Ying, Xie Zhen, and Xie Bao. Yang Xiong, Shi Xiu, Sun Li, Yue He, Xiao Rang, and Jiang Jing then close the mid-campaign arc through prison verdicts, rooftop pursuits, snowbound gates, river-signal music, forged orders, and quartermaster defense. Each combines a story choice, a dedicated battle oath, and a permanent roster payoff.
+- A nine-chapter campaign, a 28-chapter illustrated saga archive, and Brotherhood, Allegiance, and Renunciation endings.
+- 108 recruitable heroes with unique skills, ultimates, permanent mastery trials, and two switchable destiny doctrines.
+- 324 personal side stories and 108 capstone legend battles, each with a dedicated encounter rule, narrative payoff, and unique equipment reward.
+- 108 recruitment scrolls, each with a distinct story choice, battle oath, and permanent roster payoff across the complete saga from the opening rebellion to the Six Harmonies Temple.
 - Three-slot formations, four-way counters, guard breaks, status effects, and ultimate resources.
-- Thirty-eight hero bonds with bodyguard assists, momentum chains, stolen-qi healing, flying-stone ricochets, hook-spear armor breaks, naval rescue, Dengzhou hunter chains, half-health rescue, control extension, support-driven guard, opening-strategy bursts, and fourteen dedicated three-hero formations, all recorded in a permanent formation archive.
+- Seventy-two hero bonds, including fourteen dedicated three-hero formations, with bodyguard assists, momentum chains, naval rescue, armor breaks, status control, and opening-strategy bursts recorded in a permanent formation archive.
 - Four persistent tactical auto-battle doctrines with three speed settings.
 - An endless arena with run edicts, risk-reward encounters every third wave, rotating bosses, and nine permanent relics, plus a weekly fixed-pool challenge. Eight imperial army encounters preview distinct rules such as shield walls, massed volleys, cavalry rushes, linked camps, fire ambushes, night raids, last stands, and sealed meridians, changing each wave's target priority and merit bonus.
 - Six optional Starbound Tribulations can be stacked up to three at a time, altering enemy health, armor, attack, speed, hero qi gain, and between-wave recovery in exchange for clearly stated merit, copper, and experience bonuses. Higher best waves unlock increasingly hostile rules.

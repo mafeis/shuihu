@@ -10,6 +10,7 @@ import {
 } from "../src/cinematic.js";
 
 const root = process.cwd();
+const SOURCE_TITLE_POSTER = "/assets/video/bianjing_snow_night_poster.webp";
 
 function assetPath(asset) {
   return path.join(root, String(asset).replace(/^\/+/, ""));
@@ -18,8 +19,8 @@ function assetPath(asset) {
 test("opening cinematic starts with the Water Margin conflict and ends on the title frame", () => {
   const profile = openingCinematicProfile(null);
   assert.equal(profile.variant, "first-cycle");
-  assert.equal(profile.scenes.length, 4);
-  assert.equal(profile.scenes.at(-1).asset, "/assets/video/bianjing_snow_night_poster.webp");
+  assert.equal(profile.scenes.length, 7);
+  assert.equal(profile.scenes.at(-1).asset, SOURCE_TITLE_POSTER);
   assert.equal(profile.scenes.at(-1).focal, "66% center");
   for (const scene of profile.scenes) {
     assert.ok(scene.label.length >= 4);
@@ -34,10 +35,10 @@ test("a completed ending changes the next opening without breaking its final tra
   for (const endingId of ["brotherhood", "order", "freedom"]) {
     const profile = openingCinematicProfile({ ending: endingId });
     assert.equal(profile.variant, endingId);
-    assert.equal(profile.scenes.length, 4);
+    assert.equal(profile.scenes.length, 7);
     assert.equal(profile.scenes[0].id, `echo-${endingId}`);
-    assert.equal(profile.scenes.at(-1).asset, "/assets/video/bianjing_snow_night_poster.webp");
-    assert.equal(new Set(profile.scenes.map((scene) => scene.id)).size, 4);
+    assert.equal(profile.scenes.at(-1).asset, SOURCE_TITLE_POSTER);
+    assert.equal(new Set(profile.scenes.map((scene) => scene.id)).size, 7);
   }
 });
 

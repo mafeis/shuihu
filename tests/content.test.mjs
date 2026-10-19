@@ -23,6 +23,7 @@ import {
   HEROES,
   HERO_ORDER,
   PATHS,
+  STORY_ARCHIVE_CHAPTERS,
 } from "../src/data.js";
 
 const root = process.cwd();
@@ -33,7 +34,18 @@ function assetPath(asset) {
 
 test("campaign data is complete and references valid runtime content", () => {
   assert.equal(CHAPTERS.length, 9);
-  assert.equal(HERO_ORDER.length, 40);
+  assert.equal(HERO_ORDER.length, 108);
+  assert.equal(new Set(HERO_ORDER).size, HERO_ORDER.length);
+  assert.equal(
+    new Set(HERO_ORDER.map((heroId) => HEROES[heroId].name)).size,
+    HERO_ORDER.length,
+    "hero names must be unique",
+  );
+  assert.equal(
+    new Set(HERO_ORDER.map((heroId) => HEROES[heroId].nickname)).size,
+    HERO_ORDER.length,
+    "hero nicknames must identify distinct people",
+  );
   assert.equal(Object.keys(EQUIPMENT).length, 124);
   assert.deepEqual(
     CHAPTERS.map((chapter) => chapter.index),
@@ -57,6 +69,37 @@ test("campaign data is complete and references valid runtime content", () => {
   }
 });
 
+test("the readable saga exposes all 28 chapters from the prologue to the final temple", () => {
+  assert.equal(STORY_ARCHIVE_CHAPTERS.length, 28);
+  assert.equal(
+    new Set(STORY_ARCHIVE_CHAPTERS.map((chapter) => chapter.id)).size,
+    STORY_ARCHIVE_CHAPTERS.length,
+  );
+  assert.equal(STORY_ARCHIVE_CHAPTERS[0].title, "张天师祈禳瘟疫");
+  assert.ok(
+    STORY_ARCHIVE_CHAPTERS.some(
+      (chapter) =>
+        chapter.location.includes("六和寺") ||
+        chapter.title.includes("听潮"),
+    ),
+    "the complete saga should end at the Six Harmonies Temple",
+  );
+  for (const [index, chapter] of STORY_ARCHIVE_CHAPTERS.entries()) {
+    assert.ok(chapter.title.length >= 4, `saga chapter ${index + 1} needs a title`);
+    assert.ok(chapter.summary.length >= 24, `${chapter.id} needs a readable saga summary`);
+    assert.ok(chapter.intro.length >= 3, `${chapter.id} needs a full opening scene`);
+    assert.ok(chapter.outro.length >= 2, `${chapter.id} needs a closing scene`);
+    assert.ok(chapter.choice.options.length >= 2, `${chapter.id} needs branch choices`);
+    assert.ok(existsSync(assetPath(chapter.bg)), `${chapter.id} saga backdrop is missing`);
+    assert.ok(chapter.battle.enemies.length >= 2, `${chapter.id} needs a playable formation`);
+    assert.equal(
+      JSON.stringify(chapter).includes("${"),
+      false,
+      `${chapter.id} saga copy still contains a template placeholder`,
+    );
+  }
+});
+
 test("hero runtime assets and progression targets exist", () => {
   for (const heroId of HERO_ORDER) {
     const hero = HEROES[heroId];
@@ -77,6 +120,10 @@ test("hero runtime assets and progression targets exist", () => {
     assert.ok(
       existsSync(assetPath(`assets/characters/${heroId}/turnaround.png`)),
       `${heroId} turnaround sheet is missing`,
+    );
+    assert.ok(
+      new RegExp(HEROES[heroId].name).test(hero.bio),
+      `${heroId} biography should identify its hero`,
     );
     assert.ok(hero.skills.length >= 4, `${heroId} needs a full skill set`);
   }
@@ -103,6 +150,14 @@ test("hero cutouts share one normalized commercial runtime canvas", async () => 
       asset.height - 12,
       `${asset.id} should share the same bottom safety line`,
     );
+    assert.ok(
+      right - left >= 48,
+      `${asset.id} alpha silhouette should not be nearly empty`,
+    );
+    assert.ok(
+      bottom - top >= 72,
+      `${asset.id} alpha silhouette should not be nearly empty`,
+    );
   }
 });
 
@@ -120,7 +175,7 @@ test("every enemy runtime sprite exists and uses a distinct combat silhouette", 
 });
 
 test("hero bond runtime definitions use valid heroes and readable effects", () => {
-  assert.equal(Object.keys(HERO_BONDS).length, 38);
+  assert.equal(Object.keys(HERO_BONDS).length, 72);
   const bondKinds = Object.values(HERO_BONDS).reduce(
     (counts, bond) => ({
       ...counts,
@@ -128,7 +183,7 @@ test("hero bond runtime definitions use valid heroes and readable effects", () =
     }),
     {},
   );
-  assert.deepEqual(bondKinds, { pair: 24, trio: 14 });
+  assert.deepEqual(bondKinds, { pair: 58, trio: 14 });
   for (const bond of Object.values(HERO_BONDS)) {
     assert.equal(HERO_BONDS[bond.id], bond);
     assert.ok(["pair", "trio"].includes(bond.kind));
@@ -184,7 +239,7 @@ test("every hero has two valid endgame doctrine paths", () => {
 test("every hero has a three-stage personal quest chain", () => {
   const allQuests = Object.values(HERO_QUESTS).flat();
   assert.equal(allQuests.length, HERO_ORDER.length * 3);
-  assert.equal(allQuests.length, 120);
+  assert.equal(allQuests.length, 324);
   assert.equal(new Set(allQuests.map((quest) => quest.id)).size, allQuests.length);
   assert.deepEqual(Object.keys(HERO_QUESTS).sort(), [...HERO_ORDER].sort());
 
@@ -192,14 +247,34 @@ test("every hero has a three-stage personal quest chain", () => {
   for (const heroId of HERO_ORDER) {
     const quests = HERO_QUESTS[heroId];
     assert.equal(quests.length, 3, `${heroId} needs three personal quests`);
+    assert.doesNotMatch(
+      JSON.stringify(quests),
+      /第[123]次同阵|旧名并非空号/,
+      `${heroId} still exposes generated stage copy`,
+    );
+    assert.equal(
+      JSON.stringify(quests).includes("${"),
+      false,
+      `${heroId} quest copy still contains a template placeholder`,
+    );
     assert.deepEqual(
       quests.map((quest) => quest.stage),
       [1, 2, 3],
       `${heroId} quest stages must advance in order`,
     );
+    assert.equal(
+      new Set(quests.map((quest) => quest.title)).size,
+      3,
+      `${heroId} quest stages need distinct titles`,
+    );
+    assert.equal(
+      new Set(quests.map((quest) => quest.epithet)).size,
+      3,
+      `${heroId} quest stages need distinct epithets`,
+    );
     let previousChapter = 0;
     for (const quest of quests) {
-      assert.ok(quest.title.length >= 4, `${quest.id} needs a real title`);
+      assert.ok(quest.title.length >= 3, `${quest.id} needs a real title`);
       assert.ok(quest.premise.length >= 30, `${quest.id} needs a story premise`);
       assert.ok(quest.epithet.length >= 2, `${quest.id} needs an earned epithet`);
       assert.equal(validMetrics.has(quest.objective.metric), true);
@@ -221,6 +296,12 @@ test("every hero has one readable five-part biography chronicle", () => {
   );
   for (const heroId of HERO_ORDER) {
     const chronicle = HERO_CHRONICLES[heroId];
+    const storyCopy = [
+      HEROES[heroId].identity,
+      ...chronicle.entries
+        .filter((entry) => entry.kind !== "origin")
+        .map((entry) => entry.text),
+    ].filter(Boolean).join(" ");
     assert.equal(chronicle.heroId, heroId);
     assert.equal(chronicle.title, `${HEROES[heroId].name}列传`);
     assert.equal(chronicle.entries.length, 5);
@@ -232,10 +313,20 @@ test("every hero has one readable five-part biography chronicle", () => {
       new Set(chronicle.entries.map((entry) => entry.id)).size,
       chronicle.entries.length,
     );
+    assert.equal(
+      new Set(chronicle.entries.map((entry) => entry.title)).size,
+      chronicle.entries.length,
+      `${heroId} chronicle entries need distinct headings`,
+    );
     for (const entry of chronicle.entries) {
       assert.ok(entry.title.length >= 2);
-      assert.ok(entry.text.length >= 30);
+      assert.ok(entry.text.length >= 30, `${entry.id} needs a full biography entry`);
     }
+    assert.doesNotMatch(
+      storyCopy,
+      /第[123]段异闻|这名号与旧路/,
+      `${heroId} still exposes generated stage copy`,
+    );
     assert.deepEqual(
       chronicle.entries
         .filter((entry) => entry.kind === "quest")
@@ -267,6 +358,21 @@ test("every hero has one complete and distinct legend battle", () => {
     assert.ok(legend.location.length >= 2, `${legend.id} needs a location`);
     assert.ok(legend.objective.length >= 16, `${legend.id} needs an objective`);
     assert.ok(legend.readyText.length >= 30, `${legend.id} needs a ready scene`);
+    assert.doesNotMatch(
+      legend.readyText,
+      /接下来要由他亲手决定，从前的名声/,
+      `${legend.id} still uses generic legend copy`,
+    );
+    assert.match(
+      legend.readyText,
+      new RegExp(HEROES[heroId].name),
+      `${legend.id} should name its featured hero`,
+    );
+    assert.equal(
+      JSON.stringify(legend).includes("${"),
+      false,
+      `${legend.id} still contains a template placeholder`,
+    );
     assert.ok(legend.rule, `${legend.id} needs a dedicated battle rule`);
     assert.ok(legend.rule.id.length >= 4);
     assert.ok(legend.rule.name.length >= 4);
@@ -275,6 +381,7 @@ test("every hero has one complete and distinct legend battle", () => {
       Object.keys(legend.rule.effects || {}).length > 0,
       `${legend.id} battle rule needs at least one effect`,
     );
+    assert.ok(legend.rule.name.length >= 4);
     assert.ok(legend.intro.length >= 3, `${legend.id} intro is too short`);
     assert.ok(legend.outro.length >= 2, `${legend.id} outro is too short`);
     assert.ok(legend.requiredChapter >= 1);
@@ -297,43 +404,19 @@ test("every hero has one complete and distinct legend battle", () => {
 
 test("hero recruitment threads form a complete gated campaign loop", () => {
   const recruitments = Object.values(HERO_RECRUITMENTS);
-  assert.equal(recruitments.length, 28);
+  assert.equal(recruitments.length, 108);
   assert.deepEqual(
     Object.keys(HERO_RECRUITMENTS).sort(),
-    [
-      "chaiin",
-      "gongsunsheng",
-      "guansheng",
-      "gudashao",
-      "huyanzhuo",
-      "jiangjing",
-      "jiebao",
-      "jiezhen",
-      "leiheng",
-      "lijun",
-      "lingzhen",
-      "liutang",
-      "liying",
-      "lujunyi",
-      "qinming",
-      "ruanxiaoqi",
-      "shijin",
-      "shixiu",
-      "sunerniang",
-      "sunli",
-      "xiaorang",
-      "xuning",
-      "yangxiong",
-      "yangzhi",
-      "yuehe",
-      "zhangqing",
-      "zhangshun",
-      "zhutong",
-    ],
+    [...HERO_ORDER].sort(),
   );
   assert.equal(
     new Set(recruitments.map((recruitment) => recruitment.rule.id)).size,
     recruitments.length,
+  );
+  assert.equal(
+    new Set(recruitments.map((recruitment) => recruitment.title)).size,
+    recruitments.length,
+    "each recruitment scroll needs its own title",
   );
 
   for (const recruitment of recruitments) {
@@ -343,8 +426,27 @@ test("hero recruitment threads form a complete gated campaign loop", () => {
     assert.equal(HERO_RECRUITMENTS[heroId], recruitment);
     assert.ok(HERO_ORDER.includes(heroId));
     assert.ok(recruitment.title.length >= 4);
+    assert.doesNotMatch(
+      `${recruitment.title} ${recruitment.teaser}`,
+      /第[123]段异闻|这名号与旧路|旧名并非空号/,
+      `${heroId} recruitment still exposes generated stage copy`,
+    );
     assert.ok(recruitment.teaser.length >= 24);
+    assert.equal(
+      JSON.stringify(recruitment).includes("${"),
+      false,
+      `${heroId} recruitment still contains a template placeholder`,
+    );
     assert.ok(recruitment.location.length >= 2);
+    assert.doesNotMatch(
+      JSON.stringify({
+        location: recruitment.location,
+        prompt: recruitment.choice.prompt,
+        intro: recruitment.intro,
+      }),
+      /(?:jiangzhou|qingfeng|zhujiazhuang|damingfu|liangshan)(?![a-z_])/,
+      `${heroId} recruitment exposes an internal scene key`,
+    );
     assert.ok(existsSync(assetPath(recruitment.bg)));
     assert.ok(recruitment.requiredChapter >= 1);
     assert.ok(

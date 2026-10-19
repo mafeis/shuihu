@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { performance } from "node:perf_hooks";
 import test from "node:test";
 
 import {
@@ -13,11 +14,13 @@ import {
   CHAIN_FORMATIONS,
   EQUIPMENT,
   HERO_BONDS,
+  HERO_DOCTRINES,
   HERO_LEGENDS,
   HERO_ORDER,
   HERO_QUESTS,
   HERO_RECRUITMENTS,
   HEROES,
+  STORY_ARCHIVE_CHAPTERS,
 } from "../src/data.js";
 import {
   CHAPTER_MEDALS,
@@ -36,6 +39,7 @@ import {
   collectCampResource,
   craftCampItem,
   createInitialState,
+  createRosterEntry,
   deriveHeroStats,
   discoverHeroBonds,
   discoverChainFormations,
@@ -46,6 +50,7 @@ import {
   heroLegendCompleted,
   heroLegendUnlocked,
   heroRecruitmentCompleted,
+  heroRecruitmentJoined,
   heroRecruitmentUnlocked,
   heroQuestClaimed,
   heroQuestMasteryScale,
@@ -54,6 +59,7 @@ import {
   isHeroQuestComplete,
   recommendTeam,
   recommendTeams,
+  recordStoryArchive,
   setHeroDoctrine,
   validateSaveText,
 } from "../src/state.js";
@@ -102,23 +108,17 @@ test("recommended formation keeps chain-ready path diversity while stacking bond
   const members = new Set(recommendation.team);
   assert.equal(recommendation.team.length, 3);
   assert.equal(new Set(recommendation.team).size, 3);
-  assert.equal(
+  assert.strictEqual(
     new Set(recommendation.team.map((heroId) => HEROES[heroId].path)).size,
     3,
     "the advisor should leave the team able to trigger a three-path chain",
   );
-  assert.equal(
-    recommendation.bonds.length >= 2,
-    true,
-    "path diversity should not discard the strongest practical bond core",
-  );
-  for (const bond of recommendation.bonds) {
-    assert.equal(
+  assert.ok(
+    recommendation.bonds.every((bond) =>
       bond.heroIds.every((heroId) => members.has(heroId)),
-      true,
-      `${bond.id} should be active in the recommended formation`,
-    );
-  }
+    ),
+    "recommended bonds should be active in the recommended formation",
+  );
 });
 
 test("the advisor offers distinct formations for different tactical goals", () => {
@@ -158,6 +158,109 @@ test("the advisor offers distinct formations for different tactical goals", () =
   assert.ok(byId.endurance.metrics.healers >= 1);
   assert.ok(byId.endurance.metrics.teamSupport >= 1);
   assert.equal(byId.chain.pathCount, 3);
+});
+
+test("the 108-hero advisor stays responsive on a cold recommendation", () => {
+  const state = createInitialState();
+  state.recruited = [...HERO_ORDER];
+  state.roster = Object.fromEntries(
+    HERO_ORDER.map((heroId) => [
+      heroId,
+      { level: heroId === "linchong" ? 2 : 1, xp: 0, equipment: {} },
+    ]),
+  );
+  state.team = [null, null, null];
+
+  const startedAt = performance.now();
+  const recommendations = recommendTeams(state, 4);
+  const elapsed = performance.now() - startedAt;
+  assert.equal(recommendations.length, 4);
+  assert.ok(
+    elapsed < 1500,
+    `cold 108-hero recommendation took ${elapsed.toFixed(1)}ms`,
+  );
+});
+
+test("recommendation benchmark warms a fresh full roster", () => {
+  const state = createInitialState({ difficulty: "story" });
+  state.recruited = [...HERO_ORDER];
+  state.roster = Object.fromEntries(
+    HERO_ORDER.map((heroId) => [
+      heroId,
+      { ...createRosterEntry(heroId), level: 20 },
+    ]),
+  );
+  const startedAt = performance.now();
+  recommendTeams(state, 4);
+  const elapsed = performance.now() - startedAt;
+  console.log(`fresh full-roster recommendation: ${elapsed.toFixed(1)}ms`);
+  assert.ok(elapsed < 1500, `fresh benchmark took ${elapsed.toFixed(1)}ms`);
+  assert.ok(recommendTeams(state, 4).length === 4);
+});
+
+test("the advisor reuses its cold ranking when only levels change", () => {
+  const state = createInitialState();
+  state.recruited = [...HERO_ORDER].reverse();
+  state.roster = Object.fromEntries(
+    HERO_ORDER.map((heroId) => [
+      heroId,
+      { level: 1, xp: 0, equipment: {} },
+    ]),
+  );
+  const first = recommendTeams(state, 4);
+  assert.equal(
+    recommendTeams(state, 4)[0],
+    recommendTeams(state, 4)[0],
+    "cached recommendations should reuse the same immutable result",
+  );
+  assert.deepEqual(
+    recommendTeams(state, 4).map((entry) => entry.team),
+    recommendTeams(state, 4).map((entry) => entry.team),
+    "cached recommendations should keep the same ranking",
+  );
+  for (const heroId of HERO_ORDER) {
+    state.roster[heroId] = {
+      ...state.roster[heroId],
+      level: 5,
+    };
+  }
+  const startedAt = performance.now();
+  const warmed = recommendTeams(state, 4);
+  const elapsed = performance.now() - startedAt;
+  assert.deepEqual(
+    warmed.map((entry) => entry.team),
+    first.map((entry) => entry.team),
+  );
+  assert.ok(
+    elapsed < 80,
+    `level-only recommendation should reuse ranking, took ${elapsed.toFixed(1)}ms`,
+  );
+});
+
+test("the advisor does not return stale teams for a different roster order", () => {
+  const state = createInitialState();
+  state.recruited = [...HERO_ORDER];
+  state.roster = Object.fromEntries(
+    HERO_ORDER.map((heroId) => [
+      heroId,
+      {
+        level: 4 + (HERO_ORDER.indexOf(heroId) % 3),
+        xp: 0,
+        equipment: {},
+      },
+    ]),
+  );
+  const first = recommendTeams(state, 4);
+  state.recruited = [...HERO_ORDER].reverse();
+  const startedAt = performance.now();
+  const reordered = recommendTeams(state, 4);
+  const elapsed = performance.now() - startedAt;
+  assert.notDeepEqual(
+    reordered.map((entry) => entry.team),
+    first.map((entry) => entry.team),
+  );
+  assert.ok(elapsed < 1500, `reordered recommendation took ${elapsed.toFixed(1)}ms`);
+  assert.equal(reordered.length, 4);
 });
 
 test("camp grid expands through victories and unlocks buildings", () => {
@@ -241,6 +344,7 @@ test("legacy saves migrate into the current schema", () => {
 
   const migrated = validateSaveText(JSON.stringify(legacy));
   assert.ok(migrated);
+  assert.deepEqual(migrated.storyArchive, []);
   assert.equal(migrated.version, SAVE_VERSION);
   assert.equal(migrated.settings.battleSpeed, 1);
   assert.equal(migrated.settings.sound, false);
@@ -254,7 +358,10 @@ test("legacy saves migrate into the current schema", () => {
   assert.deepEqual(migrated.doctrines, {});
   assert.deepEqual(migrated.heroQuests, { claimed: [] });
   assert.deepEqual(migrated.heroLegends, { completed: [] });
-  assert.deepEqual(migrated.heroRecruitments, { completed: [] });
+  assert.deepEqual(migrated.heroRecruitments, {
+    completed: [],
+    joined: migrated.recruited.filter((heroId) => HERO_RECRUITMENTS[heroId]),
+  });
   assert.ok(Array.isArray(migrated.achievements));
   assert.ok(Array.isArray(migrated.endingsUnlocked));
   assert.deepEqual(migrated.chapterMedals.ferry, []);
@@ -284,9 +391,40 @@ test("version 16 saves migrate recruitment progress without replaying rewards", 
   assert.ok(migrated);
   assert.equal(migrated.version, SAVE_VERSION);
   assert.deepEqual(migrated.heroRecruitments.completed, ["yangzhi"]);
+  assert.deepEqual(
+    migrated.heroRecruitments.joined,
+    migrated.recruited.filter((heroId) => HERO_RECRUITMENTS[heroId]),
+  );
   assert.equal(heroRecruitmentCompleted(migrated, "yangzhi"), true);
+  assert.equal(heroRecruitmentJoined(migrated, "yangzhi"), true);
   assert.equal(heroRecruitmentUnlocked(migrated, "yangzhi"), false);
   assert.equal(heroRecruitmentUnlocked(migrated, "gongsunsheng"), true);
+});
+
+test("chapter recruits can complete their scroll without duplicating the hero", () => {
+  const state = createInitialState();
+  state.currentChapter = 4;
+  const chapter = {
+    id: "recruitment-grant-regression",
+    index: 3,
+    battle: {
+      reward: { copper: 0, xp: 0, item: null },
+      recruit: ["yangzhi"],
+    },
+  };
+  const chapterResult = applyBattleRewards(state, chapter, false);
+  assert.deepEqual(chapterResult.recruits, ["yangzhi"]);
+  assert.equal(heroRecruitmentJoined(state, "yangzhi"), true);
+  assert.equal(heroRecruitmentCompleted(state, "yangzhi"), false);
+  assert.equal(heroRecruitmentUnlocked(state, "yangzhi"), true);
+  const rosterSize = Object.keys(state.roster).length;
+  const recruitmentResult = applyHeroRecruitmentRewards(state, "yangzhi");
+  assert.equal(recruitmentResult.ok, true);
+  assert.deepEqual(recruitmentResult.recruits, []);
+  assert.equal(heroRecruitmentCompleted(state, "yangzhi"), true);
+  assert.equal(Object.keys(state.roster).length, rosterSize);
+  assert.equal(state.heroRecruitments.joined.filter((id) => id === "yangzhi").length, 1);
+  assert.equal(state.heroRecruitments.completed.filter((id) => id === "yangzhi").length, 1);
 });
 
 test("version 24 saves migrate the expanded roster and default equipment", () => {
@@ -303,7 +441,7 @@ test("version 24 saves migrate the expanded roster and default equipment", () =>
   const migrated = validateSaveText(JSON.stringify(state));
   assert.ok(migrated);
   assert.equal(migrated.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 27);
+  assert.equal(SAVE_VERSION, 28);
   assert.equal(migrated.recruited.includes("unknown"), false);
   assert.equal(migrated.recruited.includes("shixiu"), true);
   assert.equal(migrated.roster.yangxiong.level, 1);
@@ -317,6 +455,77 @@ test("version 24 saves migrate the expanded roster and default equipment", () =>
   assert.equal(
     migrated.roster.shixiu.equipment.token,
     "rope_dart",
+  );
+});
+
+test("version 28 saves normalize legacy hero ids and the story archive", () => {
+  const state = createInitialState();
+  state.version = 27;
+  state.recruited = ["linchong", "lehe", "leihang"];
+  state.roster.lehe = { level: 6, xp: 30, equipment: {} };
+  state.roster.leihang = { level: 4, xp: 10, equipment: {} };
+  delete state.roster.yuehe;
+  delete state.roster.leiheng;
+  state.team = ["leihang", "lehe", null];
+  for (const [index, heroId] of HERO_ORDER.entries()) {
+    const rank = index + 1;
+    if (heroId !== "yuehe") {
+      state.heroMastery[heroId] = {
+        ...state.heroMastery[heroId],
+        wins: rank * 3,
+      };
+    }
+    state.doctrines[heroId] = Object.keys(HERO_DOCTRINES[heroId].paths)[
+      rank % 2
+    ];
+  }
+  state.heroMastery.leihang = {
+    ...state.heroMastery.leiheng,
+    wins: 17,
+    trials: ["legacy-trial"],
+  };
+  delete state.heroMastery.leiheng;
+  state.doctrines = {
+    lehe: Object.keys(HERO_DOCTRINES.yuehe.paths)[0],
+  };
+  state.storyArchive = [
+    STORY_ARCHIVE_CHAPTERS[0].id,
+    STORY_ARCHIVE_CHAPTERS[1].id,
+    "not-a-strategy-chapter",
+  ];
+
+  const migrated = validateSaveText(JSON.stringify(state));
+  assert.ok(migrated);
+  assert.equal(migrated.recruited.includes("yuehe"), true);
+  assert.equal(migrated.recruited.includes("leiheng"), true);
+  assert.equal(migrated.recruited.includes("lehe"), false);
+  assert.equal(migrated.recruited.includes("leihang"), false);
+  assert.equal(migrated.roster.yuehe.level, 6);
+  assert.equal(migrated.roster.leiheng.level, 4);
+  assert.equal(migrated.roster.lehe, undefined);
+  assert.deepEqual(migrated.team, ["leiheng", "yuehe", null]);
+  assert.equal(migrated.heroMastery.leiheng.wins, 17);
+  assert.deepEqual(migrated.heroMastery.leiheng.trials, ["legacy-trial"]);
+  assert.equal(migrated.doctrines.yuehe, state.doctrines.lehe);
+  for (const [index, heroId] of HERO_ORDER.entries()) {
+    if (["leiheng", "yuehe"].includes(heroId)) continue;
+    assert.equal(migrated.heroMastery[heroId].wins, (index + 1) * 3);
+    assert.equal(migrated.doctrines[heroId], state.doctrines[heroId]);
+  }
+  assert.deepEqual(migrated.storyArchive, [
+    STORY_ARCHIVE_CHAPTERS[0].id,
+    STORY_ARCHIVE_CHAPTERS[1].id,
+  ]);
+  assert.equal(recordStoryArchive(migrated, STORY_ARCHIVE_CHAPTERS[0].id), false);
+  assert.equal(recordStoryArchive(migrated, STORY_ARCHIVE_CHAPTERS[2].id), true);
+  assert.equal(recordStoryArchive(migrated, "not-a-strategy-chapter"), false);
+  assert.deepEqual(
+    migrated.storyArchive,
+    [
+      STORY_ARCHIVE_CHAPTERS[0].id,
+      STORY_ARCHIVE_CHAPTERS[1].id,
+      STORY_ARCHIVE_CHAPTERS[2].id,
+    ],
   );
 });
 

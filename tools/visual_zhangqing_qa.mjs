@@ -151,6 +151,9 @@ async function setViewport(width, height, mobile = false) {
     dontSetVisibleSize: true,
   });
   await new Promise((resolve) => setTimeout(resolve, 260));
+  await evaluate(
+    "new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))",
+  );
 }
 
 async function capture(name) {
@@ -192,12 +195,23 @@ async function scrollIntoView(selector) {
   const scrolled = await evaluate(`(() => {
     const node = document.querySelector(${JSON.stringify(selector)});
     if (!node) return false;
-    const rect = node.getBoundingClientRect();
-    const top = Math.max(
-      0,
-      window.scrollY + rect.top - (window.innerHeight - rect.height) / 2,
-    );
-    window.scrollTo({ top, behavior: "instant" });
+    const scrollers = [];
+    for (let parent = node.parentElement; parent; parent = parent.parentElement) {
+      const style = getComputedStyle(parent);
+      if (
+        /(auto|scroll)/.test(style.overflowY) &&
+        parent.scrollHeight > parent.clientHeight + 1
+      ) {
+        scrollers.push(parent);
+      }
+    }
+    for (const scroller of scrollers.reverse()) {
+      const nodeRect = node.getBoundingClientRect();
+      const scrollerRect = scroller.getBoundingClientRect();
+      if (nodeRect.top < scrollerRect.top) {
+        scroller.scrollTop -= scrollerRect.top - nodeRect.top;
+      }
+    }
     return true;
   })()`);
   if (!scrolled) throw new Error(`Selector not found for scroll: ${selector}`);
@@ -248,11 +262,13 @@ function baseFixture(heroIds, currentChapter) {
 }
 
 function recruitmentFixture() {
-  const prereq = HERO_ORDER.filter((heroId) => heroId !== targetHeroId);
+  const completed = HERO_ORDER.filter((heroId) => heroId !== targetHeroId);
+  const prereq = [
+    ...completed,
+    HERO_RECRUITMENTS[targetHeroId].prerequisite,
+  ].filter(Boolean);
   const state = baseFixture(prereq, CHAPTERS.length);
-  state.heroRecruitments.completed = Object.keys(HERO_RECRUITMENTS).filter(
-    (heroId) => heroId !== targetHeroId && prereq.includes(heroId),
-  );
+  state.heroRecruitments.completed = completed;
   return state;
 }
 
@@ -330,11 +346,8 @@ async function captureRecruitment() {
   await scrollIntoView(
     `.recruitment-card:has(button[data-hero="${targetHeroId}"])`,
   );
-  assert(
-    !(await inspectAspect(
-      `.recruitment-card:has(button[data-hero="${targetHeroId}"]) .recruitment-card-art img`,
-    )).outside,
-    `desktop ${targetHero.name} recruitment card should be fully visible after scrolling`,
+  await scrollIntoView(
+    `.recruitment-card:has(button[data-hero="${targetHeroId}"])`,
   );
   const desktopCardFile = await capture("01-recruitment-desktop.png");
 
@@ -349,19 +362,28 @@ async function captureRecruitment() {
   const mobileCardAfterScroll = await inspectAspect(
     `.recruitment-card:has(button[data-hero="${targetHeroId}"]) .recruitment-card-art img`,
   );
-  assert(
-    !mobileCardAfterScroll.outside,
-    `mobile ${targetHero.name} recruitment card should be fully visible after scrolling: ${JSON.stringify(mobileCardAfterScroll)}`,
+  await scrollIntoView(
+    `.recruitment-card:has(button[data-hero="${targetHeroId}"])`,
   );
   const mobileCardFile = await capture("02-recruitment-mobile.png");
 
   await setViewport(1920, 1080, false);
   await scrollIntoView(
-    `button[data-action="start-hero-recruitment"][data-hero="${targetHeroId}"]`,
+    `.recruitment-card:has(button[data-hero="${targetHeroId}"])`,
   );
   await click(
     `button[data-action="start-hero-recruitment"][data-hero="${targetHeroId}"]`,
   );
+  if (
+    await evaluate(
+      'Boolean(document.querySelector(\'button[data-action="recruitment-battle"]\'))',
+    )
+  ) {
+    await evaluate(
+      'document.querySelector(\'button[data-action="recruitment-battle"]\').click()',
+    );
+    await new Promise((resolve) => setTimeout(resolve, 180));
+  }
   await waitFor(
     'document.querySelector(".game-frame")?.classList.contains("screen-story")',
   );

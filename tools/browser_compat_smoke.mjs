@@ -292,13 +292,20 @@ async function assertDesktopSettings(page, engineName) {
   const legalDocument = await page.locator(".legal-notice-text").evaluate((node) => {
     const panel = node.closest(".modal-panel");
     const panelRect = panel.getBoundingClientRect();
+    const actionsRect = panel
+      .querySelector(".modal-actions")
+      ?.getBoundingClientRect();
     return {
       viewportHeight: window.innerHeight,
       tabIndex: node.tabIndex,
       clientHeight: node.clientHeight,
       scrollHeight: node.scrollHeight,
+      clientWidth: node.clientWidth,
+      scrollWidth: node.scrollWidth,
       panelTop: panelRect.top,
       panelBottom: panelRect.bottom,
+      actionsTop: actionsRect?.top || 0,
+      textBottom: node.getBoundingClientRect().bottom,
     };
   });
   assert.equal(
@@ -314,6 +321,14 @@ async function assertDesktopSettings(page, engineName) {
     legalDocument.panelTop >= -1 &&
       legalDocument.panelBottom <= legalDocument.viewportHeight + 1,
     `${engineName}: legal dialog should remain inside the viewport`,
+  );
+  assert.ok(
+    legalDocument.actionsTop >= legalDocument.textBottom - 1,
+    `${engineName}: legal actions should remain below the scrolling document`,
+  );
+  assert.ok(
+    legalDocument.scrollWidth <= legalDocument.clientWidth + 1,
+    `${engineName}: legal document should wrap text without horizontal scrolling`,
   );
   await page.locator(".legal-notice-text").focus();
   assert.equal(

@@ -7,6 +7,7 @@ import {
   CHAPTERS,
   CHAIN_FORMATIONS,
   HERO_DOCTRINES,
+  HERO_LEGENDS,
   HERO_ORDER,
   HERO_QUESTS,
   HERO_RECRUITMENTS,
@@ -41,6 +42,14 @@ test("route guide prioritizes an unfinished ending path after the campaign", () 
   state.team = HERO_ORDER.slice(0, 3);
   state.ending = "brotherhood";
   state.endingsUnlocked = ["brotherhood"];
+  for (const heroId of HERO_ORDER) {
+    state.heroQuests.claimed.push(
+      ...(HERO_QUESTS[heroId] || []).map((quest) => quest.id),
+    );
+    state.heroRecruitments.completed.push(heroId);
+    const legend = HERO_LEGENDS[heroId];
+    if (legend) state.heroLegends.completed.push(legend.id);
+  }
   const goals = buildRoutePlan(state, { limit: 3 });
   assert.equal(goals[0].action, "route-new-cycle");
   assert.match(goals[0].title, /再启一卷/);

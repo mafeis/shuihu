@@ -1,8 +1,8 @@
 import { createIcons } from "lucide";
 import "./styles.css";
 import { ICON_COMPONENTS } from "./icons.js";
-import titlePosterUrl from "../assets/video/bianjing_snow_night_poster.webp";
 import titleVideoUrl from "../assets/video/bianjing_snow_night_5s.mp4";
+import titlePosterUrl from "../assets/video/bianjing_snow_night_poster.webp";
 
 import {
   ACHIEVEMENTS,
@@ -38,6 +38,9 @@ import {
   ROWS,
   STAT_LABELS,
   STATUS_DEFS,
+  STORY_MEMORIES,
+  STORY_ARCHIVE_CHAPTERS,
+  STRATEGY_CHAPTERS,
 } from "./data.js";
 import {
   ARENA_WEEK_MARKS,
@@ -116,6 +119,7 @@ import {
   equipmentMatchesCategory,
   expandCampArea,
   evaluateChapterMedals,
+  fillTeam,
   grantExperience,
   hasSavedGame,
   heroDoctrine,
@@ -123,7 +127,11 @@ import {
   heroLegendCompleted,
   heroLegendUnlocked,
   heroRecruitmentCompleted,
+  heroRecruitmentJoined,
   heroRecruitmentUnlocked,
+  recruitmentChallengeComplete,
+  recruitmentIsChapterReady,
+  recruitmentIsPrerequisiteReady,
   heroQuestMasteryScale,
   heroQuestProgress,
   heroQuestUnlocked,
@@ -134,6 +142,7 @@ import {
   recommendTeams,
   recordChapterTactic,
   recordChoice,
+  recordStoryArchive,
   SAVE_BACKUP_KEY,
   SAVE_KEY,
   SAVE_VERSION,
@@ -849,6 +858,7 @@ function renderGame() {
   let content = "";
   if (screen === "title") content = renderTitle();
   if (screen === "map") content = renderMap();
+  if (screen === "story-hub") content = renderStoryHub();
   if (screen === "camp") content = renderCamp();
   if (screen === "roster") content = renderRoster();
   if (screen === "quests") content = renderQuestBoard();
@@ -1012,6 +1022,7 @@ function clearBattleTimerIfLeavingBattle() {
 }
 
 function scheduleBattle(callback, delay = 0) {
+  if (window.__SHUIHU_DISABLE_BATTLE_TIMERS__ === true) return;
   if (battleTimer) window.clearTimeout(battleTimer);
   const speed = [1, 2, 4].includes(state?.settings?.battleSpeed)
     ? state.settings.battleSpeed
@@ -1381,7 +1392,7 @@ function closeModal() {
 function renderModal() {
   if (!modal) return "";
   return `
-    <div class="modal-backdrop" data-action="close-modal">
+    <div class="modal-backdrop">
       <section class="modal-panel ${modal.kind ? `is-${modal.kind}` : ""}" role="dialog" aria-modal="true" aria-label="${escapeHtml(modal.title)}" data-modal-panel>
         <button class="icon-button modal-close" data-action="close-modal" aria-label="关闭">${icon("x", 18)}</button>
         <p class="eyebrow">梁山令</p>
@@ -1410,6 +1421,7 @@ function topbar(active = "", backAction = "") {
   const chapter = currentChapter(state);
   const navItems = [
     { id: "map", label: "江湖", icon: "map" },
+    { id: "story-hub", label: "长卷", icon: "book-open" },
     { id: "camp", label: "营寨", icon: "landmark" },
     { id: "arena", label: "演武", icon: "swords" },
     { id: "roster", label: "好汉", icon: "users" },
@@ -1459,7 +1471,9 @@ function topbar(active = "", backAction = "") {
 }
 
 function renderTitlePrologue(saved) {
-  const profile = openingCinematicProfile(saved);
+  const profile = openingCinematicProfile(saved, {
+    titleAsset: titlePosterUrl,
+  });
   return `
     <section class="title-prologue is-${profile.variant}" style="--scene-count:${profile.scenes.length}" aria-hidden="true">
       ${profile.scenes
@@ -1490,10 +1504,14 @@ function renderTitle() {
   const arenaResume = saved?.arena?.activeRun
     ? ` · ${saved.arena.activeRun.mode === "weekly" ? "本周军令" : "演武"}第 ${saved.arena.activeRun.wave} 阵待续`
     : "";
+  const preload = document.querySelector("#title-poster-preload");
+  if (preload) preload.href = titlePosterUrl;
   return `
     <main class="title-screen ${showPrologue ? "has-prologue" : ""}">
-      <div class="title-backdrop" aria-hidden="true"></div>
-      <video class="title-video" autoplay muted loop playsinline poster="${titlePosterUrl}">
+      <div class="title-backdrop" aria-hidden="true">
+        <img src="${titlePosterUrl}" alt="" fetchpriority="high" draggable="false" />
+      </div>
+      <video class="title-video" autoplay muted loop playsinline>
         <source src="${titleVideoUrl}" type="video/mp4" />
       </video>
       ${showPrologue ? renderTitlePrologue(saved) : ""}
@@ -1503,7 +1521,7 @@ function renderTitle() {
         <p class="title-kicker"><span></span>北宋末年 · 梁山群像回合 RPG</p>
         <h1><span>星命</span>水浒</h1>
         <p class="title-subtitle">风雪山神庙</p>
-        <p class="title-copy">一纸冤案，${HERO_ORDER.length}位好汉，${CHAPTERS.length}场风雪。<br />从黄河夜渡到水泊聚义，替梁山选一条能走下去的路。</p>
+        <p class="title-copy">一百单八星，${CHAPTERS.length}卷梁山旧事，${STRATEGY_CHAPTERS.length}段可征战的群像。<br />从伏魔殿到六和寺，走完整部水浒。</p>
         <div class="title-actions">
           ${
             saved
@@ -1646,6 +1664,48 @@ function renderMap() {
             <button data-action="nav-camp">${icon("landmark", 19)}<span><b>经营营寨</b><small>${state.inventory.copper} 贯可用</small></span>${icon("chevron-right", 17)}</button>
           </div>
         </aside>
+      </main>
+    </div>
+  `;
+}
+
+function renderStoryHub() {
+  const storyArchive = new Set(state?.storyArchive || []);
+  const readCount = STORY_ARCHIVE_CHAPTERS.filter((chapter) =>
+    storyArchive.has(chapter.id),
+  ).length;
+  return `
+    <div class="app-screen story-hub-screen">
+      ${topbar("story-hub")}
+      <div class="story-hub-reading-progress" aria-label="长卷阅读进度">
+        <span style="--story-progress:${(readCount / STORY_ARCHIVE_CHAPTERS.length) * 100}%"></span>
+      </div>
+      <main class="story-hub-layout">
+        <section class="story-hub-intro">
+          <p class="eyebrow">全篇回目 · 梁山群像</p>
+          <h1>水浒长卷</h1>
+          <p>从龙虎山星落、史进结义，到一百单八将聚义，再到征辽、征田虎、征王庆、征方腊与六和寺终章。每一段都可单独推进，每一战也会留在本地战卷。</p>
+          <div class="story-hub-stats">
+            <span><small>长卷回目</small><b>${STORY_ARCHIVE_CHAPTERS.length}</b></span>
+            <span><small>好汉</small><b>${HERO_ORDER.length}</b></span>
+            <span><small>列传</small><b>${HERO_ORDER.length}</b></span>
+            <span><small>已阅长卷</small><b>${readCount}/${STORY_ARCHIVE_CHAPTERS.length}</b></span>
+          </div>
+        </section>
+        <section class="story-hub-list" aria-label="水浒完整回目">
+          ${STORY_ARCHIVE_CHAPTERS.map((chapter, index) => `
+            <button class="story-hub-card${storyArchive.has(chapter.id) ? " is-read" : ""}" data-action="enter-story-memory" data-chapter="${chapter.id}" aria-label="${escapeHtml(`${chapter.label} ${chapter.title}`)}">
+              <span class="story-hub-index">${String(index + 1).padStart(2, "0")}</span>
+              <span class="story-hub-copy">
+                <small>${chapter.label} · ${chapter.location}</small>
+                <b>${chapter.title}</b>
+                <em>${chapter.summary}</em>
+              </span>
+              <span class="story-hub-status">${storyArchive.has(chapter.id) ? "已阅" : chapter.label}</span>
+              ${icon("chevron-right", 18)}
+            </button>
+          `).join("")}
+        </section>
       </main>
     </div>
   `;
@@ -3244,6 +3304,9 @@ function renderQuestBoard() {
   const allQuests = Object.values(HERO_QUESTS).flat();
   const legendEntries = Object.values(HERO_LEGENDS);
   const recruitmentEntries = Object.values(HERO_RECRUITMENTS);
+  const orderedRecruitments = HERO_ORDER.map((heroId) =>
+    HERO_RECRUITMENTS[heroId],
+  ).filter(Boolean);
   const totalClaimed = allQuests.filter((quest) =>
     state.heroQuests?.claimed?.includes(quest.id),
   ).length;
@@ -3258,6 +3321,9 @@ function renderQuestBoard() {
   ).length;
   const completedRecruitments = recruitmentEntries.filter((recruitment) =>
     heroRecruitmentCompleted(state, recruitment.heroId),
+  ).length;
+  const joinedRecruitments = recruitmentEntries.filter((recruitment) =>
+    heroRecruitmentJoined(state, recruitment.heroId),
   ).length;
   const availableRecruitments = recruitmentEntries.filter((recruitment) =>
     heroRecruitmentUnlocked(state, recruitment.heroId),
@@ -3280,6 +3346,17 @@ function renderQuestBoard() {
   const selectedLegendCompleted = heroLegendCompleted(state, selectedId);
   const selectedLegendChapterReady =
     state.currentChapter >= selectedLegend.requiredChapter;
+  const visibleRecruitmentEntries = orderedRecruitments
+    .filter(
+      (recruitment) =>
+        !recruitmentChallengeComplete(state, recruitment.heroId),
+    )
+    .filter(
+      (recruitment) =>
+        recruitmentIsChapterReady(state, recruitment.heroId) ||
+        recruitmentIsPrerequisiteReady(state, recruitment.heroId),
+    )
+    .slice(0, 108);
 
   return `
     <div class="app-screen quests-screen">
@@ -3295,7 +3372,7 @@ function renderQuestBoard() {
             <span><small>异闻已录</small><b>${totalClaimed}</b><em>/${allQuests.length}</em></span>
             <span><small>可领取</small><b>${claimable}</b><em>段</em></span>
             <span><small>群英战</small><b>${totalLegends}</b><em>/${legendEntries.length}</em></span>
-            <span><small>聚义帖</small><b>${completedRecruitments}</b><em>/${recruitmentEntries.length}</em></span>
+            <span><small>聚义帖</small><b>${completedRecruitments}</b><em>/${recruitmentEntries.length} · ${joinedRecruitments} 人入伙</em></span>
             <button class="button primary" data-action="claim-all-hero-quests" ${claimable ? "" : "disabled"}>
               ${icon("scroll-text", 17)}<span>一键领取${claimable ? ` ${claimable}` : ""}</span>
             </button>
@@ -3310,12 +3387,16 @@ function renderQuestBoard() {
             </div>
             <span>${availableRecruitments ? `${availableRecruitments} 帖可接` : "推进回目或完成前帖"}</span>
           </div>
-          <div class="recruitment-scroll">
+          <div class="recruitment-scroll" tabindex="0" aria-label="聚义帖列表">
             <div class="recruitment-grid">
-              ${recruitmentEntries
+              ${visibleRecruitmentEntries
                 .map((recruitment) => {
                   const hero = HEROES[recruitment.heroId];
                   const completed = heroRecruitmentCompleted(
+                    state,
+                    recruitment.heroId,
+                  );
+                  const joined = heroRecruitmentJoined(
                     state,
                     recruitment.heroId,
                   );
@@ -3329,19 +3410,21 @@ function renderQuestBoard() {
                   const chapterReady =
                     state.currentChapter >= recruitment.requiredChapter;
                   const status = completed
-                    ? "已结义"
-                    : unlocked
-                      ? "可接帖"
-                      : !chapterReady
-                        ? `第 ${recruitment.requiredChapter} 回`
-                        : prerequisite
-                          ? `需先结义${prerequisite.name}`
-                          : "尚未开放";
+                    ? "聚义已录"
+                    : joined
+                      ? "已入聚义簿"
+                      : unlocked
+                        ? "可接帖"
+                        : !chapterReady
+                          ? `第 ${recruitment.requiredChapter} 回`
+                          : prerequisite
+                            ? `需先结义${prerequisite.name}`
+                            : "尚未开放";
                   return `
-                    <article class="recruitment-card ${completed ? "is-complete" : unlocked ? "is-ready" : "is-locked"}" style="--recruit-color:${hero.palette};--recruit-bg:url('${recruitment.bg}')">
+                    <article class="recruitment-card ${completed || joined ? "is-complete" : unlocked ? "is-ready" : "is-locked"}" data-hero="${recruitment.heroId}" style="--recruit-color:${hero.palette};--recruit-bg:url('${recruitment.bg}')">
                       <div class="recruitment-card-art">${heroKeyart(recruitment.heroId, "")}</div>
                       <div class="recruitment-card-top">
-                        <span>${icon(completed ? "badge-check" : unlocked ? "scroll-text" : "lock-keyhole", 15)}${status}</span>
+                        <span>${icon(completed ? "badge-check" : joined ? "user-round-check" : unlocked ? "scroll-text" : "lock-keyhole", 15)}${status}</span>
                         <em>${hero.star}</em>
                       </div>
                       <div class="recruitment-card-copy">
@@ -3357,8 +3440,10 @@ function renderQuestBoard() {
                         <span>${icon("map-pin", 13)}${recruitment.location}</span>
                         ${
                           completed
-                            ? `<em>${icon("check", 14)} 已入聚义簿</em>`
-                            : unlocked
+                            ? `<em>${icon("check", 14)} 聚义战已录</em>`
+                            : joined
+                              ? `<button class="button primary" data-action="start-hero-recruitment" data-hero="${recruitment.heroId}">${icon("scroll-text", 15)}<span>续写聚义帖</span></button>`
+                              : unlocked
                               ? `<button class="button primary" data-action="start-hero-recruitment" data-hero="${recruitment.heroId}">${icon("swords", 15)}<span>接帖出征</span></button>`
                               : `<em>${chapterReady && prerequisite ? `${prerequisite.name}尚未结义` : `第 ${recruitment.requiredChapter} 回后开启`}</em>`
                         }
@@ -3367,7 +3452,17 @@ function renderQuestBoard() {
                   `;
                 })
                 .join("")}
+              ${
+                visibleRecruitmentEntries.length
+                  ? ""
+                  : `<div class="recruitment-grid-empty">
+                      ${icon("scroll-text", 24)}
+                      <b>暂无聚义帖</b>
+                      <p>推进回目，或完成前一位好汉的聚义战。</p>
+                    </div>`
+              }
             </div>
+            <p class="recruitment-grid-caption">${visibleRecruitmentEntries.length} 帖已开放 · ${availableRecruitments} 帖当前可接 · 共 ${orderedRecruitments.length} 位好汉</p>
           </div>
         </section>
 
@@ -4080,6 +4175,7 @@ async function showThirdPartyNotices() {
     const notices = await response.text();
     openModal({
       title: "第三方软件许可",
+      kind: "legal",
       body: `<pre class="legal-notice-text">${escapeHtml(notices)}</pre>`,
       actions: [
         {
@@ -4128,6 +4224,7 @@ async function showLegalDocument(documentId) {
     if (!text) throw new Error("empty legal document");
     openModal({
       title: documentInfo.title,
+      kind: "legal",
       body: `<pre class="legal-notice-text" tabindex="0">${escapeHtml(text)}</pre>`,
       actions: [
         {
@@ -4178,7 +4275,7 @@ function renderStory() {
   const line = lines[Math.min(story.line, lines.length - 1)];
   const portrait = getStoryPortrait(line, isResponse ? activeChapter.choice.options[story.choiceIndex] : null);
   return `
-    <main class="story-screen" style="--story-bg:url('${activeChapter.bg}')">
+    <main class="story-screen" style="--story-bg:url('${activeChapter.bg}')" data-story-chapter="${activeChapter.id}">
       <div class="story-background"></div>
       <div class="story-vignette"></div>
       <header class="story-header">
@@ -4189,7 +4286,7 @@ function renderStory() {
         </div>
       </header>
       <div class="story-party-silhouettes">
-        ${state.recruited
+        ${[...new Set([...state.team.filter(Boolean), ...state.recruited])]
           .slice(0, 4)
           .map(
             (heroId, index) => `
@@ -4228,7 +4325,7 @@ function renderStory() {
         </div>
         ${
           story.stage === "intro"
-            ? `<button data-action="story-skip">跳过回想 ${icon("chevrons-right", 15)}</button>`
+            ? `<button data-action="story-skip">${story.storyArchive ? "跳过开卷" : "跳过回想"} ${icon("chevrons-right", 15)}</button>`
             : `<span>${activeChapter.location}</span>`
         }
       </footer>
@@ -5258,6 +5355,10 @@ function settleVictory() {
     activeChapter.id,
     state.choices?.[activeChapter.id],
   );
+  const fromStoryArchive = Boolean(story?.storyArchive);
+  result.storyArchive = fromStoryArchive
+    ? recordStoryArchive(state, activeChapter.id)
+    : false;
   if (activeChapter.id === CHAPTERS[CHAPTERS.length - 1].id) {
     state.flags.finalBattleWon = true;
   }
@@ -5270,6 +5371,8 @@ function settleVictory() {
   sound.victory();
   battleUi = createBattleUi();
   story.reward = result;
+  story.storyArchive = fromStoryArchive;
+  story.completedStoryArchive = activeChapter;
   setScreen("reward");
 }
 
@@ -5316,6 +5419,15 @@ function renderReward() {
           ${renderChapterMedalRewards(reward.medals)}
           ${renderChapterTacticReward(reward.tactic)}
           ${renderLegendReward(reward.legend)}
+          ${
+            reward.storyArchive
+              ? `<div class="story-archive-reward">
+                  ${icon("book-open-check", 20)}
+                  <span><small>水浒长卷 · 新回目已归档</small><b>${activeChapter.title}</b></span>
+                  <em>${state.storyArchive.length}/${STORY_ARCHIVE_CHAPTERS.length}</em>
+                </div>`
+              : ""
+          }
           ${renderMasteryUnlocks()}
           ${renderBondUnlocks()}
           ${renderChainUnlocks()}
@@ -5505,7 +5617,7 @@ function renderEndingCinematic(cinematic) {
           .join("")}
       </div>
       <div class="ending-cinematic-seal">
-        <small>九回抉择 · 已记 ${cinematic.decisionCount} 笔</small>
+        <small>全篇抉择 · 已记 ${cinematic.decisionCount} 笔</small>
         <b>${cinematic.title}</b>
       </div>
       <button class="ending-cinematic-skip" data-action="skip-ending-cinematic">跳过过场 ${icon("chevrons-right", 15)}</button>
@@ -5586,6 +5698,9 @@ function startNewGame(options = {}) {
   const previousTactics = options.preserveArchive
     ? [...(state?.tacticArchive || [])]
     : [];
+  const previousStoryArchive = options.preserveArchive
+    ? [...(state?.storyArchive || [])]
+    : [];
   const previousDoctrines = options.preserveArchive
     ? structuredClone(state?.doctrines || {})
     : null;
@@ -5620,6 +5735,7 @@ function startNewGame(options = {}) {
     state.bondArchive = [...new Set(previousBonds)];
     state.chainArchive = [...new Set(previousChains)];
     state.tacticArchive = [...new Set(previousTactics)];
+    state.storyArchive = [...new Set(previousStoryArchive)];
     if (previousDoctrines) state.doctrines = previousDoctrines;
     if (previousHeroQuests) state.heroQuests = previousHeroQuests;
     if (previousHeroLegends) state.heroLegends = previousHeroLegends;
@@ -5642,7 +5758,7 @@ function startNewGame(options = {}) {
     () =>
       toast(
         options.preserveArchive
-          ? "战功、命途、异闻、演武与设置已保留，新卷再启"
+          ? "长卷、战功、命途、异闻、演武与设置已保留，新卷再启"
           : "新卷已开：先查看营寨，再踏出黄河渡口。",
         "success",
       ),
@@ -5659,6 +5775,11 @@ function continueGame() {
     return;
   }
   state = loaded;
+  if (!saveGame(state)) {
+    reportDiagnostic("warning", "save-migration-write-failed", {
+      version: state.version,
+    });
+  }
   restoreArenaRunFromState();
   focusedChapterId = currentChapter(state)?.id || CHAPTERS[CHAPTERS.length - 1].id;
   selectedEquipmentHero = state.recruited[0];
@@ -5816,7 +5937,7 @@ function startHeroRecruitment(heroId) {
   }
   if (
     recruitment.prerequisite &&
-    !heroRecruitmentCompleted(state, recruitment.prerequisite)
+    !heroRecruitmentJoined(state, recruitment.prerequisite)
   ) {
     toast(
       `需先完成${HEROES[recruitment.prerequisite].name}的聚义帖`,
@@ -5878,7 +5999,31 @@ function continuePendingRecruitment() {
   const heroId = pendingRecruitment?.heroId;
   pendingRecruitment = null;
   if (!state || !heroId) return;
-  startHeroRecruitment(heroId);
+  modal = null;
+  const recruitment = HERO_RECRUITMENTS[heroId];
+  if (!recruitment) return;
+  if (
+    recruitment.prerequisite &&
+    !heroRecruitmentJoined(state, recruitment.prerequisite)
+  ) {
+    toast(
+      `需先完成${HEROES[recruitment.prerequisite].name}的聚义帖`,
+      "danger",
+    );
+    return;
+  }
+  persist();
+  activeChapter = createRecruitmentChapter(heroId);
+  story = {
+    stage: "intro",
+    line: 0,
+    choiceIndex: null,
+    replay: false,
+    reward: null,
+    heroRecruitmentId: heroId,
+  };
+  sound.confirm();
+  setScreen("story");
 }
 
 function storyNext() {
@@ -6839,6 +6984,17 @@ function rerollArenaRewardChoices() {
 
 function finishChapter() {
   if (story?.replay) {
+    if (story.storyArchive) {
+      activeChapter = story.completedStoryArchive || activeChapter;
+      focusedChapterId = activeChapter.id;
+      battle = null;
+      battleUi = createBattleUi();
+      state.team = fillTeam(state, state.team);
+      story = null;
+      setScreen("story-hub");
+      toast("长卷回目已归档", "success");
+      return;
+    }
     focusedChapterId = activeChapter.id;
     setScreen("map");
     toast("旧战重游完成", "success");
@@ -7056,9 +7212,33 @@ function handleAction(action, element) {
     case "go-map":
     case "nav-map":
       if (!state) return;
+      activeChapter = null;
+      story = null;
+      battle = null;
+      battleUi = createBattleUi();
       focusedChapterId = currentChapter(state)?.id || focusedChapterId;
       setScreen("map");
       return;
+    case "nav-story-hub":
+      setScreen("story-hub");
+      return;
+    case "enter-story-memory": {
+      const chapter = STORY_ARCHIVE_CHAPTERS.find(
+        (item) => item.id === element.dataset.chapter,
+      );
+      if (!chapter) return;
+      activeChapter = chapter;
+      story = {
+        stage: "intro",
+        line: 0,
+        choiceIndex: null,
+        replay: true,
+        reward: null,
+        storyArchive: true,
+      };
+      setScreen("story");
+      return;
+    }
     case "nav-camp":
       setScreen("camp");
       return;
@@ -7148,7 +7328,6 @@ function handleAction(action, element) {
       return;
     }
     case "recruitment-battle":
-      modal = null;
       continuePendingRecruitment();
       return;
     case "nav-formation":
@@ -7390,9 +7569,7 @@ function handleAction(action, element) {
       ].join("、");
       render();
       toast(
-        bondNames
-          ? `${recommendation.name}：${state.team.map((heroId) => HEROES[heroId]?.name).filter(Boolean).join(" · ")}，三路为${pathNames}，激活${bondNames}`
-          : `${recommendation.name}：军师已按惯用阵位排成三阵`,
+        `${recommendation.name}：${state.team.map((heroId) => HEROES[heroId]?.name).filter(Boolean).join(" · ")}，三路为${pathNames}，${recommendation.bonds.length} 契${bondNames ? `（${bondNames}）` : ""}`,
         "success",
       );
       return;
@@ -7758,6 +7935,7 @@ function handleAction(action, element) {
       launchStoryBattle();
       return;
     case "story-outro":
+      if (story.storyArchive) activeChapter = story.completedStoryArchive;
       story.stage = "outro";
       story.line = 0;
       setScreen("story");
