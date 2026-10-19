@@ -11040,6 +11040,7 @@ button[aria-pressed="true"] {
 
 .final-background,
 .ending-background {
+  background-image: var(--final-bg);
   background-position: center;
   background-size: cover;
   filter: saturate(0.5) contrast(1.04);
