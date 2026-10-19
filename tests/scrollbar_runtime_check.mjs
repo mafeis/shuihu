@@ -62,6 +62,96 @@ async function setUpCampaign(page) {
   await page.waitForSelector(".screen-map");
 }
 
+async function verifyArenaRewardScrolling(page) {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.evaluate((key) => {
+    const save = JSON.parse(localStorage.getItem(key));
+    save.settings.autoArena = false;
+    save.arena.activeRun = {
+      mode: "endless",
+      wave: 7,
+      boons: ["vanguard", "vanguard", "vanguard", "rally", "rally"],
+      pendingBoons: ["breaker", "swift", "remedy"],
+      rerollUsed: false,
+      eventOffer: [],
+      healthRatios: { linchong: 0.42, luzhishen: 1, wusong: 0.8 },
+      completedWave: 6,
+      lastReward: { copper: 188, xp: 162, score: 740 },
+      score: 3380,
+      bountiesCleared: 3,
+      currentBounty: "chain",
+      lastBounty: {
+        id: "breaker",
+        cleared: true,
+        copper: 40,
+        score: 170,
+      },
+      lastPerformance: {
+        grade: "S",
+        bonusScore: 100,
+        rounds: 5,
+        survivors: 3,
+        heroCount: 3,
+        mvpHeroId: "linchong",
+        mvpDamage: 920,
+        mvpKills: 2,
+        mvpUltimates: 1,
+        objectives: [
+          { id: "unbroken", label: "全阵而归", met: true },
+          { id: "swift", label: "6 回合破阵", met: true },
+          { id: "bounty", label: "悬赏达成", met: true },
+          { id: "chain", label: "星命合击", met: true },
+        ],
+      },
+      lastUnlocks: [],
+      lastDiscoveries: { masteries: [], synergies: [], encounters: [] },
+      lastWeeklyMarks: [],
+      trialIds: [],
+      defeated: false,
+    };
+    localStorage.setItem(key, JSON.stringify(save));
+  }, SAVE_KEY);
+  await page.reload({ waitUntil: "networkidle" });
+  await page.click('button[data-action="continue-game"]');
+  await page.waitForSelector(".screen-map");
+  await page.click('button[data-action="nav-arena"]');
+  await page.waitForSelector(".screen-arena");
+  await page.click('button[data-action="resume-arena"]');
+  await page.waitForSelector(".screen-arena-reward");
+
+  const panel = page.locator(".arena-reward-layout");
+  const start = await panel.evaluate((node) => ({
+    overflowY: getComputedStyle(node).overflowY,
+    scrollHeight: node.scrollHeight,
+    clientHeight: node.clientHeight,
+    scrollTop: node.scrollTop,
+  }));
+  assert.equal(start.overflowY, "auto");
+  assert.ok(
+    start.scrollHeight > start.clientHeight + 1,
+    "1280x720 arena reward: fixture must overflow",
+  );
+  await panel.evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
+  await page.waitForTimeout(80);
+  const end = await page.evaluate(() => {
+    const node = document.querySelector(".arena-reward-layout");
+    const footer = document.querySelector(".arena-reward-footer");
+    return {
+      scrollTop: node.scrollTop,
+      footerBottom: footer.getBoundingClientRect().bottom,
+      viewportHeight: innerHeight,
+    };
+  });
+  assert.ok(
+    end.scrollTop > start.scrollTop,
+    "1280x720 arena reward: panel cannot scroll",
+  );
+  assert.ok(
+    end.footerBottom <= end.viewportHeight + 1,
+    "1280x720 arena reward: reward controls remain cut off",
+  );
+}
+
 async function pageIsAtTop(page) {
   return page.evaluate(() => window.scrollX === 0 && window.scrollY === 0);
 }
@@ -267,9 +357,10 @@ try {
     await page.reload({ waitUntil: "networkidle" });
     await setUpCampaign(page);
   }
+  await verifyArenaRewardScrolling(page);
   assert.equal(terminalScreen, 1, "failed to verify a battle screen");
   console.log(
-    `Scrollbar checks passed for ${viewports.length} viewports across page, content, story, and battle screens.`,
+    `Scrollbar checks passed for ${viewports.length} viewports across page, content, story, battle, and arena reward screens.`,
   );
 } finally {
   await browser.close().catch(() => {});
