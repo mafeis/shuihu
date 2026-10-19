@@ -15,6 +15,9 @@ import {
   ARENA_MILESTONES,
   ARENA_RELICS,
   ARENA_SYNERGIES,
+  CAMP_BUILDINGS,
+  CAMP_PRODUCTS,
+  CAMP_RECIPES,
   CHAPTERS,
   CHAIN_FORMATIONS,
   DIFFICULTIES,
@@ -85,8 +88,14 @@ import {
   alignmentSummary,
   applyHeroRecruitmentRewards,
   applyBattleRewards,
+  buildCampBuilding,
+  campAreaLevel,
+  campAreaRequirement,
+  campAreaSize,
+  campBuildingStatus,
   campRest,
   campRestCost,
+  campRecipeStatus,
   CHAPTER_MEDALS,
   chapterStatus,
   checkAchievements,
@@ -99,7 +108,10 @@ import {
   deriveHeroStats,
   discoverHeroBonds,
   discoverChainFormations,
+  collectCampResource,
+  craftCampItem,
   equipItem,
+  expandCampArea,
   evaluateChapterMedals,
   grantExperience,
   hasSavedGame,
@@ -1317,94 +1329,196 @@ function renderCamp() {
   const team = activeHeroes(state);
   const restCost = campRestCost(state);
   const next = currentChapter(state);
+  const [campCols, campRows] = campAreaSize(state);
+  const campLevel = campAreaLevel(state);
+  const nextAreaWins = campAreaRequirement(state);
+  const cellWidth = 100 / campCols;
+  const cellHeight = 100 / campRows;
+  const stockEntries = Object.entries(state.camp.stock).filter(
+    ([productId, amount]) => CAMP_PRODUCTS[productId] && amount > 0,
+  );
   return `
     <div class="app-screen camp-screen">
       ${topbar("camp")}
       <main class="camp-layout">
-        <section class="camp-banner" style="--camp-bg:url('/assets/environments/liangshan_water_fort.png')">
-          <div class="camp-banner-shade"></div>
-          <div class="camp-banner-copy">
+        <section class="camp-heading">
+          <div>
             <p class="eyebrow">水泊深处 · 忠义堂前</p>
             <h1>梁山营寨</h1>
-            <p>修寨、演武、点星。下一场风雪之前，先让兄弟们有处可归。</p>
+            <p>以战功开辟营区，经营水泊与工坊，让山寨真正成为众人的归处。</p>
+          </div>
+          <div class="camp-heading-data">
             <div class="camp-resources">
               <span>${icon("coins", 17)}<b>${state.inventory.copper}</b> 贯</span>
               <span>${icon("flame", 17)}<b>${Math.round(totalPower(state))}</b> 战力</span>
               <span>${icon("users", 17)}<b>${state.recruited.length}/${HERO_ORDER.length}</b> 好汉</span>
             </div>
-          </div>
-          <div class="camp-team">
-            ${team
-              .map(
-                ({ heroId, entry }) => `
-                  <button data-action="open-hero" data-hero="${heroId}">
-                    ${heroPortrait(heroId, "")}
-                    <span>${HEROES[heroId].name}<small>Lv.${entry.level}</small></span>
-                  </button>
-                `,
-              )
-              .join("")}
+            <div class="camp-team">
+              ${team
+                .map(
+                  ({ heroId, entry }) => `
+                    <button data-action="open-hero" data-hero="${heroId}">
+                      ${heroPortrait(heroId, "")}
+                      <span>${HEROES[heroId].name}<small>Lv.${entry.level}</small></span>
+                    </button>
+                  `,
+                )
+                .join("")}
+            </div>
           </div>
         </section>
         <section class="camp-main">
-          <div class="section-heading">
-            <div><p class="eyebrow">山寨营造</p><h2>三处根基</h2></div>
-            <button class="text-button" data-action="nav-roster">查看好汉 ${icon("arrow-up-right", 16)}</button>
+          <div class="section-heading camp-main-heading">
+            <div><p class="eyebrow">水泊营图 · 第 ${campLevel} 期</p><h2>${campCols} × ${campRows} 营区</h2></div>
+            <button class="button small ${nextAreaWins !== null && state.stats.battlesWon >= nextAreaWins ? "secondary" : "ghost"}" data-action="expand-camp-area" ${nextAreaWins === null || state.stats.battlesWon < nextAreaWins ? "disabled" : ""}>${icon(nextAreaWins === null ? "check" : "grid-3x3", 15)}<span>${nextAreaWins === null ? "营区全开" : `扩建营区 · ${nextAreaWins} 胜`}</span></button>
           </div>
-          <div class="facility-grid">
-            ${Object.values(FACILITIES)
-              .map((facility) => {
-                const level = state.facilities[facility.id];
-                const cost = upgradeCost(state, facility.id);
+          <div class="camp-map" style="--camp-cols:${campCols};--camp-rows:${campRows}">
+            ${Array.from({ length: campCols * campRows }, () => `<i class="camp-grid-cell" aria-hidden="true"></i>`).join("")}
+            ${Object.values(CAMP_BUILDINGS)
+              .map((building) => {
+                const status = campBuildingStatus(state, building.id);
+                const [spanCols, spanRows] = building.size;
+                const level = state.facilities[building.id] || 1;
+                const recipe = CAMP_RECIPES.find(
+                  (entry) => entry.buildingId === building.id,
+                );
                 return `
-                  <article class="facility-card">
-                    <div class="facility-icon">${icon(facility.icon, 25)}</div>
-                    <div class="facility-level"><span>等级</span><b>${level}</b><small>/${facility.maxLevel}</small></div>
-                    <h3>${facility.name}</h3>
-                    <p>${facility.desc}</p>
-                    <div class="level-pips">
-                      ${Array.from({ length: facility.maxLevel }, (_, index) => `<i class="${index < level ? "filled" : ""}"></i>`).join("")}
-                    </div>
-                    <button class="button small ${cost && state.inventory.copper >= cost ? "secondary" : "ghost"}" data-action="upgrade-facility" data-facility="${facility.id}" ${!cost ? "disabled" : ""}>
-                      ${cost ? `${icon("hammer", 15)}<span>升级 · ${cost} 贯</span>` : `${icon("check", 15)}<span>已至顶</span>`}
-                    </button>
-                  </article>
+                  <button
+                    class="camp-building is-${status}"
+                    style="--building-col:${building.col - 1};--building-row:${building.row - 1};--building-cols:${spanCols};--building-rows:${spanRows};--cell-width:${cellWidth}%;--cell-height:${cellHeight}%"
+                    data-action="select-camp-building"
+                    data-building="${building.id}"
+                    aria-label="${building.name}，${status === "built" ? `等级 ${level}` : status === "available" ? `可建造，需 ${building.cost} 贯` : `胜利 ${building.unlockVictories} 场后开放`}"
+                    ${status === "locked" ? "disabled" : ""}
+                  >
+                    <span class="camp-building-icon">${icon(building.icon, spanCols > 1 ? 27 : 20)}</span>
+                    <span class="camp-building-copy"><b>${building.name}</b><small>${spanCols} × ${spanRows}${status === "built" ? ` · Lv.${level}` : ""}</small></span>
+                    ${status === "available" ? `<em>${icon("hammer", 12)}${building.cost} 贯</em>` : status === "locked" ? `<em>${icon("lock-keyhole", 12)}${building.unlockVictories} 胜</em>` : building.resource ? `<em>${icon("package-open", 12)}${state.camp.stock[building.resource] || 0}</em>` : recipe ? `<em>${icon("refresh-cw", 12)}加工</em>` : ""}
+                  </button>
                 `;
               })
               .join("")}
           </div>
-          <div class="camp-actions-grid">
-            <article class="camp-action-card rest-card">
-              <div class="camp-action-art">${icon("moon-star", 34)}</div>
-              <div>
-                <p class="eyebrow">夜宿忠义堂</p>
-                <h3>营中休整</h3>
-                <p>全队获得历练。星台越高，休整所得越多。</p>
-              </div>
-              <button class="button secondary" data-action="camp-rest">${icon("flame", 17)}<span>休整 · ${restCost} 贯</span></button>
-            </article>
-            <article class="camp-action-card">
-              <div class="camp-action-art">${icon("swords", 34)}</div>
-              <div>
-                <p class="eyebrow">三阵编成</p>
-                <h3>演武点将</h3>
-                <p>调整前阵、中军与后阵，善用站位和路数克制。</p>
-              </div>
-              <button class="button ghost" data-action="nav-roster">${icon("users", 17)}<span>调整阵容</span></button>
-            </article>
+          <div class="camp-stock" aria-label="营寨库存">
+            <span class="camp-stock-title">${icon("package-open", 15)}库存</span>
+            ${stockEntries.length ? stockEntries.map(([productId, amount]) => `<span>${icon(CAMP_PRODUCTS[productId].icon, 14)}${CAMP_PRODUCTS[productId].name}<b>${amount}</b></span>`).join("") : `<small>建造农田、矿场、林地和水产后可采集原料</small>`}
           </div>
         </section>
-        <aside class="camp-next">
-          <p class="eyebrow">下一程</p>
-          <div class="next-chapter-art" style="background-image:url('${next.bg}')"></div>
-          <span>${next.label} · ${next.location}</span>
-          <h2>${next.title}</h2>
-          <p>${next.summary}</p>
-          <button class="button primary" data-action="go-map">${icon("map", 18)}<span>查看行军图</span></button>
+        <aside class="camp-side">
+          <section class="camp-operation">
+            <div class="section-heading compact"><div><p class="eyebrow">营寨整备</p><h2>${icon("moon-star", 18)}休整与编成</h2></div></div>
+            <button class="button secondary" data-action="camp-rest">${icon("flame", 17)}<span>营中休整 · ${restCost} 贯</span></button>
+            <button class="button ghost" data-action="nav-roster">${icon("users", 17)}<span>调整三阵</span></button>
+          </section>
+          <section class="camp-next">
+            <p class="eyebrow">下一程</p>
+            <div class="next-chapter-art" style="background-image:url('${next.bg}')"></div>
+            <span>${next.label} · ${next.location}</span>
+            <h2>${next.title}</h2>
+            <p>${next.summary}</p>
+            <button class="button primary" data-action="go-map">${icon("map", 18)}<span>查看行军图</span></button>
+          </section>
         </aside>
       </main>
     </div>
   `;
+}
+
+function openCampBuilding(buildingId) {
+  const building = CAMP_BUILDINGS[buildingId];
+  if (!building) return;
+  const status = campBuildingStatus(state, buildingId);
+  const level = state.facilities[buildingId] || 1;
+  const facility = FACILITIES[buildingId];
+  const recipe = CAMP_RECIPES.find(
+    (entry) => entry.buildingId === buildingId,
+  );
+  const actions = [];
+  if (status === "available") {
+    actions.push({
+      label: `建造 · ${building.cost} 贯`,
+      action: "build-camp-building",
+      tone: "primary",
+      icon: "hammer",
+      building: building.id,
+    });
+  }
+  if (status === "built" && building.resource) {
+    actions.push({
+      label: `收获 · ${CAMP_PRODUCTS[building.resource].name} +${building.output + level - 1}`,
+      action: "collect-camp-resource",
+      tone: "primary",
+      icon: "package-open",
+      building: building.id,
+    });
+  }
+  if (status === "built" && recipe) {
+    const recipeStatus = campRecipeStatus(state, recipe.id);
+    actions.push({
+      label: `${recipe.name} · ${CAMP_PRODUCTS[recipe.input.item].name} ${recipe.input.amount}`,
+      action: "craft-camp-recipe",
+      tone: "primary",
+      icon: "refresh-cw",
+      disabled: !recipeStatus.available,
+      recipe: recipe.id,
+    });
+  }
+  if (status === "built" && facility) {
+    const cost = upgradeCost(state, buildingId);
+    actions.push({
+      label: cost ? `升级至 ${level + 1} 级 · ${cost} 贯` : "已至最高等级",
+      action: "upgrade-facility",
+      tone: "secondary",
+      icon: cost ? "arrow-up" : "check",
+      disabled: !cost,
+      building: building.id,
+    });
+  }
+  actions.push({
+    label: "返回营图",
+    action: "close-modal",
+    tone: "ghost",
+    icon: "grid-3x3",
+  });
+  const stock = Object.entries(state.camp.stock)
+    .filter(([productId, amount]) => CAMP_PRODUCTS[productId] && amount > 0)
+    .map(
+      ([productId, amount]) =>
+        `<span>${escapeHtml(CAMP_PRODUCTS[productId].name)}<b>${amount}</b></span>`,
+    )
+    .join("");
+  const statusCopy =
+    status === "built"
+      ? `${level} 级 · 占地 ${building.size[0]} × ${building.size[1]}`
+      : status === "available"
+        ? `胜利 ${building.unlockVictories} 场已解锁 · 建造需 ${building.cost} 贯`
+        : `累计胜利 ${building.unlockVictories} 场后开放`;
+  let operation = "";
+  if (status === "built" && building.resource) {
+    operation = `<p class="camp-dialog-intro">每次收获 <b>${CAMP_PRODUCTS[building.resource].name} +${building.output + level - 1}</b>，建筑升级后产量增加。</p>`;
+  } else if (status === "built" && recipe) {
+    operation = `<p class="camp-dialog-intro">消耗 <b>${CAMP_PRODUCTS[recipe.input.item].name} ${recipe.input.amount}</b>，产出 <b>${CAMP_PRODUCTS[recipe.output.item].name} ${recipe.output.amount}</b>。</p>`;
+  }
+  const modalActions = actions
+    .map(
+      ({ action, label, tone, icon: iconName, disabled, recipe: recipeId, building: targetBuilding }) =>
+        `<button class="button ${tone || "ghost"}" data-action="${action}" data-building="${targetBuilding || ""}" data-facility="${targetBuilding || ""}" data-recipe="${recipeId || ""}" ${disabled ? "disabled" : ""}>${icon(iconName, 17)}<span>${escapeHtml(label)}</span></button>`,
+    )
+    .join("");
+  openModal({
+    title: building.name,
+    body: `
+      <p class="camp-dialog-intro">${escapeHtml(building.desc)}</p>
+      <p class="camp-dialog-intro"><b>${escapeHtml(statusCopy)}</b></p>
+      ${operation}
+      <div class="camp-dialog-stock"><b>当前库存</b>${stock || "暂无"}</div>
+      <div class="camp-dialog-actions">${modalActions}</div>
+    `,
+    actions: [],
+  });
+  document
+    .querySelector("[data-modal-panel]")
+    ?.setAttribute("data-camp-building", building.id);
 }
 
 function arenaBoonCards(boons, action, options = {}) {
@@ -6360,6 +6474,73 @@ function handleAction(action, element) {
       }
       return;
     }
+    case "select-camp-building":
+      openCampBuilding(element.dataset.building);
+      return;
+    case "expand-camp-area": {
+      const result = expandCampArea(state);
+      if (result.ok) {
+        persist();
+        sound.confirm();
+        toast(`营区扩展至第 ${result.level} 期`, "success");
+        render();
+      } else {
+        const labels = {
+          victories: "战斗胜利不足",
+          copper: "铜钱不足",
+          timber: "林地木材不足",
+          iron: "矿场铁矿不足",
+          max: "营区已全开",
+        };
+        toast(labels[result.reason] || "暂时无法扩建", "danger");
+      }
+      return;
+    }
+    case "build-camp-building": {
+      const result = buildCampBuilding(state, element.dataset.building);
+      if (result.ok) {
+        persist();
+        sound.confirm();
+        toast(`${result.building.name}已落成`, "success");
+        openCampBuilding(result.building.id);
+      } else {
+        toast(
+          result.reason === "copper" ? "铜钱不足" : "此建筑尚未开放",
+          "danger",
+        );
+      }
+      return;
+    }
+    case "collect-camp-resource": {
+      const result = collectCampResource(state, element.dataset.building);
+      if (result.ok) {
+        persist();
+        sound.confirm();
+        toast(`${CAMP_PRODUCTS[result.item].name} +${result.amount}`, "success");
+        openCampBuilding(element.dataset.building);
+      } else {
+        toast("需先建造此处", "danger");
+      }
+      return;
+    }
+    case "craft-camp-recipe": {
+      const result = craftCampItem(state, element.dataset.recipe);
+      if (result.available) {
+        persist();
+        sound.confirm();
+        toast(
+          `${CAMP_PRODUCTS[result.recipe.output.item].name} +${result.output}`,
+          "success",
+        );
+        openCampBuilding(result.recipe.buildingId);
+      } else {
+        toast(
+          result.reason === "material" ? "原料不足" : "加工建筑尚未建造",
+          "danger",
+        );
+      }
+      return;
+    }
     case "upgrade-facility": {
       const facilityId = element.dataset.facility;
       const facility = FACILITIES[facilityId];
@@ -6367,7 +6548,8 @@ function handleAction(action, element) {
         persist();
         sound.confirm();
         toast(`${facility.name}提升至 ${state.facilities[facilityId]} 级`, "success");
-        render();
+        if (screen === "camp") openCampBuilding(facilityId);
+        else render();
       } else {
         toast(upgradeCost(state, facilityId) ? "铜钱不足" : "此处已升至顶阶", "danger");
       }

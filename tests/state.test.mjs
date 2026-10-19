@@ -7,6 +7,8 @@ import {
   ARENA_BOUNTIES,
   ARENA_ENCOUNTERS,
   ARENA_SYNERGIES,
+  CAMP_BUILDINGS,
+  CAMP_RECIPES,
   CHAPTERS,
   CHAIN_FORMATIONS,
   HERO_BONDS,
@@ -22,14 +24,21 @@ import {
   activeHeroBonds,
   applyBattleRewards,
   applyHeroRecruitmentRewards,
+  buildCampBuilding,
+  campAreaSize,
+  campBuildingStatus,
+  campRecipeStatus,
   checkAchievements,
   chooseNewestSaveText,
   claimHeroQuest,
+  collectCampResource,
+  craftCampItem,
   createInitialState,
   deriveHeroStats,
   discoverHeroBonds,
   discoverChainFormations,
   evaluateChapterMedals,
+  expandCampArea,
   heroDoctrineUnlocked,
   heroLegendCompleted,
   heroLegendUnlocked,
@@ -76,6 +85,64 @@ test("recommended formation keeps chain-ready path diversity while stacking bond
       `${bond.id} should be active in the recommended formation`,
     );
   }
+});
+
+test("camp grid expands through victories and unlocks buildings", () => {
+  const state = createInitialState();
+  assert.deepEqual(campAreaSize(state), [5, 4]);
+  assert.equal(campBuildingStatus(state, "hall"), "built");
+  assert.equal(campBuildingStatus(state, "farmland"), "locked");
+  assert.equal(buildCampBuilding(state, "farmland").reason, "locked");
+  state.stats.battlesWon = 2;
+  assert.equal(campBuildingStatus(state, "farmland"), "available");
+  const copper = state.inventory.copper;
+  assert.equal(buildCampBuilding(state, "farmland").ok, true);
+  assert.equal(state.inventory.copper, copper - CAMP_BUILDINGS.farmland.cost);
+  assert.equal(buildCampBuilding(state, "farmland").reason, "built");
+  state.stats.battlesWon = 5;
+  assert.deepEqual(campAreaSize(state), [5, 5]);
+  state.inventory.copper = 2000;
+  assert.equal(expandCampArea(state).reason, "timber");
+  state.camp.stock.timber = 4;
+  assert.equal(expandCampArea(state).ok, true);
+  assert.deepEqual(campAreaSize(state), [6, 5]);
+  state.stats.battlesWon = 10;
+  assert.deepEqual(campAreaSize(state), [6, 5]);
+  state.inventory.copper += 500;
+  state.camp.stock.timber = 8;
+  state.camp.stock.iron_ore = 4;
+  assert.equal(expandCampArea(state).ok, true);
+  assert.equal(state.camp.areaUnlocked.length, 2);
+  assert.deepEqual(campAreaSize(state), [8, 5]);
+});
+
+test("camp production turns wheat into flour and steamed buns", () => {
+  const state = createInitialState();
+  const mill = Object.values(CAMP_BUILDINGS).find(
+    (building) => building.id === "mill",
+  );
+  const kitchen = Object.values(CAMP_BUILDINGS).find(
+    (building) => building.id === "kitchen",
+  );
+  const farm = Object.values(CAMP_BUILDINGS).find(
+    (building) => building.id === "farmland",
+  );
+  state.inventory.copper = 2000;
+  state.stats.battlesWon = 5;
+  for (const building of [farm, mill, kitchen]) {
+    assert.equal(buildCampBuilding(state, building.id).ok, true);
+  }
+  assert.equal(collectCampResource(state, "farmland").ok, true);
+  assert.equal(state.camp.stock.wheat, 2);
+  assert.equal(craftCampItem(state, "grind_wheat").output, 1);
+  assert.equal(state.camp.stock.wheat, 0);
+  assert.equal(state.camp.stock.flour, 1);
+  assert.equal(craftCampItem(state, "steam_bun").output, 2);
+  assert.equal(state.camp.stock.flour, 0);
+  assert.equal(state.camp.stock.steamed_bun, 2);
+  assert.equal(craftCampItem(state, "steam_bun").reason, "material");
+  assert.equal(CAMP_RECIPES.length, 2);
+  assert.equal(campRecipeStatus(state, "grind_wheat").reason, "material");
 });
 
 test("legacy saves migrate into the current schema", () => {
@@ -163,7 +230,7 @@ test("version 24 saves migrate the expanded roster and default equipment", () =>
   const migrated = validateSaveText(JSON.stringify(state));
   assert.ok(migrated);
   assert.equal(migrated.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 26);
+  assert.equal(SAVE_VERSION, 27);
   assert.equal(migrated.recruited.includes("unknown"), false);
   assert.equal(migrated.recruited.includes("shixiu"), true);
   assert.equal(migrated.roster.yangxiong.level, 1);

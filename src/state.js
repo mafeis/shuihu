@@ -8,6 +8,9 @@ import {
   ARENA_EVENTS,
   ARENA_RELICS,
   ARENA_SYNERGIES,
+  CAMP_BUILDINGS,
+  CAMP_PRODUCTS,
+  CAMP_RECIPES,
   CHAPTERS,
   CHAIN_FORMATIONS,
   DIFFICULTIES,
@@ -31,7 +34,7 @@ import {
 
 export const SAVE_KEY = "xingming-shuihu-save-v1";
 export const SAVE_BACKUP_KEY = `${SAVE_KEY}-backup`;
-export const SAVE_VERSION = 26;
+export const SAVE_VERSION = 27;
 
 const HERO_QUEST_LIST = Object.values(HERO_QUESTS).flat();
 const HERO_QUEST_IDS = new Set(HERO_QUEST_LIST.map((quest) => quest.id));
@@ -523,6 +526,11 @@ export function createInitialState(options = {}) {
       arena: 1,
       tower: 1,
     },
+    camp: {
+      built: ["hall"],
+      areaUnlocked: [],
+      stock: {},
+    },
     alignment: {
       brotherhood: 1,
       order: 1,
@@ -727,6 +735,11 @@ function migrateSave(saved) {
     flags: { ...base.flags, ...(saved.flags || {}) },
     stats: { ...base.stats, ...(saved.stats || {}) },
     facilities: { ...base.facilities, ...(saved.facilities || {}) },
+    camp: {
+      built: [...base.camp.built],
+      areaUnlocked: [...base.camp.areaUnlocked],
+      stock: { ...base.camp.stock },
+    },
     arena: { ...base.arena, ...(saved.arena || {}) },
     chapterMedals:
       saved.chapterMedals && typeof saved.chapterMedals === "object"
@@ -840,6 +853,37 @@ function migrateSave(saved) {
       : [],
   };
   merged.flags.tutorialSeen = Boolean(merged.flags.tutorialSeen);
+  merged.camp.built = [
+    ...new Set(
+      [
+        ...base.camp.built,
+        ...(Array.isArray(saved.camp?.built) ? saved.camp.built : []),
+      ].filter((buildingId) => CAMP_BUILDINGS[buildingId]),
+    ),
+  ];
+  merged.camp.areaUnlocked = Array.isArray(saved.camp?.areaUnlocked)
+    ? [
+        ...new Set(
+          saved.camp.areaUnlocked.filter((id) =>
+            ["medium", "large"].includes(id),
+          ),
+        ),
+      ]
+    : [];
+  merged.camp.stock =
+    saved.camp?.stock && typeof saved.camp.stock === "object"
+      ? Object.fromEntries(
+          Object.keys(CAMP_PRODUCTS)
+            .map((productId) => [
+              productId,
+              Math.max(
+                0,
+                Math.trunc(Number(saved.camp.stock[productId]) || 0),
+              ),
+            ])
+            .filter(([, amount]) => amount > 0),
+        )
+      : {};
   if (!Array.isArray(merged.arena.relics)) {
     merged.arena.relics = [];
   }
@@ -1670,6 +1714,105 @@ export function upgradeFacility(state, facilityId) {
 
 export function campRestCost(state) {
   return Math.max(40, 28 + state.recruited.length * 12 + state.currentChapter * 14);
+}
+
+export function campAreaSize(state) {
+  const wins = Math.max(0, Number(state?.stats?.battlesWon) || 0);
+  const area = state?.camp?.areaUnlocked || [];
+  if (wins >= 10 && area.includes("large")) return [8, 5];
+  if (wins >= 5 && area.includes("medium")) return [6, 5];
+  if (wins >= 10) return [6, 4];
+  if (wins >= 5) return [5, 5];
+  return [5, 4];
+}
+
+export function campAreaLevel(state) {
+  return 1 + (state?.camp?.areaUnlocked?.length || 0);
+}
+
+export function campAreaRequirement(state) {
+  const level = campAreaLevel(state);
+  return level >= 3 ? null : level === 1 ? 5 : 10;
+}
+
+export function expandCampArea(state) {
+  state.camp.areaUnlocked ||= [];
+  const wins = Math.max(0, Number(state?.stats?.battlesWon) || 0);
+  const level = campAreaLevel(state);
+  if (level >= 3) return { ok: false, reason: "max" };
+  const requirement = level === 1 ? 5 : 10;
+  if (wins < requirement) return { ok: false, reason: "victories" };
+  const cost = level === 1 ? 320 : 760;
+  const wood = level === 1 ? 4 : 8;
+  const iron = level === 2 ? 4 : 0;
+  if (state.inventory.copper < cost) return { ok: false, reason: "copper" };
+  if ((state.camp.stock.timber || 0) < wood) {
+    return { ok: false, reason: "timber" };
+  }
+  if ((state.camp.stock.iron_ore || 0) < iron) {
+    return { ok: false, reason: "iron" };
+  }
+  state.inventory.copper -= cost;
+  state.camp.stock.timber -= wood;
+  if (iron) state.camp.stock.iron_ore -= iron;
+  state.camp.areaUnlocked.push(level === 1 ? "medium" : "large");
+  return { ok: true, level: level + 1 };
+}
+
+export function campBuildingStatus(state, buildingId) {
+  const building = CAMP_BUILDINGS[buildingId];
+  if (!building) return "unknown";
+  if (state?.camp?.built?.includes(buildingId)) return "built";
+  const wins = Math.max(0, Number(state?.stats?.battlesWon) || 0);
+  return wins >= building.unlockVictories ? "available" : "locked";
+}
+
+export function buildCampBuilding(state, buildingId) {
+  const building = CAMP_BUILDINGS[buildingId];
+  if (!building) return { ok: false, reason: "unknown" };
+  const status = campBuildingStatus(state, buildingId);
+  if (status === "built") return { ok: false, reason: "built" };
+  if (status === "locked") return { ok: false, reason: "locked" };
+  if (state.inventory.copper < building.cost) {
+    return { ok: false, reason: "copper" };
+  }
+  state.inventory.copper -= building.cost;
+  state.camp.built.push(building.id);
+  return { ok: true, building };
+}
+
+export function collectCampResource(state, buildingId) {
+  const building = CAMP_BUILDINGS[buildingId];
+  if (!building?.resource || !state.camp?.built?.includes(buildingId)) {
+    return { ok: false, reason: "unbuilt", item: null, amount: 0 };
+  }
+  const level = Math.max(1, Number(state.facilities[buildingId]) || 1);
+  const amount = building.output + level - 1;
+  state.camp.stock[building.resource] =
+    (state.camp.stock[building.resource] || 0) + amount;
+  return { ok: true, item: building.resource, amount };
+}
+
+export function campRecipeStatus(state, recipeId) {
+  const recipe = CAMP_RECIPES.find((entry) => entry.id === recipeId);
+  if (!recipe) return { available: false, reason: "unknown", recipe: null };
+  if (!state.camp?.built?.includes(recipe.buildingId)) {
+    return { available: false, reason: "building", recipe };
+  }
+  if ((state.camp.stock?.[recipe.input.item] || 0) < recipe.input.amount) {
+    return { available: false, reason: "material", recipe };
+  }
+  return { available: true, reason: null, recipe };
+}
+
+export function craftCampItem(state, recipeId) {
+  const status = campRecipeStatus(state, recipeId);
+  if (!status.available) return { ...status, output: 0 };
+  const { recipe } = status;
+  state.camp.stock[recipe.input.item] -= recipe.input.amount;
+  state.camp.stock[recipe.output.item] =
+    (state.camp.stock[recipe.output.item] || 0) + recipe.output.amount;
+  return { ...status, output: recipe.output.amount };
 }
 
 export function campRest(state) {
