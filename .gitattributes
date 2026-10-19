@@ -2,6 +2,9 @@ assets/**/*.png filter=lfs diff=lfs merge=lfs -text
 assets/**/*.webp filter=lfs diff=lfs merge=lfs -text
 assets/**/*.mp3 filter=lfs diff=lfs merge=lfs -text
 assets/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
-
+godot/assets/**/*.png filter=lfs diff=lfs merge=lfs -text
+godot/assets/**/*.webp filter=lfs diff=lfs merge=lfs -text
+godot/assets/**/*.mp3 filter=lfs diff=lfs merge=lfs -text
+godot/ui/game_icon.icns filter=lfs diff=lfs merge=lfs -text
 store/**/*.png filter=lfs diff=lfs merge=lfs -text
 store/**/*.mp4 filter=lfs diff=lfs merge=lfs -text

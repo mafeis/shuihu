@@ -1,0 +1,6280 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": 0,
+      "name": "前阵",
+      "defense": 1.1,
+      "aggro": 1.45,
+      "melee": 1.08
+    },
+    {
+      "id": 1,
+      "name": "中军",
+      "defense": 1,
+      "aggro": 1,
+      "melee": 1
+    },
+    {
+      "id": 2,
+      "name": "后阵",
+      "defense": 0.9,
+      "aggro": 0.7,
+      "melee": 0.94
+    }
+  ],
+  "paths": {
+    "gang": {
+      "id": "gang",
+      "name": "刚猛",
+      "short": "猛",
+      "beats": "shou",
+      "icon": "res://assets/ui/icons/gangmeng_spear_256.png",
+      "color": "#c7644f"
+    },
+    "ling": {
+      "id": "ling",
+      "name": "灵巧",
+      "short": "巧",
+      "beats": "tao",
+      "icon": "res://assets/ui/icons/lingqiao_blades_256.png",
+      "color": "#7ba6a1"
+    },
+    "tao": {
+      "id": "tao",
+      "name": "韬略",
+      "short": "谋",
+      "beats": "gang",
+      "icon": "res://assets/ui/icons/taolue_scroll_256.png",
+      "color": "#b49a62"
+    },
+    "shou": {
+      "id": "shou",
+      "name": "守御",
+      "short": "守",
+      "beats": "ling",
+      "icon": "res://assets/ui/icons/shouyu_shield_256.png",
+      "color": "#6f8ca4"
+    }
+  },
+  "difficulties": {
+    "story": {
+      "id": "story",
+      "name": "说书人",
+      "desc": "敌方伤害降低 20%，适合只想过完故事。",
+      "enemyDamage": 0.8
+    },
+    "normal": {
+      "id": "normal",
+      "name": "江湖客",
+      "desc": "标准攻防与资源收益。",
+      "enemyDamage": 1
+    },
+    "hard": {
+      "id": "hard",
+      "name": "演义录",
+      "desc": "敌方伤害提高 20%，资源收益提高 15%。",
+      "enemyDamage": 1.2,
+      "rewardMultiplier": 1.15
+    }
+  },
+  "hero_order": [
+    "linchong",
+    "luzhishen",
+    "wusong",
+    "daizong",
+    "andaoquan",
+    "shiqian",
+    "huarong",
+    "likui",
+    "songjiang",
+    "husanniang",
+    "wuyong",
+    "yanqing",
+    "yangzhi",
+    "gongsunsheng",
+    "lujunyi",
+    "zhangshun",
+    "shijin",
+    "qinming",
+    "chaiin",
+    "guansheng",
+    "zhangqing",
+    "xuning",
+    "lijun",
+    "ruanxiaoqi",
+    "sunerniang",
+    "gudashao",
+    "lingzhen",
+    "huyanzhuo",
+    "liutang",
+    "zhutong",
+    "leiheng",
+    "liying",
+    "jiezhen",
+    "jiebao",
+    "yangxiong",
+    "shixiu",
+    "sunli",
+    "yuehe",
+    "xiaorang",
+    "jiangjing"
+  ],
+  "heroes": {
+    "linchong": {
+      "id": "linchong",
+      "name": "林冲",
+      "nickname": "豹子头",
+      "star": "天雄星",
+      "role": "守御反击先锋",
+      "path": "gang",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/linchong/cutout.png",
+      "keyart": "res://assets/characters/linchong/keyart.png",
+      "palette": "#405f67",
+      "base": {
+        "hp": 455,
+        "atk": 55,
+        "def": 43,
+        "spd": 34
+      },
+      "passive": {
+        "name": "禁军枪架",
+        "desc": "处于前阵时，受到近战攻击后有 22% 概率以寒星枪反击。"
+      },
+      "skills": [
+        {
+          "id": "lin_basic",
+          "name": "寒星枪",
+          "desc": "单体刚猛伤害，附加 1 回合破甲。",
+          "target": "enemy",
+          "power": 0.92,
+          "poise": 14,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.8
+            }
+          ]
+        },
+        {
+          "id": "lin_return",
+          "name": "回马枪",
+          "desc": "刺击目标，随后自身获得 1 回合护御。",
+          "target": "enemy",
+          "power": 1.18,
+          "poise": 19,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "lin_formation",
+          "name": "禁军枪阵",
+          "desc": "全队获得 1 回合护御，自身额外恢复义气。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 30,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 20
+            }
+          ]
+        },
+        {
+          "id": "lin_throat",
+          "name": "雪夜封喉",
+          "desc": "强力单体攻击。目标生命低于 40% 时威力大幅提高。",
+          "target": "enemy",
+          "power": 1.48,
+          "poise": 24,
+          "yiqi": 28,
+          "cooldown": 3,
+          "executeBonus": 1.7
+        },
+        {
+          "id": "lin_ult",
+          "name": "风雪山神庙",
+          "desc": "连续三枪贯穿单体，必定附加破甲并强化自身护御。",
+          "target": "enemy",
+          "power": 0.78,
+          "hits": 3,
+          "poise": 12,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 1
+            },
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        }
+      ],
+      "bio": "原东京八十万禁军枪棒教头。高俅设计陷害后，他在风雪中一步步失去退路，也第一次看清朝廷与江湖的真正界线。"
+    },
+    "luzhishen": {
+      "id": "luzhishen",
+      "name": "鲁智深",
+      "nickname": "花和尚",
+      "star": "天孤星",
+      "role": "前阵群体破甲",
+      "path": "gang",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/luzhishen/cutout.png",
+      "keyart": "res://assets/characters/luzhishen/keyart.png",
+      "palette": "#7c6842",
+      "base": {
+        "hp": 530,
+        "atk": 58,
+        "def": 45,
+        "spd": 27
+      },
+      "passive": {
+        "name": "倒拔垂杨柳",
+        "desc": "受到控制时有 35% 概率抵抗。抵抗成功后获得 18 义气。"
+      },
+      "skills": [
+        {
+          "id": "lu_basic",
+          "name": "禅杖横扫",
+          "desc": "攻击全体敌人，附加轻微破势。",
+          "target": "allEnemies",
+          "power": 0.56,
+          "poise": 8,
+          "yiqi": 20,
+          "basic": true
+        },
+        {
+          "id": "lu_gate",
+          "name": "醉打山门",
+          "desc": "重击单体，25% 概率眩晕。",
+          "target": "enemy",
+          "power": 1.12,
+          "poise": 20,
+          "yiqi": 24,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.25
+            }
+          ]
+        },
+        {
+          "id": "lu_willow",
+          "name": "倒拔杨柳",
+          "desc": "抓取目标并封穴 2 回合，使其无法获得义气。",
+          "target": "enemy",
+          "power": 0.74,
+          "poise": 28,
+          "yiqi": 28,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 1
+            }
+          ]
+        },
+        {
+          "id": "lu_golden",
+          "name": "佛门金身",
+          "desc": "全队获得护御，自身恢复生命。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.6,
+          "yiqi": 30,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "lu_ult",
+          "name": "拳打镇关西",
+          "desc": "对单体连续三击，第三击必定暴击。",
+          "target": "enemy",
+          "power": 0.9,
+          "hits": 3,
+          "poise": 15,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "finalCrit": true
+        }
+      ],
+      "bio": "渭州提辖鲁达，因三拳打死镇关西而亡命江湖。出家之后仍不守清规，只守心中那杆秤。"
+    },
+    "wusong": {
+      "id": "wusong",
+      "name": "武松",
+      "nickname": "行者",
+      "star": "天伤星",
+      "role": "单体爆发与处决",
+      "path": "ling",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/wusong/cutout.png",
+      "keyart": "res://assets/characters/wusong/keyart.png",
+      "palette": "#365a75",
+      "base": {
+        "hp": 400,
+        "atk": 62,
+        "def": 29,
+        "spd": 45
+      },
+      "passive": {
+        "name": "打虎",
+        "desc": "攻击生命比例高于自身的敌人时，无视 15% 护御。"
+      },
+      "skills": [
+        {
+          "id": "wu_basic",
+          "name": "玉环步",
+          "desc": "快速斩击单体，30% 概率造成流血。",
+          "target": "enemy",
+          "power": 0.96,
+          "poise": 14,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.3
+            }
+          ]
+        },
+        {
+          "id": "wu_kick",
+          "name": "鸳鸯脚",
+          "desc": "同时踢击全体敌人，对前阵造成额外伤害。",
+          "target": "allEnemies",
+          "power": 0.66,
+          "poise": 9,
+          "yiqi": 24,
+          "cooldown": 2,
+          "rowBonus": {
+            "0": 1.3
+          }
+        },
+        {
+          "id": "wu_drunk",
+          "name": "醉拳",
+          "desc": "随机攻击两次，若命中同一目标则追加轻击。",
+          "target": "enemy",
+          "power": 0.72,
+          "hits": 2,
+          "poise": 12,
+          "yiqi": 25,
+          "cooldown": 2,
+          "wildHits": true
+        },
+        {
+          "id": "wu_blade",
+          "name": "戒刀斩",
+          "desc": "对流血目标威力提高 55%。",
+          "target": "enemy",
+          "power": 1.34,
+          "poise": 22,
+          "yiqi": 27,
+          "cooldown": 3,
+          "bleedBonus": 1.55
+        },
+        {
+          "id": "wu_ult",
+          "name": "景阳冈打虎",
+          "desc": "锁定单体并造成致命一击，目标生命越低暴击率越高。",
+          "target": "enemy",
+          "power": 2.12,
+          "poise": 40,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "executeCrit": true
+        }
+      ],
+      "bio": "景阳冈打虎之后名动阳谷县。兄长惨死、官府枉法，他选择用自己的手讨回一个最直白的公道。"
+    },
+    "daizong": {
+      "id": "daizong",
+      "name": "戴宗",
+      "nickname": "神行太保",
+      "star": "天速星",
+      "role": "行动调度与全队机动",
+      "path": "tao",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/daizong/cutout.png",
+      "keyart": "res://assets/characters/daizong/keyart.png",
+      "palette": "#817044",
+      "base": {
+        "hp": 360,
+        "atk": 43,
+        "def": 28,
+        "spd": 53
+      },
+      "passive": {
+        "name": "神行法",
+        "desc": "每场战斗首次行动时为全队补充 12 义气。"
+      },
+      "skills": [
+        {
+          "id": "dai_basic",
+          "name": "驿路快刀",
+          "desc": "快速攻击单体并为全队补充少量义气。",
+          "target": "enemy",
+          "power": 0.82,
+          "poise": 10,
+          "yiqi": 24,
+          "basic": true,
+          "effects": [
+            {
+              "type": "teamYiqi",
+              "amount": 5
+            }
+          ]
+        },
+        {
+          "id": "dai_order",
+          "name": "甲马急行",
+          "desc": "一名队友获得鼓舞 2 回合，并立即恢复 20 义气。",
+          "target": "ally",
+          "power": 0,
+          "yiqi": 22,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "targetStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "targetYiqi",
+              "amount": 20
+            }
+          ]
+        },
+        {
+          "id": "dai_message",
+          "name": "传令",
+          "desc": "为一名队友补充 45 义气，并清除其封穴。",
+          "target": "ally",
+          "power": 0,
+          "yiqi": 28,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "targetYiqi",
+              "amount": 45
+            },
+            {
+              "type": "targetCleanse"
+            }
+          ]
+        },
+        {
+          "id": "dai_track",
+          "name": "千里追踪",
+          "desc": "标记单体 3 回合破甲，并让全队获得 10 义气。",
+          "target": "enemy",
+          "power": 0.58,
+          "poise": 18,
+          "yiqi": 26,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 3,
+              "chance": 1
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 10
+            }
+          ]
+        },
+        {
+          "id": "dai_ult",
+          "name": "日行八百",
+          "desc": "全队获得鼓舞 2 回合，并补充 35 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 35
+            }
+          ]
+        }
+      ],
+      "bio": "江州两院押牢节级，能借神行之术日行数百里。他替梁山传递的不只是书信，也是许多人最后一条退路。"
+    },
+    "andaoquan": {
+      "id": "andaoquan",
+      "name": "安道全",
+      "nickname": "神医",
+      "star": "地灵星",
+      "role": "治疗与状态净化",
+      "path": "shou",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/andaoquan/cutout.png",
+      "keyart": "res://assets/characters/andaoquan/keyart.png",
+      "palette": "#3f604b",
+      "base": {
+        "hp": 372,
+        "atk": 37,
+        "def": 35,
+        "spd": 32
+      },
+      "passive": {
+        "name": "药到病除",
+        "desc": "治疗生命低于 30% 的目标时，治疗量提高 25%。"
+      },
+      "skills": [
+        {
+          "id": "an_basic",
+          "name": "金针点穴",
+          "desc": "以银针攻击单体，20% 概率封穴。",
+          "target": "enemy",
+          "power": 0.6,
+          "poise": 8,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 1,
+              "chance": 0.2
+            }
+          ]
+        },
+        {
+          "id": "an_needle",
+          "name": "金针渡厄",
+          "desc": "治疗单体并清除一个负面状态。",
+          "target": "ally",
+          "power": 0,
+          "heal": 1.55,
+          "yiqi": 24,
+          "cooldown": 1,
+          "effects": [
+            {
+              "type": "targetCleanse"
+            }
+          ]
+        },
+        {
+          "id": "an_bath",
+          "name": "药浴",
+          "desc": "治疗全队并给予 1 回合护御。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.75,
+          "yiqi": 30,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "an_powder",
+          "name": "麻沸散",
+          "desc": "对单体施加眩晕，基础命中率较低。",
+          "target": "enemy",
+          "power": 0.22,
+          "poise": 10,
+          "yiqi": 28,
+          "cooldown": 4,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 2,
+              "chance": 0.55
+            }
+          ]
+        },
+        {
+          "id": "an_ult",
+          "name": "神医下山",
+          "desc": "大幅治疗全队，并净化全体负面状态。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 1.85,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "teamCleanse"
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        }
+      ],
+      "bio": "建康府名医，针药双绝。被卷入梁山与官府纷争后，他坚持一条朴素原则：先救人，再问立场。"
+    },
+    "shiqian": {
+      "id": "shiqian",
+      "name": "时迁",
+      "nickname": "鼓上蚤",
+      "star": "地贼星",
+      "role": "偷袭、偷取与后排干扰",
+      "path": "ling",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/shiqian/cutout.png",
+      "keyart": "res://assets/characters/shiqian/keyart.png",
+      "palette": "#66554c",
+      "base": {
+        "hp": 338,
+        "atk": 51,
+        "def": 25,
+        "spd": 56
+      },
+      "passive": {
+        "name": "飞檐走壁",
+        "desc": "从后阵攻击时暴击率提高 18%，攻击后自身获得 1 回合护御。"
+      },
+      "skills": [
+        {
+          "id": "shi_basic",
+          "name": "鼓上翻",
+          "desc": "攻击任意目标并偷取 8 义气。",
+          "target": "enemy",
+          "power": 0.84,
+          "poise": 11,
+          "yiqi": 23,
+          "basic": true,
+          "ignoreRow": true,
+          "effects": [
+            {
+              "type": "stealYiqi",
+              "amount": 8
+            }
+          ]
+        },
+        {
+          "id": "shi_empty",
+          "name": "妙手空空",
+          "desc": "偷取目标 30 义气并转移给自身。",
+          "target": "enemy",
+          "power": 0.38,
+          "poise": 6,
+          "yiqi": 24,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "stealYiqi",
+              "amount": 30
+            }
+          ]
+        },
+        {
+          "id": "shi_fire",
+          "name": "火绒",
+          "desc": "施加 3 回合流血并移除目标鼓舞。",
+          "target": "enemy",
+          "power": 0.58,
+          "poise": 8,
+          "yiqi": 26,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 3,
+              "chance": 1
+            },
+            {
+              "type": "targetRemoveGood"
+            }
+          ]
+        },
+        {
+          "id": "shi_hide",
+          "name": "隐身",
+          "desc": "自身获得鼓舞与护御 2 回合。",
+          "target": "self",
+          "power": 0,
+          "yiqi": 28,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "id": "shi_ult",
+          "name": "盗甲",
+          "desc": "重击单体，移除其所有增益并施加 2 回合破甲。",
+          "target": "enemy",
+          "power": 1.46,
+          "poise": 32,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "targetRemoveGood"
+            },
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 1
+            }
+          ]
+        }
+      ],
+      "bio": "高唐州盗贼，轻功与开锁之术冠绝江湖。看似只为钱财奔走，却总在别人不敢出手时钻进最危险的地方。"
+    },
+    "likui": {
+      "id": "likui",
+      "name": "李逵",
+      "nickname": "黑旋风",
+      "star": "天杀星",
+      "role": "残血增伤与群体压制",
+      "path": "gang",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/likui/cutout.png",
+      "keyart": "res://assets/characters/likui/keyart.png",
+      "palette": "#49322d",
+      "base": {
+        "hp": 505,
+        "atk": 66,
+        "def": 31,
+        "spd": 34
+      },
+      "passive": {
+        "name": "杀性",
+        "desc": "生命越低，造成的伤害越高，最多提高 30%；击败敌人时获得 15 义气。"
+      },
+      "skills": [
+        {
+          "id": "li_basic",
+          "name": "板斧双斫",
+          "desc": "挥斧横扫全体敌人，25% 概率造成流血。",
+          "target": "allEnemies",
+          "power": 0.62,
+          "poise": 10,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.25
+            }
+          ]
+        },
+        {
+          "id": "li_charge",
+          "name": "黑风劈",
+          "desc": "重劈单体；目标生命低于 40% 时伤害大幅提高。",
+          "target": "enemy",
+          "power": 1.3,
+          "poise": 24,
+          "yiqi": 24,
+          "cooldown": 2,
+          "executeBonus": 1.65
+        },
+        {
+          "id": "li_roar",
+          "name": "杀声震阵",
+          "desc": "全队获得 2 回合鼓舞，自身额外获得 18 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 28,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 18
+            }
+          ]
+        },
+        {
+          "id": "li_reckless",
+          "name": "舍命狂斫",
+          "desc": "以命换命般连续劈砍单体两次，并强化自身杀性。",
+          "target": "enemy",
+          "power": 0.82,
+          "hits": 2,
+          "poise": 18,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "inspiration",
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "id": "li_ult",
+          "name": "黑旋风",
+          "desc": "双斧卷起两轮旋风，对全体敌人造成两次重击。",
+          "target": "allEnemies",
+          "power": 0.72,
+          "hits": 2,
+          "poise": 16,
+          "yiqiCost": 100,
+          "ultimate": true
+        }
+      ],
+      "bio": "沂州百丈村人，性烈如火的板斧手。李逵不懂朝廷与江湖的绕弯道理，只认谁给过他一碗饭、谁把百姓逼上绝路。"
+    },
+    "huarong": {
+      "id": "huarong",
+      "name": "花荣",
+      "nickname": "小李广",
+      "star": "天英星",
+      "role": "后排狙杀与多段射击",
+      "path": "ling",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/huarong/cutout.png",
+      "keyart": "res://assets/characters/huarong/keyart.png",
+      "palette": "#435f70",
+      "base": {
+        "hp": 355,
+        "atk": 59,
+        "def": 27,
+        "spd": 53
+      },
+      "passive": {
+        "name": "百步穿杨",
+        "desc": "处于后阵时暴击率提高 12%，且攻击不会因目标阵位降低威力。"
+      },
+      "skills": [
+        {
+          "id": "hua_basic",
+          "name": "穿云箭",
+          "desc": "精准射击单体，20% 概率造成流血。",
+          "target": "enemy",
+          "power": 1,
+          "poise": 13,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.2
+            }
+          ]
+        },
+        {
+          "id": "hua_volley",
+          "name": "雁翎箭雨",
+          "desc": "射击全体敌人，对后阵目标额外提高威力。",
+          "target": "allEnemies",
+          "power": 0.62,
+          "poise": 9,
+          "yiqi": 24,
+          "cooldown": 2,
+          "rowBonus": {
+            "2": 1.25
+          }
+        },
+        {
+          "id": "hua_three",
+          "name": "连珠三矢",
+          "desc": "对单体连续射出三箭。",
+          "target": "enemy",
+          "power": 0.46,
+          "hits": 3,
+          "poise": 9,
+          "yiqi": 25,
+          "cooldown": 2
+        },
+        {
+          "id": "hua_pin",
+          "name": "定风一箭",
+          "desc": "钉住目标护甲，施加 3 回合破甲。",
+          "target": "enemy",
+          "power": 0.72,
+          "poise": 22,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 3,
+              "chance": 1
+            }
+          ]
+        },
+        {
+          "id": "hua_ult",
+          "name": "小李广",
+          "desc": "锁定单体射出决胜一箭，目标生命越低暴击率越高。",
+          "target": "enemy",
+          "power": 2.28,
+          "poise": 42,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "executeCrit": true
+        }
+      ],
+      "bio": "清风寨武知寨，箭术冠绝青州。与宋江相识后，他在官身与义气之间选择了后者，也因此再没有回头路。"
+    },
+    "songjiang": {
+      "id": "songjiang",
+      "name": "宋江",
+      "nickname": "及时雨",
+      "star": "天魁星",
+      "role": "全队调度与危急救援",
+      "path": "shou",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/songjiang/cutout.png",
+      "keyart": "res://assets/characters/songjiang/keyart.png",
+      "palette": "#536a5a",
+      "base": {
+        "hp": 430,
+        "atk": 47,
+        "def": 42,
+        "spd": 35
+      },
+      "passive": {
+        "name": "呼保义",
+        "desc": "开战时全队获得 10 义气。任意好汉本场首次降至 35% 生命以下时，宋江立即为全队恢复 8% 生命并给予 1 回合护御。"
+      },
+      "skills": [
+        {
+          "id": "song_basic",
+          "name": "及时朴刀",
+          "desc": "攻击单体并为全队补充 6 义气。",
+          "target": "enemy",
+          "power": 0.74,
+          "poise": 9,
+          "yiqi": 24,
+          "basic": true,
+          "effects": [
+            {
+              "type": "teamYiqi",
+              "amount": 6
+            }
+          ]
+        },
+        {
+          "id": "song_supply",
+          "name": "仗义疏财",
+          "desc": "治疗一名队友，补充 22 义气并净化其负面状态。",
+          "target": "ally",
+          "power": 0,
+          "heal": 1.12,
+          "yiqi": 24,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "targetYiqi",
+              "amount": 22
+            },
+            {
+              "type": "targetCleanse"
+            }
+          ]
+        },
+        {
+          "id": "song_banner",
+          "name": "义字当先",
+          "desc": "全队获得 1 回合护御与 2 回合鼓舞。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 30,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "id": "song_convoy",
+          "name": "押粮归寨",
+          "desc": "治疗全队，并为生命最低的队友额外补充义气。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.58,
+          "yiqi": 29,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "lowestAllyYiqi",
+              "amount": 24
+            }
+          ]
+        },
+        {
+          "id": "song_ult",
+          "name": "替天行道",
+          "desc": "以令旗压阵，攻击全体敌人，并让全队获得鼓舞与 24 义气。",
+          "target": "allEnemies",
+          "power": 0.86,
+          "poise": 20,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 24
+            }
+          ]
+        }
+      ],
+      "bio": "郓城押司出身，因私放晁盖而一步步走上梁山。他记得每一个投奔者的姓名，也必须学会在救人与守寨之间作出最难的选择。"
+    },
+    "husanniang": {
+      "id": "husanniang",
+      "name": "扈三娘",
+      "nickname": "一丈青",
+      "star": "地慧星",
+      "role": "破甲控制与双刀追击",
+      "path": "ling",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/husanniang/cutout.png",
+      "keyart": "res://assets/characters/husanniang/keyart.png",
+      "palette": "#6e4d50",
+      "base": {
+        "hp": 388,
+        "atk": 61,
+        "def": 30,
+        "spd": 49
+      },
+      "passive": {
+        "name": "红锦缚敌",
+        "desc": "攻击破甲或破势目标时伤害提高 20%；暴击会令目标的破甲延长 1 回合。"
+      },
+      "skills": [
+        {
+          "id": "hu_basic",
+          "name": "日月双锋",
+          "desc": "双刀交错斩击单体，35% 概率破甲。",
+          "target": "enemy",
+          "power": 0.94,
+          "poise": 14,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.35
+            }
+          ]
+        },
+        {
+          "id": "hu_lasso",
+          "name": "红锦套索",
+          "desc": "低伤害索击，施加 2 回合破甲并有 40% 概率眩晕。",
+          "target": "enemy",
+          "power": 0.54,
+          "poise": 24,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 1
+            },
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.4
+            }
+          ]
+        },
+        {
+          "id": "hu_sweep",
+          "name": "青影回锋",
+          "desc": "横扫全体敌人，对前阵额外提高 25% 威力。",
+          "target": "allEnemies",
+          "power": 0.58,
+          "poise": 10,
+          "yiqi": 25,
+          "cooldown": 2,
+          "rowBonus": {
+            "0": 1.25
+          }
+        },
+        {
+          "id": "hu_moon",
+          "name": "月下断甲",
+          "desc": "强力单体斩击；目标处于破甲时威力提高 65%。",
+          "target": "enemy",
+          "power": 1.22,
+          "poise": 21,
+          "yiqi": 27,
+          "cooldown": 3,
+          "armorBreakBonus": 1.65
+        },
+        {
+          "id": "hu_ult",
+          "name": "一丈青",
+          "desc": "双刀与套索连续进攻三次，必定破甲，并有较大概率眩晕。",
+          "target": "enemy",
+          "power": 0.76,
+          "hits": 3,
+          "poise": 13,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 3,
+              "chance": 1
+            },
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.6
+            }
+          ]
+        }
+      ],
+      "bio": "扈家庄少主，双刀与红锦套索罕逢敌手。她拒绝成为任何阵营议和的筹码，选择亲自决定这座庄子和庄中百姓该归向何处。"
+    },
+    "wuyong": {
+      "id": "wuyong",
+      "name": "吴用",
+      "nickname": "智多星",
+      "star": "天机星",
+      "role": "开局蓄势与谋略控场",
+      "path": "tao",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/wuyong/cutout.png",
+      "keyart": "res://assets/characters/wuyong/keyart.png",
+      "palette": "#53614a",
+      "base": {
+        "hp": 352,
+        "atk": 51,
+        "def": 29,
+        "spd": 46
+      },
+      "passive": {
+        "name": "智多星",
+        "desc": "开战时全队获得 14 义气；吴用造成的护势伤害提高 15%。"
+      },
+      "skills": [
+        {
+          "id": "wuy_basic",
+          "name": "铜链点穴",
+          "desc": "以铜链击打穴位，25% 概率封穴。",
+          "target": "enemy",
+          "power": 0.68,
+          "poise": 13,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.25
+            }
+          ]
+        },
+        {
+          "id": "wuy_lure",
+          "name": "诱敌深入",
+          "desc": "标记单体 3 回合破甲，并为全队补充 12 义气。",
+          "target": "enemy",
+          "power": 0.46,
+          "poise": 22,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 3,
+              "chance": 1
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 12
+            }
+          ]
+        },
+        {
+          "id": "wuy_formation",
+          "name": "排兵布阵",
+          "desc": "全队获得 2 回合鼓舞，自身立即恢复 18 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 28,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 18
+            }
+          ]
+        },
+        {
+          "id": "wuy_chaos",
+          "name": "乱阵火计",
+          "desc": "以火计扰乱全体敌人，造成护势伤害并尝试封穴。",
+          "target": "allEnemies",
+          "power": 0.55,
+          "poise": 20,
+          "yiqi": 28,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.3
+            }
+          ]
+        },
+        {
+          "id": "wuy_ult",
+          "name": "智取生辰纲",
+          "desc": "全阵设伏重创所有敌人，封穴并令全队获得 30 义气。",
+          "target": "allEnemies",
+          "power": 0.96,
+          "poise": 28,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.55
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 30
+            }
+          ]
+        }
+      ],
+      "bio": "郓城县东溪村教书先生，善用人心与地势。他懂得最难的不是设下计策，而是让执行计策的人仍能平安归来。"
+    },
+    "yanqing": {
+      "id": "yanqing",
+      "name": "燕青",
+      "nickname": "浪子",
+      "star": "天巧星",
+      "role": "高速暴击与后排处决",
+      "path": "ling",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/yanqing/cutout.png",
+      "keyart": "res://assets/characters/yanqing/keyart.png",
+      "palette": "#4c6072",
+      "base": {
+        "hp": 362,
+        "atk": 63,
+        "def": 27,
+        "spd": 58
+      },
+      "passive": {
+        "name": "浪子燕青",
+        "desc": "处于后阵时暴击率提高 10%。每回合首次受到直接攻击时有 30% 概率闪避，闪避成功后获得 12 义气。"
+      },
+      "skills": [
+        {
+          "id": "yan_basic",
+          "name": "浪子刀",
+          "desc": "快速斩击单体，25% 概率造成流血。",
+          "target": "enemy",
+          "power": 0.96,
+          "poise": 14,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.25
+            }
+          ]
+        },
+        {
+          "id": "yan_swallow",
+          "name": "鹁鸽旋",
+          "desc": "越过前阵攻击后阵，并无视阵位减伤。",
+          "target": "backEnemy",
+          "power": 1.12,
+          "poise": 18,
+          "yiqi": 25,
+          "cooldown": 2,
+          "ignoreRow": true
+        },
+        {
+          "id": "yan_wrestle",
+          "name": "相扑跌法",
+          "desc": "近身摔投单体，造成高护势伤害并有 40% 概率眩晕。",
+          "target": "enemy",
+          "power": 0.74,
+          "poise": 32,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.4
+            }
+          ]
+        },
+        {
+          "id": "yan_finish",
+          "name": "燕尾回锋",
+          "desc": "绕过阵位重击单体；目标生命低于 45% 时威力提高 65%。",
+          "target": "enemy",
+          "power": 1.34,
+          "poise": 23,
+          "yiqi": 28,
+          "cooldown": 3,
+          "ignoreRow": true,
+          "executeBonus": 1.65
+        },
+        {
+          "id": "yan_ult",
+          "name": "浪子回头",
+          "desc": "踏燕三折后贯穿单体，无视阵位，目标生命越低越容易暴击。",
+          "target": "enemy",
+          "power": 2.2,
+          "poise": 42,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "ignoreRow": true,
+          "executeCrit": true
+        }
+      ],
+      "bio": "卢俊义府中养大的浪子，吹箫、相扑、弩箭与短枪样样精通。他看似随性，却总在宴席散尽后替最不起眼的人留一条退路。"
+    },
+    "yangzhi": {
+      "id": "yangzhi",
+      "name": "杨志",
+      "nickname": "青面兽",
+      "star": "天暗星",
+      "role": "押阵反击与破甲先锋",
+      "path": "shou",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/yangzhi/cutout.png",
+      "keyart": "res://assets/characters/yangzhi/keyart.png",
+      "palette": "#50645f",
+      "base": {
+        "hp": 468,
+        "atk": 54,
+        "def": 46,
+        "spd": 35
+      },
+      "passive": {
+        "name": "杨家枪架",
+        "desc": "处于前阵时，受到近战攻击后有 28% 概率挺枪反击。",
+        "effects": {
+          "counterChance": 0.28,
+          "counterRow": 0
+        }
+      },
+      "skills": [
+        {
+          "id": "yang_basic",
+          "name": "杨家枪",
+          "desc": "沉稳刺击单体，70% 概率附加 1 回合破甲。",
+          "target": "enemy",
+          "power": 0.9,
+          "poise": 16,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.7
+            }
+          ]
+        },
+        {
+          "id": "yang_guard",
+          "name": "横枪守阵",
+          "desc": "自身获得 2 回合护御，并立即补充 22 义气。",
+          "target": "self",
+          "power": 0,
+          "yiqi": 22,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 22
+            }
+          ]
+        },
+        {
+          "id": "yang_convoy",
+          "name": "押纲断后",
+          "desc": "横扫全体敌人，35% 概率破甲，前阵目标额外提高护势伤害。",
+          "target": "allEnemies",
+          "power": 0.58,
+          "poise": 13,
+          "yiqi": 25,
+          "cooldown": 2,
+          "rowBonus": {
+            "0": 1.2
+          },
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.35
+            }
+          ]
+        },
+        {
+          "id": "yang_counter",
+          "name": "青面伏枪",
+          "desc": "重刺单体；目标破甲时威力提高 60%。",
+          "target": "enemy",
+          "power": 1.26,
+          "poise": 23,
+          "yiqi": 27,
+          "cooldown": 3,
+          "armorBreakBonus": 1.6
+        },
+        {
+          "id": "yang_ult",
+          "name": "天暗星·万钧枪",
+          "desc": "杨家枪势连刺三次，必定破甲，并为自己叠加 2 层护御。",
+          "target": "enemy",
+          "power": 0.74,
+          "hits": 3,
+          "poise": 14,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 1
+            },
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        }
+      ],
+      "bio": "杨家将后人，满心只想凭一身枪棒重振门楣。黄泥冈押纲失手后，他必须先回答一个比功名更难的问题：失掉的究竟是官府的责任，还是自己替官府背着的罪名。"
+    },
+    "gongsunsheng": {
+      "id": "gongsunsheng",
+      "name": "公孙胜",
+      "nickname": "入云龙",
+      "star": "天闲星",
+      "role": "护阵、净化与封穴控场",
+      "path": "tao",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/gongsunsheng/cutout.png",
+      "keyart": "res://assets/characters/gongsunsheng/keyart.png",
+      "palette": "#4d6354",
+      "base": {
+        "hp": 366,
+        "atk": 52,
+        "def": 34,
+        "spd": 47
+      },
+      "passive": {
+        "name": "云隐天罡",
+        "desc": "开战时全队获得 1 层护御；公孙胜的封穴更容易打乱敌方节奏。",
+        "effects": {
+          "teamOpeningGuard": 1,
+          "controlPoisePct": 0.15
+        }
+      },
+      "skills": [
+        {
+          "id": "gong_basic",
+          "name": "松纹剑",
+          "desc": "以古定剑点向敌阵，30% 概率封穴 1 回合。",
+          "target": "enemy",
+          "power": 0.72,
+          "poise": 14,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 1,
+              "chance": 0.3
+            }
+          ]
+        },
+        {
+          "id": "gong_cloud",
+          "name": "云遁护阵",
+          "desc": "治疗全队并获得 1 回合护御。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.58,
+          "yiqi": 27,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "gong_thunder",
+          "name": "五雷正法",
+          "desc": "震动全体敌人，造成较高护势伤害，15% 概率眩晕。",
+          "target": "allEnemies",
+          "power": 0.68,
+          "poise": 29,
+          "yiqi": 29,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.15
+            }
+          ]
+        },
+        {
+          "id": "gong_ward",
+          "name": "天罡护心",
+          "desc": "大幅治疗一名队友，净化其负面状态并给予 1 回合护御。",
+          "target": "ally",
+          "power": 0,
+          "heal": 1.4,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "targetCleanse"
+            },
+            {
+              "type": "targetStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "gong_ult",
+          "name": "入云龙",
+          "desc": "雷云压阵，重创全体敌人，封穴 2 回合并使全队获得护御与 20 义气。",
+          "target": "allEnemies",
+          "power": 1.02,
+          "poise": 32,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.6
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "bio": "蓟州九宫山道士，通晓阵势与天时。他下山不是为了争一纸功名，而是看见乱世将百姓的命压成筹码后，决定亲自走进棋局。"
+    },
+    "lujunyi": {
+      "id": "lujunyi",
+      "name": "卢俊义",
+      "nickname": "玉麒麟",
+      "star": "天罡星",
+      "role": "全能决斗与正面破阵",
+      "path": "gang",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/lujunyi/cutout.png",
+      "keyart": "res://assets/characters/lujunyi/keyart.png",
+      "palette": "#58665a",
+      "base": {
+        "hp": 505,
+        "atk": 67,
+        "def": 40,
+        "spd": 42
+      },
+      "passive": {
+        "name": "河北三绝",
+        "desc": "生命高于 85% 时，招式伤害提高 18%，正面破阵几乎不受阵位牵制。",
+        "effects": {
+          "fullHpDamagePct": 0.18,
+          "ignoreRow": true
+        }
+      },
+      "skills": [
+        {
+          "id": "lu_j_basic",
+          "name": "麒麟枪",
+          "desc": "稳定刺击单体，护势伤害高于寻常枪招。",
+          "target": "enemy",
+          "power": 0.98,
+          "poise": 18,
+          "yiqi": 22,
+          "basic": true
+        },
+        {
+          "id": "lu_j_break",
+          "name": "河北枪绝",
+          "desc": "重击单体并施加 2 回合破甲。",
+          "target": "enemy",
+          "power": 1.22,
+          "poise": 22,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 1
+            }
+          ]
+        },
+        {
+          "id": "lu_j_sweep",
+          "name": "一骑当千",
+          "desc": "纵马横扫全体敌人，并提高自身 12 义气。",
+          "target": "allEnemies",
+          "power": 0.66,
+          "poise": 12,
+          "yiqi": 27,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "selfYiqi",
+              "amount": 12
+            }
+          ]
+        },
+        {
+          "id": "lu_j_duel",
+          "name": "玉麟决胜",
+          "desc": "向单体发动决斗重击；目标生命低于 45% 时威力提高 60%。",
+          "target": "enemy",
+          "power": 1.42,
+          "poise": 25,
+          "yiqi": 29,
+          "cooldown": 3,
+          "executeBonus": 1.6
+        },
+        {
+          "id": "lu_j_ult",
+          "name": "玉麒麟破军",
+          "desc": "枪锋贯穿单体，造成极高伤害，目标生命越低越容易暴击。",
+          "target": "enemy",
+          "power": 2.36,
+          "poise": 44,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "executeCrit": true
+        }
+      ],
+      "bio": "北京大名府第一等长者，枪棒、拳脚与马上功夫都难逢敌手。被吴用设计卷入梁山后，他失去家业与名望，却在一无所有时看清哪些人值得并肩。"
+    },
+    "zhangshun": {
+      "id": "zhangshun",
+      "name": "张顺",
+      "nickname": "浪里白条",
+      "star": "天损星",
+      "role": "水战闪避与后排追击",
+      "path": "ling",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/zhangshun/cutout.png",
+      "keyart": "res://assets/characters/zhangshun/keyart.png",
+      "palette": "#42677a",
+      "base": {
+        "hp": 378,
+        "atk": 61,
+        "def": 27,
+        "spd": 59
+      },
+      "passive": {
+        "name": "浪里藏身",
+        "desc": "每回合首次受到直接攻击时有 24% 概率闪避，闪避成功后获得 14 义气。",
+        "effects": {
+          "evadeChance": 0.24,
+          "evadeYiqi": 14
+        }
+      },
+      "skills": [
+        {
+          "id": "zhang_basic",
+          "name": "分水刺",
+          "desc": "贴身刺击单体，35% 概率造成流血。",
+          "target": "enemy",
+          "power": 0.92,
+          "poise": 13,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.35
+            }
+          ]
+        },
+        {
+          "id": "zhang_wave",
+          "name": "浪里穿波",
+          "desc": "越过前阵攻击后阵，并无视阵位减伤。",
+          "target": "backEnemy",
+          "power": 1.16,
+          "poise": 18,
+          "yiqi": 25,
+          "cooldown": 2,
+          "ignoreRow": true
+        },
+        {
+          "id": "zhang_leap",
+          "name": "鱼跃翻波",
+          "desc": "横扫全体敌人，对后阵额外提高 25% 威力。",
+          "target": "allEnemies",
+          "power": 0.59,
+          "poise": 10,
+          "yiqi": 25,
+          "cooldown": 2,
+          "rowBonus": {
+            "2": 1.25
+          }
+        },
+        {
+          "id": "zhang_strike",
+          "name": "白条夺命",
+          "desc": "双叉夹击单体；目标流血时威力提高 65%。",
+          "target": "enemy",
+          "power": 1.31,
+          "poise": 22,
+          "yiqi": 28,
+          "cooldown": 3,
+          "bleedBonus": 1.65
+        },
+        {
+          "id": "zhang_ult",
+          "name": "浪里白条",
+          "desc": "入水回身，双叉贯穿单体，无视阵位，目标生命越低越容易暴击。",
+          "target": "enemy",
+          "power": 2.16,
+          "poise": 41,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "ignoreRow": true,
+          "executeCrit": true
+        }
+      ],
+      "bio": "浔阳江上的船户好手，水中能伏七日，浪里来去无声。他敬重的是敢替船家出头的人，厌恨的是把一条江都当作私产的官船与恶霸。"
+    },
+    "shijin": {
+      "id": "shijin",
+      "name": "史进",
+      "nickname": "九纹龙",
+      "star": "天微星",
+      "role": "连击破甲与追枪先锋",
+      "path": "ling",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/shijin/cutout.png",
+      "keyart": "res://assets/characters/shijin/keyart.png",
+      "palette": "#8a5d49",
+      "base": {
+        "hp": 402,
+        "atk": 60,
+        "def": 31,
+        "spd": 54
+      },
+      "passive": {
+        "name": "九龙追锋",
+        "desc": "每回合首次单体命中后，有 45% 概率追刺同一目标；目标破甲时追击必定触发。",
+        "effects": {
+          "comboChaseChance": 0.45,
+          "comboChasePowerPct": 0.38,
+          "comboChaseBrokenGuaranteed": true
+        }
+      },
+      "skills": [
+        {
+          "id": "shi_basic",
+          "name": "连珠枪",
+          "desc": "快刺单体，60% 概率附加 1 回合破甲。",
+          "target": "enemy",
+          "power": 0.9,
+          "poise": 15,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.6
+            }
+          ]
+        },
+        {
+          "id": "shi_sweep",
+          "name": "龙纹扫阵",
+          "desc": "横扫全体敌人，并削减其护势。",
+          "target": "allEnemies",
+          "power": 0.61,
+          "poise": 15,
+          "yiqi": 24,
+          "cooldown": 2
+        },
+        {
+          "id": "shi_guard",
+          "name": "少华守势",
+          "desc": "收枪护身，获得 1 回合护御并立即补充 20 义气。",
+          "target": "self",
+          "power": 0,
+          "yiqi": 22,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 20
+            }
+          ]
+        },
+        {
+          "id": "shi_finish",
+          "name": "九纹追命",
+          "desc": "重刺单体；目标破甲时威力提高 55%。",
+          "target": "enemy",
+          "power": 1.34,
+          "poise": 24,
+          "yiqi": 28,
+          "cooldown": 3,
+          "armorBreakBonus": 1.55
+        },
+        {
+          "id": "shi_ult",
+          "name": "少华九龙破",
+          "desc": "连续三枪钉住单体，必定破甲，最后一枪必定暴击。",
+          "target": "enemy",
+          "power": 0.74,
+          "hits": 3,
+          "poise": 15,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "finalCrit": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 1
+            }
+          ]
+        }
+      ],
+      "bio": "华州史家村的年轻庄主，拜王进为师后把一条枪练得又快又狠。家业烧尽之后，他不再只问怎样赢，而开始学着辨认身边的人是否值得一同守住。"
+    },
+    "qinming": {
+      "id": "qinming",
+      "name": "秦明",
+      "nickname": "霹雳火",
+      "star": "天猛星",
+      "role": "群体破势与重锤爆发",
+      "path": "gang",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/qinming/cutout.png",
+      "keyart": "res://assets/characters/qinming/keyart.png",
+      "palette": "#8f4b3f",
+      "base": {
+        "hp": 510,
+        "atk": 64,
+        "def": 35,
+        "spd": 32
+      },
+      "passive": {
+        "name": "霹雳震阵",
+        "desc": "全体招式护势伤害提高 25%；攻击破势目标时伤害提高 18%。",
+        "effects": {
+          "allEnemiesPoisePct": 0.25,
+          "brokenDamagePct": 0.18
+        }
+      },
+      "skills": [
+        {
+          "id": "qin_basic",
+          "name": "狼牙碎甲",
+          "desc": "重棒砸击单体，造成较高护势伤害并附加破甲。",
+          "target": "enemy",
+          "power": 0.92,
+          "poise": 24,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.45
+            }
+          ]
+        },
+        {
+          "id": "qin_sweep",
+          "name": "火雷横扫",
+          "desc": "重棒横扫全体敌人，快速击穿护势。",
+          "target": "allEnemies",
+          "power": 0.67,
+          "poise": 22,
+          "yiqi": 25,
+          "cooldown": 2
+        },
+        {
+          "id": "qin_drum",
+          "name": "霹雳战鼓",
+          "desc": "自身获得 2 回合护御，全队获得 1 回合鼓舞。",
+          "target": "self",
+          "power": 0,
+          "yiqi": 29,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            },
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "qin_break",
+          "name": "震军狼牙",
+          "desc": "砸击单体并造成高额护势伤害，目标破势时伤害提高 45%。",
+          "target": "enemy",
+          "power": 1.3,
+          "poise": 36,
+          "yiqi": 28,
+          "cooldown": 3,
+          "brokenBonus": 1.45
+        },
+        {
+          "id": "qin_ult",
+          "name": "霹雳火",
+          "desc": "雷火重落全体敌人，造成大量护势伤害并大概率破甲。",
+          "target": "allEnemies",
+          "power": 1.04,
+          "poise": 46,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.75
+            }
+          ]
+        }
+      ],
+      "bio": "青州指挥司统制，性如烈火，作战总冲在最前。他曾经把军令看得比性命更重，直到一条条被权力碾碎的家门让他明白，雷霆也该有落下的方向。"
+    },
+    "chaiin": {
+      "id": "chaiin",
+      "name": "柴进",
+      "nickname": "小旋风",
+      "star": "天贵星",
+      "role": "义气补给与净化辅助",
+      "path": "tao",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/chaiin/cutout.png",
+      "keyart": "res://assets/characters/chaiin/keyart.png",
+      "palette": "#5d6f57",
+      "base": {
+        "hp": 390,
+        "atk": 48,
+        "def": 34,
+        "spd": 43
+      },
+      "passive": {
+        "name": "仗义疏财",
+        "desc": "每回合首次治疗或为队友补充义气时，最需要的队友额外获得护御与 8 义气。",
+        "effects": {
+          "supportAidGuard": 1,
+          "supportAidYiqi": 8
+        }
+      },
+      "skills": [
+        {
+          "id": "chai_basic",
+          "name": "乌骨点阵",
+          "desc": "以折扇点向敌阵，30% 概率封穴 1 回合。",
+          "target": "enemy",
+          "power": 0.72,
+          "poise": 15,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 1,
+              "chance": 0.3
+            }
+          ]
+        },
+        {
+          "id": "chai_supply",
+          "name": "开仓济急",
+          "desc": "治疗全队并净化负面状态，为义气最低的队友补充 24 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.5,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "teamCleanse"
+            },
+            {
+              "type": "lowestAllyYiqi",
+              "amount": 24
+            }
+          ]
+        },
+        {
+          "id": "chai_network",
+          "name": "门客成阵",
+          "desc": "全队获得 1 回合护御与 16 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 28,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 16
+            }
+          ]
+        },
+        {
+          "id": "chai_judge",
+          "name": "义账问罪",
+          "desc": "折扇重击单体，夺取其 12 义气并附加破甲。",
+          "target": "enemy",
+          "power": 1.02,
+          "poise": 20,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "stealYiqi",
+              "amount": 12
+            },
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.75
+            }
+          ]
+        },
+        {
+          "id": "chai_ult",
+          "name": "小旋风散金",
+          "desc": "散尽仓中余财，大幅治疗全队、净化负面并给予护御与 30 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 1.05,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "teamCleanse"
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 30
+            }
+          ]
+        }
+      ],
+      "bio": "后周柴氏嫡派子孙，沧州横海郡的富贵庄主。门客满堂时他看见的是人情，家破入狱后才看清，真正值得散去的家财应当换回哪些人的活路。"
+    },
+    "guansheng": {
+      "id": "guansheng",
+      "name": "关胜",
+      "nickname": "大刀",
+      "star": "天勇星",
+      "role": "守阵反击与正面破军",
+      "path": "shou",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/guansheng/cutout.png",
+      "keyart": "res://assets/characters/guansheng/keyart.png",
+      "palette": "#59665a",
+      "base": {
+        "hp": 500,
+        "atk": 58,
+        "def": 49,
+        "spd": 34
+      },
+      "passive": {
+        "name": "青龙偃月",
+        "desc": "处于前阵时，受到直接攻击后有 32% 概率挥刀反击；反击命中时有机会破甲并获得护御。",
+        "effects": {
+          "counterChance": 0.32,
+          "counterRow": 0,
+          "counterArmorBreakChance": 0.45,
+          "counterGuard": 1
+        }
+      },
+      "skills": [
+        {
+          "id": "guan_basic",
+          "name": "青龙拖刀",
+          "desc": "沉稳斩击单体，55% 概率附加 1 回合破甲。",
+          "target": "enemy",
+          "power": 0.94,
+          "poise": 21,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.55
+            }
+          ]
+        },
+        {
+          "id": "guan_cleave",
+          "name": "横刀镇阵",
+          "desc": "横扫全体敌人，前阵目标承受更高威力。",
+          "target": "allEnemies",
+          "power": 0.63,
+          "poise": 24,
+          "yiqi": 25,
+          "cooldown": 2,
+          "rowBonus": {
+            "0": 1.28
+          }
+        },
+        {
+          "id": "guan_hold",
+          "name": "偃月护军",
+          "desc": "自身获得 2 回合护御并恢复少量生命。",
+          "target": "self",
+          "power": 0,
+          "heal": 0.36,
+          "yiqi": 23,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "id": "guan_break",
+          "name": "天勇断锋",
+          "desc": "双手压刀重斩单体，目标破甲时威力提高 45%。",
+          "target": "enemy",
+          "power": 1.35,
+          "poise": 35,
+          "yiqi": 28,
+          "cooldown": 3,
+          "armorBreakBonus": 1.45
+        },
+        {
+          "id": "guan_ult",
+          "name": "青龙镇军",
+          "desc": "刀势扫过全体敌人，自身获得 2 层护御，全队获得鼓舞。",
+          "target": "allEnemies",
+          "power": 1.02,
+          "poise": 43,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            },
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "bio": "蒲东巡检，关羽后裔，熟读兵书而不好虚名。奉命征讨梁山时，他先看见的是军令，后来才看见军令背后被当作代价的百姓与降卒。"
+    },
+    "zhangqing": {
+      "id": "zhangqing",
+      "name": "张清",
+      "nickname": "没羽箭",
+      "star": "天捷星",
+      "role": "后排飞石连击与破势控场",
+      "path": "ling",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/zhangqing/cutout.png",
+      "keyart": "res://assets/characters/zhangqing/keyart.png",
+      "palette": "#3e6e73",
+      "base": {
+        "hp": 382,
+        "atk": 64,
+        "def": 29,
+        "spd": 57
+      },
+      "passive": {
+        "name": "飞石连星",
+        "desc": "每回合首次飞石命中后，有 45% 概率弹向另一名敌人，造成 38% 伤害并追加护势伤害。",
+        "effects": {
+          "stoneRicochetChance": 0.45,
+          "stoneRicochetPowerPct": 0.38,
+          "stoneRicochetPoise": 16
+        }
+      },
+      "skills": [
+        {
+          "id": "zhang_basic",
+          "name": "飞蝗石",
+          "desc": "越过前阵飞石击将，造成破势伤害并有 22% 概率眩晕。",
+          "target": "backEnemy",
+          "power": 0.94,
+          "poise": 23,
+          "yiqi": 22,
+          "basic": true,
+          "ignoreRow": true,
+          "stone": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.22
+            }
+          ]
+        },
+        {
+          "id": "zhang_chain",
+          "name": "连珠三石",
+          "desc": "对单体连掷三石，每击都可能撕开甲缝。",
+          "target": "enemy",
+          "power": 0.44,
+          "hits": 3,
+          "poise": 13,
+          "yiqi": 25,
+          "cooldown": 2,
+          "stone": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.35
+            }
+          ]
+        },
+        {
+          "id": "zhang_seal",
+          "name": "飞石点将",
+          "desc": "精准击向后阵穴位，造成高额破势并大概率封穴 2 回合。",
+          "target": "backEnemy",
+          "power": 0.76,
+          "poise": 32,
+          "yiqi": 26,
+          "cooldown": 3,
+          "ignoreRow": true,
+          "stone": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.8
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 10
+            }
+          ]
+        },
+        {
+          "id": "zhang_break",
+          "name": "没羽穿甲",
+          "desc": "一石直取护甲接缝，对破甲或破势目标造成额外伤害。",
+          "target": "enemy",
+          "power": 1.28,
+          "poise": 35,
+          "yiqi": 28,
+          "cooldown": 3,
+          "ignoreRow": true,
+          "stone": true,
+          "armorBreakBonus": 1.35,
+          "brokenBonus": 1.45
+        },
+        {
+          "id": "zhang_ult",
+          "name": "漫天花雨",
+          "desc": "百石齐发覆盖敌阵，造成大量护势伤害，大概率破甲并震晕敌将。",
+          "target": "allEnemies",
+          "power": 0.96,
+          "poise": 34,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "stone": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.8
+            },
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.3
+            }
+          ]
+        }
+      ],
+      "bio": "东昌府骑将，能以石子连打梁山十五员头领，因而得名没羽箭。他的飞石不只在比谁手快，更在阵眼松动的一瞬，让整支官军先乱起来。"
+    },
+    "xuning": {
+      "id": "xuning",
+      "name": "徐宁",
+      "nickname": "金枪手",
+      "star": "天佑星",
+      "role": "前排钩镰破甲与阵线控制",
+      "path": "gang",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/xuning/cutout.png",
+      "keyart": "res://assets/characters/xuning/keyart.png",
+      "palette": "#8b743c",
+      "base": {
+        "hp": 462,
+        "atk": 58,
+        "def": 40,
+        "spd": 38
+      },
+      "passive": {
+        "name": "钩镰锁阵",
+        "desc": "每回合首次钩镰招式命中时，倒钩会扯向另一名敌人，造成 34% 伤害、10 护势伤害并破甲；若原目标已经破甲，徐宁获得 6 义气。",
+        "effects": {
+          "hookSplashPowerPct": 0.34,
+          "hookSplashPoise": 10,
+          "hookArmorBreakYiqi": 6
+        }
+      },
+      "skills": [
+        {
+          "id": "xu_basic",
+          "name": "雁翎钩镰",
+          "desc": "横枪钩住前阵甲绦，造成伤害并大概率破甲。",
+          "target": "frontEnemy",
+          "power": 0.96,
+          "poise": 22,
+          "yiqi": 22,
+          "basic": true,
+          "hook": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.7
+            }
+          ]
+        },
+        {
+          "id": "xu_drag",
+          "name": "倒钩锁马",
+          "desc": "倒钩拖住敌将，造成高额护势伤害；目标破甲时威力提高。",
+          "target": "enemy",
+          "power": 1.18,
+          "poise": 34,
+          "yiqi": 26,
+          "cooldown": 2,
+          "hook": true,
+          "armorBreakBonus": 1.35
+        },
+        {
+          "id": "xu_guard",
+          "name": "金枪立门",
+          "desc": "收枪守住阵门，自身获得 2 回合护御并恢复少量生命。",
+          "target": "self",
+          "power": 0,
+          "heal": 0.3,
+          "yiqi": 24,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "id": "xu_sweep",
+          "name": "雁翎连挑",
+          "desc": "连续两挑撕开前阵甲缝，每击都有机会破甲。",
+          "target": "frontEnemy",
+          "power": 0.58,
+          "hits": 2,
+          "poise": 16,
+          "yiqi": 27,
+          "cooldown": 3,
+          "hook": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.55
+            }
+          ]
+        },
+        {
+          "id": "xu_ult",
+          "name": "雁翎锁军",
+          "desc": "钩镰扫过敌阵，造成大量护势伤害，几乎全体破甲并使全队获得护御。",
+          "target": "allEnemies",
+          "power": 0.92,
+          "poise": 38,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "hook": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.9
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "bio": "东京禁军金枪班教头，家传钩镰枪法专破连环马阵。他珍视军令与规矩，却更清楚阵法的用途是护人，不是替权臣把百姓推上前线。"
+    },
+    "lijun": {
+      "id": "lijun",
+      "name": "李俊",
+      "nickname": "混江龙",
+      "star": "天寿星",
+      "role": "水战调度与群体护御",
+      "path": "tao",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/lijun/cutout.png",
+      "keyart": "res://assets/characters/lijun/keyart.png",
+      "palette": "#345f6f",
+      "base": {
+        "hp": 438,
+        "atk": 57,
+        "def": 38,
+        "spd": 49
+      },
+      "passive": {
+        "name": "混江潮信",
+        "desc": "每回合首次闪避后有 18% 基础概率引来潮信，为全队补充 6 义气并获得 1 层护御。",
+        "effects": {
+          "evadeChance": 0.18,
+          "evadeYiqi": 10,
+          "evadeTeamYiqi": 6,
+          "evadeTeamGuard": 1
+        }
+      },
+      "skills": [
+        {
+          "id": "li_basic",
+          "name": "分水龙叉",
+          "desc": "三股叉破浪直刺，45% 概率造成 2 回合流血。",
+          "target": "enemy",
+          "power": 0.94,
+          "poise": 16,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.45
+            }
+          ]
+        },
+        {
+          "id": "li_call",
+          "name": "水寨号令",
+          "desc": "调转船阵，全队获得 1 层护御与 14 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 26,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 14
+            }
+          ]
+        },
+        {
+          "id": "li_tide",
+          "name": "翻江倒海",
+          "desc": "潮头压向全体敌人，造成较高护势伤害并撕开阵甲。",
+          "target": "allEnemies",
+          "power": 0.69,
+          "poise": 25,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "id": "li_cut_rope",
+          "name": "断索夺舟",
+          "desc": "钩断前阵甲绦并拖倒目标，35% 概率眩晕 1 回合。",
+          "target": "frontEnemy",
+          "power": 1.22,
+          "poise": 34,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.35
+            }
+          ]
+        },
+        {
+          "id": "li_ult",
+          "name": "混江龙吟",
+          "desc": "整条水泊随号令起浪，重创全体敌人，并为全队续上护御与义气。",
+          "target": "allEnemies",
+          "power": 1.02,
+          "poise": 42,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.55
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "bio": "浔阳江上的水路总领，熟悉港汊、潮汐与私税船队的每一道暗门。他不喜欢空谈替天行道，更愿意先让一艘渔船平安靠岸。"
+    },
+    "ruanxiaoqi": {
+      "id": "ruanxiaoqi",
+      "name": "阮小七",
+      "nickname": "活阎罗",
+      "star": "天败星",
+      "role": "残血爆发与多段流血",
+      "path": "ling",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/ruanxiaoqi/cutout.png",
+      "keyart": "res://assets/characters/ruanxiaoqi/keyart.png",
+      "palette": "#477567",
+      "base": {
+        "hp": 392,
+        "atk": 63,
+        "def": 27,
+        "spd": 58
+      },
+      "passive": {
+        "name": "活阎罗",
+        "desc": "生命越低攻击越高，最多提高 42%；暴击时有 35% 概率附加 2 回合流血。",
+        "effects": {
+          "lowHpDamagePct": 0.42,
+          "bleedOnCritChance": 0.35
+        }
+      },
+      "skills": [
+        {
+          "id": "ruan_basic",
+          "name": "浪底双刃",
+          "desc": "双刃贴着水线连划，40% 概率附加流血。",
+          "target": "enemy",
+          "power": 0.88,
+          "poise": 14,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.4
+            }
+          ]
+        },
+        {
+          "id": "ruan_net",
+          "name": "撒网拿将",
+          "desc": "飞网罩住后阵，封穴 2 回合并削减其义气。",
+          "target": "backEnemy",
+          "power": 0.74,
+          "poise": 30,
+          "yiqi": 25,
+          "cooldown": 2,
+          "ignoreRow": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.8
+            },
+            {
+              "type": "stealYiqi",
+              "amount": 16
+            }
+          ]
+        },
+        {
+          "id": "ruan_wrath",
+          "name": "阎罗借命",
+          "desc": "割伤掌心换取攻势，自身获得 2 层鼓舞并恢复 20 义气。",
+          "target": "self",
+          "power": 0,
+          "heal": 0.08,
+          "yiqi": 20,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 20
+            }
+          ]
+        },
+        {
+          "id": "ruan_hunt",
+          "name": "夜叉追魂",
+          "desc": "追击生命最低的敌人，目标流血时威力提高 70%。",
+          "target": "lowestEnemy",
+          "power": 1.34,
+          "poise": 24,
+          "yiqi": 28,
+          "cooldown": 3,
+          "bleedBonus": 1.7,
+          "executeCrit": true
+        },
+        {
+          "id": "ruan_ult",
+          "name": "活阎罗闹江",
+          "desc": "三度穿透敌阵，逐次撕开流血的伤口，残血时伤害最高。",
+          "target": "allEnemies",
+          "power": 0.46,
+          "hits": 3,
+          "poise": 13,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.6
+            }
+          ]
+        }
+      ],
+      "bio": "石碣村的渔家少年，胆大、嘴硬，也最不肯向官船低头。兄长们讲价、讲势、讲退路，他只问这一网撒下去能不能把乡亲护在岸上。"
+    },
+    "sunerniang": {
+      "id": "sunerniang",
+      "name": "孙二娘",
+      "nickname": "母夜叉",
+      "star": "地壮星",
+      "role": "药控封锁与义气夺取",
+      "path": "tao",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/sunerniang/cutout.png",
+      "keyart": "res://assets/characters/sunerniang/keyart.png",
+      "palette": "#764b50",
+      "base": {
+        "hp": 404,
+        "atk": 55,
+        "def": 32,
+        "spd": 51
+      },
+      "passive": {
+        "name": "蒙汗药香",
+        "desc": "施加眩晕、封穴或破甲时额外造成 18 护势伤害；敌方负面状态延长 1 回合。",
+        "effects": {
+          "controlPoisePct": 0.3,
+          "statusDurationBonus": 1
+        }
+      },
+      "skills": [
+        {
+          "id": "sun_basic",
+          "name": "夜叉剔骨",
+          "desc": "药刀贴身削甲，50% 概率造成 2 回合破甲。",
+          "target": "enemy",
+          "power": 0.88,
+          "poise": 18,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "id": "sun_powder",
+          "name": "蒙汗迷烟",
+          "desc": "药烟覆盖全体敌人，降低护势并大概率封穴。",
+          "target": "allEnemies",
+          "power": 0.48,
+          "poise": 23,
+          "yiqi": 25,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.65
+            }
+          ]
+        },
+        {
+          "id": "sun_soup",
+          "name": "三鲜药羹",
+          "desc": "给药汤补气，治疗全队并净化负面状态。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.62,
+          "yiqi": 24,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamCleanse"
+            }
+          ]
+        },
+        {
+          "id": "sun_take",
+          "name": "夺魂药刀",
+          "desc": "割断敌将气脉，夺取 20 义气并附加流血。",
+          "target": "enemy",
+          "power": 1.08,
+          "poise": 24,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "stealYiqi",
+              "amount": 20
+            },
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.8
+            }
+          ]
+        },
+        {
+          "id": "sun_ult",
+          "name": "人肉作坊今不在",
+          "desc": "旧黑店的规矩被反用来对付贪官，药雾重伤全体敌人、封穴并夺走义气。",
+          "target": "allEnemies",
+          "power": 0.9,
+          "poise": 36,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.9
+            },
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.7
+            },
+            {
+              "type": "stealYiqi",
+              "amount": 20
+            }
+          ]
+        }
+      ],
+      "bio": "十字坡黑店的当家娘子，看人极准，刀与药都不留情。她见过最坏的人心，因此更在意一张桌上谁有资格先动筷。"
+    },
+    "gudashao": {
+      "id": "gudashao",
+      "name": "顾大嫂",
+      "nickname": "母大虫",
+      "star": "地阴星",
+      "role": "前阵反击与全队守门",
+      "path": "shou",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/gudashao/cutout.png",
+      "keyart": "res://assets/characters/gudashao/keyart.png",
+      "palette": "#5e6843",
+      "base": {
+        "hp": 548,
+        "atk": 54,
+        "def": 49,
+        "spd": 31
+      },
+      "passive": {
+        "name": "母大虫守门",
+        "desc": "处在前阵时受击有 38% 概率以铁门闩反击，追加 18 护势伤害并在反击后获得 1 层护御。",
+        "effects": {
+          "counterChance": 0.38,
+          "counterRow": 0,
+          "counterGuard": 1,
+          "counterPoise": 18
+        }
+      },
+      "skills": [
+        {
+          "id": "gu_basic",
+          "name": "门闩横扫",
+          "desc": "铁门闩横扫前阵，造成较高护势伤害。",
+          "target": "frontEnemy",
+          "power": 0.93,
+          "poise": 27,
+          "yiqi": 22,
+          "basic": true
+        },
+        {
+          "id": "gu_guard",
+          "name": "关门落闩",
+          "desc": "全队获得 2 层护御，自身恢复少量生命。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.28,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "id": "gu_challenge",
+          "name": "虎娘叫阵",
+          "desc": "重击单体并大概率眩晕，自身获得鼓舞。",
+          "target": "enemy",
+          "power": 1.14,
+          "poise": 30,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.45
+            },
+            {
+              "type": "selfStatus",
+              "status": "inspiration",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "gu_counter",
+          "name": "开门迎贼",
+          "desc": "故意露出阵门，自身获得 2 层护御并立即补充 26 义气。",
+          "target": "self",
+          "power": 0,
+          "yiqi": 24,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 26
+            }
+          ]
+        },
+        {
+          "id": "gu_ult",
+          "name": "大虫镇店",
+          "desc": "铁闩砸裂敌阵，重创全体敌人；全队获得护御与鼓舞。",
+          "target": "allEnemies",
+          "power": 0.94,
+          "poise": 44,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "bio": "登州山店的女主人，敢掀桌，也敢劫牢。她判断一个人从不先听名号，只看对方愿不愿意为桌边的人担事。"
+    },
+    "lingzhen": {
+      "id": "lingzhen",
+      "name": "凌振",
+      "nickname": "轰天雷",
+      "star": "地轴星",
+      "role": "后排炮火与群体震晕",
+      "path": "gang",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/lingzhen/cutout.png",
+      "keyart": "res://assets/characters/lingzhen/keyart.png",
+      "palette": "#71604b",
+      "base": {
+        "hp": 358,
+        "atk": 72,
+        "def": 29,
+        "spd": 37
+      },
+      "passive": {
+        "name": "轰天雷",
+        "desc": "炮火招式的护势伤害提高 35%，并有 14% 概率震晕未被破势的敌人。",
+        "effects": {
+          "artilleryPoisePct": 0.35,
+          "bombStunChance": 0.14,
+          "controlPoisePct": 0.12
+        }
+      },
+      "skills": [
+        {
+          "id": "ling_basic",
+          "name": "震天雷",
+          "desc": "掷出铁壳雷炮，造成范围伤害与较高护势伤害。",
+          "target": "allEnemies",
+          "power": 0.63,
+          "poise": 25,
+          "yiqi": 23,
+          "basic": true,
+          "bomb": true
+        },
+        {
+          "id": "ling_fuse",
+          "name": "三线延时",
+          "desc": "精准轰击单体，大概率破甲并震晕。",
+          "target": "enemy",
+          "power": 1.34,
+          "poise": 38,
+          "yiqi": 26,
+          "cooldown": 2,
+          "bomb": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.8
+            },
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.3
+            }
+          ]
+        },
+        {
+          "id": "ling_smoke",
+          "name": "硝烟障目",
+          "desc": "引爆烟罐遮住敌阵，全队获得 1 层护御并补充 12 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 25,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 12
+            }
+          ]
+        },
+        {
+          "id": "ling_chain",
+          "name": "子母连炮",
+          "desc": "连续两次轰击全体敌人，逐次压垮护势。",
+          "target": "allEnemies",
+          "power": 0.5,
+          "hits": 2,
+          "poise": 18,
+          "yiqi": 28,
+          "cooldown": 3,
+          "bomb": true
+        },
+        {
+          "id": "ling_ult",
+          "name": "轰天雷阵",
+          "desc": "整座炮架齐鸣，全体敌人受到重创，高概率破甲与眩晕。",
+          "target": "allEnemies",
+          "power": 1.28,
+          "poise": 56,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "bomb": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.9
+            },
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.45
+            }
+          ]
+        }
+      ],
+      "bio": "北宋军中少见的火炮匠师，能算药量，也能算城墙倒下时该往哪边偏。他曾经替官军造雷，如今只替不肯再被城头压住的人点火。"
+    },
+    "huyanzhuo": {
+      "id": "huyanzhuo",
+      "name": "呼延灼",
+      "nickname": "双鞭",
+      "star": "天威星",
+      "role": "重甲连环与正面破阵",
+      "path": "gang",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/huyanzhuo/cutout.png",
+      "keyart": "res://assets/characters/huyanzhuo/keyart.png",
+      "palette": "#5c5966",
+      "base": {
+        "hp": 528,
+        "atk": 64,
+        "def": 47,
+        "spd": 34
+      },
+      "passive": {
+        "name": "连环马阵",
+        "desc": "全体招式护势伤害提高 18%；生命高于 80% 时，双鞭伤害再提高 16%。",
+        "effects": {
+          "allEnemiesPoisePct": 0.18,
+          "fullHpDamagePct": 0.16
+        }
+      },
+      "skills": [
+        {
+          "id": "hu_basic",
+          "name": "双鞭压阵",
+          "desc": "重鞭压下前阵，造成高额护势伤害并有机会破甲。",
+          "target": "frontEnemy",
+          "power": 0.96,
+          "poise": 27,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "id": "hu_chain",
+          "name": "连环马踏",
+          "desc": "重甲骑阵连续两次踏过全体敌人。",
+          "target": "allEnemies",
+          "power": 0.51,
+          "hits": 2,
+          "poise": 22,
+          "yiqi": 27,
+          "cooldown": 3
+        },
+        {
+          "id": "hu_guard",
+          "name": "铁甲横门",
+          "desc": "横鞭守住阵门，自身获得 2 层护御并恢复生命。",
+          "target": "self",
+          "power": 0,
+          "heal": 0.38,
+          "yiqi": 24,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "id": "hu_stun",
+          "name": "双龙震将",
+          "desc": "双鞭夹击单体，造成大量护势伤害并眩晕目标。",
+          "target": "enemy",
+          "power": 1.3,
+          "poise": 42,
+          "yiqi": 29,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.42
+            }
+          ]
+        },
+        {
+          "id": "hu_ult",
+          "name": "连环马破梁山",
+          "desc": "旧日攻山杀阵被反转为护阵冲阵，全体敌人受创、破甲并被震慑。",
+          "target": "allEnemies",
+          "power": 1.08,
+          "poise": 48,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.72
+            },
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.25
+            },
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "bio": "开国名将呼延赞之后，治军严整，双鞭与连环马都曾让梁山吃了大苦头。兵败归义后，他把最擅长的冲阵重新用来替被围的人开路。"
+    },
+    "liutang": {
+      "id": "liutang",
+      "name": "刘唐",
+      "nickname": "赤发鬼",
+      "star": "天异星",
+      "role": "残血爆发与流血追击",
+      "path": "gang",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/liutang/cutout.png",
+      "keyart": "res://assets/characters/liutang/keyart.png",
+      "palette": "#8b4937",
+      "base": {
+        "hp": 424,
+        "atk": 66,
+        "def": 31,
+        "spd": 45
+      },
+      "passive": {
+        "name": "赤发拼命",
+        "desc": "生命越低刀势越猛，最多提高 38%；暴击时有 42% 概率附加 2 回合流血。",
+        "effects": {
+          "lowHpDamagePct": 0.38,
+          "bleedOnCritChance": 0.42
+        }
+      },
+      "skills": [
+        {
+          "id": "liutang_basic",
+          "name": "赤发拖刀",
+          "desc": "贴地拖刀后猛然上撩，55% 概率造成 2 回合流血。",
+          "target": "enemy",
+          "power": 0.94,
+          "poise": 17,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.55
+            }
+          ]
+        },
+        {
+          "id": "liutang_break",
+          "name": "断索夺路",
+          "desc": "厚背刀劈开前阵甲绦，造成高额护势伤害并大概率破甲。",
+          "target": "frontEnemy",
+          "power": 1.08,
+          "poise": 31,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.7
+            }
+          ]
+        },
+        {
+          "id": "liutang_oath",
+          "name": "酒旗血战",
+          "desc": "扯下酒旗裹住伤臂，自身获得鼓舞与护御，并补回 22 义气。",
+          "target": "self",
+          "power": 0,
+          "yiqi": 20,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 22
+            }
+          ]
+        },
+        {
+          "id": "liutang_chase",
+          "name": "夜走郓城",
+          "desc": "突袭生命最低的敌人，目标流血时威力提高 65%。",
+          "target": "lowestEnemy",
+          "power": 1.34,
+          "poise": 24,
+          "yiqi": 28,
+          "cooldown": 3,
+          "bleedBonus": 1.65,
+          "executeCrit": true
+        },
+        {
+          "id": "liutang_ult",
+          "name": "赤发鬼烧营",
+          "desc": "三度穿过敌阵，逐刀撕开伤口，并留下持续流血。",
+          "target": "allEnemies",
+          "power": 0.49,
+          "hits": 3,
+          "poise": 14,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.62
+            }
+          ]
+        }
+      ],
+      "bio": "东潞州江湖客，因鬓边赤发和不要命的刀法被称为赤发鬼。他送出的那封生辰纲消息点燃了梁山的第一把火，也始终相信，官府的账本必须有人亲手翻开。"
+    },
+    "zhutong": {
+      "id": "zhutong",
+      "name": "朱仝",
+      "nickname": "美髯公",
+      "star": "天满星",
+      "role": "守囚援护与全队回护",
+      "path": "shou",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/zhutong/cutout.png",
+      "keyart": "res://assets/characters/zhutong/keyart.png",
+      "palette": "#496b80",
+      "base": {
+        "hp": 516,
+        "atk": 54,
+        "def": 46,
+        "spd": 37
+      },
+      "passive": {
+        "name": "美髯公护囚",
+        "desc": "处在前阵时受击有 32% 概率拖刀反击，获得 1 层护御并替生命最低的队友恢复 3% 生命。",
+        "effects": {
+          "counterChance": 0.32,
+          "counterRow": 0,
+          "counterGuard": 1,
+          "counterHealPct": 0.03
+        }
+      },
+      "skills": [
+        {
+          "id": "zhutong_basic",
+          "name": "郓城拖刀",
+          "desc": "拖刀横斩前阵，造成稳定伤害并削减护势。",
+          "target": "frontEnemy",
+          "power": 0.91,
+          "poise": 24,
+          "yiqi": 22,
+          "basic": true
+        },
+        {
+          "id": "zhutong_release",
+          "name": "开门义释",
+          "desc": "替全队卸去枷锁，治疗并净化负面状态。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.46,
+          "yiqi": 25,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamCleanse"
+            }
+          ]
+        },
+        {
+          "id": "zhutong_guard",
+          "name": "横刀守门",
+          "desc": "横刀挡在阵门前，全队获得 1 层护御，自身恢复生命。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.25,
+          "yiqi": 25,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "zhutong_cut",
+          "name": "义令断枷",
+          "desc": "以刀背震开敌将甲锁，破甲并夺取 14 义气。",
+          "target": "enemy",
+          "power": 1.04,
+          "poise": 27,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.72
+            },
+            {
+              "type": "stealYiqi",
+              "amount": 14
+            }
+          ]
+        },
+        {
+          "id": "zhutong_ult",
+          "name": "朱门义释",
+          "desc": "打开旧牢门，治疗全队、净化伤势，并让所有人获得护御与鼓舞。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.58,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "teamCleanse"
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "bio": "郓城县马兵都头，重情面更重活路。雷横失手后，他宁可丢掉官职也打开牢门；沧州小衙内一事则成为他最难放下的旧债。他的刀始终在问，官府守的是规矩，还是规矩背后的人。"
+    },
+    "leiheng": {
+      "id": "leiheng",
+      "name": "雷横",
+      "nickname": "插翅虎",
+      "star": "天退星",
+      "role": "控制追击与破甲反击",
+      "path": "gang",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/leiheng/cutout.png",
+      "keyart": "res://assets/characters/leiheng/keyart.png",
+      "palette": "#66624f",
+      "base": {
+        "hp": 472,
+        "atk": 61,
+        "def": 39,
+        "spd": 40
+      },
+      "passive": {
+        "name": "插翅虎跃",
+        "desc": "受击时有 26% 概率以铁棍反击，反击有 35% 概率撕开目标护甲。",
+        "effects": {
+          "counterChance": 0.26,
+          "counterArmorBreakChance": 0.35,
+          "counterPoise": 12
+        }
+      },
+      "skills": [
+        {
+          "id": "leiheng_basic",
+          "name": "虎尾扫堂",
+          "desc": "铁棍扫腿，25% 概率震晕目标。",
+          "target": "enemy",
+          "power": 0.9,
+          "poise": 22,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.25
+            }
+          ]
+        },
+        {
+          "id": "leiheng_leap",
+          "name": "跃城追捕",
+          "desc": "越过前阵直取后排，将其拖回阵中并破甲。",
+          "target": "backEnemy",
+          "power": 1.16,
+          "poise": 28,
+          "yiqi": 26,
+          "cooldown": 2,
+          "ignoreRow": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.62
+            }
+          ]
+        },
+        {
+          "id": "leiheng_sweep",
+          "name": "雷声压街",
+          "desc": "长棍横扫全体敌人，削减护势并震乱出手节奏。",
+          "target": "allEnemies",
+          "power": 0.64,
+          "poise": 24,
+          "yiqi": 26,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.18
+            }
+          ]
+        },
+        {
+          "id": "leiheng_gate",
+          "name": "虎跃夺门",
+          "desc": "撞开前阵并封住敌将气脉，自身获得护御。",
+          "target": "frontEnemy",
+          "power": 1.12,
+          "poise": 34,
+          "yiqi": 28,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.55
+            },
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "leiheng_ult",
+          "name": "插翅虎破狱",
+          "desc": "跃过整条敌阵，连续两次砸落铁棍，重创护势并震晕敌将。",
+          "target": "allEnemies",
+          "power": 0.68,
+          "hits": 2,
+          "poise": 28,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.7
+            },
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.28
+            }
+          ]
+        }
+      ],
+      "bio": "郓城县步兵都头，性急而重孝，能一跃过城，也能为母亲的一顿席面与人拼命。枷锁与官身曾让他站在梁山对面，直到他终于明白，都头的棍也可以先砸开官差锁住的门。"
+    },
+    "liying": {
+      "id": "liying",
+      "name": "李应",
+      "nickname": "扑天雕",
+      "star": "天富星",
+      "role": "后排飞刃与庄园调度",
+      "path": "ling",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/liying/cutout.png",
+      "keyart": "res://assets/characters/liying/keyart.png",
+      "palette": "#4f705d",
+      "base": {
+        "hp": 392,
+        "atk": 66,
+        "def": 30,
+        "spd": 54
+      },
+      "passive": {
+        "name": "扑天雕眼",
+        "desc": "飞刃无视站位；每回合首次攻击满血敌人时伤害提高 22%，暴击后夺取 8 义气。",
+        "effects": {
+          "ignoreRow": true,
+          "fullHpDamagePct": 0.22,
+          "critYiqi": 8
+        }
+      },
+      "skills": [
+        {
+          "id": "liying_basic",
+          "name": "袖中飞刃",
+          "desc": "短刃越过前阵直取后排，35% 概率破甲。",
+          "target": "backEnemy",
+          "power": 0.95,
+          "poise": 18,
+          "yiqi": 22,
+          "basic": true,
+          "ignoreRow": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.35
+            }
+          ]
+        },
+        {
+          "id": "liying_fan",
+          "name": "五口连掷",
+          "desc": "五口飞刃依次越过阵线，攻击全体敌人并削减护势。",
+          "target": "allEnemies",
+          "power": 0.63,
+          "poise": 21,
+          "yiqi": 26,
+          "cooldown": 3,
+          "ignoreRow": true
+        },
+        {
+          "id": "liying_manor",
+          "name": "庄客列阵",
+          "desc": "敲响庄园铜铃，全队获得 12 义气与 1 层护御。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 25,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 12
+            }
+          ]
+        },
+        {
+          "id": "liying_mark",
+          "name": "雕眼寻隙",
+          "desc": "盯住生命最低的敌人掷出重刃，目标破甲时必定暴击。",
+          "target": "lowestEnemy",
+          "power": 1.38,
+          "poise": 24,
+          "yiqi": 28,
+          "cooldown": 3,
+          "ignoreRow": true,
+          "armorBreakBonus": 1.4,
+          "executeCrit": true
+        },
+        {
+          "id": "liying_ult",
+          "name": "扑天雕落",
+          "desc": "飞刃如群雕掠阵，重创全体敌人并留下破甲与流血。",
+          "target": "allEnemies",
+          "power": 1.04,
+          "poise": 38,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "ignoreRow": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.72
+            },
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.5
+            }
+          ]
+        }
+      ],
+      "bio": "独龙冈李家庄主，善使飞刀，也善算一庄粮仓能撑多少户人家。他被旧交与官府一同逼上梁山后，仍把庄园账册带在身边，提醒众人聚义不只是分金银，更要学会把粮食分到最后一户。"
+    },
+    "jiezhen": {
+      "id": "jiezhen",
+      "name": "解珍",
+      "nickname": "两头蛇",
+      "star": "天暴星",
+      "role": "后排猎杀与破甲穿透",
+      "path": "ling",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/jiezhen/cutout.png",
+      "keyart": "res://assets/characters/jiezhen/keyart.png",
+      "palette": "#4d7159",
+      "base": {
+        "hp": 408,
+        "atk": 62,
+        "def": 30,
+        "spd": 55
+      },
+      "passive": {
+        "name": "两头蛇寻踪",
+        "desc": "猎矛无视站位，攻击破甲或流血目标时伤害提高 18%；击杀后自身获得护御。",
+        "effects": {
+          "ignoreRow": true,
+          "armorBreakDamagePct": 0.18,
+          "bleedDamagePct": 0.18,
+          "killGuard": 1
+        }
+      },
+      "skills": [
+        {
+          "id": "jiezhen_basic",
+          "name": "蛇信钩矛",
+          "desc": "钩矛探入敌阵，优先刺击后排并造成流血。",
+          "target": "backEnemy",
+          "power": 0.92,
+          "poise": 17,
+          "yiqi": 22,
+          "basic": true,
+          "ignoreRow": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.48
+            }
+          ]
+        },
+        {
+          "id": "jiezhen_bridge",
+          "name": "索桥伏杀",
+          "desc": "借登山索越阵，钩开敌甲并封住退路。",
+          "target": "backEnemy",
+          "power": 1.18,
+          "poise": 27,
+          "yiqi": 26,
+          "cooldown": 2,
+          "ignoreRow": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.68
+            }
+          ]
+        },
+        {
+          "id": "jiezhen_climb",
+          "name": "蛇形上山",
+          "desc": "沿阵线翻至高处，自身获得 2 层护御并补回 20 义气。",
+          "target": "self",
+          "power": 0,
+          "yiqi": 22,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 20
+            }
+          ]
+        },
+        {
+          "id": "jiezhen_hunt",
+          "name": "双钩裂甲",
+          "desc": "双钩夹住前阵甲片猛然后扯，造成大量护势伤害。",
+          "target": "frontEnemy",
+          "power": 1.28,
+          "poise": 38,
+          "yiqi": 28,
+          "cooldown": 3,
+          "armorBreakBonus": 1.45
+        },
+        {
+          "id": "jiezhen_ult",
+          "name": "登州双蛇阵",
+          "desc": "与山中猎阵合围，连续钩穿敌阵并布下流血与眩晕。",
+          "target": "allEnemies",
+          "power": 0.7,
+          "hits": 2,
+          "poise": 26,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "ignoreRow": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.62
+            },
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.18
+            }
+          ]
+        }
+      ],
+      "bio": "登州山中的猎户兄长，熟悉每一条兽径与崖缝。他与解宝因虎皮遭豪绅陷害，劫牢反出登州；从此兄弟二人把最擅长追兽的本事，用来追踪那些躲在官府背后吃人的恶徒。"
+    },
+    "jiebao": {
+      "id": "jiebao",
+      "name": "解宝",
+      "nickname": "双尾蝎",
+      "star": "天哭星",
+      "role": "前阵夹击与反击破甲",
+      "path": "gang",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/jiebao/cutout.png",
+      "keyart": "res://assets/characters/jiebao/keyart.png",
+      "palette": "#6c6640",
+      "base": {
+        "hp": 452,
+        "atk": 64,
+        "def": 34,
+        "spd": 42
+      },
+      "passive": {
+        "name": "双尾蝎夹击",
+        "desc": "受击时有 24% 概率以猎叉反击，反击附加 14 护势伤害，30% 概率破甲。",
+        "effects": {
+          "counterChance": 0.24,
+          "counterPoise": 14,
+          "counterArmorBreakChance": 0.3
+        }
+      },
+      "skills": [
+        {
+          "id": "jiebao_basic",
+          "name": "蝎尾夹叉",
+          "desc": "三股猎叉夹住前阵甲叶，造成较高护势伤害。",
+          "target": "frontEnemy",
+          "power": 0.95,
+          "poise": 27,
+          "yiqi": 22,
+          "basic": true
+        },
+        {
+          "id": "jiebao_trap",
+          "name": "兽夹伏阵",
+          "desc": "在敌阵前布下铁夹，攻击全体并大概率破势。",
+          "target": "allEnemies",
+          "power": 0.62,
+          "poise": 27,
+          "yiqi": 26,
+          "cooldown": 3
+        },
+        {
+          "id": "jiebao_brace",
+          "name": "索甲横身",
+          "desc": "以登山索缠紧护胸，自身获得护御并恢复生命。",
+          "target": "self",
+          "power": 0,
+          "heal": 0.32,
+          "yiqi": 23,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "id": "jiebao_pin",
+          "name": "双尾封喉",
+          "desc": "猎叉锁住敌将兵刃，30% 概率封穴，破甲目标受到额外伤害。",
+          "target": "enemy",
+          "power": 1.26,
+          "poise": 32,
+          "yiqi": 28,
+          "cooldown": 3,
+          "armorBreakBonus": 1.48,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.3
+            }
+          ]
+        },
+        {
+          "id": "jiebao_ult",
+          "name": "双尾蝎翻山",
+          "desc": "从阵侧翻入敌后，连续两次夹碎甲阵，并为全队续上护御。",
+          "target": "allEnemies",
+          "power": 0.72,
+          "hits": 2,
+          "poise": 30,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.66
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "bio": "解珍之弟，性子比兄长更直，猎叉落下时却同样知道该给猎物留哪条路。登州牢狱让他第一次明白，百姓若没有自己的甲和猎叉，就只能任人写成盗贼。"
+    },
+    "yangxiong": {
+      "id": "yangxiong",
+      "name": "杨雄",
+      "nickname": "病关索",
+      "star": "天牢星",
+      "role": "前阵法刀与反击破甲",
+      "path": "shou",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/yangxiong/cutout.png",
+      "keyart": "res://assets/characters/yangxiong/keyart.png",
+      "palette": "#725047",
+      "base": {
+        "hp": 468,
+        "atk": 59,
+        "def": 42,
+        "spd": 38
+      },
+      "passive": {
+        "name": "病关索法刀",
+        "desc": "受击时有 18% 概率反击；反击有 45% 概率破甲，并为自身补回 8 义气。",
+        "effects": {
+          "counterChance": 0.18,
+          "counterPoise": 10,
+          "counterArmorBreakChance": 0.45,
+          "counterYiqi": 8
+        }
+      },
+      "skills": [
+        {
+          "id": "yangxiong_basic",
+          "name": "法刀断锁",
+          "desc": "横斩前阵敌人，35% 概率破甲 1 回合。",
+          "target": "frontEnemy",
+          "power": 0.94,
+          "poise": 19,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.35
+            }
+          ]
+        },
+        {
+          "id": "yangxiong_chain",
+          "name": "铁臂锁刀",
+          "desc": "以刀背压住敌械并封穴，自身获得 1 层护御。",
+          "target": "enemy",
+          "power": 1.1,
+          "poise": 24,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.48
+            },
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "yangxiong_prison",
+          "name": "天牢开锁",
+          "desc": "横扫整条敌阵，削减护势并让全队获得护御。",
+          "target": "allEnemies",
+          "power": 0.62,
+          "poise": 25,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "yangxiong_verdict",
+          "name": "病关索索命",
+          "desc": "追杀生命最低的敌人，对破甲目标威力提高。",
+          "target": "lowestEnemy",
+          "power": 1.34,
+          "poise": 28,
+          "yiqi": 28,
+          "cooldown": 3,
+          "armorBreakBonus": 1.5,
+          "executeBonus": 1.35
+        },
+        {
+          "id": "yangxiong_ult",
+          "name": "蓟州夜决",
+          "desc": "法刀与铁臂连番压下，重创全体敌人，破甲前阵并为全队续起护御。",
+          "target": "allEnemies",
+          "power": 0.86,
+          "hits": 2,
+          "poise": 24,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.7
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "bio": "蓟州牢城押狱兼行刑刽子，刀下见过太多无姓之人。妻子被辱、石秀拔刀之后，他终于不再替官府的判词握刀，而是开始替活人追问那张判词究竟是谁写的。"
+    },
+    "shixiu": {
+      "id": "shixiu",
+      "name": "石秀",
+      "nickname": "拼命三郎",
+      "star": "天慧星",
+      "role": "越阵追击与残血处决",
+      "path": "ling",
+      "preferred_row": 1,
+      "cutout": "res://assets/characters/shixiu/cutout.png",
+      "keyart": "res://assets/characters/shixiu/keyart.png",
+      "palette": "#3e6271",
+      "base": {
+        "hp": 392,
+        "atk": 66,
+        "def": 27,
+        "spd": 56
+      },
+      "passive": {
+        "name": "拼命三郎",
+        "desc": "生命越低伤害越高，最高提高 42%；击杀后恢复 8% 生命并获得 1 层护御。",
+        "effects": {
+          "lowHpDamagePct": 0.42,
+          "killHealPct": 0.08,
+          "killGuard": 1
+        }
+      },
+      "skills": [
+        {
+          "id": "shixiu_basic",
+          "name": "窄巷拼命刀",
+          "desc": "越过阵线追斩后排，35% 概率造成流血。",
+          "target": "backEnemy",
+          "power": 0.96,
+          "poise": 16,
+          "yiqi": 22,
+          "basic": true,
+          "ignoreRow": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.35
+            }
+          ]
+        },
+        {
+          "id": "shixiu_climb",
+          "name": "盘墙索镖",
+          "desc": "借索镖翻上屋脊，攻击全体敌人并削减后阵护势。",
+          "target": "allEnemies",
+          "power": 0.64,
+          "poise": 22,
+          "yiqi": 25,
+          "cooldown": 3,
+          "ignoreRow": true,
+          "rowBonus": {
+            "2": 1.2
+          }
+        },
+        {
+          "id": "shixiu_desperate",
+          "name": "三郎搏命",
+          "desc": "以伤口换取出刀机会，攻击大幅提高，但自身失去 5% 当前生命。",
+          "target": "enemy",
+          "power": 1.42,
+          "poise": 24,
+          "yiqi": 27,
+          "cooldown": 3,
+          "selfDamagePct": 0.05
+        },
+        {
+          "id": "shixiu_execute",
+          "name": "楼窗断影",
+          "desc": "锁定生命最低的敌人追击，残血目标必定承受暴击判定。",
+          "target": "lowestEnemy",
+          "power": 1.28,
+          "poise": 26,
+          "yiqi": 28,
+          "cooldown": 3,
+          "ignoreRow": true,
+          "executeCrit": true,
+          "executeBonus": 1.7
+        },
+        {
+          "id": "shixiu_ult",
+          "name": "拼命三郎破楼",
+          "desc": "连续三次越阵追斩，最后一刀必定暴击，并在破敌后立刻回气。",
+          "target": "lowestEnemy",
+          "power": 0.82,
+          "hits": 3,
+          "poise": 18,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "ignoreRow": true,
+          "finalCrit": true
+        }
+      ],
+      "bio": "流落蓟州街巷的卖柴人，眼里容不得半点仗势欺人。为杨雄拔刀、为真相潜入祝家庄，他从不先算自己有几条命，只先问这一刀是否应该落下。"
+    },
+    "sunli": {
+      "id": "sunli",
+      "name": "孙立",
+      "nickname": "病尉迟",
+      "star": "地勇星",
+      "role": "前阵铁壁与反击控场",
+      "path": "shou",
+      "preferred_row": 0,
+      "cutout": "res://assets/characters/sunli/cutout.png",
+      "keyart": "res://assets/characters/sunli/keyart.png",
+      "palette": "#50677b",
+      "base": {
+        "hp": 492,
+        "atk": 60,
+        "def": 47,
+        "spd": 35
+      },
+      "passive": {
+        "name": "登州铁军",
+        "desc": "受击时有 20% 概率以长枪反击；反击额外削减 12 护势，并有 35% 概率破甲。",
+        "effects": {
+          "counterChance": 0.2,
+          "counterPoise": 12,
+          "counterArmorBreakChance": 0.35
+        }
+      },
+      "skills": [
+        {
+          "id": "sunli_basic",
+          "name": "尉迟压枪",
+          "desc": "压住前阵长兵，造成护势伤害并大概率破甲。",
+          "target": "frontEnemy",
+          "power": 0.96,
+          "poise": 27,
+          "yiqi": 22,
+          "basic": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "id": "sunli_whip",
+          "name": "铁鞭换手",
+          "desc": "长枪虚刺后以铁鞭抽向敌阵，眩晕概率较高。",
+          "target": "enemy",
+          "power": 1.08,
+          "poise": 30,
+          "yiqi": 25,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.28
+            }
+          ]
+        },
+        {
+          "id": "sunli_gate",
+          "name": "登州镇门",
+          "desc": "横枪封门，全队获得护御，自身恢复 18 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 26,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 2
+            },
+            {
+              "type": "selfYiqi",
+              "amount": 18
+            }
+          ]
+        },
+        {
+          "id": "sunli_break",
+          "name": "病尉迟破阵",
+          "desc": "重击前阵并震裂整条敌线，对破甲目标额外增伤。",
+          "target": "allEnemies",
+          "power": 0.72,
+          "poise": 30,
+          "yiqi": 28,
+          "cooldown": 3,
+          "armorBreakBonus": 1.45,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.52
+            }
+          ]
+        },
+        {
+          "id": "sunli_ult",
+          "name": "登州铁门开",
+          "desc": "长枪与铁鞭连破前阵，重创全体敌人并为全队筑起护御。",
+          "target": "allEnemies",
+          "power": 0.92,
+          "poise": 36,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.68
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        }
+      ],
+      "bio": "登州驻军提辖，弓马熟娴，行事比同僚更沉。解珍、解宝蒙冤后，他没有替官府劝兄弟认命，而是把军令、亲族与百姓放在同一张桌上，选择站到能救人那一边。"
+    },
+    "yuehe": {
+      "id": "yuehe",
+      "name": "乐和",
+      "nickname": "铁叫子",
+      "star": "地乐星",
+      "role": "后排号令与全队回气",
+      "path": "tao",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/yuehe/cutout.png",
+      "keyart": "res://assets/characters/yuehe/keyart.png",
+      "palette": "#4d7667",
+      "base": {
+        "hp": 354,
+        "atk": 44,
+        "def": 28,
+        "spd": 54
+      },
+      "passive": {
+        "name": "铁叫子",
+        "desc": "开阵时全队额外获得 10 义气与 1 回合鼓舞。",
+        "effects": {
+          "teamStartYiqi": 10,
+          "teamOpeningInspiration": 1
+        }
+      },
+      "skills": [
+        {
+          "id": "yuehe_basic",
+          "name": "铁笛点穴",
+          "desc": "短笛掠过敌阵，为全队补充少量义气。",
+          "target": "enemy",
+          "power": 0.78,
+          "poise": 13,
+          "yiqi": 24,
+          "basic": true,
+          "effects": [
+            {
+              "type": "teamYiqi",
+              "amount": 7
+            }
+          ]
+        },
+        {
+          "id": "yuehe_call",
+          "name": "水调号子",
+          "desc": "吹响登州旧调，为全队补充 24 义气并给予鼓舞。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 24,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamYiqi",
+              "amount": 24
+            },
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "yuehe_heal",
+          "name": "一阕安歌",
+          "desc": "为生命最低的队友恢复生命并净化负面状态。",
+          "target": "ally",
+          "power": 0,
+          "heal": 0.55,
+          "yiqi": 24,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "targetCleanse"
+            },
+            {
+              "type": "targetYiqi",
+              "amount": 18
+            }
+          ]
+        },
+        {
+          "id": "yuehe_break",
+          "name": "铁笛破阵",
+          "desc": "笛声骤然转急，攻击全体敌人并震乱其护势。",
+          "target": "allEnemies",
+          "power": 0.58,
+          "poise": 27,
+          "yiqi": 26,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.16
+            }
+          ]
+        },
+        {
+          "id": "yuehe_ult",
+          "name": "登州夜号",
+          "desc": "一曲传遍水寨，为全队补满大量义气、恢复生命并施加两回合鼓舞。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.22,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "teamYiqi",
+              "amount": 35
+            },
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "bio": "登州牢城小牢子，生得伶俐，能唱善吹，也记得每一条山路的暗号。他看似只会热闹，真正入阵时却知道什么时候该敲鼓、什么时候该停声，让所有人听见彼此的脚步。"
+    },
+    "xiaorang": {
+      "id": "xiaorang",
+      "name": "萧让",
+      "nickname": "圣手书生",
+      "star": "地文星",
+      "role": "后排控阵与状态延展",
+      "path": "tao",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/xiaorang/cutout.png",
+      "keyart": "res://assets/characters/xiaorang/keyart.png",
+      "palette": "#56625f",
+      "base": {
+        "hp": 348,
+        "atk": 45,
+        "def": 29,
+        "spd": 45
+      },
+      "passive": {
+        "name": "圣手临文",
+        "desc": "萧让施加的破甲、流血、眩晕与封穴延长 1 回合，控制招式额外削减护势。",
+        "effects": {
+          "statusDurationBonus": 1,
+          "controlPoisePct": 0.16
+        }
+      },
+      "skills": [
+        {
+          "id": "xiaorang_basic",
+          "name": "判笔点朱",
+          "desc": "笔锋点向敌腕，造成伤害并削减护势。",
+          "target": "enemy",
+          "power": 0.84,
+          "poise": 23,
+          "yiqi": 22,
+          "basic": true
+        },
+        {
+          "id": "xiaorang_order",
+          "name": "临摹军令",
+          "desc": "以乱真军令扰乱敌阵，眩晕单体并封穴。",
+          "target": "enemy",
+          "power": 0.72,
+          "poise": 26,
+          "yiqi": 26,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.3
+            },
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.55
+            }
+          ]
+        },
+        {
+          "id": "xiaorang_copy",
+          "name": "伪檄乱阵",
+          "desc": "把假檄文散入敌阵，使全体敌人破甲并削减护势。",
+          "target": "allEnemies",
+          "power": 0.54,
+          "poise": 28,
+          "yiqi": 27,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.6
+            }
+          ]
+        },
+        {
+          "id": "xiaorang_banner",
+          "name": "一笔改旗",
+          "desc": "为全队施加鼓舞，并让生命最低的队友恢复 32 义气。",
+          "target": "allAllies",
+          "power": 0,
+          "yiqi": 26,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "lowestAllyYiqi",
+              "amount": 32
+            }
+          ]
+        },
+        {
+          "id": "xiaorang_ult",
+          "name": "天书改命",
+          "desc": "以巨笔横扫敌阵，造成流血与封穴，并让全队获得鼓舞。",
+          "target": "allEnemies",
+          "power": 0.78,
+          "poise": 32,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.7
+            },
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.45
+            },
+            {
+              "type": "teamStatus",
+              "status": "inspiration",
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "bio": "济州书生，能摹天下诸家笔迹，也能从一纸文书的墨色看出谁在说谎。被请上梁山后，他不再替权贵写漂亮的赦令，而是替不敢申冤的人把真相抄到每一面墙上。"
+    },
+    "jiangjing": {
+      "id": "jiangjing",
+      "name": "蒋敬",
+      "nickname": "神算子",
+      "star": "地会星",
+      "role": "后排破势与军需调度",
+      "path": "tao",
+      "preferred_row": 2,
+      "cutout": "res://assets/characters/jiangjing/cutout.png",
+      "keyart": "res://assets/characters/jiangjing/keyart.png",
+      "palette": "#6b7353",
+      "base": {
+        "hp": 382,
+        "atk": 47,
+        "def": 35,
+        "spd": 40
+      },
+      "passive": {
+        "name": "神算子",
+        "desc": "战斗开始时敌军护势已被削减 8%；全队护势伤害提高 10%。",
+        "effects": {
+          "enemyStartPoisePct": 0.08,
+          "teamPoisePct": 0.1
+        }
+      },
+      "skills": [
+        {
+          "id": "jiangjing_basic",
+          "name": "铁算盘",
+          "desc": "算珠扫向敌腕，稳定削减护势。",
+          "target": "enemy",
+          "power": 0.82,
+          "poise": 28,
+          "yiqi": 22,
+          "basic": true
+        },
+        {
+          "id": "jiangjing_balance",
+          "name": "两清账",
+          "desc": "核对敌阵虚实，使单体破甲并封穴。",
+          "target": "enemy",
+          "power": 0.72,
+          "poise": 32,
+          "yiqi": 26,
+          "cooldown": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.72
+            },
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 1,
+              "chance": 0.4
+            }
+          ]
+        },
+        {
+          "id": "jiangjing_supply",
+          "name": "军需调拨",
+          "desc": "把药、粮与护具送到最需要的位置，为全队补气并治疗最低生命队友。",
+          "target": "allAllies",
+          "power": 0,
+          "heal": 0.22,
+          "yiqi": 26,
+          "cooldown": 3,
+          "effects": [
+            {
+              "type": "teamYiqi",
+              "amount": 15
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "id": "jiangjing_audit",
+          "name": "清点破阵",
+          "desc": "以算盘敲出敌军阵脚弱点，重创全体护势并对破势目标追加伤害。",
+          "target": "allEnemies",
+          "power": 0.66,
+          "poise": 34,
+          "yiqi": 28,
+          "cooldown": 3,
+          "brokenBonus": 1.35
+        },
+        {
+          "id": "jiangjing_ult",
+          "name": "一册定军需",
+          "desc": "翻完总账，重创全体护势，为全队补气并让军阵重新站稳。",
+          "target": "allEnemies",
+          "power": 0.96,
+          "poise": 40,
+          "yiqiCost": 100,
+          "ultimate": true,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.5
+            },
+            {
+              "type": "teamYiqi",
+              "amount": 20
+            },
+            {
+              "type": "teamStatus",
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        }
+      ],
+      "bio": "精通书算与钱粮的潭州人，能把一座空仓算出一军还能走几天。上梁山后，他不把账本当作催粮的鞭子，而把它当作检验梁山是否真的替百姓守住每一粒米的秤。"
+    }
+  },
+  "chapters": [
+    {
+      "id": "ferry",
+      "index": 0,
+      "label": "第一回",
+      "title": "黄河夜渡",
+      "location": "黄河渡口",
+      "bg": "res://assets/environments/yellow_river_ferry.png",
+      "summary": "风雪压住河面，官差已封了渡口。林冲必须在天亮前过河，而一群流民正被挡在船外。",
+      "objective": "突破河岸封锁，结识鲁智深",
+      "par_rounds": 6,
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "沧州道上，林冲带着一纸休书与满身风雪来到黄河渡口。前方官差设卡，后方追骑未远。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "东京回不去了。若这条河也断，便只剩山中一条路。"
+        },
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "船家不渡官差追的人，倒肯渡没路可走的人。洒家这条船，正好还空着。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "你认得我？"
+        },
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "不认得。可那些拿水火棍的，总不会追一个好人。先上船，再讲道理。"
+        }
+      ],
+      "choice": {
+        "prompt": "河岸上的流民被官差拦住。林冲此刻应当如何？",
+        "options": [
+          {
+            "text": "折返救人，让鲁智深先撑船离岸。",
+            "effect": {
+              "brotherhood": 2
+            },
+            "response": "林冲提枪回身，把最靠近孩童的那名差役挑翻在地。鲁智深大笑一声，也跟着跳下船来。"
+          },
+          {
+            "text": "先夺下渡船，再借船势逼退官差。",
+            "effect": {
+              "freedom": 2
+            },
+            "response": "林冲没有恋战，而是一枪挑断缆绳。渡船顺水横摆，堵住岸口，流民趁乱拥上了船。"
+          }
+        ]
+      },
+      "battle": {
+        "enemies": [
+          {
+            "id": "runner",
+            "level": 1,
+            "row": 0
+          },
+          {
+            "id": "runner",
+            "level": 1,
+            "row": 1
+          }
+        ],
+        "reward": {
+          "copper": 140,
+          "xp": 120,
+          "item": "bamboo_token"
+        },
+        "recruit": [
+          "luzhishen"
+        ],
+        "boss": null
+      },
+      "outro": [
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "你这枪法不像逃命的人，像还在等一道军令的人。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "军令已经没有了。今夜之后，我只认自己这条命。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "渡船离岸。鲁智深把一壶冷酒塞到林冲手里。河对岸的灯火越来越远，梁山的方向却第一次有了轮廓。"
+        }
+      ]
+    },
+    {
+      "id": "bianjing",
+      "index": 1,
+      "label": "第二回",
+      "title": "东京雪夜",
+      "location": "东京汴梁",
+      "bg": "res://assets/environments/bianjing_snow_night.png",
+      "summary": "林冲要洗清冤屈，必须找到高俅陷害他的原始文书。戴宗送来了消息，时迁则带回了更危险的东西。",
+      "objective": "夺取诬告文书，结识戴宗与时迁",
+      "par_rounds": 7,
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "汴梁城门在雪中紧闭。戴宗借着驿路火牌带众人入城，时迁已经先一步翻进了开封府后衙。"
+        },
+        {
+          "speaker": "戴宗",
+          "portrait": "daizong",
+          "text": "文书在府尹手中，天亮前会送进禁军。我们只有一炷香。"
+        },
+        {
+          "speaker": "时迁",
+          "portrait": "shiqian",
+          "text": "东西我拿到了。不过顺手惊动了弓手。现在大概全城的差役都知道后衙进了贼。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "那不是贼。那是能证明高俅陷害禁军教头的官印文书。"
+        }
+      ],
+      "choice": {
+        "prompt": "伪造的诬告文书已经到手。下一步该怎样使用？",
+        "options": [
+          {
+            "text": "留下真文书，逼府尹当众承认冤案。",
+            "effect": {
+              "order": 2
+            },
+            "response": "戴宗把副本藏入驿袋。林冲决定留下原件，让府尹无法毁去证据，也让官府自己面对这道裂缝。"
+          },
+          {
+            "text": "带走证据，把真相交给梁山与百姓。",
+            "effect": {
+              "brotherhood": 1,
+              "freedom": 1
+            },
+            "response": "时迁抽出火折，点燃府衙案卷。真正的文书被塞进林冲怀中，虚假的罪证在雪夜里烧成灰。"
+          }
+        ]
+      },
+      "battle": {
+        "enemies": [
+          {
+            "id": "archer",
+            "level": 3,
+            "row": 2
+          },
+          {
+            "id": "runner",
+            "level": 3,
+            "row": 0
+          },
+          {
+            "id": "runner",
+            "level": 3,
+            "row": 1
+          }
+        ],
+        "reward": {
+          "copper": 230,
+          "xp": 240,
+          "item": "scout_boots"
+        },
+        "recruit": [
+          "daizong",
+          "shiqian"
+        ],
+        "boss": null
+      },
+      "outro": [
+        {
+          "speaker": "时迁",
+          "portrait": "shiqian",
+          "text": "我偷过金银，偷过印信，头一回偷出一张纸。你们这些讲道理的人，真麻烦。"
+        },
+        {
+          "speaker": "戴宗",
+          "portrait": "daizong",
+          "text": "纸不重。可今晚之后，高俅会知道有人能把他的罪证从后衙带出来。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "众人踏雪出城。林冲回头看了一眼宣德门，那里灯火通明，却没有一盏是为冤屈的人点的。"
+        }
+      ]
+    },
+    {
+      "id": "boar_forest",
+      "index": 2,
+      "label": "第三回",
+      "title": "野猪林伏杀",
+      "location": "野猪林",
+      "bg": "res://assets/environments/boar_forest.png",
+      "summary": "高俅派出的禁军教头在野猪林设伏。林中雪深路窄，退一步便是断崖。",
+      "objective": "击败禁军伏兵，结识武松",
+      "par_rounds": 8,
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "野猪林里没有野猪，只有披着官军甲胄的猎人。梆子声一响，三面火把同时亮起。"
+        },
+        {
+          "speaker": "禁军教头",
+          "text": "林教头，高太尉念旧，只要你交出文书，还可留个全尸。"
+        },
+        {
+          "speaker": "武松",
+          "portrait": "wusong",
+          "text": "雪夜杀人还要讲全尸，倒比景阳冈上的老虎客气。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "武都头，这趟浑水不该你来。"
+        },
+        {
+          "speaker": "武松",
+          "portrait": "wusong",
+          "text": "我从来只挑该杀的人，不问水浑不浑。"
+        }
+      ],
+      "choice": {
+        "prompt": "禁军结阵封住林间道路。该如何破局？",
+        "options": [
+          {
+            "text": "正面冲阵，替众人挡下第一轮枪锋。",
+            "effect": {
+              "brotherhood": 2,
+              "order": 1
+            },
+            "response": "林冲踏入雪地中央，枪尖压低。官军的火把被他一个人引向同一处，武松与鲁智深从侧翼撞入阵中。"
+          },
+          {
+            "text": "诱敌深入，让武松从断崖后包抄。",
+            "effect": {
+              "freedom": 1,
+              "order": 1
+            },
+            "response": "戴宗故意留下脚印，把教头引向结冰的溪谷。武松从断崖后落下，双刀在雪光里只闪了一次。"
+          }
+        ]
+      },
+      "battle": {
+        "enemies": [
+          {
+            "id": "instructor",
+            "level": 5,
+            "row": 0
+          },
+          {
+            "id": "archer",
+            "level": 5,
+            "row": 2
+          },
+          {
+            "id": "runner",
+            "level": 5,
+            "row": 1
+          }
+        ],
+        "reward": {
+          "copper": 330,
+          "xp": 380,
+          "item": "tiger_tooth"
+        },
+        "recruit": [
+          "wusong"
+        ],
+        "boss": null
+      },
+      "outro": [
+        {
+          "speaker": "武松",
+          "portrait": "wusong",
+          "text": "这教头会使禁军枪阵，却只会拿它堵死自己的退路。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "我也曾把军阵当作规矩。后来才明白，规矩若不问对错，只是杀人的刀鞘。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "火把渐渐熄在雪里。武松把从教头身上搜出的军令交给林冲，上面写着另一个名字：沧州押差。"
+        }
+      ]
+    },
+    {
+      "id": "cangzhou",
+      "index": 3,
+      "label": "第四回",
+      "title": "沧州药火",
+      "location": "沧州牢城",
+      "bg": "res://assets/environments/boar_forest.png",
+      "summary": "安道全被押差扣在牢城，以神医之术替权贵续命。梁山众人必须在药火熄灭前救出他。",
+      "objective": "攻入牢城药铺，结识安道全",
+      "par_rounds": 9,
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "沧州牢城深处有一间不被计入牢册的药铺。安道全被迫为押差首领调制续命药，门外守着刀手与弓手。"
+        },
+        {
+          "speaker": "安道全",
+          "portrait": "andaoquan",
+          "text": "药能救人，也能让恶人活得更久。今夜若再晚一步，这炉药便不只是药了。"
+        },
+        {
+          "speaker": "戴宗",
+          "portrait": "daizong",
+          "text": "药铺后门只能进一个人。我送时迁进去，前门交给你们。"
+        },
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "一炉药还要分前后门？洒家从正门进去，哪个不服，先问禅杖。"
+        }
+      ],
+      "choice": {
+        "prompt": "安道全仍在为押差炼药。应该优先做什么？",
+        "options": [
+          {
+            "text": "先救人，药炉与罪证都留到之后再算。",
+            "effect": {
+              "brotherhood": 2
+            },
+            "response": "林冲一枪挑开药铺门闩，武松背起安道全便走。药炉在身后炸裂，火光照亮整座牢城。"
+          },
+          {
+            "text": "让安道全继续炼药，借药香麻痹守军。",
+            "effect": {
+              "order": 1,
+              "freedom": 1
+            },
+            "response": "安道全悄悄换了最后一味药。白烟漫过门槛，守军还未拔刀便已四肢发软。"
+          }
+        ]
+      },
+      "battle": {
+        "enemies": [
+          {
+            "id": "instructor",
+            "level": 6,
+            "row": 0
+          },
+          {
+            "id": "archer",
+            "level": 6,
+            "row": 2
+          },
+          {
+            "id": "runner",
+            "level": 6,
+            "row": 1
+          }
+        ],
+        "reward": {
+          "copper": 460,
+          "xp": 480,
+          "item": "herb_satchel"
+        },
+        "recruit": [
+          "andaoquan"
+        ],
+        "boss": null
+      },
+      "outro": [
+        {
+          "speaker": "安道全",
+          "portrait": "andaoquan",
+          "text": "我救过官，也救过贼。你们若要我上山，先答应我一件事：梁山不能拿医术逼人。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "梁山若连这点都做不到，也就不配让你留下。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "众人带着安道全与半炉未熄的药火返回水泊。押差首领的军令已送到梁山，决战不会等到雪停。"
+        }
+      ]
+    },
+    {
+      "id": "qingfeng",
+      "index": 4,
+      "label": "第五回",
+      "title": "清风寨月箭",
+      "location": "青州清风寨",
+      "bg": "res://assets/environments/qingfeng_fort.png",
+      "summary": "宋江的书信被青州官府截获，花荣因此被诬为私通山贼。官军围住清风寨，只等天亮拿人。",
+      "objective": "击退青州官军，结识花荣",
+      "par_rounds": 10,
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "清风寨的号角在月色里连响三声。寨门外，青州官军已经封住山道，箭楼上却迟迟没有放箭。"
+        },
+        {
+          "speaker": "花荣",
+          "portrait": "huarong",
+          "text": "我若此时开弓，便坐实了私通梁山的罪名；若不开弓，寨中兄弟就要替我受缚。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "罪名不是一箭射出来的。今夜先保人，明日再问谁写了那张状纸。"
+        },
+        {
+          "speaker": "武松",
+          "portrait": "wusong",
+          "text": "绳子先留着。等看清是谁在背后写状纸，再决定绑谁。"
+        },
+        {
+          "speaker": "花荣",
+          "portrait": "huarong",
+          "text": "好。借你这句话，我把青州的第一盏号灯射下来。"
+        }
+      ],
+      "choice": {
+        "prompt": "花荣手中还有一封能证明清白、却会牵连宋江的书信。该如何处置？",
+        "options": [
+          {
+            "text": "把书信交给寨中兄弟，让所有人知道为何而战。",
+            "effect": {
+              "brotherhood": 2
+            },
+            "response": "花荣将书信钉在寨门，逐字念给众人听。原本犹豫的寨兵纷纷取下官军号旗，转身守上箭楼。"
+          },
+          {
+            "text": "烧掉书信，只以官府越界拿人作为迎战理由。",
+            "effect": {
+              "order": 1,
+              "freedom": 1
+            },
+            "response": "火折点亮，纸灰被夜风吹向寨外。花荣说，今夜不替某个人守寨，只替清风寨所有不想被罗织罪名的人守。"
+          }
+        ]
+      },
+      "battle": {
+        "enemies": [
+          {
+            "id": "instructor",
+            "level": 7,
+            "row": 0
+          },
+          {
+            "id": "archer",
+            "level": 7,
+            "row": 2
+          },
+          {
+            "id": "runner",
+            "level": 7,
+            "row": 1
+          }
+        ],
+        "reward": {
+          "copper": 560,
+          "xp": 560,
+          "item": "hawk_tassel"
+        },
+        "recruit": [
+          "huarong"
+        ],
+        "boss": null
+      },
+      "outro": [
+        {
+          "speaker": "花荣",
+          "portrait": "huarong",
+          "text": "我守过官寨，也见过官军的箭射向什么人。今夜之后，这张弓只认我自己的准星。"
+        },
+        {
+          "speaker": "李逵",
+          "portrait": "likui",
+          "text": "你这箭倒准，就是话多。下一回俺冲在前头，你在后头替俺看着谁想放冷箭。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "清风寨的号灯重新亮起，却没有再向青州城传讯。众人沿山路南下，江州传来了宋江即将问斩的消息。"
+        }
+      ]
+    },
+    {
+      "id": "jiangzhou",
+      "index": 5,
+      "label": "第六回",
+      "title": "江州劫法场",
+      "location": "江州法场",
+      "bg": "res://assets/environments/jiangzhou_execution.png",
+      "summary": "宋江被判斩刑，江州法场三步一岗。李逵已经藏进人群，梁山众人只有一次出手机会。",
+      "objective": "劫下法场，结识宋江与李逵",
+      "par_rounds": 12,
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "午时未到，江州法场已经挤满人。监斩官坐在高台上，刽子手把酒喷在刀背，人群里没有一个人敢抬头。"
+        },
+        {
+          "speaker": "李逵",
+          "portrait": "likui",
+          "text": "哥哥若少一根头发，俺把这座法场从南门劈到北门。"
+        },
+        {
+          "speaker": "戴宗",
+          "portrait": "daizong",
+          "text": "你不能先动。看见城楼第二面青旗落下，才是官军换岗的一瞬。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "我们不抢一辆囚车。要抢的是他们当众杀人的胆子。"
+        },
+        {
+          "speaker": "李逵",
+          "portrait": "likui",
+          "text": "那就连胆子一块劈了。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "若今日能活着出去，梁山便不只收走投无路的人，也要替不敢抬头的人留一条路。"
+        }
+      ],
+      "choice": {
+        "prompt": "法场四门都有伏兵。第一击应打向哪里？",
+        "options": [
+          {
+            "text": "先夺监斩台，逼行刑官当众收回斩令。",
+            "effect": {
+              "order": 2
+            },
+            "response": "林冲与花荣同时出手，监斩台的旗杆和判笔一起折断。行刑官被拖到台前时，围观百姓第一次抬起头。"
+          },
+          {
+            "text": "先开囚笼，让被押百姓趁乱离场。",
+            "effect": {
+              "brotherhood": 1,
+              "freedom": 1
+            },
+            "response": "李逵两斧劈开木栅，戴宗领着一队人从水门撤离。法场不是没有刀，只是刀再快，也追不上一群终于敢跑的人。"
+          }
+        ]
+      },
+      "battle": {
+        "enemies": [
+          {
+            "id": "executioner",
+            "level": 8,
+            "row": 0
+          },
+          {
+            "id": "instructor",
+            "level": 8,
+            "row": 1
+          },
+          {
+            "id": "archer",
+            "level": 8,
+            "row": 2
+          }
+        ],
+        "reward": {
+          "copper": 720,
+          "xp": 700,
+          "item": "ox_head_belt"
+        },
+        "recruit": [
+          "songjiang",
+          "likui"
+        ],
+        "boss": true
+      },
+      "outro": [
+        {
+          "speaker": "李逵",
+          "portrait": "likui",
+          "text": "俺杀得痛快，可这些人怎么都在哭？"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "因为他们亲眼看见了。官府的刀不是只落在囚犯身上，也落在每一个旁观者心里。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "先回水泊。今日欠下的每一笔，都要有一本敢见天光的账。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "江州城门在身后合拢。押差战船正在逼近梁山，而这一次，往水泊去的人比来时更多。"
+        }
+      ]
+    },
+    {
+      "id": "zhujiazhuang",
+      "index": 6,
+      "label": "第七回",
+      "title": "祝家庄雪夜",
+      "location": "祝家庄盘陀路",
+      "bg": "res://assets/environments/zhujiazhuang_snow_night.png",
+      "summary": "祝家庄封路自守，却把庄外流民当作逼梁山退兵的筹码。扈三娘不愿再做任何人的婚约与人质，提双刀守住雪夜中的庄门。",
+      "objective": "破开盘陀路，结识扈三娘",
+      "par_rounds": 11,
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "祝家庄外积雪没膝，盘陀路每转一次都像回到原处。庄门后堆着粮车，粮车后却挤满了被扣作人盾的农户。"
+        },
+        {
+          "speaker": "扈三娘",
+          "portrait": "husanniang",
+          "text": "兄长要用这些百姓逼梁山退兵，也要拿我的婚约换祝家一条退路。两件事，我都不答应。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "我们今夜只解围，不抢庄。谁想拿百姓换命，谁就先问过梁山与扈家姑娘的刀。"
+        },
+        {
+          "speaker": "燕青",
+          "portrait": "yanqing",
+          "text": "盘陀路我走过一遍。灯火最暗处不是死路，是有人故意把真正的出口藏在枯井后。"
+        },
+        {
+          "speaker": "扈三娘",
+          "portrait": "husanniang",
+          "text": "那就由我带路。庄里每一户人家，都得自己决定往后听谁的号令。"
+        }
+      ],
+      "choice": {
+        "prompt": "庄门已经打开，祝家亲兵却挟持百姓退入粮仓。怎样处置？",
+        "options": [
+          {
+            "text": "先开仓救人，再让庄中百姓公议去留。",
+            "effect": {
+              "brotherhood": 2
+            },
+            "response": "扈三娘一索卷开粮仓横闩，宋江带人逐户解绳。天亮前，庄中百姓在雪地按下手印，决定把粮仓与道路交给梁山共同看守。"
+          },
+          {
+            "text": "绕后夺取号炮，逼祝家亲兵自己放下兵器。",
+            "effect": {
+              "order": 1,
+              "freedom": 1
+            },
+            "response": "燕青与吴用摸上望楼，把号炮转向庄内。三声炮响后，祝家亲兵以为外庄已破，纷纷弃刀，百姓未再添一人伤亡。"
+          }
+        ]
+      },
+      "battle": {
+        "enemies": [
+          {
+            "id": "zhu_guard",
+            "level": 9,
+            "row": 0
+          },
+          {
+            "id": "instructor",
+            "level": 9,
+            "row": 1
+          },
+          {
+            "id": "archer",
+            "level": 9,
+            "row": 2
+          }
+        ],
+        "reward": {
+          "copper": 650,
+          "xp": 650,
+          "item": "crimson_lasso"
+        },
+        "recruit": [
+          "husanniang"
+        ],
+        "boss": null
+      },
+      "outro": [
+        {
+          "speaker": "扈三娘",
+          "portrait": "husanniang",
+          "text": "我不是战利品，也不替扈家旧账卖命。若梁山真肯让百姓自己选，我便与你们走一程。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "梁山可以替你挡刀，却不能替你决定名字。这条路，你自己走。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "雪光照亮盘陀路。庄门没有插上任何一家的旗，只把一盏灯留给后来寻路的人。"
+        }
+      ]
+    },
+    {
+      "id": "damingfu",
+      "index": 7,
+      "label": "第八回",
+      "title": "大名府灯夜",
+      "location": "北京大名府",
+      "bg": "res://assets/environments/damingfu_lantern_night.png",
+      "summary": "大名府借上元灯会清洗曾接济梁山的百姓。吴用布下灯市疑阵，燕青潜入都监府，而梁山必须在满城灯火里救出名单上的人。",
+      "objective": "潜入灯市，结识吴用与燕青",
+      "par_rounds": 13,
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "上元夜，大名府灯楼连成一条火龙。每一盏灯下都站着官军，名册上写满替梁山开过门、送过粮的普通百姓。"
+        },
+        {
+          "speaker": "吴用",
+          "portrait": "wuyong",
+          "text": "灯市有三条假街、两座真门。都监要等子时收网，我们便让他在子时以前相信梁山已经进城。"
+        },
+        {
+          "speaker": "燕青",
+          "portrait": "yanqing",
+          "text": "名册在都监府西楼。我能进去，也能出来，但要带走名册，得有人在灯市替他敲完这一更。"
+        },
+        {
+          "speaker": "扈三娘",
+          "portrait": "husanniang",
+          "text": "我去截住巡骑。今晚谁也不许把百姓当成灯笼里的一根灯芯。"
+        },
+        {
+          "speaker": "宋江",
+          "portrait": "songjiang",
+          "text": "救名单上的人，也救不在名单上的人。梁山今夜不占城，只把这座城欠百姓的路还回去。"
+        }
+      ],
+      "choice": {
+        "prompt": "名册已经到手，都监府却封住四门。最后一步如何走？",
+        "options": [
+          {
+            "text": "把名册抄成三份，沿灯市同时散出。",
+            "effect": {
+              "freedom": 2
+            },
+            "response": "吴用命人把抄本塞进灯谜、米袋与渡船。天未亮，整座大名府都知道官府要抓的是谁，也知道这些人为何帮过梁山。"
+          },
+          {
+            "text": "挟名册逼都监开城，让百姓从正门离开。",
+            "effect": {
+              "order": 1,
+              "brotherhood": 1
+            },
+            "response": "燕青把刀架在都监印匣上，迫使守军打开南门。宋江亲自站在门洞清点人数，直到最后一名卖灯老人走出城才转身。"
+          }
+        ]
+      },
+      "battle": {
+        "enemies": [
+          {
+            "id": "daming_captain",
+            "level": 11,
+            "row": 0
+          },
+          {
+            "id": "instructor",
+            "level": 11,
+            "row": 1
+          },
+          {
+            "id": "archer",
+            "level": 11,
+            "row": 2
+          }
+        ],
+        "reward": {
+          "copper": 860,
+          "xp": 820,
+          "item": "wisdom_fan"
+        },
+        "recruit": [
+          "wuyong",
+          "yanqing"
+        ],
+        "boss": true
+      },
+      "outro": [
+        {
+          "speaker": "吴用",
+          "portrait": "wuyong",
+          "text": "一座城的门能关住人，却关不住已经传出去的名字。今夜之后，官府再想悄悄杀人就难了。"
+        },
+        {
+          "speaker": "燕青",
+          "portrait": "yanqing",
+          "text": "我只替愿意听的人吹箫。梁山若哪天也听不见百姓的声音，我便再走。"
+        },
+        {
+          "speaker": "旁白",
+          "text": "灯楼在晨曦里一盏盏熄灭。众人沿运河北上，身后的城门仍然开着，前方梁山泊战鼓已起。"
+        }
+      ]
+    },
+    {
+      "id": "liangshan",
+      "index": 8,
+      "label": "终回",
+      "title": "水泊聚义",
+      "location": "梁山泊水寨",
+      "bg": "res://assets/environments/liangshan_water_fort.png",
+      "summary": "沧州押差率军逼近水泊，高俅的招安文书也同时送到。梁山必须决定自己为何而战。",
+      "objective": "击败沧州押差，决定梁山去向",
+      "par_rounds": 15,
+      "intro": [
+        {
+          "speaker": "旁白",
+          "text": "晨雾漫过梁山泊，水寨外战船列阵。押差首领带来的不只是官军，还有一封高俅亲笔写下的招安文书。"
+        },
+        {
+          "speaker": "沧州押差",
+          "text": "朝廷肯招安，是给你们脸面。交出林冲与文书，余者皆可免罪。"
+        },
+        {
+          "speaker": "鲁智深",
+          "portrait": "luzhishen",
+          "text": "洒家听过许多好听话，最后都落成刀子。要打便打，休拿官帽当遮羞布。"
+        },
+        {
+          "speaker": "武松",
+          "portrait": "wusong",
+          "text": "我上山时没人给路，如今也不缺这一纸赦书。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "这一战之后，梁山总要选一条能走下去的路。今日先让刀枪说话。"
+        }
+      ],
+      "choice": {
+        "prompt": "战鼓已经响起。梁山以何种名义迎战？",
+        "options": [
+          {
+            "text": "替天行道，先破官军，再论招安。",
+            "effect": {
+              "brotherhood": 1,
+              "order": 1
+            },
+            "response": "聚义厅前竖起替天行道的大旗。林冲第一个走下石阶，众人紧随其后。"
+          },
+          {
+            "text": "不求招安，只求兄弟与百姓有一块活地。",
+            "effect": {
+              "freedom": 2
+            },
+            "response": "大旗没有写官号，只写着梁山泊三个字。水寨里的船工、农户与流民把船撑向战阵，桨声连成一片。"
+          },
+          {
+            "text": "接受文书，但要求朝廷先惩办高俅。",
+            "effect": {
+              "order": 2
+            },
+            "response": "林冲把招安文书钉在聚义厅柱上，只添了一句：先还冤者一个公道。使者脸色发白，战鼓却已压过他的声音。"
+          }
+        ]
+      },
+      "battle": {
+        "enemies": [
+          {
+            "id": "captain",
+            "level": 12,
+            "row": 0
+          },
+          {
+            "id": "instructor",
+            "level": 11,
+            "row": 1
+          },
+          {
+            "id": "archer",
+            "level": 11,
+            "row": 2
+          }
+        ],
+        "reward": {
+          "copper": 1100,
+          "xp": 1000,
+          "item": "chieftain_whip"
+        },
+        "recruit": [],
+        "boss": true
+      },
+      "outro": [
+        {
+          "speaker": "旁白",
+          "text": "押差首领倒在雪水里，官军战船在浓雾中退去。梁山第一次没有被围死，却也第一次真正站到了选择之前。"
+        },
+        {
+          "speaker": "林冲",
+          "portrait": "linchong",
+          "text": "兄弟们，山门已经守住。接下来要守的，是我们究竟为何聚在这里。"
+        }
+      ]
+    }
+  ],
+  "enemies": {
+    "runner": {
+      "id": "runner",
+      "name": "县衙差役",
+      "sprite": "res://assets/enemies/runner.png",
+      "path": "tao",
+      "portraitPosition": "0% 50%",
+      "base": {
+        "hp": 255,
+        "atk": 38,
+        "def": 19,
+        "spd": 31
+      },
+      "poise": 72,
+      "skills": [
+        {
+          "id": "runner_staff",
+          "name": "水火棍",
+          "target": "enemy",
+          "power": 0.9,
+          "weight": 4,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.1
+            }
+          ]
+        },
+        {
+          "id": "runner_call",
+          "name": "拿人",
+          "target": "enemy",
+          "power": 0.72,
+          "weight": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.45
+            }
+          ]
+        }
+      ]
+    },
+    "archer": {
+      "id": "archer",
+      "name": "官府弓手",
+      "sprite": "res://assets/enemies/archer.png",
+      "path": "ling",
+      "portraitPosition": "33.333% 50%",
+      "base": {
+        "hp": 228,
+        "atk": 45,
+        "def": 16,
+        "spd": 39
+      },
+      "poise": 62,
+      "skills": [
+        {
+          "id": "archer_arrow",
+          "name": "破甲箭",
+          "target": "lowestEnemy",
+          "power": 1.02,
+          "weight": 4,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.4
+            }
+          ]
+        },
+        {
+          "id": "archer_snipe",
+          "name": "冷箭",
+          "target": "backEnemy",
+          "power": 1.18,
+          "weight": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.45
+            }
+          ]
+        }
+      ]
+    },
+    "instructor": {
+      "id": "instructor",
+      "name": "禁军教头",
+      "sprite": "res://assets/enemies/instructor.png",
+      "path": "gang",
+      "portraitPosition": "66.667% 50%",
+      "base": {
+        "hp": 520,
+        "atk": 50,
+        "def": 39,
+        "spd": 36
+      },
+      "poise": 105,
+      "skills": [
+        {
+          "id": "instructor_spear",
+          "name": "军阵突刺",
+          "target": "frontEnemy",
+          "power": 1.12,
+          "weight": 4,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.55
+            }
+          ]
+        },
+        {
+          "id": "instructor_sweep",
+          "name": "横枪扫阵",
+          "target": "allEnemies",
+          "power": 0.64,
+          "weight": 2
+        },
+        {
+          "id": "instructor_order",
+          "name": "整军",
+          "target": "self",
+          "power": 0,
+          "weight": 1,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "inspiration",
+              "duration": 2
+            },
+            {
+              "type": "selfHeal",
+              "power": 0.18
+            }
+          ]
+        }
+      ]
+    },
+    "captain": {
+      "id": "captain",
+      "name": "沧州押差",
+      "sprite": "res://assets/enemies/captain.png",
+      "path": "shou",
+      "portraitPosition": "100% 50%",
+      "base": {
+        "hp": 1080,
+        "atk": 59,
+        "def": 47,
+        "spd": 33
+      },
+      "poise": 165,
+      "boss": true,
+      "skills": [
+        {
+          "id": "captain_blade",
+          "name": "断脊刀",
+          "target": "frontEnemy",
+          "power": 1.28,
+          "weight": 4,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.55
+            }
+          ]
+        },
+        {
+          "id": "captain_whip",
+          "name": "黑蜡长鞭",
+          "target": "backEnemy",
+          "power": 1.05,
+          "weight": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.75
+            }
+          ]
+        },
+        {
+          "id": "captain_press",
+          "name": "沧州威压",
+          "target": "allEnemies",
+          "power": 0.72,
+          "weight": 2,
+          "effects": [
+            {
+              "type": "teamStatus",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.18
+            }
+          ]
+        },
+        {
+          "id": "captain_execute",
+          "name": "押解处决",
+          "target": "lowestEnemy",
+          "power": 1.72,
+          "weight": 1,
+          "minRound": 3
+        }
+      ]
+    },
+    "executioner": {
+      "id": "executioner",
+      "name": "江州行刑官",
+      "sprite": "res://assets/enemies/executioner.png",
+      "path": "shou",
+      "portraitPosition": "100% 50%",
+      "base": {
+        "hp": 930,
+        "atk": 56,
+        "def": 43,
+        "spd": 35
+      },
+      "poise": 145,
+      "boss": true,
+      "skills": [
+        {
+          "id": "executioner_blade",
+          "name": "断头刀",
+          "target": "frontEnemy",
+          "power": 1.3,
+          "weight": 4,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "id": "executioner_press",
+          "name": "法场喝令",
+          "target": "allEnemies",
+          "power": 0.68,
+          "weight": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.16
+            }
+          ]
+        },
+        {
+          "id": "executioner_mark",
+          "name": "朱笔勾名",
+          "target": "lowestEnemy",
+          "power": 1.55,
+          "weight": 2,
+          "minRound": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.7
+            }
+          ]
+        }
+      ]
+    },
+    "zhu_guard": {
+      "id": "zhu_guard",
+      "name": "祝家庄教师",
+      "sprite": "res://assets/enemies/zhu_guard.png",
+      "path": "gang",
+      "portraitPosition": "50% 50%",
+      "base": {
+        "hp": 790,
+        "atk": 58,
+        "def": 44,
+        "spd": 38
+      },
+      "poise": 124,
+      "skills": [
+        {
+          "id": "zhu_spear",
+          "name": "盘陀夹枪",
+          "target": "frontEnemy",
+          "power": 1.26,
+          "weight": 4,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 2,
+              "chance": 0.55
+            }
+          ]
+        },
+        {
+          "id": "zhu_fire",
+          "name": "庄门火把",
+          "target": "allEnemies",
+          "power": 0.64,
+          "weight": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "stun",
+              "duration": 1,
+              "chance": 0.12
+            }
+          ]
+        },
+        {
+          "id": "zhu_hold",
+          "name": "死守粮仓",
+          "target": "self",
+          "power": 0,
+          "weight": 1,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            },
+            {
+              "type": "selfHeal",
+              "power": 0.12
+            }
+          ]
+        }
+      ]
+    },
+    "daming_captain": {
+      "id": "daming_captain",
+      "name": "大名府都监",
+      "sprite": "res://assets/enemies/daming_captain.png",
+      "path": "shou",
+      "portraitPosition": "50% 50%",
+      "base": {
+        "hp": 1540,
+        "atk": 66,
+        "def": 52,
+        "spd": 39
+      },
+      "poise": 176,
+      "boss": true,
+      "skills": [
+        {
+          "id": "daming_blade",
+          "name": "都监断门刀",
+          "target": "frontEnemy",
+          "power": 1.34,
+          "weight": 4,
+          "effects": [
+            {
+              "type": "status",
+              "status": "bleeding",
+              "duration": 2,
+              "chance": 0.6
+            }
+          ]
+        },
+        {
+          "id": "daming_ambush",
+          "name": "灯市伏兵",
+          "target": "allEnemies",
+          "power": 0.72,
+          "weight": 2,
+          "effects": [
+            {
+              "type": "status",
+              "status": "armorBreak",
+              "duration": 1,
+              "chance": 0.45
+            }
+          ]
+        },
+        {
+          "id": "daming_list",
+          "name": "朱笔勾名",
+          "target": "lowestEnemy",
+          "power": 1.58,
+          "weight": 2,
+          "minRound": 3,
+          "effects": [
+            {
+              "type": "status",
+              "status": "sealed",
+              "duration": 2,
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "id": "daming_close_gate",
+          "name": "闭城死战",
+          "target": "self",
+          "power": 0,
+          "weight": 1,
+          "minRound": 4,
+          "effects": [
+            {
+              "type": "selfStatus",
+              "status": "guard",
+              "duration": 2
+            },
+            {
+              "type": "selfHeal",
+              "power": 0.16
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "camp_buildings": {
+    "hall": {
+      "id": "hall",
+      "name": "聚义厅",
+      "desc": "梁山议事的根基，营中休整提升义气。",
+      "icon": "landmark",
+      "size": [
+        2,
+        2
+      ],
+      "col": 1,
+      "row": 1,
+      "unlockVictories": 0,
+      "cost": 0
+    },
+    "tower": {
+      "id": "tower",
+      "name": "星台",
+      "desc": "夜观星命，营中休整更加充分。",
+      "icon": "sparkles",
+      "size": [
+        1,
+        1
+      ],
+      "col": 1,
+      "row": 3,
+      "unlockVictories": 1,
+      "cost": 80
+    },
+    "arena": {
+      "id": "arena",
+      "name": "演武场",
+      "desc": "众好汉操练阵势，提升整营战力。",
+      "icon": "swords",
+      "size": [
+        2,
+        2
+      ],
+      "col": 3,
+      "row": 1,
+      "unlockVictories": 2,
+      "cost": 180
+    },
+    "farmland": {
+      "id": "farmland",
+      "name": "农田",
+      "desc": "种植小麦，收成随建筑等级提高。",
+      "icon": "wheat",
+      "size": [
+        2,
+        2
+      ],
+      "col": 3,
+      "row": 3,
+      "unlockVictories": 2,
+      "cost": 160,
+      "resource": "wheat",
+      "output": 2
+    },
+    "mine": {
+      "id": "mine",
+      "name": "矿场",
+      "desc": "开采铁矿，为营寨扩建积累材料。",
+      "icon": "pickaxe",
+      "size": [
+        2,
+        2
+      ],
+      "col": 5,
+      "row": 1,
+      "unlockVictories": 3,
+      "cost": 220,
+      "resource": "iron_ore",
+      "output": 2
+    },
+    "woodland": {
+      "id": "woodland",
+      "name": "林地",
+      "desc": "采伐木材，扩建更大的水泊营区。",
+      "icon": "trees",
+      "size": [
+        2,
+        2
+      ],
+      "col": 5,
+      "row": 3,
+      "unlockVictories": 4,
+      "cost": 260,
+      "resource": "timber",
+      "output": 2
+    },
+    "fishery": {
+      "id": "fishery",
+      "name": "水产",
+      "desc": "水泊鱼塘，为营中供应鲜鱼。",
+      "icon": "fish",
+      "size": [
+        1,
+        1
+      ],
+      "col": 1,
+      "row": 4,
+      "unlockVictories": 5,
+      "cost": 280,
+      "resource": "fish",
+      "output": 2
+    },
+    "mill": {
+      "id": "mill",
+      "name": "石磨",
+      "desc": "工坊建筑，将小麦加工为面粉。",
+      "icon": "factory",
+      "size": [
+        1,
+        1
+      ],
+      "col": 4,
+      "row": 5,
+      "unlockVictories": 3,
+      "cost": 240
+    },
+    "kitchen": {
+      "id": "kitchen",
+      "name": "厨房",
+      "desc": "工坊建筑，将面粉蒸制成馒头。",
+      "icon": "flame",
+      "size": [
+        1,
+        1
+      ],
+      "col": 3,
+      "row": 5,
+      "unlockVictories": 5,
+      "cost": 320
+    }
+  }
+}

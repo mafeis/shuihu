@@ -1,0 +1,7 @@
+[gd_resource type="SystemFont" format=3]
+
+[resource]
+font_names = PackedStringArray("PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", "Arial Unicode MS")
+font_weight = 500
+subpixel_positioning = 1
+keep_rounding_remainders = true
