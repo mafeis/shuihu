@@ -1900,7 +1900,7 @@ func show_settings() -> void:
 	)
 	var copy_name := _button("复制中文", func():
 		DisplayServer.clipboard_set(player_name.text)
-		_toast("称号已复制，可在输入框直接粘贴。")
+		_toast("称号已复制。")
 	, false, 192)
 	var paste_name := _button("粘贴中文", func():
 		player_name.text = DisplayServer.clipboard_get().left(24)
@@ -1914,6 +1914,8 @@ func show_settings() -> void:
 	clipboard_actions.add_child(copy_name)
 	clipboard_actions.add_child(paste_name)
 	box.add_child(clipboard_actions)
+	if not native_name_input.available:
+		box.add_child(_label("若键盘输入中文未进入游戏，可在此直接粘贴。", 14, PAPER_500))
 	native_name_field.set_meta("composition", composition)
 	native_name_field.add_child(player_name)
 	player_name.focus_entered.connect(func():
@@ -1969,7 +1971,7 @@ func show_settings() -> void:
 	save_actions.add_child(_button("立即保存", func(): state.save(); _toast("战卷已保存。"), true, 196))
 	save_actions.add_child(_button("删除存档", confirm_delete_save, false, 196))
 	box.add_child(save_actions)
-	box.add_child(_button("返回游戏", func():
+	box.add_child(_button("保存并返回游戏", func():
 		state.save()
 		close_settings()
 	, false, 398))
