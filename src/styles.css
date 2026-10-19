@@ -539,6 +539,7 @@ small {
 }
 
 .title-backdrop {
+  z-index: 0;
   background:
     linear-gradient(rgba(8, 13, 14, 0.06), rgba(8, 13, 14, 0.16)),
     url("/assets/video/bianjing_snow_night_poster.webp") 66% center / cover no-repeat;
@@ -546,7 +547,9 @@ small {
 }
 
 .title-video {
+  z-index: 0;
   object-fit: cover;
+  object-position: 66% center;
   filter: saturate(0.72) contrast(1.06);
   opacity: 0;
   transition: opacity 500ms ease;
@@ -557,13 +560,100 @@ small {
 }
 
 .title-shade {
+  z-index: 2;
   background:
     linear-gradient(90deg, rgba(6, 11, 12, 0.95) 0%, rgba(6, 11, 12, 0.75) 38%, rgba(6, 11, 12, 0.24) 74%),
     linear-gradient(0deg, rgba(6, 10, 11, 0.95), transparent 38%);
 }
 
+.title-prologue {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  background: #070c0d;
+  opacity: 1;
+  animation: title-prologue-release 7s ease-in-out both;
+  pointer-events: none;
+}
+
+.title-prologue-frame {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  background-position: var(--focus, center);
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0;
+  transform: scale(1.035);
+  animation: title-prologue-frame 1.9s ease-in-out both;
+  animation-delay: calc(var(--scene) * 1.58s);
+  will-change: opacity, transform;
+}
+
+.title-prologue-frame::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(90deg, rgba(6, 11, 12, 0.72), transparent 44%, rgba(6, 11, 12, 0.26)),
+    linear-gradient(0deg, rgba(6, 10, 11, 0.56), transparent 52%);
+}
+
+.title-prologue-frame figcaption {
+  position: absolute;
+  z-index: 2;
+  top: 19%;
+  right: 5vw;
+  display: flex;
+  width: min(380px, 34vw);
+  flex-direction: column;
+  padding: 16px 18px 17px;
+  border-left: 1px solid rgba(215, 188, 125, 0.54);
+  background: linear-gradient(90deg, rgba(6, 11, 12, 0.72), transparent);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.78);
+}
+
+.title-prologue-frame figcaption small {
+  color: var(--bronze-300);
+  font-size: 0.625rem;
+}
+
+.title-prologue-frame figcaption b {
+  margin: 5px 0 7px;
+  color: var(--paper-100);
+  font-family: var(--serif);
+  font-size: 2.15rem;
+  letter-spacing: 0;
+}
+
+.title-prologue-frame figcaption p {
+  margin: 0;
+  color: rgba(236, 228, 210, 0.76);
+  font-family: var(--serif);
+  font-size: 0.75rem;
+  line-height: 1.75;
+}
+
+.title-prologue-rule {
+  position: absolute;
+  z-index: 3;
+  top: 14%;
+  right: 5vw;
+  width: 1px;
+  height: 5%;
+  background: linear-gradient(180deg, transparent, var(--bronze-300));
+  animation: title-prologue-rule 7s ease both;
+}
+
+.title-screen.has-prologue .title-roster {
+  opacity: 0;
+  animation: title-roster-reveal 700ms 6.35s ease-out forwards;
+}
+
 .title-rule {
   position: absolute;
+  z-index: 3;
   top: 0;
   bottom: 0;
   left: 54.5%;
@@ -10354,6 +10444,18 @@ small {
   filter: saturate(0.3) brightness(0.46);
 }
 
+.ending-screen {
+  --ending-accent: var(--bronze-300);
+}
+
+.ending-screen.tone-blue {
+  --ending-accent: #9fc4df;
+}
+
+.ending-screen.tone-teal {
+  --ending-accent: var(--teal-300);
+}
+
 .ending-wash {
   background:
     linear-gradient(90deg, rgba(6, 10, 11, 0.9), rgba(6, 10, 11, 0.58) 50%, rgba(6, 10, 11, 0.9)),
@@ -10440,6 +10542,18 @@ small {
 .ending-epilogue {
   color: var(--paper-500);
   font-size: 0.75rem;
+}
+
+.ending-choice-echo {
+  width: fit-content;
+  margin: 17px auto 0;
+  padding: 7px 12px;
+  border: 1px solid color-mix(in srgb, var(--ending-accent) 28%, transparent);
+  background: rgba(7, 12, 13, 0.58);
+  color: var(--ending-accent);
+  font-family: var(--serif);
+  font-size: 0.6875rem;
+  line-height: 1.65;
 }
 
 .ending-record {
@@ -10535,6 +10649,145 @@ small {
   display: flex;
   justify-content: center;
   gap: 7px;
+}
+
+.ending-cinematic {
+  --cine-accent: var(--bronze-300);
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  overflow: hidden;
+  background: #040809;
+  animation: ending-cinematic-release 5.7s ease-in-out both;
+}
+
+.ending-cinematic.tone-blue {
+  --cine-accent: #9fc4df;
+}
+
+.ending-cinematic.tone-teal {
+  --cine-accent: var(--teal-300);
+}
+
+.ending-cinematic-frames,
+.ending-cinematic-frame,
+.ending-cinematic-backdrop,
+.ending-cinematic-frame::after {
+  position: absolute;
+  inset: 0;
+}
+
+.ending-cinematic-frame {
+  margin: 0;
+  opacity: 0;
+  animation: ending-cinematic-frame 1.92s ease-in-out both;
+  animation-delay: calc(var(--frame) * 1.78s);
+}
+
+.ending-cinematic-frame::after {
+  content: "";
+  background:
+    linear-gradient(90deg, rgba(5, 9, 10, 0.92), rgba(5, 9, 10, 0.52) 46%, rgba(5, 9, 10, 0.16)),
+    linear-gradient(0deg, rgba(5, 9, 10, 0.82), transparent 48%);
+}
+
+.ending-cinematic-backdrop {
+  width: 100%;
+  height: 100%;
+  filter: saturate(0.58) contrast(1.08);
+}
+
+.ending-cinematic-portrait {
+  position: absolute;
+  z-index: 2;
+  right: 7%;
+  bottom: 1%;
+  width: min(48vw, 620px);
+  height: 88%;
+  max-width: 55%;
+  filter:
+    var(--character-outline-strong)
+    saturate(0.7)
+    drop-shadow(0 22px 34px rgba(0, 0, 0, 0.58));
+}
+
+.ending-cinematic-frame figcaption {
+  position: absolute;
+  z-index: 3;
+  bottom: 12%;
+  left: 7%;
+  display: flex;
+  width: min(520px, 43vw);
+  flex-direction: column;
+  padding: 18px 0 18px 20px;
+  border-left: 2px solid var(--cine-accent);
+}
+
+.ending-cinematic-frame figcaption small {
+  color: var(--cine-accent);
+  font-size: 0.625rem;
+}
+
+.ending-cinematic-frame figcaption b {
+  margin: 6px 0 10px;
+  color: var(--paper-100);
+  font-family: var(--serif);
+  font-size: 3.25rem;
+  line-height: 1.12;
+  letter-spacing: 0;
+  text-shadow: 0 5px 24px rgba(0, 0, 0, 0.6);
+}
+
+.ending-cinematic-frame figcaption p {
+  margin: 0;
+  color: rgba(237, 230, 214, 0.8);
+  font-family: var(--serif);
+  font-size: 0.8125rem;
+  line-height: 1.9;
+}
+
+.ending-cinematic-seal {
+  position: absolute;
+  z-index: 5;
+  top: 34px;
+  left: 34px;
+  display: flex;
+  padding-left: 11px;
+  border-left: 1px solid var(--cine-accent);
+  flex-direction: column;
+}
+
+.ending-cinematic-seal small {
+  color: var(--paper-500);
+  font-size: 0.5rem;
+}
+
+.ending-cinematic-seal b {
+  color: var(--paper-100);
+  font-family: var(--serif);
+  font-size: 1rem;
+}
+
+.ending-cinematic-skip {
+  position: absolute;
+  z-index: 6;
+  top: 26px;
+  right: 28px;
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid rgba(223, 213, 193, 0.18);
+  background: rgba(5, 10, 11, 0.62);
+  color: var(--paper-400);
+  font-size: 0.5625rem;
+  backdrop-filter: blur(8px);
+}
+
+.ending-cinematic-skip:hover {
+  border-color: rgba(215, 188, 125, 0.52);
+  color: var(--paper-100);
 }
 
 /* Modal and toast */
@@ -10886,6 +11139,88 @@ small {
 }
 
 /* Motion */
+
+@keyframes title-prologue-frame {
+  0% {
+    opacity: 0;
+    transform: scale(1.035);
+  }
+  12% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.995);
+  }
+}
+
+@keyframes title-prologue-release {
+  0%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes title-prologue-rule {
+  0%,
+  8% {
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  20%,
+  82% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes title-roster-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ending-cinematic-frame {
+  0% {
+    opacity: 0;
+    transform: scale(1.025);
+  }
+  12%,
+  78% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.995);
+  }
+}
+
+@keyframes ending-cinematic-release {
+  0%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 
 @keyframes portrait-in {
   from {
@@ -14857,4 +15192,112 @@ html[data-motion="reduced"] *::after {
     top: 28%;
     transform: scale(0.62);
   }
+}
+
+@media (max-width: 920px) {
+  .title-prologue-frame figcaption {
+    top: 12%;
+    right: 26px;
+    width: min(310px, 42vw);
+  }
+
+  .title-prologue-frame figcaption b {
+    font-size: 1.75rem;
+  }
+
+  .title-prologue-rule {
+    top: 10%;
+    right: 26px;
+  }
+
+  .ending-cinematic-portrait {
+    right: 1%;
+    width: min(54vw, 480px);
+    max-width: 58%;
+    height: 78%;
+  }
+
+  .ending-cinematic-frame figcaption {
+    bottom: 10%;
+    left: 5%;
+    width: 48vw;
+  }
+
+  .ending-cinematic-frame figcaption b {
+    font-size: 2.4rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .title-prologue-frame figcaption {
+    top: 92px;
+    right: 20px;
+    left: 20px;
+    width: auto;
+    padding: 12px 0 12px 13px;
+    background: linear-gradient(90deg, rgba(6, 11, 12, 0.64), transparent);
+  }
+
+  .title-prologue-frame figcaption small {
+    font-size: 0.5rem;
+  }
+
+  .title-prologue-frame figcaption b {
+    margin: 3px 0 5px;
+    font-size: 1.45rem;
+  }
+
+  .title-prologue-frame figcaption p {
+    font-size: 0.625rem;
+    line-height: 1.6;
+  }
+
+  .title-prologue-rule {
+    display: none;
+  }
+
+  .ending-cinematic-seal {
+    top: 16px;
+    left: 16px;
+  }
+
+  .ending-cinematic-skip {
+    top: 12px;
+    right: 12px;
+    min-height: 30px;
+    padding: 5px 7px;
+  }
+
+  .ending-cinematic-portrait {
+    right: -9%;
+    bottom: 17%;
+    width: 82vw;
+    max-width: 92%;
+    height: 68%;
+  }
+
+  .ending-cinematic-frame figcaption {
+    right: 18px;
+    bottom: 54px;
+    left: 18px;
+    width: auto;
+    padding: 11px 0 12px 12px;
+    background: linear-gradient(90deg, rgba(5, 9, 10, 0.74), transparent);
+  }
+
+  .ending-cinematic-frame figcaption b {
+    margin: 3px 0 6px;
+    font-size: 1.95rem;
+  }
+
+  .ending-cinematic-frame figcaption p {
+    max-width: 88%;
+    font-size: 0.6875rem;
+    line-height: 1.7;
+  }
+}
+
+html[data-motion="reduced"] .title-prologue,
+html[data-motion="reduced"] .ending-cinematic {
+  display: none;
 }

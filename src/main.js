@@ -169,6 +169,11 @@ import {
   normalizeAutoBattleTactic,
 } from "./auto-battle.js";
 import { battleVfxProfile } from "./battle-vfx.js";
+import {
+  cinematicImageFit,
+  endingCinematicProfile,
+  openingCinematicProfile,
+} from "./cinematic.js";
 import { combatSfxCue, sound } from "./audio.js";
 
 const app = document.querySelector("#app");
@@ -189,6 +194,9 @@ let battleFeedbackTimer = null;
 let battleActorSide = null;
 let arenaAutoTimer = null;
 let titleVideoCleanup = null;
+let titleProloguePlayed = false;
+let endingCinematicActive = false;
+let endingCinematicTimer = null;
 let modal = null;
 let toastTimer = null;
 let settingsOrigin = "nav";
@@ -821,9 +829,7 @@ function bindTitleVideo() {
   const video = document.querySelector(".title-video");
   if (!video) return;
 
-  const reducedMotion =
-    state?.settings?.reducedMotion ||
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reducedMotion = reducedMotionFor(state);
   const showFallback = () => video.classList.remove("is-playing");
   const play = () => {
     if (reducedMotion) {
@@ -850,6 +856,13 @@ function bindTitleVideo() {
   titleVideoCleanup = () => {
     document.removeEventListener("visibilitychange", handleVisibility);
   };
+}
+
+function reducedMotionFor(preferences) {
+  return Boolean(
+    preferences?.settings?.reducedMotion ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 }
 
 function currentChapterBg() {
@@ -883,11 +896,35 @@ function setScreen(nextScreen) {
     battleTimer = null;
     clearBattleFeedbackTimer();
   }
+  clearEndingCinematicTimer();
+  if (nextScreen !== "ending") endingCinematicActive = false;
   clearArenaAutoTimer();
   screen = nextScreen;
   pendingInputRestore = null;
   updateSteamPresence();
   render();
+}
+
+function clearEndingCinematicTimer() {
+  if (!endingCinematicTimer) return;
+  window.clearTimeout(endingCinematicTimer);
+  endingCinematicTimer = null;
+}
+
+function showEndingCinematic(endingId) {
+  if (reducedMotionFor(state)) {
+    endingCinematicActive = false;
+    setScreen("ending");
+    return;
+  }
+  endingCinematicActive = true;
+  setScreen("ending");
+  endingCinematicTimer = window.setTimeout(() => {
+    endingCinematicTimer = null;
+    endingCinematicActive = false;
+    render();
+  }, 5700);
+  reportDiagnostic?.("info", "ending-cinematic", { endingId });
 }
 
 function clearArenaAutoTimer() {
@@ -1238,8 +1275,32 @@ function topbar(active = "", backAction = "") {
   `;
 }
 
+function renderTitlePrologue(saved) {
+  const profile = openingCinematicProfile(saved);
+  return `
+    <section class="title-prologue is-${profile.variant}" style="--scene-count:${profile.scenes.length}" aria-hidden="true">
+      ${profile.scenes
+        .map(
+          (scene, index) => `
+            <figure class="title-prologue-frame" style="--scene:${index};--focus:${scene.focal};background-image:url('${scene.asset}')">
+              <figcaption>
+                <small>${escapeHtml(scene.label)}</small>
+                <b>${escapeHtml(scene.title)}</b>
+                <p>${escapeHtml(scene.text)}</p>
+              </figcaption>
+            </figure>
+          `,
+        )
+        .join("")}
+      <span class="title-prologue-rule"></span>
+    </section>
+  `;
+}
+
 function renderTitle() {
   const saved = hasSavedGame() ? loadGame() : null;
+  const showPrologue = !titleProloguePlayed && !reducedMotionFor(saved);
+  titleProloguePlayed = true;
   const routeLead = saved
     ? buildRoutePlan(saved, { limit: 1 })[0]
     : null;
@@ -1247,11 +1308,12 @@ function renderTitle() {
     ? ` · ${saved.arena.activeRun.mode === "weekly" ? "本周军令" : "演武"}第 ${saved.arena.activeRun.wave} 阵待续`
     : "";
   return `
-    <main class="title-screen">
+    <main class="title-screen ${showPrologue ? "has-prologue" : ""}">
       <div class="title-backdrop" aria-hidden="true"></div>
       <video class="title-video" autoplay muted loop playsinline poster="${titlePosterUrl}">
         <source src="${titleVideoUrl}" type="video/mp4" />
       </video>
+      ${showPrologue ? renderTitlePrologue(saved) : ""}
       <div class="title-shade"></div>
       <div class="title-rule"></div>
       <section class="title-content">
@@ -5037,6 +5099,11 @@ function renderFinalChoice() {
     归隐: "freedom",
   };
   const recommendedEnding = alignmentToEnding[summary];
+  const endingAlignment = {
+    brotherhood: state.alignment.brotherhood,
+    order: state.alignment.order,
+    freedom: state.alignment.freedom,
+  };
   return `
     <main class="final-choice-screen" style="--final-bg:url('/assets/environments/liangshan_water_fort.png')">
       <div class="final-background"></div>
@@ -5057,7 +5124,7 @@ function renderFinalChoice() {
             (ending) => `
               <button data-action="choose-ending" data-ending="${ending.id}" class="${recommendedEnding === ending.id ? "is-recommended" : ""}">
                 <span class="ending-symbol">${icon(ending.id === "brotherhood" ? "users" : ending.id === "order" ? "landmark" : "wind", 27)}</span>
-                <small>${ending.subtitle}</small>
+                <small>${ending.subtitle} · ${endingAlignment[ending.id]} 点命途</small>
                 <h2>${ending.title}</h2>
                 <p>${ending.text.slice(0, 78)}…</p>
                 <span class="ending-select">落定此卷 ${icon("arrow-right", 17)}</span>
@@ -5071,8 +5138,55 @@ function renderFinalChoice() {
   `;
 }
 
+function renderEndingCinematic(cinematic) {
+  return `
+    <section class="ending-cinematic tone-${cinematic.tone}" data-ending-cinematic="${cinematic.id}" aria-label="${cinematic.title}过场">
+      <div class="ending-cinematic-frames">
+        ${cinematic.frames
+          .map(
+            (frame, index) => {
+              const portrait = frame.portrait ? HEROES[frame.portrait] : null;
+              return `
+                <figure class="ending-cinematic-frame" style="--frame:${index}">
+                  <img
+                    class="ending-cinematic-backdrop"
+                    src="${frame.asset}"
+                    alt=""
+                    style="object-position:${frame.focal};object-fit:${cinematicImageFit("backdrop")}"
+                  />
+                  ${
+                    portrait
+                      ? `<img
+                          class="ending-cinematic-portrait"
+                          src="${portrait.cutout}"
+                          alt=""
+                          style="object-fit:${cinematicImageFit("portrait")}"
+                        />`
+                      : ""
+                  }
+                  <figcaption>
+                    <small>${escapeHtml(frame.label)}</small>
+                    <b>${escapeHtml(frame.title)}</b>
+                    <p>${escapeHtml(frame.text)}</p>
+                  </figcaption>
+                </figure>
+              `;
+            },
+          )
+          .join("")}
+      </div>
+      <div class="ending-cinematic-seal">
+        <small>九回抉择 · 已记 ${cinematic.decisionCount} 笔</small>
+        <b>${cinematic.title}</b>
+      </div>
+      <button class="ending-cinematic-skip" data-action="skip-ending-cinematic">跳过过场 ${icon("chevrons-right", 15)}</button>
+    </section>
+  `;
+}
+
 function renderEnding() {
   const ending = ENDINGS[state.ending] || ENDINGS.brotherhood;
+  const cinematic = endingCinematicProfile(ending.id, state);
   const endingIds = new Set([
     ...(state.endingsUnlocked || []),
     ...(state.ending ? [state.ending] : []),
@@ -5086,8 +5200,8 @@ function renderEnding() {
   ).length;
   const totalLegends = Object.keys(HERO_LEGENDS).length;
   return `
-    <main class="ending-screen ending-${ending.id}">
-      <div class="ending-background" style="background-image:url('/assets/environments/liangshan_water_fort.png')"></div>
+    <main class="ending-screen ending-${ending.id} tone-${cinematic.tone}">
+      <div class="ending-background" style="background-image:url('${cinematic.background}')"></div>
       <div class="ending-wash"></div>
       <div class="ending-stars">${Array.from({ length: 12 }, (_, index) => `<i style="--i:${index}"></i>`).join("")}</div>
       <section class="ending-letter">
@@ -5097,6 +5211,7 @@ function renderEnding() {
         <div class="ending-rule"><i></i><span>终</span><i></i></div>
         <p class="ending-body">${ending.text}</p>
         <p class="ending-epilogue">${ending.epilogue}</p>
+        <p class="ending-choice-echo">${cinematic.echo}</p>
         <div class="ending-record">
           <span><small>战斗胜利</small><b>${state.stats.battlesWon}</b></span>
           <span><small>结义好汉</small><b>${state.recruited.length}/${HERO_ORDER.length}</b></span>
@@ -5117,11 +5232,14 @@ function renderEnding() {
           <button class="button ghost" data-action="back-to-title">${icon("home", 18)}<span>返回标题</span></button>
         </div>
       </section>
+      ${endingCinematicActive ? renderEndingCinematic(cinematic) : ""}
     </main>
   `;
 }
 
 function startNewGame(options = {}) {
+  endingCinematicActive = false;
+  clearEndingCinematicTimer();
   const previousEndings = options.preserveArchive
     ? [...(state?.endingsUnlocked || []), ...(state?.ending ? [state.ending] : [])]
     : [];
@@ -5204,6 +5322,8 @@ function startNewGame(options = {}) {
 }
 
 function continueGame() {
+  endingCinematicActive = false;
+  clearEndingCinematicTimer();
   const loaded = loadGame();
   if (!loaded) {
     toast("未找到可用存档", "danger");
@@ -7194,7 +7314,12 @@ function handleAction(action, element) {
       state.flags.finalBattleWon = true;
       persist();
       sound.victory();
-      setScreen("ending");
+      showEndingCinematic(state.ending);
+      return;
+    case "skip-ending-cinematic":
+      endingCinematicActive = false;
+      clearEndingCinematicTimer();
+      render();
       return;
     case "continue-after-ending":
       setScreen("codex");
