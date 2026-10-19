@@ -68,6 +68,16 @@ function arenaRewardFixture() {
   return state;
 }
 
+function finalChoiceFixture() {
+  const state = progressedFixture();
+  state.currentChapter = CHAPTERS.length;
+  state.completedChapters = CHAPTERS.map((chapter) => chapter.id);
+  state.flags.finalBattleWon = true;
+  state.ending = null;
+  state.endingsUnlocked = ["brotherhood"];
+  return state;
+}
+
 async function measureScreen(page, name) {
   return page.evaluate((screenName) => {
     const visible = (node) => {
@@ -125,6 +135,30 @@ async function measureScreen(page, name) {
           height: rect.height,
         };
       });
+    const videos = [...document.querySelectorAll("video")]
+      .filter(visible)
+      .map((video) => {
+        const rect = video.getBoundingClientRect();
+        return {
+          src: video.currentSrc || video.getAttribute("src"),
+          readyState: video.readyState,
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+          objectFit: getComputedStyle(video).objectFit,
+          width: rect.width,
+          height: rect.height,
+        };
+      });
+    const backdrops = [
+      ...document.querySelectorAll(
+        ".reward-background, .final-background, .ending-background",
+      ),
+    ]
+      .filter(visible)
+      .map((node) => ({
+        className: node.className,
+        backgroundImage: getComputedStyle(node).backgroundImage,
+      }));
     const headings = [
       ...document.querySelectorAll(
         "h1, h2, .story-chapter-mark b, .battle-title b",
@@ -140,9 +174,11 @@ async function measureScreen(page, name) {
         };
       });
     const screen = document.querySelector(
-      ".app-screen, .story-screen, .battle-screen, .reward-screen",
+      ".app-screen, .title-screen, .story-screen, .battle-screen, .reward-screen, .final-choice-screen, .ending-screen",
     );
     const screenRect = screen?.getBoundingClientRect();
+    const modal = document.querySelector("[data-modal-panel]");
+    const modalRect = modal?.getBoundingClientRect();
     return {
       viewport: { width: innerWidth, height: innerHeight },
       screen: screenName,
@@ -162,7 +198,17 @@ async function measureScreen(page, name) {
         : null,
       controls,
       images,
+      videos,
+      backdrops,
       headings,
+      modalRect: modalRect
+        ? {
+            top: modalRect.top,
+            right: modalRect.right,
+            bottom: modalRect.bottom,
+            left: modalRect.left,
+          }
+        : null,
       arenaLockedHeading: (() => {
         const node = document.querySelector(".arena-locked h2");
         if (!visible(node)) return null;
@@ -185,6 +231,15 @@ async function captureScreen(page, name, metrics) {
     `${name}: page has vertical overflow`,
   );
   assert.ok(metrics.screenRect, `${name}: app screen is missing`);
+  assert.ok(
+    metrics.screenRect.top <= 1 &&
+      metrics.screenRect.left <= 1 &&
+      metrics.screenRect.right >= metrics.viewport.width - 1 &&
+      metrics.screenRect.bottom >= metrics.viewport.height - 1,
+    `${name}: app screen does not cover the viewport ${JSON.stringify(
+      metrics.screenRect,
+    )}`,
+  );
   assert.ok(metrics.headings.length > 0, `${name}: no visible page heading`);
   const minimumHeadingTop = ["story", "battle"].includes(name) ? -1 : 70;
   assert.ok(
@@ -214,6 +269,37 @@ async function captureScreen(page, name, metrics) {
       image.objectFit,
       "fill",
       `${name}: stretched image ${image.src}`,
+    );
+  }
+  for (const video of metrics.videos) {
+    assert.notEqual(
+      video.objectFit,
+      "fill",
+      `${name}: stretched video ${video.src}`,
+    );
+    if (video.readyState >= 2) {
+      assert.ok(
+        video.videoWidth > 0 && video.videoHeight > 0,
+        `${name}: video metadata is invalid ${video.src}`,
+      );
+    }
+  }
+  for (const backdrop of metrics.backdrops) {
+    assert.notEqual(
+      backdrop.backgroundImage,
+      "none",
+      `${name}: full-screen backdrop has no image (${backdrop.className})`,
+    );
+  }
+  if (metrics.modalRect) {
+    assert.ok(
+      metrics.modalRect.left >= -1 &&
+        metrics.modalRect.right <= metrics.viewport.width + 1 &&
+        metrics.modalRect.top >= -1 &&
+        metrics.modalRect.bottom <= metrics.viewport.height + 1,
+      `${name}: modal escapes the viewport ${JSON.stringify(
+        metrics.modalRect,
+      )}`,
     );
   }
   await page.screenshot({
@@ -276,10 +362,9 @@ try {
     [SAVE_KEY, JSON.stringify(fixture)],
   );
   await page.reload({ waitUntil: "networkidle" });
-  await page.screenshot({
-    path: `${outputDir}/title-1440x900.png`,
-    fullPage: false,
-  });
+  let metrics = await measureScreen(page, "title");
+  await captureScreen(page, "title", metrics);
+  reports.push({ name: "title", controls: metrics.controls.length });
   await page.click('button[data-action="continue-game"]');
   await page.waitForSelector(".screen-map");
 
@@ -306,7 +391,7 @@ try {
   await page.click('button[data-action="nav-formation"]');
   await page.waitForSelector(".screen-formation");
   await page.waitForTimeout(160);
-  let metrics = await measureScreen(page, "formation");
+  metrics = await measureScreen(page, "formation");
   await captureScreen(page, "formation", metrics);
   reports.push({ name: "formation", controls: metrics.controls.length });
 
@@ -314,6 +399,10 @@ try {
   await page.waitForSelector(".screen-roster");
   await page.locator(".hero-card-hit").first().click();
   await page.waitForSelector(".hero-dossier.is-open");
+  await page.waitForTimeout(160);
+  metrics = await measureScreen(page, "roster-dossier");
+  await captureScreen(page, "roster-dossier", metrics);
+  reports.push({ name: "roster-dossier", controls: metrics.controls.length });
   await page.click(
     '.hero-dossier button[data-action="equipment-hero"]',
   );
@@ -341,6 +430,14 @@ try {
   metrics = await measureScreen(page, "battle");
   await captureScreen(page, "battle", metrics);
   reports.push({ name: "battle", controls: metrics.controls.length });
+  await page.click('button[data-action="battle-menu"]');
+  await page.waitForSelector("[data-modal-panel]");
+  await page.waitForTimeout(160);
+  metrics = await measureScreen(page, "battle-menu");
+  await captureScreen(page, "battle-menu", metrics);
+  reports.push({ name: "battle-menu", controls: metrics.controls.length });
+  await page.click('[data-modal-panel] button[data-action="close-modal"]');
+  await page.waitForSelector("[data-modal-panel]", { state: "detached" });
   if (!(await page.locator('button[data-action="toggle-auto-battle"].is-active').count())) {
     await page.click('button[data-action="toggle-auto-battle"]');
   }
@@ -402,6 +499,78 @@ try {
   metrics = await measureScreen(page, "arena-reward");
   await captureScreen(page, "arena-reward", metrics);
   reports.push({ name: "arena-reward", controls: metrics.controls.length });
+
+  await page.evaluate(
+    ([key, save]) => localStorage.setItem(key, save),
+    [SAVE_KEY, JSON.stringify(finalChoiceFixture())],
+  );
+  await page.reload({ waitUntil: "networkidle" });
+  await page.click('button[data-action="continue-game"]');
+  await page.waitForSelector(".screen-final-choice");
+  await page.waitForTimeout(160);
+  metrics = await measureScreen(page, "final-choice");
+  await captureScreen(page, "final-choice", metrics);
+  reports.push({ name: "final-choice", controls: metrics.controls.length });
+
+  await page.click(
+    'button[data-action="choose-ending"][data-ending="brotherhood"]',
+  );
+  await page.waitForSelector(".screen-ending");
+  if (await page.locator('button[data-action="skip-ending-cinematic"]').count()) {
+    await page.click('button[data-action="skip-ending-cinematic"]');
+  }
+  await page.waitForTimeout(220);
+  metrics = await measureScreen(page, "ending");
+  await captureScreen(page, "ending", metrics);
+  const endingActions = await page.evaluate(async () => {
+    const screen = document.querySelector(".ending-screen");
+    const actions = [...document.querySelectorAll(".ending-actions button")];
+    if (!screen || !actions.length) return null;
+    screen.scrollTop = screen.scrollHeight;
+    await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+    return {
+      scrollTop: screen.scrollTop,
+      scrollHeight: screen.scrollHeight,
+      clientHeight: screen.clientHeight,
+      buttons: actions.map((button) => {
+        const rect = button.getBoundingClientRect();
+        return {
+          action: button.dataset.action,
+          visible:
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.right <= innerWidth &&
+            rect.bottom <= innerHeight,
+          rect: {
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+          },
+        };
+      }),
+    };
+  });
+  assert.ok(endingActions, "ending: final actions are missing");
+  assert.ok(
+    endingActions.scrollHeight > endingActions.clientHeight,
+    "ending: long content should live in an independently reachable scroller",
+  );
+  assert.equal(
+    endingActions.buttons.length,
+    3,
+    "ending: expected three final actions",
+  );
+  for (const action of endingActions.buttons) {
+    assert.equal(
+      action.visible,
+      true,
+      `ending: ${action.action} is unreachable at the end of the scroll area ${JSON.stringify(
+        action.rect,
+      )}`,
+    );
+  }
+  reports.push({ name: "ending", controls: metrics.controls.length });
 
   assert.deepEqual(runtimeErrors, [], "1440x900 screens should not throw");
   console.log(JSON.stringify({ status: "passed", reports }, null, 2));
