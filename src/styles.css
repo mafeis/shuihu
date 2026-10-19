@@ -16643,10 +16643,16 @@ html[data-motion="reduced"] .ending-cinematic {
 .roster-screen .hero-card::after {
   position: absolute;
   z-index: 1;
-  inset: 32% 0 0;
+  inset: 18% 0 0;
   content: "";
   background:
-    linear-gradient(0deg, rgba(8, 13, 14, 0.98) 2%, rgba(8, 13, 14, 0.83) 48%, transparent 100%);
+    linear-gradient(
+      0deg,
+      #080d0e 0%,
+      #080d0e 80%,
+      rgba(8, 13, 14, 0.84) 90%,
+      transparent 100%
+    );
   pointer-events: none;
 }
 
@@ -16736,6 +16742,7 @@ html[data-motion="reduced"] .ending-cinematic {
 
   .roster-screen .hero-card-copy {
     padding: 0 11px 8px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   }
 
   .roster-screen .hero-card-copy h3 {

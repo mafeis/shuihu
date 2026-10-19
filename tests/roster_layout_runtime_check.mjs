@@ -73,9 +73,14 @@ async function measureRoster(page) {
     const cards = [...document.querySelectorAll(".hero-card")].map((card) => {
       const box = card.getBoundingClientRect();
       const hit = card.querySelector(".hero-card-hit");
+      const art = card.querySelector(".hero-card-art");
+      const copy = card.querySelector(".hero-card-copy");
       const footer = card.querySelector("footer");
       const hitStyle = hit ? getComputedStyle(hit) : null;
+      const artStyle = art ? getComputedStyle(art) : null;
+      const copyStyle = copy ? getComputedStyle(copy) : null;
       const footerStyle = footer ? getComputedStyle(footer) : null;
+      const cardOverlayStyle = getComputedStyle(card, "::after");
       const footerBackground = footerStyle?.backgroundColor || "";
       const backgroundAlpha = Number(
         footerBackground.match(/rgba?\([^,]+,[^,]+,[^,]+(?:,\s*([^)]+))?\)/)?.[1] ??
@@ -90,8 +95,13 @@ async function measureRoster(page) {
         clientWidth: card.clientWidth,
         scrollHeight: card.scrollHeight,
         clientHeight: card.clientHeight,
-        hitZIndex: Number(hitStyle?.zIndex || 0),
-        footerZIndex: Number(footerStyle?.zIndex || 0),
+        hitZIndex: Number.parseInt(hitStyle?.zIndex, 10) || 0,
+        artZIndex: Number.parseInt(artStyle?.zIndex, 10) || 0,
+        copyZIndex: Number.parseInt(copyStyle?.zIndex, 10) || 0,
+        cardOverlay: cardOverlayStyle.backgroundImage,
+        cardOverlayZIndex:
+          Number.parseInt(cardOverlayStyle.zIndex, 10) || 0,
+        footerZIndex: Number.parseInt(footerStyle?.zIndex, 10) || 0,
         footerBackground,
         footerBackgroundOpaque: backgroundAlpha === 1,
       };
@@ -204,6 +214,16 @@ try {
         `${name}: hero card escapes gallery`,
       );
       if (width > 920) {
+        assert.notEqual(
+          card.cardOverlay,
+          "none",
+          `${name}: hero card needs a portrait fade ${JSON.stringify(card)}`,
+        );
+        assert.ok(
+          card.copyZIndex > card.cardOverlayZIndex &&
+            card.copyZIndex > card.artZIndex,
+          `${name}: hero identity text is not layered above the portrait fade ${JSON.stringify(card)}`,
+        );
         assert.equal(
           card.footerBackgroundOpaque,
           true,
