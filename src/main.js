@@ -26,6 +26,7 @@ import {
   EQUIPMENT,
   FACILITIES,
   HERO_BONDS,
+  HERO_CHRONICLES,
   HERO_DOCTRINES,
   HERO_LEGENDS,
   HERO_QUESTS,
@@ -1111,8 +1112,8 @@ function toast(message, tone = "default") {
   }, 2800);
 }
 
-function openModal({ title, body, actions = [] }) {
-  modal = { title, body, actions };
+function openModal({ title, body, actions = [], kind = "" }) {
+  modal = { title, body, actions, kind };
   render();
 }
 
@@ -1125,7 +1126,7 @@ function renderModal() {
   if (!modal) return "";
   return `
     <div class="modal-backdrop" data-action="close-modal">
-      <section class="modal-panel" role="dialog" aria-modal="true" aria-label="${escapeHtml(modal.title)}" data-modal-panel>
+      <section class="modal-panel ${modal.kind ? `is-${modal.kind}` : ""}" role="dialog" aria-modal="true" aria-label="${escapeHtml(modal.title)}" data-modal-panel>
         <button class="icon-button modal-close" data-action="close-modal" aria-label="关闭">${icon("x", 18)}</button>
         <p class="eyebrow">梁山令</p>
         <h2>${escapeHtml(modal.title)}</h2>
@@ -2431,6 +2432,84 @@ function heroCard(heroId, options = {}) {
   `;
 }
 
+function showHeroChronicle(heroId) {
+  const hero = HEROES[heroId];
+  const chronicle = HERO_CHRONICLES[heroId];
+  if (!hero || !chronicle) return;
+  const questEntries = chronicle.entries.filter(
+    (entry) => entry.kind === "quest",
+  );
+  const claimed = new Set(state.heroQuests?.claimed || []);
+  const completed = questEntries.filter((entry) => claimed.has(entry.id)).length;
+  const legend = HERO_LEGENDS[heroId];
+  const legendDone = heroLegendCompleted(state, heroId);
+  openModal({
+    title: chronicle.title,
+    kind: "chronicle",
+    body: `
+      <article class="hero-chronicle">
+        <header class="hero-chronicle-heading">
+          <div class="hero-chronicle-keyart">${heroKeyart(heroId, "")}</div>
+          <div>
+            <p class="eyebrow">${escapeHtml(chronicle.subtitle)} · ${escapeHtml(hero.role)}</p>
+            <h3>${escapeHtml(hero.name)}</h3>
+            <div class="hero-chronicle-meta">
+              ${pathBadge(hero.path)}
+              <span>${icon("map-pin", 14)}${escapeHtml(legend.location)}</span>
+              <span>${icon(legendDone ? "badge-check" : "scroll-text", 14)}${legendDone ? "列传已录" : `${completed}/3 异闻已录`}</span>
+            </div>
+            <blockquote>${escapeHtml(hero.bio)}</blockquote>
+          </div>
+        </header>
+        <ol class="hero-chronicle-timeline">
+          ${chronicle.entries
+            .map(
+              (entry) => `
+                <li class="hero-chronicle-entry is-${entry.kind}">
+                  <span class="hero-chronicle-marker">${escapeHtml(entry.marker)}</span>
+                  <div>
+                    <small>${
+                      entry.kind === "origin"
+                        ? "人物本传"
+                        : entry.kind === "quest"
+                          ? "好汉异闻"
+                          : "群英列传"
+                    }</small>
+                    <h4>${escapeHtml(entry.title)}</h4>
+                    <p>${escapeHtml(entry.text)}</p>
+                    ${
+                      entry.objective
+                        ? `<em>${icon("swords", 13)}${escapeHtml(entry.objective)}</em>`
+                        : ""
+                    }
+                    ${
+                      entry.epithet
+                        ? `<b>${icon("star", 13)}${escapeHtml(entry.epithet)}</b>`
+                        : ""
+                    }
+                  </div>
+                </li>
+              `,
+            )
+            .join("")}
+        </ol>
+        <footer class="hero-chronicle-footer">
+          <span>${icon("book-open", 14)}本传、异闻与列传同归一册</span>
+          <b>${escapeHtml(hero.star)}</b>
+        </footer>
+      </article>
+    `,
+    actions: [
+      {
+        label: "合上列传",
+        action: "close-modal",
+        tone: "primary",
+        icon: "book-open",
+      },
+    ],
+  });
+}
+
 function renderRoster() {
   const detailId = selectedCodexHero && state.recruited.includes(selectedCodexHero)
     ? selectedCodexHero
@@ -2514,6 +2593,7 @@ function renderRoster() {
             <div class="dossier-actions">
               <button class="button secondary" data-action="equipment-hero" data-hero="${detailId}">${icon("shield", 17)}<span>整理装备</span></button>
               <button class="button ghost" data-action="nav-formation">${icon("layout-grid", 17)}<span>调整站位</span></button>
+              <button class="button ghost chronicle-action" data-action="open-hero-chronicle" data-hero="${detailId}">${icon("book-open", 17)}<span>阅人物生平</span></button>
             </div>
           </div>
         </aside>
@@ -3208,6 +3288,9 @@ function renderCodex() {
                   .map((skill) => `<span><b>${skill.name}</b><small>${skill.desc}</small></span>`)
                   .join("")}
               </div>
+              <button class="codex-chronicle-action" data-action="open-hero-chronicle" data-hero="${selectedId}">
+                ${icon("book-open", 16)}<span>翻阅${HEROES[selectedId].name}列传</span>${icon("chevron-right", 15)}
+              </button>
               <div class="codex-mastery">
                 <div class="codex-mastery-heading">
                   <span>${icon("trophy", 15)} 星命试炼</span>
@@ -6647,6 +6730,9 @@ function handleAction(action, element) {
       selectedCodexHero = element.dataset.hero;
       if (screen === "codex") render();
       else setScreen("roster");
+      return;
+    case "open-hero-chronicle":
+      showHeroChronicle(element.dataset.hero);
       return;
     case "toggle-codex-archive": {
       const archive = element.dataset.archive;

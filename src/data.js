@@ -12780,6 +12780,50 @@ export const ENEMIES = {
   },
 };
 
+export const HERO_CHRONICLES = Object.fromEntries(
+  HERO_ORDER.map((heroId) => {
+    const hero = HEROES[heroId];
+    const quests = HERO_QUESTS[heroId] || [];
+    const legend = HERO_LEGENDS[heroId];
+    return [
+      heroId,
+      {
+        id: `${heroId}_chronicle`,
+        heroId,
+        title: `${hero.name}列传`,
+        subtitle: `${hero.star} · ${hero.nickname}`,
+        entries: [
+          {
+            id: `${heroId}_origin`,
+            kind: "origin",
+            marker: "本传",
+            title: hero.nickname,
+            text: hero.bio,
+          },
+          ...quests.map((quest, index) => ({
+            id: quest.id,
+            kind: "quest",
+            marker: ["起势", "转折", "归心"][index],
+            title: quest.title,
+            text: quest.premise,
+            epithet: quest.epithet,
+          })),
+          {
+            id: `legend-${legend.id}`,
+            sourceId: legend.id,
+            kind: "legend",
+            marker: "终章",
+            title: legend.title,
+            text: legend.readyText,
+            objective: legend.objective,
+            location: legend.location,
+          },
+        ],
+      },
+    ];
+  }),
+);
+
 export const CHAPTERS = [
   {
     id: "ferry",
