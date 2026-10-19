@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Regenerates Godot gameplay JSON from the shared campaign source.
-import { cp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 
 const data = await import("../src/data.js");
 const assetPath = (value) => value?.replace(/^\/?assets\//, "res://assets/");
@@ -42,6 +42,30 @@ const startingEquipment = {
   wuyong: { weapon: "strategist_chain", armor: "crane_cloak", token: "wisdom_fan" },
   yanqing: { weapon: "wanderer_spear", armor: "swallow_armor", token: "wrestling_belt" },
 };
+
+// Godot's importer writes sidecars next to assets. Preserve them when the
+// generated asset tree is refreshed so exported builds keep valid textures.
+const importSidecars = {};
+for (const folder of ["characters", "enemies", "environments", "audio", "video"]) {
+  const sourceFolder = new URL("../godot/assets/" + folder + "/", import.meta.url);
+  const visit = async (directory) => {
+    let entries;
+    try {
+      entries = await readdir(directory, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const child = new URL(entry.name + (entry.isDirectory() ? "/" : ""), directory);
+      if (entry.isDirectory()) {
+        await visit(child);
+      } else if (entry.name.endsWith(".import")) {
+        importSidecars[child.pathname] = await readFile(child);
+      }
+    }
+  };
+  await visit(sourceFolder);
+}
 
 const chapterRules = {
   ferry: {
@@ -238,4 +262,7 @@ for (const folder of bundledAssets) {
     filter: (source) => !skipFiles.test(source.split("/").at(-1)),
     force: true,
   });
+}
+for (const [path, contents] of Object.entries(importSidecars)) {
+  await writeFile(path, contents);
 }
