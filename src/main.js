@@ -5314,6 +5314,26 @@ function settleVictory() {
 function renderReward() {
   const reward = story?.reward;
   if (!reward) return "";
+  const additionalRecruits = (reward.recruits || []).filter(
+    (heroId) => heroId !== reward.recruitment?.heroId,
+  );
+  const recruitCards = additionalRecruits.length
+    ? `<div class="recruit-section">
+        <p class="eyebrow">新入伙</p>
+        <div class="recruit-cards">
+          ${additionalRecruits
+            .map(
+              (heroId) => `
+                <article>
+                  ${heroPortrait(heroId, "")}
+                  <span><small>${HEROES[heroId].star} · ${HEROES[heroId].nickname}</small><b>${HEROES[heroId].name}</b></span>
+                </article>
+              `,
+            )
+            .join("")}
+        </div>
+      </div>`
+    : "";
   return `
     <main class="reward-screen" style="--reward-bg:url('${activeChapter.bg}')">
       <div class="reward-background"></div>
@@ -5329,33 +5349,15 @@ function renderReward() {
             <div class="reward-item">${icon("trending-up", 23)}<small>全队历练</small><b>+${reward.xp}</b><span>经验</span></div>
             <div class="reward-item">${icon("gem", 23)}<small>获得装备</small><b>${reward.item ? EQUIPMENT[reward.item]?.name : "旧战重游"}</b><span>${reward.item ? EQUIPMENT[reward.item]?.rarity : ""}</span></div>
           </div>
+          ${renderRecruitmentReward(reward.recruitment)}
+          ${recruitCards}
           ${renderChapterMedalRewards(reward.medals)}
           ${renderChapterTacticReward(reward.tactic)}
           ${renderLegendReward(reward.legend)}
-          ${renderRecruitmentReward(reward.recruitment)}
           ${renderMasteryUnlocks()}
           ${renderBondUnlocks()}
           ${renderChainUnlocks()}
           ${renderAchievementUnlocks()}
-          ${
-            reward.recruits?.length
-              ? `<div class="recruit-section">
-                  <p class="eyebrow">新入伙</p>
-                  <div class="recruit-cards">
-                    ${reward.recruits
-                      .map(
-                        (heroId) => `
-                          <article>
-                            ${heroPortrait(heroId, "")}
-                            <span><small>${HEROES[heroId].star} · ${HEROES[heroId].nickname}</small><b>${HEROES[heroId].name}</b></span>
-                          </article>
-                        `,
-                      )
-                      .join("")}
-                  </div>
-                </div>`
-              : ""
-          }
           ${
             reward.levelUps?.length
               ? `<p class="level-up-line">${icon("arrow-up", 16)} ${reward.levelUps.map((entry) => `${HEROES[entry.heroId].name}提升 ${entry.levels} 级`).join(" · ")}</p>`
@@ -5389,16 +5391,17 @@ function renderLegendReward(legend) {
 function renderRecruitmentReward(recruitment) {
   if (!recruitment) return "";
   const hero = HEROES[recruitment.heroId];
+  if (!hero) return "";
   return `
-    <div class="legend-reward-panel recruitment-reward-panel">
-      <span>${icon("user-round-plus", 20)}</span>
-      <div>
-        <small>聚义帖 · 新兄弟入伙</small>
-        <b>${hero?.name || ""} · ${hero?.nickname || ""}</b>
+    <section class="recruitment-reward-panel" aria-label="${hero.name}入队">
+      <div class="recruitment-reward-art">${heroPortrait(recruitment.heroId, "")}</div>
+      <div class="recruitment-reward-copy">
+        <p class="eyebrow">${icon("user-round-plus", 14)} 聚义帖 · 新兄弟入伙</p>
+        <h2>${hero.name}<small>${hero.star} · ${hero.nickname}</small></h2>
         <p>${recruitment.teaser}</p>
+        <span>${icon("badge-check", 15)} 已入聚义簿</span>
       </div>
-      <em>${icon("badge-check", 15)} 已入聚义簿</em>
-    </div>
+    </section>
   `;
 }
 

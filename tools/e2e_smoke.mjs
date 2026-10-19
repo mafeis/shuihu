@@ -404,6 +404,51 @@ async function completeRecruitmentScroll(heroId) {
     "recruitment_theme",
     `${recruitment.title} reward should use the recruitment theme`,
   );
+  const recruitmentReward = await evaluate(`(() => {
+    const panel = document.querySelector(".recruitment-reward-panel");
+    const image = panel?.querySelector(".recruitment-reward-art img");
+    const copy = panel?.querySelector(".recruitment-reward-copy");
+    if (!panel || !image || !copy) return null;
+    const panelRect = panel.getBoundingClientRect();
+    const imageRect = image.getBoundingClientRect();
+    const copyRect = copy.getBoundingClientRect();
+    return {
+      imageComplete: image.complete,
+      imageInside:
+        imageRect.top >= panelRect.top - 1 &&
+        imageRect.bottom <= panelRect.bottom + 1 &&
+        imageRect.left >= panelRect.left - 1 &&
+        imageRect.right <= panelRect.right + 1,
+      copySeparated: copyRect.left >= imageRect.right - 1,
+      objectFit: getComputedStyle(image).objectFit,
+      duplicateCard: Boolean(document.querySelector(".recruit-cards")),
+    };
+  })()`);
+  assertEqual(
+    Boolean(recruitmentReward?.imageComplete),
+    true,
+    `${recruitment.title} reward should load the new hero portrait`,
+  );
+  assertEqual(
+    recruitmentReward?.imageInside,
+    true,
+    `${recruitment.title} reward should show the complete new hero portrait`,
+  );
+  assertEqual(
+    recruitmentReward?.copySeparated,
+    true,
+    `${recruitment.title} reward should keep recruit copy clear of the portrait`,
+  );
+  assertEqual(
+    recruitmentReward?.objectFit,
+    "contain",
+    `${recruitment.title} reward should preserve the recruit portrait silhouette`,
+  );
+  assertEqual(
+    recruitmentReward?.duplicateCard,
+    false,
+    `${recruitment.title} reward should not duplicate the new hero card`,
+  );
   const completedState = await evaluate(
     `JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}))`,
   );
