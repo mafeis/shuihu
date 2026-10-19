@@ -199,6 +199,36 @@ npm run audio:verify
 
 音频验收会检查 MP3 编码、44.1kHz、双声道、约 32 秒时长、约 `-16 LUFS` 响度、真峰值上限 `-1.0 dBTP`、解码峰值上限 `0.98` 与循环边界比上限 `2.0`。当前十首作品全部通过，最高循环边界比为 `1.04`。
 
+### 8.1 生成战斗一次性音效
+
+```bash
+# 缺少的音效会通过 ComfyUI 生成，再从缓存母带重建
+COMFY_URL=http://100.122.17.21:8188 python3 tools/comfy_sfx_pipeline.py
+
+# 只重做单个分类
+COMFY_URL=http://100.122.17.21:8188 \
+  python3 tools/comfy_sfx_pipeline.py impact --force
+
+# 已有 ComfyUI 原始音时，仅重新裁切、瞬态整形与母带
+npm run audio:master:sfx
+```
+
+战斗音效与配乐共用 ComfyUI 资产流程，但不做循环。YuE2 先提供短材质层，`tools/combat_sfx_synth.py` 再叠加与技能语义对应的刀风、箭矢、重击、格挡、恢复和终式瞬态层。最终文件会去除前导静音、压缩动态、做短淡出，并输出 44.1kHz、双声道、192kbps MP3。
+
+当前十个通用分类为：
+
+- `battle-start`：开战鼓点与短角声。
+- `blade`：单斩、突刺、刀剑命中。
+- `impact`：重兵器、破甲与范围冲击。
+- `volley`：箭矢、飞石、暗器与投掷。
+- `guard`：格挡、反击与防御架势。
+- `evade`：闪避与衣袂掠过。
+- `restore`：治疗、净化和回复。
+- `ultimate`：攻击型义技与星命合击。
+- `victory` / `defeat`：胜负收束。
+
+`npm run audio:verify` 会同时检查配乐循环和所有一次性音效的编码、时长、响度、真峰值与解码峰值。
+
 ## 9. 资产打包
 
 ```bash

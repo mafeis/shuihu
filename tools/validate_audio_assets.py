@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AUDIO_DIR = ROOT / "assets" / "audio"
+SFX_DIR = AUDIO_DIR / "sfx"
 TRACKS = [
     "title_theme",
     "jianghu_theme",
@@ -25,8 +26,21 @@ TRACKS = [
     "boss_theme",
     "recruitment_theme",
 ]
+SFX_CUES = {
+    "battle-start": 1.55,
+    "blade": 0.72,
+    "impact": 0.95,
+    "volley": 0.82,
+    "guard": 0.88,
+    "evade": 0.58,
+    "restore": 1.35,
+    "ultimate": 1.6,
+    "victory": 1.9,
+    "defeat": 2.0,
+}
 TARGET_LUFS = -16.0
 LUFS_TOLERANCE = 1.5
+SFX_LUFS_TOLERANCE = 3.0
 TRUE_PEAK_LIMIT = -1.0
 DECODED_PEAK_LIMIT = 0.98
 BOUNDARY_RATIO_LIMIT = 2.0
@@ -173,8 +187,47 @@ def validate_track(name: str) -> dict:
     }
 
 
+def validate_sfx(name: str, target_duration: float) -> dict:
+    path = SFX_DIR / f"{name}.mp3"
+    if not path.exists():
+        raise FileNotFoundError(path)
+    encoding = ffprobe(path)
+    loud = loudness(path)
+    decoded = decoded_metrics(path)
+    errors = []
+    if encoding["codec"] != "mp3":
+        errors.append(f"codec is {encoding['codec']}, expected mp3")
+    if encoding["sample_rate"] != 44100:
+        errors.append(f"sample rate is {encoding['sample_rate']}, expected 44100")
+    if encoding["channels"] != 2:
+        errors.append(f"channel count is {encoding['channels']}, expected 2")
+    if encoding["bit_rate"] < 160_000:
+        errors.append(f"bit rate is {encoding['bit_rate']}, expected at least 160 kbps")
+    if abs(encoding["duration"] - target_duration) > 0.22:
+        errors.append(
+            f"duration is {encoding['duration']:.2f}s, expected {target_duration:.2f}s"
+        )
+    if abs(loud["integrated_lufs"] - TARGET_LUFS) > SFX_LUFS_TOLERANCE:
+        errors.append(
+            f"integrated loudness is {loud['integrated_lufs']:.2f} LUFS"
+        )
+    if loud["true_peak_dbtp"] > TRUE_PEAK_LIMIT:
+        errors.append(f"true peak is {loud['true_peak_dbtp']:.2f} dBTP")
+    if decoded["decoded_peak"] > DECODED_PEAK_LIMIT:
+        errors.append(f"decoded peak is {decoded['decoded_peak']:.4f}")
+    return {
+        "cue": name,
+        "duration": round(encoding["duration"], 3),
+        "bit_rate": encoding["bit_rate"],
+        **{key: round(value, 4) for key, value in loud.items()},
+        "decoded_peak": round(decoded["decoded_peak"], 4),
+        "errors": errors,
+    }
+
+
 def main() -> int:
     reports = []
+    sfx_reports = []
     failed = False
     for name in TRACKS:
         report = validate_track(name)
@@ -189,7 +242,29 @@ def main() -> int:
         for error in report["errors"]:
             print(f"  - {error}")
         failed = failed or bool(report["errors"])
-    print(json.dumps({"passed": not failed, "tracks": reports}, ensure_ascii=False))
+    for name, target_duration in SFX_CUES.items():
+        report = validate_sfx(name, target_duration)
+        sfx_reports.append(report)
+        status = "PASS" if not report["errors"] else "FAIL"
+        print(
+            f"{status} sfx/{name:12} "
+            f"{report['integrated_lufs']:>6.2f} LUFS  "
+            f"{report['true_peak_dbtp']:>6.2f} dBTP  "
+            f"{report['duration']:.2f}s"
+        )
+        for error in report["errors"]:
+            print(f"  - {error}")
+        failed = failed or bool(report["errors"])
+    print(
+        json.dumps(
+            {
+                "passed": not failed,
+                "tracks": reports,
+                "combat_sfx": sfx_reports,
+            },
+            ensure_ascii=False,
+        )
+    )
     return 1 if failed else 0
 
 

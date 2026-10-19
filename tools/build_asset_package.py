@@ -1451,6 +1451,32 @@ AUDIO_ASSETS = [
     },
 ]
 
+SFX_ASSETS = [
+    {
+        "id": cue,
+        "type": "combat_sfx",
+        "file": f"assets/audio/sfx/{cue}.mp3",
+        "pipeline": "ComfyUI YuE2 texture + deterministic transient mastering",
+        "model": "yue2_3b_int8_convrot.safetensors",
+        "workflow": "tools/comfy_sfx_pipeline.py",
+        "seed": seed,
+        "target_duration": duration,
+        "usage": usage,
+    }
+    for cue, seed, duration, usage in (
+        ("battle-start", 281001, 1.55, "battle opening hit"),
+        ("blade", 281013, 0.72, "single-target slash and stab"),
+        ("impact", 281031, 0.95, "heavy weapon and area impact"),
+        ("volley", 281047, 0.82, "arrows, darts and thrown weapons"),
+        ("guard", 281063, 0.88, "block, counter and defensive support"),
+        ("evade", 281081, 0.58, "miss and evasion"),
+        ("restore", 281099, 1.35, "healing and restorative support"),
+        ("ultimate", 281117, 1.6, "offensive ultimate and chain attack"),
+        ("victory", 281133, 1.9, "victory sting"),
+        ("defeat", 281151, 2.0, "defeat sting"),
+    )
+]
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -1659,6 +1685,8 @@ def main() -> int:
         entries.append(build_entry(asset))
     for asset in AUDIO_ASSETS:
         entries.append(build_audio_entry(asset))
+    for asset in SFX_ASSETS:
+        entries.append(build_audio_entry(asset))
 
     icon_dir = ROOT / "assets/ui/icons"
     for icon in sorted(icon_dir.glob("*_512.png")):
@@ -1681,6 +1709,7 @@ def main() -> int:
             "image": "ComfyUI + Qwen Image 2.1",
             "video": "ComfyUI + MiniMax H3",
             "music": "ComfyUI + YuE2 3B",
+            "combat_sfx": "ComfyUI YuE2 texture + deterministic transient mastering",
             "upscale": "SeedVR2 7B (available for final engine textures)",
         },
         "asset_count": len(entries),
@@ -1688,7 +1717,8 @@ def main() -> int:
     }
     output = ROOT / "assets/manifest.json"
     output.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
     )
     print(f"Wrote {output} with {len(entries)} assets")
     return 0

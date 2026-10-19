@@ -3,21 +3,11 @@ import test from "node:test";
 
 import {
   battleVfxProfile,
-  battleVfxVideoKey,
+  battleVfxTemplate,
 } from "../src/battle-vfx.js";
 
-test("each combat path resolves to its ComfyUI skill video", () => {
-  assert.deepEqual(
-    ["gang", "ling", "tao", "shou"].map((pathId) =>
-      battleVfxVideoKey(pathId),
-    ),
-    ["gang", "ling", "tao", "shou"],
-  );
-  assert.equal(battleVfxVideoKey("unknown"), null);
-});
-
-test("battle VFX profiles follow the four combat paths", () => {
-  const result = {
+function damageResult(overrides = {}) {
+  return {
     ok: true,
     actorUid: "hero-1",
     kind: "damage",
@@ -30,91 +20,151 @@ test("battle VFX profiles follow the four combat paths", () => {
         critical: true,
       },
     ],
+    ...overrides,
   };
+}
 
-  const profiles = [
-    {
-      skill: { name: "断岳", path: "gang", power: 0.8 },
-      actor: { uid: "hero-1", side: "hero", path: "gang" },
-      result,
-    },
-    {
-      skill: { name: "追风", path: "ling", power: 0.8 },
-      actor: { uid: "hero-1", side: "hero", path: "ling" },
-      result,
-    },
-    {
-      skill: { name: "星阵", path: "tao", power: 0.8 },
-      actor: { uid: "hero-1", side: "hero", path: "tao" },
-      result,
-    },
-    {
-      skill: { name: "铁壁", path: "shou", power: 0.8 },
-      actor: { uid: "hero-1", side: "hero", path: "shou" },
-      result,
-    },
-  ];
-  const expected = [
-    ["gang", "slash"],
-    ["ling", "projectile"],
-    ["tao", "sigil"],
-    ["shou", "guard"],
-  ];
-
-  profiles.forEach((profile, index) => {
-    const visual = battleVfxProfile(profile);
-    assert.equal(visual.videoKey, expected[index][0]);
-    assert.equal(visual.kind, expected[index][1]);
-  });
-});
-
-test("heavy, healing, support and chain skills receive distinct VFX", () => {
-  const actor = { uid: "hero-1", side: "hero", path: "gang" };
+test("skill behavior selects one of six reusable VFX templates", () => {
   assert.equal(
-    battleVfxProfile({
-      skill: { name: "天罡破军", path: "gang", ultimate: true },
-      actor,
-      result: {
-        ok: true,
-        actorUid: "hero-1",
-        kind: "damage",
-        targets: ["enemy-1"],
-        events: [{ type: "damage", targetUid: "enemy-1" }],
-      },
-    }).kind,
-    "quake",
+    battleVfxTemplate({
+      skill: { name: "寒星枪", desc: "单体刺击", power: 0.92 },
+      result: damageResult(),
+    }),
+    "blade",
   );
   assert.equal(
-    battleVfxProfile({
-      skill: { name: "回春", path: "tao", heal: true },
-      actor,
+    battleVfxTemplate({
+      skill: { name: "穿云箭", desc: "精准射击单体", power: 1 },
+      result: damageResult(),
+    }),
+    "volley",
+  );
+  assert.equal(
+    battleVfxTemplate({
+      skill: { name: "狼牙碎甲", desc: "重棒砸击单体", power: 0.92 },
+      result: damageResult(),
+    }),
+    "impact",
+  );
+  assert.equal(
+    battleVfxTemplate({
+      skill: { name: "震天雷", desc: "掷出铁壳雷炮，造成范围伤害", power: 0.63 },
+      result: damageResult(),
+    }),
+    "impact",
+  );
+  assert.equal(
+    battleVfxTemplate({
+      skill: { name: "横枪守阵", target: "self", power: 0 },
+      result: { ok: true, kind: "support", events: [], targets: ["hero-1"] },
+    }),
+    "guard",
+  );
+  assert.equal(
+    battleVfxTemplate({
+      skill: { name: "金针渡厄", heal: 1.55, power: 0 },
       result: {
         ok: true,
-        actorUid: "hero-1",
         kind: "heal",
         targets: ["hero-1"],
         events: [{ type: "heal", targetUid: "hero-1", healing: 30 }],
       },
-    }).kind,
-    "mend",
+    }),
+    "restore",
   );
   assert.equal(
-    battleVfxProfile({
-      skill: { name: "列阵", path: "shou" },
-      actor,
-      result: {
-        ok: true,
-        actorUid: "hero-1",
-        kind: "support",
-        targets: ["hero-1", "hero-2"],
-        events: [],
-      },
-    }).kind,
-    "ward",
+    battleVfxTemplate({
+      skill: { name: "风雪山神庙", ultimate: true, power: 0.78, hits: 3 },
+      result: damageResult(),
+    }),
+    "ultimate",
   );
+});
+
+test("metadata overrides path-specific identity while path only changes tone", () => {
+  const actor = { uid: "hero-1", side: "hero", path: "gang", row: 1 };
+  const arrow = battleVfxProfile({
+    skill: {
+      id: "arrow",
+      name: "雁翎箭雨",
+      desc: "射击全体敌人",
+      path: "gang",
+      target: "allEnemies",
+      power: 0.62,
+    },
+    actor,
+    result: damageResult({ targets: ["enemy-1", "enemy-2"] }),
+  });
+  assert.equal(arrow.kind, "volley");
+  assert.equal(arrow.tone, "cinnabar");
+  assert.equal(arrow.videoKey, undefined);
+  assert.equal(arrow.multiTarget, true);
+
+  const staff = battleVfxProfile({
+    skill: {
+      id: "staff",
+      name: "禅杖横扫",
+      desc: "攻击全体敌人",
+      path: "ling",
+      target: "allEnemies",
+      power: 0.56,
+    },
+    actor: { ...actor, path: "ling" },
+    result: damageResult({ targets: ["enemy-1", "enemy-2"] }),
+  });
+  assert.equal(staff.kind, "impact");
+  assert.equal(staff.tone, "teal");
+});
+
+test("defensive supports and healing ultimates retain their functional template", () => {
+  const actor = { uid: "hero-1", side: "hero", path: "shou", row: 0 };
+  const guard = battleVfxProfile({
+    skill: {
+      name: "禁军枪阵",
+      path: "shou",
+      target: "allAllies",
+      power: 0,
+      effects: [{ type: "teamStatus", status: "guard", duration: 1 }],
+    },
+    actor,
+    result: {
+      ok: true,
+      actorUid: "hero-1",
+      kind: "support",
+      targets: ["hero-1", "hero-2"],
+      events: [],
+    },
+  });
+  assert.equal(guard.kind, "guard");
+  assert.equal(guard.ultimate, false);
+
+  const healUltimate = battleVfxProfile({
+    skill: {
+      name: "神医下山",
+      path: "shou",
+      target: "allAllies",
+      power: 0,
+      heal: 1.85,
+      ultimate: true,
+    },
+    actor,
+    result: {
+      ok: true,
+      actorUid: "hero-1",
+      kind: "heal",
+      targets: ["hero-1", "hero-2"],
+      events: [{ type: "heal", targetUid: "hero-1", healing: 42 }],
+    },
+  });
+  assert.equal(healUltimate.kind, "restore");
+  assert.equal(healUltimate.ultimate, true);
+  assert.ok(healUltimate.duration > 940);
+});
+
+test("chain attacks use the ultimate template and retain event flags", () => {
   const combo = battleVfxProfile({
     skill: { name: "星命合击", path: "gang", ultimate: true },
-    actor,
+    actor: { uid: "hero-1", side: "hero", path: "gang", row: 1 },
     result: {
       ok: true,
       actorUid: "hero-1",
@@ -127,11 +177,11 @@ test("heavy, healing, support and chain skills receive distinct VFX", () => {
       ],
     },
   });
-  assert.equal(combo.kind, "starfall");
-  assert.equal(combo.videoKey, "gang");
+  assert.equal(combo.kind, "ultimate");
   assert.equal(combo.heavy, true);
-  assert.deepEqual(combo.targetUids, ["enemy-1", "enemy-2"]);
+  assert.equal(combo.ultimate, true);
   assert.equal(combo.pathAdvantage, true);
+  assert.deepEqual(combo.targetUids, ["enemy-1", "enemy-2"]);
 });
 
 test("failed actions do not render a stale VFX overlay", () => {

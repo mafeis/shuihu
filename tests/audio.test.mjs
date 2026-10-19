@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  COMBAT_SFX_ASSETS,
   COMBAT_SFX_CUES,
+  combatSfxAsset,
   combatSfxCue,
   sceneMusicTrack,
 } from "../src/audio.js";
@@ -10,16 +12,22 @@ import {
 test("combat audio exposes every battle and result cue", () => {
   assert.deepEqual(COMBAT_SFX_CUES, [
     "battle-start",
-    "slash",
-    "heavy",
-    "projectile",
-    "block",
+    "blade",
+    "impact",
+    "volley",
+    "guard",
     "evade",
-    "heal",
-    "combo",
+    "restore",
+    "ultimate",
     "victory",
     "defeat",
   ]);
+  assert.equal(
+    combatSfxAsset("blade"),
+    "/assets/audio/sfx/blade.mp3",
+  );
+  assert.equal(combatSfxAsset("unknown"), null);
+  assert.equal(Object.keys(COMBAT_SFX_ASSETS).length, COMBAT_SFX_CUES.length);
 });
 
 test("scene music follows the campaign chapter and switches to the boss theme", () => {
@@ -58,43 +66,74 @@ test("scene music follows the campaign chapter and switches to the boss theme", 
   );
 });
 
-test("combat cues reflect path, impact, evasion and results", () => {
+test("combat cues reflect skill behavior, evasion and results", () => {
   const hit = { ok: true, kind: "damage", events: [{ type: "damage" }] };
   assert.equal(
-    combatSfxCue({ skill: { path: "gang", target: "enemy" }, result: hit }),
-    "slash",
+    combatSfxCue({
+      skill: { path: "gang", target: "enemy", power: 0.9 },
+      result: hit,
+    }),
+    "blade",
   );
   assert.equal(
     combatSfxCue({
-      skill: { path: "tao", target: "enemy", power: 1.3 },
+      skill: {
+        path: "tao",
+        target: "enemy",
+        power: 0.92,
+        name: "狼牙碎甲",
+        desc: "重棒砸击单体",
+      },
       result: hit,
     }),
-    "heavy",
+    "impact",
   );
   assert.equal(
-    combatSfxCue({ skill: { path: "ling", target: "enemy" }, result: hit }),
-    "projectile",
+    combatSfxCue({
+      skill: {
+        path: "ling",
+        target: "enemy",
+        power: 1,
+        name: "穿云箭",
+        desc: "精准射击单体",
+      },
+      result: hit,
+    }),
+    "volley",
   );
   assert.equal(
     combatSfxCue({
       skill: { path: "ling", target: "enemy" },
-      result: { events: [{ type: "evade" }] },
+      result: { ok: true, events: [{ type: "evade" }] },
     }),
     "evade",
   );
   assert.equal(
     combatSfxCue({
       skill: { path: "gang", target: "enemy" },
-      result: { events: [{ type: "combo" }] },
+      result: { ok: true, kind: "combo", events: [{ type: "combo" }] },
     }),
-    "combo",
+    "ultimate",
   );
   assert.equal(
     combatSfxCue({
       skill: { path: "shou", target: "ally" },
-      result: { events: [{ type: "heal" }] },
+      result: { ok: true, events: [{ type: "heal" }] },
     }),
-    "heal",
+    "restore",
+  );
+  assert.equal(
+    combatSfxCue({
+      skill: {
+        path: "shou",
+        target: "self",
+        power: 0,
+        name: "横枪守阵",
+        effects: [{ type: "selfStatus", status: "guard" }],
+      },
+      result: { ok: true, kind: "support", events: [] },
+    }),
+    "guard",
   );
   assert.equal(
     combatSfxCue({

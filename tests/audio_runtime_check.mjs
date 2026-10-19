@@ -39,20 +39,29 @@ try {
       globalThis.__shuihuAudioPlayAttempts?.("battle_theme") || 0;
     const sound = globalThis.__shuihuSound;
     const sfx = [];
-    for (const cue of [
+    const cues = [
       "battle-start",
-      "slash",
-      "heavy",
-      "projectile",
-      "block",
+      "blade",
+      "impact",
+      "volley",
+      "guard",
       "evade",
-      "heal",
-      "combo",
+      "restore",
+      "ultimate",
       "victory",
       "defeat",
-    ]) {
+    ];
+    const loadedBuffers = await sound.preloadCombatSfx();
+    for (const cue of cues) {
       sound.playCombatCue(cue);
       sfx.push({ cue, lastCue: sound.lastCue });
+    }
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    const sfxStatus = globalThis.__shuihuCombatSfxStatus?.();
+    const sfxBytes = {};
+    for (const cue of cues) {
+      const sfxResponse = await fetch(`/assets/audio/sfx/${cue}.mp3`);
+      sfxBytes[cue] = (await sfxResponse.arrayBuffer()).byteLength;
     }
     const media = [
       ...performance.getEntriesByType("resource")
@@ -66,6 +75,9 @@ try {
       audioElementCount,
       audioPlayAttempts,
       sfx,
+      sfxStatus,
+      loadedBufferCount: loadedBuffers.filter(Boolean).length,
+      sfxBytes,
     };
   });
 
@@ -78,6 +90,34 @@ try {
     report.sfx.every((entry) => entry.cue === entry.lastCue),
     true,
     "every combat cue should reach the audio engine",
+  );
+  assert.equal(
+    report.loadedBufferCount,
+    10,
+    "all ten generated combat one-shots should decode",
+  );
+  assert.equal(
+    report.sfxStatus.loaded.length,
+    10,
+    "the runtime should cache every generated combat one-shot",
+  );
+  assert.equal(
+    report.sfxStatus.failures.length,
+    0,
+    "generated combat one-shots should not fail to load",
+  );
+  assert.ok(
+    report.sfxStatus.generatedPlays >= 10,
+    "combat cues should play from generated buffers after preload",
+  );
+  assert.equal(
+    Object.values(report.sfxBytes).every((bytes) => bytes > 8_000),
+    true,
+    "every generated combat one-shot should contain audio data",
+  );
+  assert.ok(
+    report.media.some((entry) => entry.src.includes("/assets/audio/sfx/")),
+    "the browser should request generated combat one-shots",
   );
   console.log(JSON.stringify(report, null, 2));
 } finally {

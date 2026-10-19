@@ -1,3 +1,5 @@
+import { battleVfxTemplate } from "./battle-vfx.js";
+
 const SCENE_TRACKS = {
   title: "title_theme",
   battle: "battle_theme",
@@ -26,16 +28,26 @@ const CHAPTER_TRACKS = {
 
 export const COMBAT_SFX_CUES = [
   "battle-start",
-  "slash",
-  "heavy",
-  "projectile",
-  "block",
+  "blade",
+  "impact",
+  "volley",
+  "guard",
   "evade",
-  "heal",
-  "combo",
+  "restore",
+  "ultimate",
   "victory",
   "defeat",
 ];
+
+export const COMBAT_SFX_ASSETS = Object.freeze(
+  Object.fromEntries(
+    COMBAT_SFX_CUES.map((cue) => [cue, `/assets/audio/sfx/${cue}.mp3`]),
+  ),
+);
+
+export function combatSfxAsset(cue) {
+  return COMBAT_SFX_ASSETS[cue] || null;
+}
 
 export function sceneMusicTrack(scene, context = {}) {
   const chapterId = String(context.chapterId || "");
@@ -70,15 +82,12 @@ export function combatSfxCue({ skill, result }) {
   if (result?.phase === "victory") return "victory";
   if (result?.phase === "defeat") return "defeat";
   const events = Array.isArray(result?.events) ? result.events : [];
-  if (events.some((event) => event.type === "combo")) return "combo";
-  if (events.some((event) => event.type === "heal")) return "heal";
+  if (events.some((event) => event.type === "combo")) return "ultimate";
+  if (events.some((event) => event.type === "heal")) return "restore";
   const evaded = events.some((event) => event.type === "evade");
-  if (!skill) return evaded ? "evade" : "block";
-  const path = skill.path || skill.actorPath;
-  if (path === "shou") return evaded ? "evade" : "block";
-  if (path === "tao") return evaded ? "evade" : "heavy";
-  if (path === "ling") return evaded ? "evade" : "projectile";
-  return evaded ? "evade" : "slash";
+  if (evaded) return "evade";
+  if (!skill) return "guard";
+  return battleVfxTemplate({ skill, result }) || "blade";
 }
 
 class SoundEngine {
@@ -93,6 +102,10 @@ class SoundEngine {
     this.musicLayers = [this.createMusicLayer(), this.createMusicLayer()];
     this.activeMusicLayer = 0;
     this.musicFadeTimer = null;
+    this.sfxBuffers = new Map();
+    this.sfxLoads = new Map();
+    this.sfxLoadFailures = new Map();
+    this.generatedSfxPlays = 0;
     this.lastCue = null;
     if (globalThis.window && globalThis.document) {
       globalThis.__shuihuAudioElements = () =>
@@ -102,6 +115,13 @@ class SoundEngine {
         this.musicLayers.filter(
           (layer) => layer.dataset?.track === trackId && layer.playAttempted,
         ).length;
+      globalThis.__shuihuCombatSfxStatus = () => ({
+        loaded: [...this.sfxBuffers.keys()],
+        loading: [...this.sfxLoads.keys()],
+        failures: [...this.sfxLoadFailures.keys()],
+        generatedPlays: this.generatedSfxPlays,
+      });
+      globalThis.__shuihuCombatSfxPreload = () => this.preloadCombatSfx();
       globalThis.__shuihuSound = this;
     }
   }
@@ -181,6 +201,7 @@ class SoundEngine {
     this.unlocked = true;
     this.ensureContext();
     if (this.currentMusic) this.playMusic(this.currentMusic);
+    this.preloadCombatSfx();
   }
 
   catchPlayback(layer) {
@@ -249,9 +270,70 @@ class SoundEngine {
       this.masterGain = this.context.createGain();
       this.masterGain.gain.value = Math.pow(this.sfxVolume, 1.35) * 0.7;
       this.masterGain.connect(this.context.destination);
+      const compressor = this.context.createDynamicsCompressor();
+      compressor.threshold.value = -18;
+      compressor.knee.value = 12;
+      compressor.ratio.value = 4;
+      compressor.attack.value = 0.002;
+      compressor.release.value = 0.12;
+      compressor.connect(this.masterGain);
+      this.sfxCompressor = compressor;
     }
     if (this.context.state === "suspended") this.context.resume().catch(() => {});
     return this.context;
+  }
+
+  loadCombatSfx(cue) {
+    const source = combatSfxAsset(cue);
+    const context = this.ensureContext();
+    if (!source || !context) return Promise.resolve(null);
+    if (this.sfxBuffers.has(cue)) {
+      return Promise.resolve(this.sfxBuffers.get(cue));
+    }
+    if (this.sfxLoads.has(cue)) return this.sfxLoads.get(cue);
+    const load = globalThis
+      .fetch(source, { cache: "force-cache" })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Combat SFX request failed: ${response.status}`);
+        }
+        return response.arrayBuffer();
+      })
+      .then((payload) => context.decodeAudioData(payload))
+      .then((buffer) => {
+        this.sfxBuffers.set(cue, buffer);
+        this.sfxLoadFailures.delete(cue);
+        return buffer;
+      })
+      .catch((error) => {
+        this.sfxLoadFailures.set(cue, String(error?.message || error));
+        return null;
+      })
+      .finally(() => {
+        this.sfxLoads.delete(cue);
+      });
+    this.sfxLoads.set(cue, load);
+    return load;
+  }
+
+  preloadCombatSfx() {
+    if (!this.enabled) return Promise.resolve([]);
+    return Promise.all(COMBAT_SFX_CUES.map((cue) => this.loadCombatSfx(cue)));
+  }
+
+  playGeneratedCombatSfx(cue) {
+    const context = this.ensureContext();
+    const buffer = this.sfxBuffers.get(cue);
+    if (!context || !buffer || this.sfxVolume <= 0) return false;
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    source.buffer = buffer;
+    gain.gain.value = cue === "battle-start" ? 0.92 : 0.8;
+    source.connect(gain);
+    gain.connect(this.sfxCompressor || this.masterGain);
+    source.start();
+    this.generatedSfxPlays += 1;
+    return true;
   }
 
   noise(duration, options = {}) {
@@ -290,7 +372,7 @@ class SoundEngine {
     );
     source.connect(filter);
     filter.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxCompressor || this.masterGain);
     source.start(context.currentTime + start);
     source.stop(context.currentTime + start + duration + 0.03);
   }
@@ -319,7 +401,7 @@ class SoundEngine {
       context.currentTime + start + duration,
     );
     oscillator.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxCompressor || this.masterGain);
     oscillator.start(context.currentTime + start);
     oscillator.stop(context.currentTime + start + duration + 0.02);
   }
@@ -349,7 +431,7 @@ class SoundEngine {
     });
   }
 
-  slash() {
+  blade() {
     this.noise(0.16, {
       filter: "highpass",
       frequency: 2200,
@@ -363,7 +445,7 @@ class SoundEngine {
     });
   }
 
-  projectile() {
+  volley() {
     this.noise(0.2, {
       filter: "highpass",
       frequency: 1100,
@@ -378,7 +460,7 @@ class SoundEngine {
     this.hit(false);
   }
 
-  block() {
+  guard() {
     this.hit(false);
     this.tone(340, 0.16, {
       type: "square",
@@ -401,7 +483,7 @@ class SoundEngine {
     });
   }
 
-  heal() {
+  restore() {
     [520, 654, 784].forEach((frequency, index) => {
       this.tone(frequency, 0.3, {
         type: "sine",
@@ -411,7 +493,7 @@ class SoundEngine {
     });
   }
 
-  combo() {
+  ultimate() {
     this.noise(0.32, {
       filter: "highpass",
       frequency: 1800,
@@ -461,15 +543,18 @@ class SoundEngine {
   playCombatCue(cue) {
     if (!COMBAT_SFX_CUES.includes(cue)) return false;
     this.lastCue = cue;
+    this.ensureContext();
+    this.loadCombatSfx(cue);
+    if (this.playGeneratedCombatSfx(cue)) return true;
     const actions = {
       "battle-start": () => this.battleStart(),
-      slash: () => this.slash(),
-      heavy: () => this.hit(true),
-      projectile: () => this.projectile(),
-      block: () => this.block(),
+      blade: () => this.blade(),
+      impact: () => this.hit(true),
+      volley: () => this.volley(),
+      guard: () => this.guard(),
       evade: () => this.evade(),
-      heal: () => this.heal(),
-      combo: () => this.combo(),
+      restore: () => this.restore(),
+      ultimate: () => this.ultimate(),
       victory: () => this.victory(),
       defeat: () => this.defeat(),
     };

@@ -9757,6 +9757,883 @@ button[aria-pressed="true"] {
   animation: vfx-star-burst 700ms ease-out both;
 }
 
+/* Semantic skill effects: one reusable language per combat behavior. */
+.skill-impact {
+  --vfx-main: #ffd7b0;
+  --vfx-hot: #fff9e8;
+  --vfx-deep: #9e4e39;
+  z-index: calc(11 + var(--vfx-layer, 1));
+  color: var(--vfx-main);
+  isolation: isolate;
+}
+
+.skill-impact.tone-teal {
+  --vfx-main: #b9f4e8;
+  --vfx-hot: #f2fffb;
+  --vfx-deep: #327f76;
+}
+
+.skill-impact.tone-blue {
+  --vfx-main: #c5e3f5;
+  --vfx-hot: #ffffff;
+  --vfx-deep: #4d7896;
+}
+
+.skill-impact.tone-gold {
+  --vfx-main: #ffe4a0;
+  --vfx-hot: #fffbea;
+  --vfx-deep: #9f722c;
+}
+
+.skill-impact.tone-cinnabar {
+  --vfx-main: #ffc2a6;
+  --vfx-hot: #fff8e9;
+  --vfx-deep: #9f493d;
+}
+
+.skill-impact.is-from-enemy {
+  --vfx-main: #ffb19a;
+  --vfx-hot: #fff0e8;
+  --vfx-deep: #8e332e;
+}
+
+.skill-impact .vfx-wash,
+.skill-impact .vfx-arcs,
+.skill-impact .vfx-streaks,
+.skill-impact .vfx-shards,
+.skill-impact .vfx-runes,
+.skill-impact .vfx-motes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.skill-impact .vfx-wash {
+  width: clamp(150px, 19vw, 270px);
+  height: clamp(130px, 16vw, 230px);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, var(--vfx-hot) 0 2%, var(--vfx-main) 6%, transparent 27%),
+    radial-gradient(ellipse at 50% 52%, color-mix(in srgb, var(--vfx-main) 36%, transparent), transparent 66%);
+  filter: blur(2px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.35);
+  animation: semantic-vfx-wash var(--vfx-wash-time, 700ms) ease-out both;
+}
+
+.skill-impact .impact-core {
+  z-index: 4;
+  width: 38px;
+  height: 38px;
+  border: 1px solid color-mix(in srgb, var(--vfx-hot) 70%, transparent);
+  background:
+    radial-gradient(circle, #fff 0 7%, var(--vfx-hot) 13%, var(--vfx-main) 31%, transparent 70%);
+  box-shadow:
+    0 0 11px var(--vfx-main),
+    0 0 32px color-mix(in srgb, var(--vfx-main) 64%, transparent),
+    0 0 72px color-mix(in srgb, var(--vfx-deep) 55%, transparent);
+  transform: translate(-50%, -50%) scale(0.15);
+  animation: semantic-vfx-core var(--vfx-core-time, 440ms) cubic-bezier(0.12, 0.84, 0.24, 1) both;
+}
+
+.skill-impact .impact-shockwave {
+  z-index: 2;
+  width: 62px;
+  height: 62px;
+  border: 1px solid color-mix(in srgb, var(--vfx-main) 84%, transparent);
+  box-shadow:
+    0 0 13px color-mix(in srgb, var(--vfx-main) 52%, transparent),
+    inset 0 0 18px color-mix(in srgb, var(--vfx-main) 25%, transparent);
+  transform: translate(-50%, -50%) scale(0.1);
+  animation: semantic-vfx-ring var(--vfx-ring-time, 620ms) ease-out both;
+}
+
+.skill-impact .impact-shockwave.is-late {
+  opacity: 0;
+  animation-delay: 100ms;
+}
+
+.skill-impact .vfx-arcs i {
+  top: 0;
+  left: 0;
+  width: 168px;
+  height: 2px;
+  border: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, var(--vfx-main) 24%, var(--vfx-hot) 58%, transparent);
+  box-shadow:
+    0 0 5px var(--vfx-hot),
+    0 0 13px var(--vfx-main);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(calc(-42deg + var(--vfx-index) * 39deg));
+  animation: semantic-vfx-arc var(--vfx-streak-time, 520ms) ease-out both;
+  animation-delay: calc(var(--vfx-index) * 24ms);
+}
+
+.skill-impact .vfx-streaks i {
+  top: calc(-52px + var(--vfx-index) * 15px);
+  left: -92px;
+  width: 96px;
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--vfx-main) 48%, var(--vfx-hot));
+  box-shadow: 0 0 7px var(--vfx-main);
+  opacity: 0;
+  transform: rotate(calc(-10deg + var(--vfx-index) * 3deg));
+  animation: semantic-vfx-streak var(--vfx-streak-time, 520ms) ease-in both;
+  animation-delay: calc(var(--vfx-index) * 17ms);
+}
+
+.skill-impact.is-from-enemy .vfx-streaks i {
+  left: -4px;
+  background: linear-gradient(90deg, var(--vfx-hot), var(--vfx-main) 52%, transparent);
+  transform: rotate(calc(10deg - var(--vfx-index) * 3deg));
+  animation-name: semantic-vfx-streak-reverse;
+}
+
+.skill-impact .vfx-shards i {
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 17px;
+  border: 0;
+  border-radius: 99px;
+  background: linear-gradient(180deg, var(--vfx-hot), var(--vfx-main) 38%, transparent);
+  box-shadow: 0 0 6px var(--vfx-main);
+  opacity: 0;
+  transform: rotate(calc(var(--vfx-index) * 36deg)) translateY(-3px) scaleY(0.2);
+  transform-origin: 50% 0;
+  animation: semantic-vfx-shard var(--vfx-shard-time, 680ms) ease-out both;
+  animation-delay: calc(var(--vfx-index) * 13ms);
+}
+
+.skill-impact .vfx-runes i {
+  top: 0;
+  left: 0;
+  width: 43px;
+  height: 43px;
+  border: 1px solid color-mix(in srgb, var(--vfx-main) 74%, transparent);
+  background: transparent;
+  box-shadow:
+    0 0 9px color-mix(in srgb, var(--vfx-main) 45%, transparent),
+    inset 0 0 9px color-mix(in srgb, var(--vfx-main) 15%, transparent);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0.2);
+  animation: semantic-vfx-rune var(--vfx-ring-time, 620ms) ease-out both;
+  animation-delay: calc(var(--vfx-index) * 62ms);
+}
+
+.skill-impact .vfx-motes i {
+  top: calc(-20px + var(--vfx-index) * 5px);
+  left: calc(-42px + var(--vfx-index) * 12px);
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--vfx-hot);
+  background: color-mix(in srgb, var(--vfx-main) 38%, transparent);
+  box-shadow:
+    0 0 6px var(--vfx-main),
+    0 0 13px color-mix(in srgb, var(--vfx-main) 58%, transparent);
+  opacity: 0;
+  transform: rotate(45deg) translateY(18px) scale(0.4);
+  animation: semantic-vfx-mote var(--vfx-mote-time, 780ms) ease-out both;
+  animation-delay: calc(var(--vfx-index) * 28ms);
+}
+
+.skill-impact .vfx-seal {
+  top: 50%;
+  left: 50%;
+  display: block;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--vfx-main);
+  background: transparent;
+  box-shadow:
+    0 0 12px var(--vfx-main),
+    inset 0 0 10px color-mix(in srgb, var(--vfx-main) 20%, transparent);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0.4);
+  animation: semantic-vfx-seal var(--vfx-ring-time, 620ms) ease-out both;
+}
+
+.skill-impact.is-multi-target.is-secondary {
+  opacity: 0.72;
+}
+
+.skill-impact.is-multi-target.is-secondary .vfx-wash {
+  width: clamp(90px, 12vw, 150px);
+  height: clamp(78px, 10vw, 128px);
+}
+
+.skill-impact.is-multi-target.is-secondary .impact-core {
+  width: 26px;
+  height: 26px;
+}
+
+.skill-impact.is-multi-target.is-secondary .impact-shockwave {
+  width: 48px;
+  height: 48px;
+}
+
+.skill-impact.is-multi-target.is-secondary .vfx-motes {
+  display: none;
+}
+
+/* Blade: one decisive cut followed by a hot, narrow collision. */
+.skill-impact.is-blade {
+  color: var(--vfx-main);
+}
+
+.skill-impact.is-blade .vfx-streaks,
+.skill-impact.is-blade .vfx-runes,
+.skill-impact.is-blade .vfx-motes {
+  display: none;
+}
+
+.skill-impact.is-blade .vfx-arcs i {
+  width: 196px;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--vfx-main) 20%,
+    var(--vfx-hot) 53% 64%,
+    var(--vfx-main) 78%,
+    transparent
+  );
+  box-shadow:
+    0 0 6px var(--vfx-hot),
+    0 0 18px var(--vfx-main);
+  filter: drop-shadow(0 0 3px var(--vfx-hot));
+}
+
+.skill-impact.is-blade .vfx-shards i:nth-child(n + 6) {
+  display: none;
+}
+
+.skill-impact.is-blade .impact-core {
+  width: 21px;
+  height: 21px;
+}
+
+.skill-impact.is-blade .impact-shockwave {
+  display: none;
+}
+
+.skill-impact.is-blade .vfx-seal {
+  width: 12px;
+  height: 112px;
+  border: 0;
+  background: linear-gradient(180deg, transparent, var(--vfx-hot), transparent);
+  box-shadow:
+    0 0 12px var(--vfx-main),
+    0 0 28px color-mix(in srgb, var(--vfx-main) 55%, transparent);
+  transform: translate(-50%, -50%) rotate(72deg) scaleY(0.2);
+}
+
+/* Volley: projectiles arrive from the caster and converge into a small hit. */
+.skill-impact.is-volley .vfx-arcs {
+  display: none;
+}
+
+.skill-impact.is-volley .impact-core {
+  width: 26px;
+  height: 26px;
+}
+
+.skill-impact.is-volley .impact-shockwave {
+  width: 48px;
+  height: 48px;
+}
+
+.skill-impact.is-volley .vfx-streaks i {
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0 20%, var(--vfx-main) 52%, var(--vfx-hot) 96%);
+}
+
+.skill-impact.is-volley .vfx-runes i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background:
+    linear-gradient(90deg, transparent 45%, var(--vfx-main) 45% 55%, transparent 55%),
+    linear-gradient(0deg, transparent 45%, var(--vfx-main) 45% 55%, transparent 55%);
+  transform: translate(-50%, -50%) scale(0.2);
+}
+
+.skill-impact.is-volley .vfx-shards i {
+  width: 2px;
+  height: 12px;
+}
+
+.skill-impact.is-volley .vfx-seal {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border-style: dashed;
+  transform: translate(-50%, -50%) scale(0.3);
+}
+
+/* Impact: a heavy center, dust ring, radial debris and a delayed aftershock. */
+.skill-impact.is-impact {
+  color: #ffc188;
+}
+
+.skill-impact.is-impact .vfx-wash {
+  background:
+    radial-gradient(circle at 50% 72%, rgba(255, 225, 174, 0.82), transparent 14%),
+    radial-gradient(ellipse at 50% 80%, rgba(194, 93, 51, 0.5), transparent 60%);
+}
+
+.skill-impact.is-impact .impact-core,
+.skill-impact.is-heavy.is-impact .impact-core {
+  width: 58px;
+  height: 58px;
+}
+
+.skill-impact.is-impact .impact-shockwave,
+.skill-impact.is-heavy.is-impact .impact-shockwave {
+  width: 92px;
+  height: 92px;
+  border-width: 2px;
+}
+
+.skill-impact.is-impact .vfx-arcs {
+  display: none;
+}
+
+.skill-impact.is-impact .vfx-streaks i {
+  top: -2px;
+  left: 0;
+  width: 5px;
+  height: calc(24px + var(--vfx-index) * 4px);
+  background: linear-gradient(0deg, transparent, var(--vfx-main), var(--vfx-hot));
+  transform: rotate(calc(var(--vfx-index) * 45deg)) translateY(8px);
+  transform-origin: 50% 0;
+  animation-name: semantic-vfx-ground-streak;
+}
+
+.skill-impact.is-impact .vfx-runes i {
+  width: calc(38px + var(--vfx-index) * 24px);
+  height: calc(14px + var(--vfx-index) * 8px);
+  border-radius: 50%;
+  transform: translate(-50%, 19px) scale(0.3);
+  animation-name: semantic-vfx-ground-ring;
+}
+
+.skill-impact.is-impact .vfx-shards i {
+  width: 5px;
+  height: 21px;
+  background: linear-gradient(180deg, var(--vfx-hot), #b36e43 38%, transparent);
+}
+
+.skill-impact.is-impact .vfx-motes {
+  display: none;
+}
+
+.skill-impact.is-impact .vfx-seal {
+  width: 34px;
+  height: 3px;
+  border: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, var(--vfx-hot), transparent);
+  box-shadow:
+    0 0 15px var(--vfx-main),
+    0 0 30px var(--vfx-main);
+}
+
+/* Guard: a readable shield plane, orbiting clasps and a firm counter-ring. */
+.skill-impact.is-guard {
+  color: #b9dcf2;
+}
+
+.skill-impact.is-guard .vfx-wash {
+  background:
+    radial-gradient(circle at center, rgba(219, 243, 255, 0.22), transparent 46%),
+    conic-gradient(from 45deg, transparent, rgba(143, 197, 229, 0.3), transparent 34%);
+}
+
+.skill-impact.is-guard .impact-core {
+  width: 28px;
+  height: 28px;
+}
+
+.skill-impact.is-guard .impact-shockwave {
+  width: 90px;
+  height: 90px;
+  border-radius: 8px;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0.1);
+}
+
+.skill-impact.is-guard .vfx-arcs i {
+  width: 114px;
+  background: linear-gradient(90deg, transparent, #dff5ff 42%, var(--vfx-main), transparent);
+  transform: translate(-50%, -50%) rotate(calc(30deg + var(--vfx-index) * 60deg));
+  animation-name: semantic-vfx-orbit;
+}
+
+.skill-impact.is-guard .vfx-streaks i {
+  top: calc(-42px + var(--vfx-index) * 11px);
+  left: calc(-55px + var(--vfx-index) * 15px);
+  width: 22px;
+  height: 2px;
+  border: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, #e7f9ff, transparent);
+  box-shadow: 0 0 8px rgba(157, 214, 243, 0.78);
+  animation-name: semantic-vfx-guard-shard;
+}
+
+.skill-impact.is-guard .vfx-runes i {
+  width: 72px;
+  height: 72px;
+  border-radius: 6px;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0.2);
+}
+
+.skill-impact.is-guard .vfx-shards {
+  display: none;
+}
+
+.skill-impact.is-guard .vfx-motes i {
+  border-color: #e8f8ff;
+  background: rgba(163, 215, 241, 0.5);
+}
+
+.skill-impact.is-guard .vfx-seal {
+  width: 56px;
+  height: 64px;
+  clip-path: polygon(50% 0, 90% 16%, 82% 68%, 50% 100%, 18% 68%, 10% 16%);
+  background:
+    linear-gradient(145deg, rgba(225, 247, 255, 0.28), transparent 48%),
+    rgba(92, 142, 169, 0.16);
+  box-shadow: 0 0 18px rgba(157, 214, 243, 0.7);
+}
+
+/* Restore: rising motes, a calm double ring and a soft seal instead of an explosion. */
+.skill-impact.is-restore {
+  color: #a7ebc2;
+}
+
+.skill-impact.is-restore .vfx-wash {
+  background:
+    radial-gradient(circle at 50% 70%, rgba(212, 255, 229, 0.56), transparent 11%),
+    radial-gradient(circle at 50% 62%, rgba(93, 194, 139, 0.32), transparent 58%);
+}
+
+.skill-impact.is-restore .impact-core {
+  width: 38px;
+  height: 38px;
+  background:
+    linear-gradient(90deg, transparent 41%, #effff5 41% 59%, transparent 59%),
+    linear-gradient(0deg, transparent 41%, #effff5 41% 59%, transparent 59%),
+    radial-gradient(circle, rgba(167, 235, 194, 0.72), transparent 64%);
+  box-shadow:
+    0 0 16px #8ce2ad,
+    0 0 42px rgba(91, 195, 137, 0.55);
+}
+
+.skill-impact.is-restore .impact-shockwave {
+  width: 74px;
+  height: 34px;
+  border-color: rgba(167, 235, 194, 0.8);
+  transform: translate(-50%, 8px) scale(0.2);
+  animation-name: semantic-vfx-heal-ring;
+}
+
+.skill-impact.is-restore .impact-shockwave.is-late {
+  animation-delay: 150ms;
+}
+
+.skill-impact.is-restore .vfx-arcs,
+.skill-impact.is-restore .vfx-streaks,
+.skill-impact.is-restore .vfx-shards {
+  display: none;
+}
+
+.skill-impact.is-restore .vfx-runes i {
+  width: calc(44px + var(--vfx-index) * 20px);
+  height: calc(20px + var(--vfx-index) * 10px);
+  border-radius: 50%;
+  transform: translate(-50%, 10px) scale(0.3);
+  animation-name: semantic-vfx-heal-ring;
+}
+
+.skill-impact.is-restore .vfx-motes i {
+  top: calc(-12px + var(--vfx-index) * 7px);
+  border-color: #e9fff2;
+  background:
+    linear-gradient(90deg, transparent 38%, #c9ffdc 38% 62%, transparent 62%),
+    linear-gradient(0deg, transparent 38%, #c9ffdc 38% 62%, transparent 62%);
+  box-shadow: 0 0 7px #8ce2ad;
+  transform: rotate(0deg) translateY(20px) scale(0.4);
+  animation-name: semantic-vfx-heal-mote;
+}
+
+.skill-impact.is-restore .vfx-seal {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 1px dashed rgba(211, 255, 229, 0.75);
+  background: transparent;
+  box-shadow:
+    0 0 17px rgba(124, 224, 164, 0.52),
+    inset 0 0 13px rgba(124, 224, 164, 0.22);
+}
+
+/* Ultimate: staged multi-hit rings, directional spears and a final seal. */
+.skill-impact.is-ultimate {
+  color: var(--vfx-main);
+}
+
+.skill-impact.is-ultimate .vfx-wash {
+  width: clamp(230px, 31vw, 460px);
+  height: clamp(205px, 28vw, 410px);
+  background:
+    radial-gradient(circle at center, var(--vfx-hot) 0 1.5%, var(--vfx-main) 5%, transparent 19%),
+    conic-gradient(from 18deg, transparent 0 7%, color-mix(in srgb, var(--vfx-main) 35%, transparent) 9% 10%, transparent 12% 21%, color-mix(in srgb, var(--vfx-hot) 24%, transparent) 24% 25%, transparent 28%),
+    radial-gradient(circle at center, color-mix(in srgb, var(--vfx-deep) 45%, transparent), transparent 65%);
+  filter: blur(1.5px);
+}
+
+.skill-impact.is-ultimate .impact-core {
+  width: 66px;
+  height: 66px;
+}
+
+.skill-impact.is-ultimate .impact-shockwave {
+  width: 102px;
+  height: 102px;
+  border-width: 2px;
+}
+
+.skill-impact.is-ultimate .vfx-arcs i {
+  width: 202px;
+  height: 3px;
+  animation-duration: calc(var(--vfx-streak-time, 520ms) + 130ms);
+}
+
+.skill-impact.is-ultimate .vfx-streaks i {
+  top: calc(-76px + var(--vfx-index) * 21px);
+  width: 128px;
+  height: 2px;
+}
+
+.skill-impact.is-ultimate .vfx-shards i {
+  width: 4px;
+  height: 28px;
+}
+
+.skill-impact.is-ultimate .vfx-runes i {
+  width: calc(56px + var(--vfx-index) * 28px);
+  height: calc(56px + var(--vfx-index) * 28px);
+  border-color: color-mix(in srgb, var(--vfx-main) 86%, transparent);
+  animation-duration: calc(var(--vfx-ring-time, 620ms) + 180ms);
+}
+
+.skill-impact.is-ultimate .vfx-motes i {
+  width: 9px;
+  height: 9px;
+}
+
+.skill-impact.is-ultimate .vfx-seal {
+  width: 24px;
+  height: 24px;
+  border-width: 2px;
+  background: rgba(255, 248, 222, 0.14);
+  box-shadow:
+    0 0 17px var(--vfx-hot),
+    0 0 48px var(--vfx-main);
+}
+
+.skill-impact.is-ultimate.is-multi-target.is-secondary {
+  opacity: 0.58;
+}
+
+.skill-impact.is-ultimate.is-multi-target.is-secondary .vfx-wash {
+  width: clamp(120px, 17vw, 230px);
+  height: clamp(108px, 15vw, 205px);
+}
+
+.skill-impact.is-reduced-motion .vfx-wash,
+.skill-impact.is-reduced-motion .vfx-streaks,
+.skill-impact.is-reduced-motion .vfx-shards,
+.skill-impact.is-reduced-motion .vfx-motes,
+.skill-impact.is-reduced-motion .vfx-arcs,
+.skill-impact.is-reduced-motion .vfx-runes {
+  display: none;
+}
+
+.skill-impact.is-reduced-motion .impact-core,
+.skill-impact.is-reduced-motion .impact-shockwave,
+.skill-impact.is-reduced-motion .vfx-seal {
+  animation-duration: 1ms;
+}
+
+@keyframes semantic-vfx-wash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.25);
+  }
+  22% {
+    opacity: 0.86;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.32);
+  }
+}
+
+@keyframes semantic-vfx-core {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.12) rotate(0deg);
+  }
+  22% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.6) rotate(18deg);
+  }
+  58% {
+    opacity: 0.88;
+    transform: translate(-50%, -50%) scale(1) rotate(36deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.2) rotate(58deg);
+  }
+}
+
+@keyframes semantic-vfx-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.1);
+  }
+  24% {
+    opacity: 0.96;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.7);
+  }
+}
+
+@keyframes semantic-vfx-arc {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    transform: translate(-56%, -50%) rotate(calc(-42deg + var(--vfx-index) * 39deg)) scaleX(0.4);
+  }
+  20% {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 0 100%);
+    transform: translate(-42%, -50%) rotate(calc(-42deg + var(--vfx-index) * 39deg)) scaleX(1.2);
+  }
+}
+
+@keyframes semantic-vfx-orbit {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(30deg + var(--vfx-index) * 60deg)) scaleX(0.3);
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(92deg + var(--vfx-index) * 60deg)) scaleX(1.4);
+  }
+}
+
+@keyframes semantic-vfx-streak {
+  0% {
+    opacity: 0;
+    transform: translateX(-34px) rotate(calc(-10deg + var(--vfx-index) * 3deg)) scaleX(0.25);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(118px) rotate(calc(-10deg + var(--vfx-index) * 3deg)) scaleX(1.15);
+  }
+}
+
+@keyframes semantic-vfx-streak-reverse {
+  0% {
+    opacity: 0;
+    transform: translateX(34px) rotate(calc(10deg - var(--vfx-index) * 3deg)) scaleX(0.25);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-118px) rotate(calc(10deg - var(--vfx-index) * 3deg)) scaleX(1.15);
+  }
+}
+
+@keyframes semantic-vfx-shard {
+  0% {
+    opacity: 0;
+    transform: rotate(calc(var(--vfx-index) * 36deg)) translateY(-3px) scaleY(0.15);
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--vfx-index) * 36deg)) translateY(calc(-44px - var(--vfx-index) * 4px)) scaleY(1.2);
+  }
+}
+
+@keyframes semantic-vfx-rune {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(45deg) scale(0.18);
+  }
+  24% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(135deg) scale(1.65);
+  }
+}
+
+@keyframes semantic-vfx-ground-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 19px) scale(0.24);
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 19px) scale(2.1);
+  }
+}
+
+@keyframes semantic-vfx-ground-streak {
+  0% {
+    opacity: 0;
+    transform: rotate(calc(var(--vfx-index) * 45deg)) translateY(0) scaleY(0.16);
+  }
+  28% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--vfx-index) * 45deg)) translateY(26px) scaleY(1.1);
+  }
+}
+
+@keyframes semantic-vfx-guard-shard {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.3);
+  }
+  24% {
+    opacity: 0.82;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px) scaleX(1.8);
+  }
+}
+
+@keyframes semantic-vfx-mote {
+  0% {
+    opacity: 0;
+    transform: rotate(45deg) translateY(20px) scale(0.25);
+  }
+  24% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(45deg) translateY(-48px) scale(1.05);
+  }
+}
+
+@keyframes semantic-vfx-heal-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.24);
+  }
+  28% {
+    opacity: 0.86;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(2.05);
+  }
+}
+
+@keyframes semantic-vfx-heal-mote {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) translateY(24px) scale(0.25);
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-66px) rotate(90deg) scale(1.1);
+  }
+}
+
+@keyframes semantic-vfx-seal {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(28deg) scale(0.25);
+  }
+  28% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(82deg) scale(1.4);
+  }
+}
+
+@media (max-width: 920px) {
+  .skill-impact.is-primary {
+    transform: scale(0.78);
+  }
+
+  .skill-impact.is-ultimate.is-primary {
+    transform: scale(0.72);
+  }
+}
+
+@media (max-width: 680px) {
+  .skill-impact.is-primary {
+    transform: scale(0.58);
+  }
+
+  .skill-impact.is-ultimate.is-primary {
+    transform: scale(0.54);
+  }
+
+  .skill-impact.is-multi-target.is-secondary {
+    transform: scale(0.46);
+  }
+}
+
 @media (max-width: 920px) {
   .battle-motion > b {
     top: 41px;
@@ -9876,7 +10753,7 @@ button[aria-pressed="true"] {
 
 .unit-hud {
   position: relative;
-  z-index: 3;
+  z-index: 16;
   width: 100%;
   min-height: 72px;
   padding: 8px 9px 7px;
@@ -14834,12 +15711,17 @@ html[data-motion="reduced"] *::after {
   }
 
   .skill-list {
-    gap: 4px;
+    gap: 3px;
   }
 
   .skill-button {
     min-height: 44px;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
     padding: 5px;
+  }
+
+  .skill-cost {
+    grid-column: auto;
   }
 
   .skill-copy b {

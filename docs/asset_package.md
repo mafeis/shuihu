@@ -235,6 +235,8 @@ git lfs pull
 - UI 图标缩到 256 像素后仍可识别。
 - 角色与敌方立绘在战斗中统一使用 `object-fit: contain`；四十张角色透明画布统一为 896×1024，并在资产清单中记录 Alpha 边界、底部安全线与文件哈希。页面不再依赖逐角色 CSS 缩放表，避免同一角色在标题、招贤、剧情与战斗之间出现尺寸漂移。
 - 十套配乐无削波，并以双音轨交叉淡入淡出切换。
+- 十枚通用水浒战斗音效已生成、母带处理并接入运行时缓存，加载失败时保留 WebAudio 合成回退。
+- 战斗特效按技能行为使用六类通用模板，不再按流派复播同一视频。
 
 ## 8. 音乐资产
 
@@ -268,12 +270,44 @@ npm run audio:master
 npm run audio:verify
 ```
 
+### 8.1 战斗音效
+
+| 分类 | 用途 | 文件 |
+| --- | --- | --- |
+| 开战 | 战鼓与短角声 | [battle-start.mp3](../assets/audio/sfx/battle-start.mp3) |
+| 刀击 | 单斩、突刺与刀剑命中 | [blade.mp3](../assets/audio/sfx/blade.mp3) |
+| 重击 | 重兵器、破甲与范围冲击 | [impact.mp3](../assets/audio/sfx/impact.mp3) |
+| 齐射 | 箭矢、飞石、暗器与投掷 | [volley.mp3](../assets/audio/sfx/volley.mp3) |
+| 守御 | 格挡、反击与防御架势 | [guard.mp3](../assets/audio/sfx/guard.mp3) |
+| 闪避 | 落空与身法 | [evade.mp3](../assets/audio/sfx/evade.mp3) |
+| 恢复 | 治疗、净化与回复 | [restore.mp3](../assets/audio/sfx/restore.mp3) |
+| 终式 | 攻击义技与星命合击 | [ultimate.mp3](../assets/audio/sfx/ultimate.mp3) |
+| 胜利 | 战斗胜利 | [victory.mp3](../assets/audio/sfx/victory.mp3) |
+| 败北 | 战斗失败 | [defeat.mp3](../assets/audio/sfx/defeat.mp3) |
+
+生成入口为 `tools/comfy_sfx_pipeline.py`，从缓存母带重建使用 `tools/master_game_sfx.py`。ComfyUI 提供短材质层，确定性瞬态层负责真正可辨识的刀风、低频冲击、金属泛音、回复音与终式节奏。浏览器通过 `AudioBuffer` 预解码缓存播放，并继续由统一音效总线控制音量。
+
+### 8.2 技能特效
+
+`src/battle-vfx.js` 根据技能目标、治疗、护御、攻击段数、义技标记、技能描述与结果事件选择通用模板，流派只改变色彩和呼出图标。
+
+| 模板 | 典型技能 |
+| --- | --- |
+| `blade` | 枪刺、刀斩、单体近战 |
+| `volley` | 箭雨、飞石、飞刃、暗器 |
+| `impact` | 重棒、战斧、炮火、范围重击 |
+| `guard` | 护御、反击、战阵与鼓舞 |
+| `restore` | 治疗、药浴、净化与回复 |
+| `ultimate` | 攻击型义技、连击与星命合击 |
+
+模板由 CSS/DOM 图层实时绘制，不使用按流派复播的视频。单位数值面板固定位于特效层之上；战斗倍速会同步缩短特效计时，避免自动战斗 4 倍速时残留遮挡。
+
 进入下一轮制作前仍需补：
 
 - 主角与反派的面部表情组。
 - 独立武器、装备、信物与可破坏甲片。
 - 角色待机、行走、攻击、受击和义技动画。
-- 招式特效序列帧或材质动画。
+- 少量英雄专属的招式装饰层；通用六类模板已可用于全部现有技能。
 - 108 将的星宿图鉴边框与稀有度之外的收集反馈。
 - 3D 模型、绑定、PBR 贴图与 LOD。
 
