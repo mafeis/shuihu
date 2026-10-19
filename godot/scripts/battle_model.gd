@@ -39,6 +39,7 @@ var level_ups := 0
 var ultimate_uses: Dictionary = {}
 var damage_by_hero: Dictionary = {}
 var action_events: Array[Dictionary] = []
+var enemy_score := 0
 
 
 func _init(game_state: GameState, chapter: Dictionary, battle_modifiers: Dictionary = {}, battle_enemy_modifiers: Dictionary = {}) -> void:
@@ -103,6 +104,7 @@ func _build_heroes() -> void:
 			"yiqi_multiplier": yiqi_multiplier,
 			"statuses": {},
 			"cooldowns": {},
+			"cycle_round": rng.randi_range(1, 3),
 			"poise": 0,
 			"poise_max": 100,
 			"broken": 0,
@@ -731,6 +733,8 @@ func enemy_turn() -> bool:
 		var enemy_before := _unit_snapshot(heroes)
 		var enemy_index := living_enemies().find(enemy)
 		_check_boss_phase(enemy)
+		var cycle := ["front", "weak", "aimed"]
+		var cycle_key := str(cycle[(round_number + int(enemy.get("cycle_round", 1))) % 3])
 		enemy.broken = maxi(0, int(enemy.broken) - 1)
 		if int(enemy.statuses.get("bleeding", 0)) > 0:
 			var bleed_damage := maxi(1, int(round(float(enemy.max_hp) * 0.035)))
@@ -750,7 +754,7 @@ func enemy_turn() -> bool:
 		targets.sort_custom(func(a, b): return a.hp < b.hp)
 		var target := targets[0]
 		var skill_list: Array = enemy.skills
-		var skill: Dictionary = skill_list[rng.randi_range(0, skill_list.size() - 1)]
+		var skill: Dictionary = skill_list[enemy_index % skill_list.size()]
 		if str(skill.get("target", "")) == "allEnemies":
 			for hero in targets:
 				var all_raw := float(enemy.atk) * float(skill.get("power", 0.8))
@@ -763,6 +767,7 @@ func enemy_turn() -> bool:
 					* difficulty_damage_taken
 				)))
 				hero.hp = maxi(0, int(hero.hp) - all_damage)
+				enemy_score += all_damage
 				log_lines.push_front("%s施展「%s」对%s造成 %d 伤害。" % [enemy.name, skill.get("name", "挥击"), hero.name, all_damage])
 			var all_event := _make_action_events("enemy", enemy, skill, {}, enemy_before, enemy_index)[0]
 			all_event.kind = "enemy"
@@ -776,12 +781,22 @@ func enemy_turn() -> bool:
 			restore_event.kind = "enemy"
 			action_events.append(restore_event)
 			continue
+		match cycle_key:
+			"front":
+				var front := heroes.filter(func(unit): return int(unit.hp) > 0 and int(unit.row) == 0)
+				if not front.is_empty():
+					target = front[0]
+			"weak":
+				target = targets[0]
+			"aimed":
+				target = heroes[enemy_index % heroes.size()] if not heroes.is_empty() and int(heroes[enemy_index % heroes.size()].hp) > 0 else targets[0]
 		var raw := float(enemy.atk) * float(skill.get("power", 0.8))
-		var row_info: Dictionary = ROWS[clampi(target.row, 0, ROWS.size() - 1)]
-		var guard_multiplier := 0.78 if int(target.statuses.get("guard", 0)) > 0 else 1.0
+		var row_info: Dictionary = ROWS[clampi(int(target.row), 0, ROWS.size() - 1)]
+		var guard_multiplier := 0.78 if int(target.get("statuses", {}).get("guard", 0)) > 0 else 1.0
 		var damage := maxi(1, int(round((raw - float(target.def) * 0.55) / float(row_info.defense) * guard_multiplier * difficulty_damage_taken)))
 		target.hp = maxi(0, target.hp - damage)
 		target.statuses.guard = maxi(0, int(target.statuses.get("guard", 0)) - 1)
+		enemy_score += damage
 		var enemy_event := _make_action_events("enemy", enemy, skill, {}, enemy_before, enemy_index, target)[-1]
 		enemy_event.kind = "enemy"
 		action_events.append(enemy_event)

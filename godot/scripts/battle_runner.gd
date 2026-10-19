@@ -58,6 +58,8 @@ func _run() -> void:
 	_check(second_target.hp == 0, "the chosen enemy should take damage")
 	_check(not main.battle.living_enemies().has(second_target), "defeating the final enemy should end the battle")
 	_check(main.battle.chain_attacks == 0, "battle should not count a chain that was never performed")
+	var auto_choice := AutoBattle.choose(battle, "balanced")
+	_check(auto_choice.has("skill_index") and auto_choice.has("target"), "auto battle should produce a playable skill and target")
 	var retry_battle := BattleModel.new(main.state, main.state.chapter())
 	for unit in retry_battle.heroes.slice(1):
 		unit.hp = 0

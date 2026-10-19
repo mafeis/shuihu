@@ -46,7 +46,7 @@ const startingEquipment = {
 // Godot's importer writes sidecars next to assets. Preserve them when the
 // generated asset tree is refreshed so exported builds keep valid textures.
 const importSidecars = {};
-for (const folder of ["characters", "enemies", "environments", "audio", "video"]) {
+for (const folder of ["characters", "enemies", "environments", "audio", "video", "vfx"]) {
   const sourceFolder = new URL("../godot/assets/" + folder + "/", import.meta.url);
   const visit = async (directory) => {
     let entries;
@@ -247,7 +247,7 @@ await writeFile(
 const assetsDir = new URL("../assets/", import.meta.url);
 const godotAssetsDir = new URL("../godot/assets/", import.meta.url);
 await mkdir(godotAssetsDir, { recursive: true });
-const bundledAssets = ["characters", "enemies", "environments", "audio", "video"];
+const bundledAssets = ["characters", "enemies", "environments", "audio", "video", "vfx"];
 for (const entry of await readdir(godotAssetsDir)) {
   if (!bundledAssets.includes(entry)) {
     await rm(new URL(entry + "/", godotAssetsDir), { recursive: true, force: true });

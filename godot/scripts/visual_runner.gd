@@ -82,6 +82,9 @@ func _run() -> void:
 	main.battle.select_skill(0)
 	main.show_battle()
 	await _capture("battle")
+	main.toggle_auto_battle()
+	main._auto_timer.stop()
+	await _capture("battle_auto")
 	main.battle.enemies[0].hp = 10000000
 	main.battle.enemies[0].max_hp = 10000000
 	main.battle.heroes[0].yiqi = 100

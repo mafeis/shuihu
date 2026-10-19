@@ -66,6 +66,12 @@ var _choice_feedback: Label
 var _choice_panel: PanelContainer
 var _battle_events: Array[Dictionary] = []
 var _battle_continuation := ""
+
+var auto_battle_enabled := false
+var auto_tactic := "balanced"
+var battle_speed := 1.0
+var _auto_timer: Timer
+var _auto_counter := 0
 var _battle_team_snapshot: Array[String] = []
 var _battle_target_snapshot := 0
 var _battle_row_snapshot := 0
@@ -139,6 +145,10 @@ func _build_shell() -> void:
 	music_player.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(music_player)
 	music_player.finished.connect(func(): music_player.play())
+	_auto_timer = Timer.new()
+	_auto_timer.one_shot = true
+	_auto_timer.timeout.connect(_auto_step)
+	add_child(_auto_timer)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -152,6 +162,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if event.keycode == KEY_ESCAPE and settings_layer.visible:
 		close_settings()
+		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_T and screen == SCREEN_BATTLE and battle != null and not battle.battle_finished:
+		cycle_auto_tactic()
+		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_A and screen == SCREEN_BATTLE and battle != null and not battle.battle_finished:
+		toggle_auto_battle()
 		get_viewport().set_input_as_handled()
 	elif event.keycode == KEY_ESCAPE and (screen == SCREEN_BATTLE or screen == SCREEN_ARENA_REWARD):
 		if arena_running:
@@ -794,6 +810,7 @@ func start_battle() -> void:
 	_battle_team_snapshot = state.team.duplicate()
 	_battle_target_snapshot = battle_target
 	_battle_row_snapshot = selected_team_slot
+	auto_battle_enabled = false
 	show_battle()
 
 
@@ -883,7 +900,9 @@ func show_battle() -> void:
 		box.add_child(_button("返回行军图", show_map, false, 280))
 		box.add_child(_sep())
 		box.add_child(_label("战阵记要", 14, PAPER_500))
-		for line in battle.log_lines.slice(0, 6):
+		if legend_running:
+			box.add_child(_label("敌阵评分  %d\n回合  %d" % [battle.enemy_score, battle.round_number], 14, PAPER_500))
+		for line in battle.log_lines.slice(0, 4 if legend_running else 6):
 			box.add_child(_label(line, 14, PAPER_300))
 		return
 	var actor: Dictionary = battle.current_hero()
@@ -895,14 +914,33 @@ func show_battle() -> void:
 		target_name = str(targets[battle_target].get("name", ""))
 	elif battle.is_ally_target(battle.selected_skill()):
 		target_name = "最需援手者"
-	box.add_child(_label("锁定 · " + target_name, 15, BRONZE))
+	var target_row := HBoxContainer.new()
+	target_row.add_theme_constant_override("separation", 8)
+	box.add_child(target_row)
+	var target_label := _label("锁定 · " + target_name, 15, BRONZE)
+	target_row.add_child(target_label)
+	var auto_button := _button("自动" if not auto_battle_enabled else "手动", toggle_auto_battle, auto_battle_enabled, 76)
+	auto_button.custom_minimum_size.y = 32
+	auto_button.tooltip_text = "A 键切换托管；T 键切换战法"
+	target_row.add_child(auto_button)
+	var tactic_button := _button(_auto_tactic_name(), cycle_auto_tactic, false, 76)
+	tactic_button.custom_minimum_size.y = 32
+	tactic_button.tooltip_text = "T 键轮换均衡、破阵、守势、追残"
+	target_row.add_child(tactic_button)
+	var speed_row := HBoxContainer.new()
+	speed_row.add_theme_constant_override("separation", 5)
+	box.add_child(speed_row)
+	for speed in [1, 2, 4]:
+		var speed_button := _button("%dx" % speed, func(): set_battle_speed(speed), battle_speed == float(speed), 94)
+		speed_button.custom_minimum_size.y = 29
+		speed_row.add_child(speed_button)
 	if battle.chain_ready:
 		var chain_button := _button("合击 · " + battle.chain_formation().get("name", "三星同辉"), perform_chain, true, 288)
 		box.add_child(chain_button)
 	var skill_heading := _label("招式", 14, PAPER_500)
 	box.add_child(skill_heading)
 	var skill_scroll := ScrollContainer.new()
-	skill_scroll.custom_minimum_size.y = 296
+	skill_scroll.custom_minimum_size.y = 188
 	skill_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	skill_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	box.add_child(skill_scroll)
@@ -1116,6 +1154,7 @@ func _render_battle_effects(page: Control) -> void:
 	for event in _battle_events:
 		if not is_inside_tree() or not is_instance_valid(page) or not page.is_inside_tree():
 			return
+		_play_combat_cue(event)
 		var kind := str(event.get("kind", "skill"))
 		if kind == "choice":
 			_show_battle_banner(page, "阵前定策", str(event.get("title", "")), BRONZE)
@@ -1149,6 +1188,32 @@ func _render_battle_effects(page: Control) -> void:
 		if bool(state.settings.get("reduced_motion", false)):
 			return
 		await get_tree().create_timer(0.62).timeout
+
+
+func _play_combat_cue(event: Dictionary) -> void:
+	if event.is_empty() or str(event.get("kind", "")) == "choice":
+		return
+	var fx_id := str({"gang": "gang", "ling": "ling", "shou": "shou", "tao": "tao"}.get(str(event.get("path", "gang")), "gang"))
+	var path := "res://assets/vfx/%s-alpha.webm" % fx_id
+	if ResourceLoader.exists(path):
+		var movie := VideoStreamPlayer.new()
+		movie.name = "CombatVfx"
+		movie.stream = load(path)
+		movie.position = Vector2(56, 146)
+		movie.size = Vector2(944, 700)
+		movie.expand = true
+		movie.loop = false
+		movie.volume_db = linear_to_db(maxf(float(state.settings.get("sfx_volume", 0.8)), 0.001)) - 5.0
+		movie.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		screen_root.add_child(movie)
+		movie.finished.connect(movie.queue_free)
+		movie.play()
+		get_tree().create_timer(1.5).timeout.connect(func():
+			if is_instance_valid(movie):
+				movie.queue_free()
+		)
+	if bool(state.settings.get("reduced_motion", false)):
+		return
 
 
 func _spawn_defeat_marks(page: Control, event: Dictionary, animate: bool) -> void:
@@ -1204,6 +1269,10 @@ func _spawn_defeat_marks(page: Control, event: Dictionary, animate: bool) -> voi
 			var enemy_card := page.find_child(_uid_to_node(_unit_uid(unit)), true, false) as Control
 			if enemy_card:
 				_add_battle_outcome(enemy_card, page, "败退", BRONZE)
+	for card in page.find_children("*", "PanelContainer", true, false):
+		if card.has_meta("unit_uid"):
+			for detail in card.find_children("*", "Label", true, false):
+				detail.visible = false
 
 
 func _add_battle_outcome(card: Control, page: Control, text: String, color: Color) -> void:
@@ -1307,7 +1376,7 @@ func _show_battle_banner(page: Control, kicker: String, copy: String, color: Col
 
 func _spawn_damage_number(page: Control, entry: Dictionary, animate: bool, stack_index := 0) -> void:
 	var unit_node := page.find_child(_uid_to_node(str(entry.get("target", ""))), true, false) as Control
-	if unit_node == null:
+	if unit_node == null or not unit_node.visible:
 		return
 	var value := int(entry.get("delta", 0))
 	var color := CINNABAR if value < 0 else TEAL
@@ -1458,9 +1527,10 @@ func perform_attack() -> void:
 		battle_target = battle.target_auto_index(battle.selected_skill())
 	var result := battle.hero_skill(battle_target)
 	if not result.ok:
-		_toast("义气不足，先使用其他招式。")
+		_toast(_battle_skill_error(result))
 		return
 	_battle_events.assign(result.get("events", []))
+	_play_combat_cue(result.get("action", {}))
 	var enemy_events: Array[Dictionary] = []
 	for enemy_event in battle.action_events:
 		if str(enemy_event.get("kind", "")) == "enemy":
@@ -1485,6 +1555,7 @@ func perform_chain() -> void:
 		_toast("三路星火尚未蓄势。")
 		return
 	_battle_events.assign(result.get("events", []))
+	_play_combat_cue(battle.last_action_event())
 	if battle.battle_finished:
 		if battle.victory:
 			_finish_victory()
@@ -1502,6 +1573,76 @@ func battle_result_continuation() -> String:
 	if legend_running:
 		return "legend"
 	return "reward"
+
+
+func _battle_skill_error(result: Dictionary) -> String:
+	match str(result.get("reason", "")):
+		"cooldown":
+			return "此招仍在调息，先换一式。"
+		"finished":
+			return "战阵已结。"
+		"no_actor":
+			return "当前没有可出手的好汉。"
+		_:
+			return "义气不足，先使用其他招式。"
+
+
+func toggle_auto_battle() -> void:
+	if battle == null or battle.battle_finished:
+		return
+	auto_battle_enabled = not auto_battle_enabled
+	if auto_battle_enabled:
+		queue_auto_step(0.2)
+		_toast("战阵托管：%s战法。" % _auto_tactic_name())
+	else:
+		if _auto_timer:
+			_auto_timer.stop()
+		_toast("已手动接管战阵。")
+	show_battle()
+
+
+func cycle_auto_tactic() -> void:
+	var tactics := ["balanced", "breaker", "guardian", "hunter"]
+	auto_tactic = tactics[(tactics.find(auto_tactic) + 1) % tactics.size()]
+	_toast("战法切换：%s" % _auto_tactic_name())
+	show_battle()
+
+
+func _auto_tactic_name() -> String:
+	return {"balanced": "均衡", "breaker": "破阵", "guardian": "守势", "hunter": "追残"}.get(auto_tactic, "均衡")
+
+
+func set_battle_speed(speed: int) -> void:
+	battle_speed = float(clampi(speed, 1, 4))
+	show_battle()
+
+
+func queue_auto_step(delay: float = -1.0) -> void:
+	if not auto_battle_enabled or battle == null or battle.battle_finished or screen != SCREEN_BATTLE:
+		return
+	if _auto_timer:
+		_auto_timer.stop()
+		_auto_timer.start((0.24 if delay < 0.0 else delay) / battle_speed)
+
+
+func _auto_step() -> void:
+	if not auto_battle_enabled or battle == null or battle.battle_finished or screen != SCREEN_BATTLE:
+		return
+	var choice := AutoBattle.choose(battle, auto_tactic)
+	if choice.is_empty():
+		auto_battle_enabled = false
+		_toast("没有可用的招式，请手动接管。")
+		show_battle()
+		return
+	battle_target = int(choice.target)
+	battle.select_skill(int(choice.skill_index))
+	perform_attack()
+	if battle != null and battle.battle_finished:
+		auto_battle_enabled = false
+		return
+	if auto_battle_enabled and battle != null and not battle.battle_finished:
+		_auto_counter += 1
+		queue_auto_step(0.45 if _auto_counter % 8 == 0 else -1.0)
 
 
 func settle_battle_result() -> void:
@@ -1552,6 +1693,9 @@ func retry_battle_prep() -> void:
 	var cost := state.camp_rest_cost()
 	if cost < 0:
 		_toast("存粮不足，无法整备。先回营寨筹集馒头。")
+		return
+	if state.copper < cost:
+		_toast("铜钱不足，无法整备。先回营寨料理营务。")
 		return
 	var xp := state.camp_rest()
 	state.save()
