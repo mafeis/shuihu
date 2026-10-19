@@ -38,6 +38,7 @@ node tools/vendor_godot_ui_addons.mjs
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path godot res://scenes/input_runner.tscn
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path godot res://scenes/battle_runner.tscn
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path godot res://scenes/save_runner.tscn
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path godot res://scenes/campaign_runner.tscn
 ```
 
 `export_presets.cfg` 提供 macOS 和 Windows 桌面导出预设，测试场景不会打包进正式游戏。导出的 Windows 版需要将同目录的 `星命水浒.exe` 与 `星命水浒.pck` 一起分发。
