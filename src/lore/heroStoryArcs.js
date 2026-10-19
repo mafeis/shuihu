@@ -311,7 +311,6 @@ function defaultArcEntry(hero, rank, stage) {
     stageCopy.label,
   );
 }
-
 function defaultHeroChoice(hero, rank) {
   const locations = ["城门", "渡口", "牢门", "粮仓", "码头", "山路"];
   const location = locations[rank % locations.length];

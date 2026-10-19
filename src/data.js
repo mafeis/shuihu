@@ -133,7 +133,6 @@ export const ROWS = [
   { id: 1, name: "中军", defense: 1.0, aggro: 1.0, melee: 1.0 },
   { id: 2, name: "后阵", defense: 0.9, aggro: 0.7, melee: 0.94 },
 ];
-
 export const EQUIPMENT = {
   worn_spear: {
     id: "worn_spear",
