@@ -1229,6 +1229,101 @@ VIDEO_ASSETS = [
     },
 ]
 
+VFX_ASSETS = [
+    {
+        "id": "vfx_gang",
+        "type": "skill_vfx_video",
+        "source": "assets/vfx/gang.mp4",
+        "source_raw": "assets/raw/vfx/shuihu_vfx_gang_raw_00001_.mp4",
+        "final": "assets/vfx/gang.mp4",
+        "workflow": "workflows/api/minimax_vfx_gang_v1.json",
+    },
+    {
+        "id": "vfx_gang_alpha",
+        "type": "skill_vfx_alpha_video",
+        "source": "assets/vfx/gang-alpha.webm",
+        "source_raw": "assets/raw/vfx/shuihu_vfx_gang_raw_00001_.mp4",
+        "final": "assets/vfx/gang-alpha.webm",
+        "workflow": "workflows/api/minimax_vfx_gang_v1.json",
+    },
+    {
+        "id": "vfx_ling",
+        "type": "skill_vfx_video",
+        "source": "assets/vfx/ling.mp4",
+        "source_raw": "assets/raw/vfx/shuihu_vfx_ling_raw_00001_.mp4",
+        "final": "assets/vfx/ling.mp4",
+        "workflow": "workflows/api/minimax_vfx_ling_v1.json",
+    },
+    {
+        "id": "vfx_ling_alpha",
+        "type": "skill_vfx_alpha_video",
+        "source": "assets/vfx/ling-alpha.webm",
+        "source_raw": "assets/raw/vfx/shuihu_vfx_ling_raw_00001_.mp4",
+        "final": "assets/vfx/ling-alpha.webm",
+        "workflow": "workflows/api/minimax_vfx_ling_v1.json",
+    },
+    {
+        "id": "vfx_tao",
+        "type": "skill_vfx_video",
+        "source": "assets/vfx/tao.mp4",
+        "source_raw": "assets/raw/vfx/shuihu_vfx_tao_raw_00001_.mp4",
+        "final": "assets/vfx/tao.mp4",
+        "workflow": "workflows/api/minimax_vfx_tao_v1.json",
+    },
+    {
+        "id": "vfx_tao_alpha",
+        "type": "skill_vfx_alpha_video",
+        "source": "assets/vfx/tao-alpha.webm",
+        "source_raw": "assets/raw/vfx/shuihu_vfx_tao_raw_00001_.mp4",
+        "final": "assets/vfx/tao-alpha.webm",
+        "workflow": "workflows/api/minimax_vfx_tao_v1.json",
+    },
+    {
+        "id": "vfx_shou",
+        "type": "skill_vfx_video",
+        "source": "assets/vfx/shou.mp4",
+        "source_raw": "assets/raw/vfx/shuihu_vfx_shou_raw_00001_.mp4",
+        "final": "assets/vfx/shou.mp4",
+        "workflow": "workflows/api/minimax_vfx_shou_v1.json",
+    },
+    {
+        "id": "vfx_shou_alpha",
+        "type": "skill_vfx_alpha_video",
+        "source": "assets/vfx/shou-alpha.webm",
+        "source_raw": "assets/raw/vfx/shuihu_vfx_shou_raw_00001_.mp4",
+        "final": "assets/vfx/shou-alpha.webm",
+        "workflow": "workflows/api/minimax_vfx_shou_v1.json",
+    },
+    {
+        "id": "vfx_gang_poster",
+        "type": "skill_vfx_poster",
+        "source": "assets/vfx/gang-poster.png",
+        "final": "assets/vfx/gang-poster.png",
+        "workflow": "workflows/api/minimax_vfx_gang_v1.json",
+    },
+    {
+        "id": "vfx_ling_poster",
+        "type": "skill_vfx_poster",
+        "source": "assets/vfx/ling-poster.png",
+        "final": "assets/vfx/ling-poster.png",
+        "workflow": "workflows/api/minimax_vfx_ling_v1.json",
+    },
+    {
+        "id": "vfx_tao_poster",
+        "type": "skill_vfx_poster",
+        "source": "assets/vfx/tao-poster.png",
+        "final": "assets/vfx/tao-poster.png",
+        "workflow": "workflows/api/minimax_vfx_tao_v1.json",
+    },
+    {
+        "id": "vfx_shou_poster",
+        "type": "skill_vfx_poster",
+        "source": "assets/vfx/shou-poster.png",
+        "final": "assets/vfx/shou-poster.png",
+        "workflow": "workflows/api/minimax_vfx_shou_v1.json",
+    },
+]
+
 AUDIO_LOOP_METHOD = (
     "4-second equal-power crossfade + 120ms post-master boundary seal"
 )
@@ -1503,6 +1598,7 @@ def build_entry(asset: dict[str, str]) -> dict[str, Any]:
     if final.suffix.lower() == ".png" and asset["type"] not in {
         "character_cutout",
         "enemy_sprite",
+        "skill_vfx_poster",
         "ui_icon_sheet",
     }:
         with Image.open(final) as image:
@@ -1559,6 +1655,8 @@ def main() -> int:
             entries.append(build_entry(asset))
         else:
             print(f"Skipping missing video: {asset['source']}")
+    for asset in VFX_ASSETS:
+        entries.append(build_entry(asset))
     for asset in AUDIO_ASSETS:
         entries.append(build_audio_entry(asset))
 

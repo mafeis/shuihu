@@ -1,7 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { battleVfxProfile } from "../src/battle-vfx.js";
+import {
+  battleVfxProfile,
+  battleVfxVideoKey,
+} from "../src/battle-vfx.js";
+
+test("each combat path resolves to its ComfyUI skill video", () => {
+  assert.deepEqual(
+    ["gang", "ling", "tao", "shou"].map((pathId) =>
+      battleVfxVideoKey(pathId),
+    ),
+    ["gang", "ling", "tao", "shou"],
+  );
+  assert.equal(battleVfxVideoKey("unknown"), null);
+});
 
 test("battle VFX profiles follow the four combat paths", () => {
   const result = {
@@ -19,38 +32,40 @@ test("battle VFX profiles follow the four combat paths", () => {
     ],
   };
 
-  assert.equal(
-    battleVfxProfile({
+  const profiles = [
+    {
       skill: { name: "断岳", path: "gang", power: 0.8 },
       actor: { uid: "hero-1", side: "hero", path: "gang" },
       result,
-    }).kind,
-    "slash",
-  );
-  assert.equal(
-    battleVfxProfile({
+    },
+    {
       skill: { name: "追风", path: "ling", power: 0.8 },
       actor: { uid: "hero-1", side: "hero", path: "ling" },
       result,
-    }).kind,
-    "projectile",
-  );
-  assert.equal(
-    battleVfxProfile({
+    },
+    {
       skill: { name: "星阵", path: "tao", power: 0.8 },
       actor: { uid: "hero-1", side: "hero", path: "tao" },
       result,
-    }).kind,
-    "sigil",
-  );
-  assert.equal(
-    battleVfxProfile({
+    },
+    {
       skill: { name: "铁壁", path: "shou", power: 0.8 },
       actor: { uid: "hero-1", side: "hero", path: "shou" },
       result,
-    }).kind,
-    "guard",
-  );
+    },
+  ];
+  const expected = [
+    ["gang", "slash"],
+    ["ling", "projectile"],
+    ["tao", "sigil"],
+    ["shou", "guard"],
+  ];
+
+  profiles.forEach((profile, index) => {
+    const visual = battleVfxProfile(profile);
+    assert.equal(visual.videoKey, expected[index][0]);
+    assert.equal(visual.kind, expected[index][1]);
+  });
 });
 
 test("heavy, healing, support and chain skills receive distinct VFX", () => {
@@ -113,6 +128,7 @@ test("heavy, healing, support and chain skills receive distinct VFX", () => {
     },
   });
   assert.equal(combo.kind, "starfall");
+  assert.equal(combo.videoKey, "gang");
   assert.equal(combo.heavy, true);
   assert.deepEqual(combo.targetUids, ["enemy-1", "enemy-2"]);
   assert.equal(combo.pathAdvantage, true);

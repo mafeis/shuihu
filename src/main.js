@@ -3,6 +3,18 @@ import "./styles.css";
 import { ICON_COMPONENTS } from "./icons.js";
 import titlePosterUrl from "../assets/video/bianjing_snow_night_poster.webp";
 import titleVideoUrl from "../assets/video/bianjing_snow_night_5s.mp4";
+import gangVfxAlphaUrl from "../assets/vfx/gang-alpha.webm";
+import gangVfxPosterUrl from "../assets/vfx/gang-poster.png";
+import gangVfxVideoUrl from "../assets/vfx/gang.mp4";
+import lingVfxAlphaUrl from "../assets/vfx/ling-alpha.webm";
+import lingVfxPosterUrl from "../assets/vfx/ling-poster.png";
+import lingVfxVideoUrl from "../assets/vfx/ling.mp4";
+import shouVfxAlphaUrl from "../assets/vfx/shou-alpha.webm";
+import shouVfxPosterUrl from "../assets/vfx/shou-poster.png";
+import shouVfxVideoUrl from "../assets/vfx/shou.mp4";
+import taoVfxAlphaUrl from "../assets/vfx/tao-alpha.webm";
+import taoVfxPosterUrl from "../assets/vfx/tao-poster.png";
+import taoVfxVideoUrl from "../assets/vfx/tao.mp4";
 
 import {
   ACHIEVEMENTS,
@@ -186,6 +198,28 @@ const app = document.querySelector("#app");
 const gameShell = window.gameShell || null;
 const steamBridge = window.gameSteam || null;
 const diagnosticsBridge = window.gameDiagnostics || null;
+const BATTLE_VFX_ASSETS = Object.freeze({
+  gang: {
+    alpha: gangVfxAlphaUrl,
+    video: gangVfxVideoUrl,
+    poster: gangVfxPosterUrl,
+  },
+  ling: {
+    alpha: lingVfxAlphaUrl,
+    video: lingVfxVideoUrl,
+    poster: lingVfxPosterUrl,
+  },
+  tao: {
+    alpha: taoVfxAlphaUrl,
+    video: taoVfxVideoUrl,
+    poster: taoVfxPosterUrl,
+  },
+  shou: {
+    alpha: shouVfxAlphaUrl,
+    video: shouVfxVideoUrl,
+    poster: shouVfxPosterUrl,
+  },
+});
 
 let state = null;
 let screen = "title";
@@ -360,10 +394,27 @@ function renderBattleMotion(event, label, tone = "") {
   `;
 }
 
-function renderBattleSkillImpact(vfx) {
+function renderBattleSkillImpact(vfx, withVideo = false) {
   if (!vfx) return "";
+  const media = withVideo ? BATTLE_VFX_ASSETS[vfx.videoKey] : null;
+  const motionReduced = reducedMotionFor(state);
+  const videoMarkup = media
+    ? motionReduced
+      ? `<img class="skill-video-poster" src="${media.poster}" alt="" draggable="false" />`
+      : `
+        <video class="skill-video-media" autoplay muted playsinline preload="auto" poster="${media.poster}" aria-hidden="true">
+          <source src="${media.alpha}" type='video/webm; codecs="vp9"' />
+          <source src="${media.video}" type="video/mp4" />
+        </video>
+      `
+    : "";
   return `
-    <span class="skill-impact is-${vfx.kind} tone-${vfx.tone} ${vfx.heavy ? "is-heavy" : ""}" aria-hidden="true">
+    <span class="skill-impact is-${vfx.kind} tone-${vfx.tone} ${vfx.heavy ? "is-heavy" : ""} ${media ? "has-video" : ""}" aria-hidden="true">
+      ${
+        media
+          ? `<span class="skill-video" data-vfx-video="${vfx.videoKey}">${videoMarkup}</span>`
+          : ""
+      }
       ${Array.from({ length: 7 }, (_, index) => `<i style="--vfx-index:${index}"></i>`).join("")}
       <em></em>
     </span>
@@ -788,9 +839,35 @@ function renderGame() {
   window.scrollTo({ top: 0, behavior: "instant" });
   restoreInputFocus();
   if (screen === "title") bindTitleVideo();
-  if (screen === "battle") runBattleAutomation();
+  if (screen === "battle") {
+    syncBattleVfxVideo();
+    runBattleAutomation();
+  }
   if (screen === "arena-reward") queueArenaAutoContinue();
   else clearArenaAutoTimer();
+}
+
+function syncBattleVfxVideo() {
+  const container = document.querySelector(".skill-video");
+  const video = container?.querySelector("video");
+  if (!video) return;
+  const speed = [1, 2, 4].includes(state?.settings?.battleSpeed)
+    ? state.settings.battleSpeed
+    : 1;
+  video.playbackRate = speed;
+  const markAlphaSource = () => {
+    container.classList.toggle("has-alpha", video.currentSrc.endsWith(".webm"));
+  };
+  markAlphaSource();
+  video.addEventListener("loadedmetadata", markAlphaSource, { once: true });
+  video.addEventListener(
+    "ended",
+    () => container.classList.add("is-ended"),
+    { once: true },
+  );
+  video.play()?.catch(() => {
+    container.classList.add("is-poster-only");
+  });
 }
 
 function restoreInputFocus() {
@@ -915,6 +992,11 @@ function scheduleBattle(callback, delay = 0) {
     battleTimer = null;
     callback();
   }, Math.max(35, Math.round(delay / speed)));
+}
+
+function battleVfxTransitionDelay(defaultDelay) {
+  if (!battleUi.vfx?.videoKey || reducedMotionFor(state)) return defaultDelay;
+  return Math.max(defaultDelay, 1480);
 }
 
 function setScreen(nextScreen) {
@@ -4457,7 +4539,7 @@ function renderEnemyUnit(unit, targetable, current) {
   return `
     <button class="battle-unit enemy-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${evade ? "is-evading" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" aria-label="${unit.name}">
       ${renderBattleMotion(damage || evade, feedbackLabel, damage?.critical ? "is-critical" : evade ? "is-evade" : "")}
-      ${vfxTarget ? renderBattleSkillImpact(vfx) : ""}
+      ${vfxTarget ? renderBattleSkillImpact(vfx, vfx?.targetUids?.[0] === unit.uid) : ""}
       <div class="enemy-figure">
         <img src="${unit.sprite}" alt="" draggable="false" />
         <span class="target-reticle">${icon("crosshair", 28)}</span>
@@ -4511,7 +4593,7 @@ function renderBattleHero(unit, targetable, current, striking) {
   return `
     <button class="battle-unit hero-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${heal ? "is-healed" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" aria-label="${unit.name}">
       ${renderBattleMotion(damage || heal, feedbackLabel, damage?.critical ? "is-critical" : heal ? "is-heal" : "")}
-      ${vfxTarget ? renderBattleSkillImpact(vfx) : ""}
+      ${vfxTarget ? renderBattleSkillImpact(vfx, vfx?.targetUids?.[0] === unit.uid) : ""}
       <span class="row-ribbon">${teamRow}</span>
       <div class="hero-figure">
         <img src="${unit.portrait}" alt="" draggable="false" />
@@ -4808,7 +4890,10 @@ function resolveChainAttack() {
   sound.playCombatCue("combo");
   render();
   showBattleResult();
-  scheduleBattle(() => advanceAfterResult(), 1120);
+  scheduleBattle(
+    () => advanceAfterResult(),
+    battleVfxTransitionDelay(1120),
+  );
 }
 
 function runEnemyTurn() {
@@ -4854,7 +4939,10 @@ function runEnemyTurn() {
   );
   render();
   showBattleResult();
-  scheduleBattle(() => advanceAfterResult(), 920);
+  scheduleBattle(
+    () => advanceAfterResult(),
+    battleVfxTransitionDelay(920),
+  );
 }
 
 function selectSkill(skillId) {
@@ -4910,7 +4998,10 @@ function resolveHeroAction(skill, targetUid = null) {
   );
   render();
   showBattleResult();
-  scheduleBattle(() => advanceAfterResult(), 900);
+  scheduleBattle(
+    () => advanceAfterResult(),
+    battleVfxTransitionDelay(900),
+  );
 }
 
 function showBattleResult() {
@@ -4919,11 +5010,12 @@ function showBattleResult() {
   const speed = [1, 2, 4].includes(state?.settings?.battleSpeed)
     ? state.settings.battleSpeed
     : 1;
+  const hold = battleVfxTransitionDelay(720) - 60;
   battleFeedbackTimer = window.setTimeout(() => {
     battleFeedbackTimer = null;
     clearBattleFeedback();
     render();
-  }, Math.max(180, Math.round(720 / speed)));
+  }, Math.max(180, Math.round(hold / speed)));
 }
 
 function advanceAfterResult() {
