@@ -13,8 +13,12 @@ func _run() -> void:
 	var scene := load("res://scenes/main.tscn") as PackedScene
 	main = scene.instantiate()
 	get_tree().root.add_child(main)
-	await _capture("title")
+	var real_save_path: String = main.state.save_path
+	var real_backup_path: String = main.state.backup_path
+	main.state.save_path = "user://visual_test_%d.json" % OS.get_process_id()
+	main.state.backup_path = "user://visual_test_%d.backup.json" % OS.get_process_id()
 	main.state.delete_save()
+	await _capture("title")
 	main.show_settings()
 	await _capture("settings")
 	var player_name := main.settings_layer.find_child("PlayerName", true, false) as LineEdit
@@ -44,6 +48,8 @@ func _run() -> void:
 	main.show_roster()
 	await _capture("roster")
 	main.state.delete_save()
+	main.state.save_path = real_save_path
+	main.state.backup_path = real_backup_path
 	print("Godot visual capture complete: ", capture_dir)
 	get_tree().quit(0)
 
