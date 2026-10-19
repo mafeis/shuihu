@@ -1,7 +1,7 @@
 class_name GameState
 extends RefCounted
 
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 
 var data: Dictionary
 var save_path := "user://xingming_shuihu.json"
@@ -30,7 +30,15 @@ var best_arena_wave := 0
 var quest_progress: Dictionary = {}
 var quest_claimed: Array[String] = []
 var legend_claimed: Array[String] = []
-var statistics := {"battles_won": 0, "enemies_defeated": 0}
+var hero_mastery: Dictionary = {}
+var doctrines: Dictionary = {}
+var achievements: Array[String] = []
+var recruitment_completed: Array[String] = []
+var tactic_archive: Array[String] = []
+var new_game_plus := 0
+var selected_choice := -1
+var chapter_tactic_enabled := true
+var statistics := {"battles_won": 0, "enemies_defeated": 0, "damage_dealt": 0}
 var settings := {
 	"music_volume": 0.65,
 	"sfx_volume": 0.8,
@@ -50,6 +58,14 @@ func _init(game_data: Dictionary) -> void:
 			"equipment": {"weapon": "worn_spear", "armor": "lamellar_vest", "token": "crimson_tassel"},
 		},
 	}
+	for hero_id in data.get("hero_order", []):
+		hero_mastery[str(hero_id)] = {
+			"wins": 0,
+			"kills": 0,
+			"damage": 0,
+			"ultimates": 0,
+			"trials": [],
+		}
 
 
 func heroes() -> Dictionary:
@@ -84,6 +100,84 @@ func roster_entry(hero_id: String) -> Dictionary:
 	return roster.get(hero_id, {})
 
 
+func trial_catalog() -> Array:
+	return data.get("hero_trials", [])
+
+
+func mastery(hero_id: String) -> Dictionary:
+	if not hero_mastery.has(hero_id):
+		hero_mastery[hero_id] = {"wins": 0, "kills": 0, "damage": 0, "ultimates": 0, "trials": []}
+	return hero_mastery[hero_id]
+
+
+func doctrine_catalog(hero_id: String) -> Dictionary:
+	return data.get("hero_doctrines", {}).get(hero_id, {})
+
+
+func doctrine(hero_id: String) -> Dictionary:
+	var config := doctrine_catalog(hero_id)
+	var doctrine_id := str(doctrines.get(hero_id, ""))
+	return config.get("paths", {}).get(doctrine_id, {})
+
+
+func doctrine_unlocked(hero_id: String) -> bool:
+	var config := doctrine_catalog(hero_id)
+	if config.is_empty():
+		return false
+	return mastery(hero_id).get("trials", []).size() >= int(config.get("unlockTrials", trial_catalog().size()))
+
+
+func set_doctrine(hero_id: String, doctrine_id: String) -> bool:
+	if not recruited.has(hero_id) or not doctrine_unlocked(hero_id):
+		return false
+	if not doctrine_catalog(hero_id).get("paths", {}).has(doctrine_id):
+		return false
+	doctrines[hero_id] = doctrine_id
+	check_achievements()
+	return true
+
+
+func chapter_tactics(chapter_id: String) -> Array:
+	return data.get("chapter_tactics", {}).get(chapter_id, [])
+
+
+func chapter_tactic(chapter_id: String, option_index: int) -> Dictionary:
+	var tactics := chapter_tactics(chapter_id)
+	return tactics[option_index] if option_index >= 0 and option_index < tactics.size() else {}
+
+
+func current_tactic() -> Dictionary:
+	var option_index := int(choices.get(str(chapter().get("id", "")), -1))
+	if option_index < 0 and chapter_tactic_enabled:
+		option_index = selected_choice
+	return chapter_tactic(str(chapter().get("id", "")), option_index)
+
+
+func tactic_known(tactic_id: String) -> bool:
+	return tactic_archive.has(tactic_id)
+
+
+func record_tactic(chapter_id: String, option_index: int) -> Dictionary:
+	var tactic := chapter_tactic(chapter_id, option_index)
+	if tactic.is_empty():
+		return {"ok": false}
+	var tactic_id := str(tactic.get("id", ""))
+	if tactic_archive.has(tactic_id):
+		return {"ok": true, "tactic": tactic, "discovered": false, "copper": 0, "xp": 0}
+	tactic_archive.append(tactic_id)
+	var chapter_number := 0
+	for entry in chapters():
+		if str(entry.get("id", "")) == chapter_id:
+			chapter_number = int(entry.get("index", 0))
+			break
+	var copper_reward := 60 + chapter_number * 20
+	var xp_reward := 45 + chapter_number * 15
+	copper += copper_reward
+	for hero_id in active_team():
+		grant_experience(hero_id, xp_reward)
+	return {"ok": true, "tactic": tactic, "discovered": true, "copper": copper_reward, "xp": xp_reward}
+
+
 func bond_catalog() -> Dictionary:
 	return data.get("bonds", {})
 
@@ -105,6 +199,10 @@ func active_bonds() -> Array[Dictionary]:
 
 func team_modifiers() -> Dictionary:
 	var modifiers := {}
+	for hero_id in active_team():
+		var doctrine_config := doctrine(hero_id)
+		for key in doctrine_config.get("teamEffects", {}):
+			modifiers[key] = float(modifiers.get(key, 0.0)) + float(doctrine_config.teamEffects[key])
 	for bond in active_bonds():
 		for key in bond.get("effects", {}):
 			modifiers[key] = float(modifiers.get(key, 0.0)) + float(bond.effects[key])
@@ -145,13 +243,15 @@ func derive_hero_stats(hero_id: String) -> Dictionary:
 	var gear := equipment_stats(hero_id)
 	var level := maxi(1, int(entry.get("level", 1)))
 	var level_scale := 1.0 + (level - 1) * 0.13
+	var mastery_scale := 1.0 + float(mastery(hero_id).get("trials", []).size()) * 0.02
+	var doctrine_effects: Dictionary = doctrine(hero_id).get("effects", {})
 	return {
 		"level": level,
 		"xp": int(entry.get("xp", 0)),
-		"max_hp": int(round(float(base.get("hp", 400)) * level_scale * (1.0 + (int(facilities.get("hall", 1)) - 1) * 0.05) + gear.hp)),
-		"atk": int(round(float(base.get("atk", 50)) * level_scale * (1.0 + (int(facilities.get("arena", 1)) - 1) * 0.05) + gear.atk)),
-		"def": int(round(float(base.get("def", 35)) * level_scale + gear.def)),
-		"spd": int(round(float(base.get("spd", 30)) * level_scale + gear.spd)),
+		"max_hp": int(round(float(base.get("hp", 400)) * level_scale * mastery_scale * (1.0 + (int(facilities.get("hall", 1)) - 1) * 0.05) * (1.0 + float(doctrine_effects.get("hpPct", 0))) + gear.hp)),
+		"atk": int(round(float(base.get("atk", 50)) * level_scale * mastery_scale * (1.0 + (int(facilities.get("arena", 1)) - 1) * 0.05) * (1.0 + float(doctrine_effects.get("atkPct", 0))) + gear.atk)),
+		"def": int(round(float(base.get("def", 35)) * level_scale * mastery_scale * (1.0 + float(doctrine_effects.get("defPct", 0))) + gear.def)),
+		"spd": int(round(float(base.get("spd", 30)) * level_scale * mastery_scale * (1.0 + float(doctrine_effects.get("spdPct", 0))) + gear.spd)),
 	}
 
 
@@ -318,6 +418,7 @@ func consume_camp_product(product_id: String, amount := 1) -> bool:
 
 
 func record_battle_progress(battle: BattleModel) -> void:
+	var mastery_unlocks: Array[Dictionary] = []
 	for unit in battle.heroes:
 		var hero_id := str(unit.get("hero_id", ""))
 		if hero_id.is_empty():
@@ -327,10 +428,137 @@ func record_battle_progress(battle: BattleModel) -> void:
 			progress.wins = int(progress.get("wins", 0)) + 1
 		progress.ultimates = int(progress.get("ultimates", 0)) + int(battle.ultimate_uses.get(hero_id, 0))
 		quest_progress[hero_id] = progress
-	for hero_id in battle.damage_by_hero:
-		var progress: Dictionary = quest_progress.get(hero_id, {"wins": 0, "damage": 0, "ultimates": 0})
-		progress.damage = int(progress.get("damage", 0)) + int(battle.damage_by_hero[hero_id])
+		var hero_mastery_entry := mastery(hero_id)
+		if battle.victory:
+			hero_mastery_entry.wins = int(hero_mastery_entry.get("wins", 0)) + 1
+		hero_mastery_entry.kills = int(hero_mastery_entry.get("kills", 0)) + int(battle.kills_by_hero.get(hero_id, 0))
+		hero_mastery_entry.damage = int(hero_mastery_entry.get("damage", 0)) + int(battle.damage_by_hero.get(hero_id, 0))
+		hero_mastery_entry.ultimates = int(hero_mastery_entry.get("ultimates", 0)) + int(battle.ultimate_uses.get(hero_id, 0))
+		var progress_damage := int(progress.get("damage", 0)) + int(battle.damage_by_hero.get(hero_id, 0))
+		progress.damage = progress_damage
 		quest_progress[hero_id] = progress
+		for trial in trial_catalog():
+			var trial_id := str(trial.get("id", ""))
+			if hero_mastery_entry.trials.has(trial_id):
+				continue
+			var metric := str(trial.get("metric", ""))
+			if int(hero_mastery_entry.get(metric, 0)) < int(trial.get("target", 1)):
+				continue
+			hero_mastery_entry.trials.append(trial_id)
+			var reward: Dictionary = trial.get("reward", {})
+			copper += int(reward.get("copper", 0))
+			grant_experience(hero_id, int(reward.get("xp", 0)))
+			mastery_unlocks.append({"hero_id": hero_id, "trial": trial})
+	if battle.victory:
+		statistics.enemies_defeated = int(statistics.get("enemies_defeated", 0)) + int(battle.final_enemy_count)
+		statistics.damage_dealt = int(statistics.get("damage_dealt", 0)) + int(battle.damage_dealt)
+	check_achievements()
+	for unlock in mastery_unlocks:
+		if unlock not in battle.mastery_unlocks:
+			battle.mastery_unlocks.append(unlock)
+
+
+func achievement_catalog() -> Array:
+	return data.get("achievements", [])
+
+
+func achievement_requirement_met(achievement_id: String) -> bool:
+	match achievement_id:
+		"first_blood":
+			return int(statistics.get("battles_won", 0)) >= 1
+		"ten_stands":
+			return int(statistics.get("battles_won", 0)) >= 10
+		"hundred_stands":
+			return int(statistics.get("battles_won", 0)) >= 100
+		"all_sworn":
+			return recruited.size() >= heroes().size()
+		"full_chronicle":
+			return completed_chapters.size() >= chapters().size()
+		"three_endings":
+			return endings_unlocked.size() >= 3
+		"camp_complete":
+			for facility_id in data.get("facilities", {}):
+				var max_level := int(data.facilities[facility_id].get("maxLevel", 1))
+				if int(facilities.get(facility_id, 1)) < max_level:
+					return false
+			return true
+		"arena_ten":
+			return best_arena_wave >= 10
+		"arena_twenty":
+			return best_arena_wave >= 20
+		"arena_thirty":
+			return best_arena_wave >= 30
+		"mastery_path":
+			for hero_id in hero_mastery:
+				if hero_mastery[hero_id].get("trials", []).size() >= trial_catalog().size():
+					return true
+			return false
+		"doctrine_path":
+			return not doctrines.is_empty()
+		"doctrine_all":
+			for hero_id in data.get("hero_order", []):
+				if doctrine(str(hero_id)).is_empty():
+					return false
+			return true
+		"new_cycle":
+			return new_game_plus >= 1
+		"medal_three":
+			return completed_chapters.size() >= 3
+	return false
+
+
+func check_achievements() -> Array[Dictionary]:
+	var unlocked: Array[Dictionary] = []
+	for achievement in achievement_catalog():
+		var achievement_id := str(achievement.get("id", ""))
+		if achievements.has(achievement_id) or not achievement_requirement_met(achievement_id):
+			continue
+		achievements.append(achievement_id)
+		var reward: Dictionary = achievement.get("reward", {})
+		copper += int(reward.get("copper", 0))
+		for hero_id in recruited:
+			grant_experience(hero_id, int(reward.get("xp", 0)))
+		unlocked.append(achievement)
+	return unlocked
+
+
+func recruitment_catalog() -> Dictionary:
+	return data.get("hero_recruitments", {})
+
+
+func recruitment(hero_id: String) -> Dictionary:
+	return recruitment_catalog().get(hero_id, {})
+
+
+func recruitment_completed_check(hero_id: String) -> bool:
+	return recruited.has(hero_id) or recruitment_completed.has(hero_id)
+
+
+func recruitment_unlocked(hero_id: String) -> bool:
+	var config := recruitment(hero_id)
+	if config.is_empty() or recruitment_completed_check(hero_id):
+		return false
+	if current_chapter < int(config.get("requiredChapter", 1)):
+		return false
+	var prerequisite := str(config.get("prerequisite", ""))
+	return prerequisite.is_empty() or recruitment_completed_check(prerequisite)
+
+
+func complete_recruitment(hero_id: String) -> bool:
+	var config := recruitment(hero_id)
+	if config.is_empty() or recruitment_completed_check(hero_id):
+		return false
+	if not recruitment_completed.has(hero_id):
+		recruitment_completed.append(hero_id)
+	recruit([hero_id])
+	var reward: Dictionary = config.get("reward", {})
+	copper += int(reward.get("copper", 0))
+	add_item(str(reward.get("item", "")), int(reward.get("amount", 1)))
+	for team_hero_id in active_team():
+		grant_experience(team_hero_id, int(reward.get("xp", 0)))
+	statistics.battles_won = int(statistics.get("battles_won", 0)) + 1
+	check_achievements()
+	return true
 
 
 func claim_hero_quest(hero_id: String, quest_id: String) -> Dictionary:
@@ -450,6 +678,7 @@ func complete_chapter(chapter_id: String) -> void:
 			break
 	if found >= 0:
 		current_chapter = mini(found + 1, chapters().size() - 1)
+	check_achievements()
 
 
 func recruit(hero_ids: Array) -> void:
@@ -486,7 +715,58 @@ func resolve_ending() -> String:
 		ending = "freedom"
 	if not endings_unlocked.has(ending):
 		endings_unlocked.append(ending)
+	check_achievements()
 	return ending
+
+
+func start_new_game_plus() -> void:
+	var previous_endings := endings_unlocked.duplicate()
+	var previous_mastery := hero_mastery.duplicate(true)
+	var previous_doctrines := doctrines.duplicate(true)
+	var previous_achievements := achievements.duplicate()
+	var previous_bonds := bond_archive.duplicate()
+	var previous_chains := chain_archive.duplicate()
+	var previous_tactics := tactic_archive.duplicate()
+	var previous_quests := quest_claimed.duplicate()
+	var previous_legends := legend_claimed.duplicate()
+	var previous_recruitments := recruitment_completed.duplicate()
+	var previous_settings := settings.duplicate(true)
+	var cycle := new_game_plus + 1
+	var preserved_name := player_name
+	var preserved_difficulty := difficulty_id
+	var fresh := GameState.new(data)
+	player_name = preserved_name
+	difficulty_id = preserved_difficulty
+	current_chapter = 0
+	completed_chapters.clear()
+	recruited.assign(["linchong"])
+	team.assign(["linchong", "", ""])
+	copper = fresh.copper
+	roster = fresh.roster.duplicate(true)
+	inventory = fresh.inventory.duplicate(true)
+	facilities = fresh.facilities.duplicate(true)
+	camp_built.assign(["hall"])
+	camp_stock.clear()
+	alignment = {"brotherhood": 1, "order": 1, "freedom": 1}
+	choices.clear()
+	rewards_granted.clear()
+	ending = ""
+	best_arena_wave = 0
+	quest_progress.clear()
+	statistics = {"battles_won": 0, "enemies_defeated": 0, "damage_dealt": 0}
+	endings_unlocked.assign(previous_endings)
+	hero_mastery = previous_mastery
+	doctrines = previous_doctrines
+	achievements.assign(previous_achievements)
+	bond_archive.assign(previous_bonds)
+	chain_archive.assign(previous_chains)
+	tactic_archive.assign(previous_tactics)
+	quest_claimed.assign(previous_quests)
+	legend_claimed.assign(previous_legends)
+	recruitment_completed.assign(previous_recruitments)
+	settings = previous_settings
+	new_game_plus = cycle
+	check_achievements()
 
 
 func difficulty() -> Dictionary:
@@ -516,6 +796,12 @@ func save() -> void:
 		"quest_progress": quest_progress,
 		"quest_claimed": quest_claimed,
 		"legend_claimed": legend_claimed,
+		"hero_mastery": hero_mastery,
+		"doctrines": doctrines,
+		"achievements": achievements,
+		"recruitment_completed": recruitment_completed,
+		"tactic_archive": tactic_archive,
+		"new_game_plus": new_game_plus,
 		"alignment": alignment,
 		"choices": choices,
 		"rewards_granted": rewards_granted,
@@ -598,6 +884,43 @@ func _load_from_path(path: String) -> bool:
 	quest_progress = parsed.get("quest_progress", {})
 	quest_claimed.assign(parsed.get("quest_claimed", []))
 	legend_claimed.assign(parsed.get("legend_claimed", []))
+	var saved_mastery = parsed.get("hero_mastery", {})
+	if saved_mastery is Dictionary:
+		for hero_id in saved_mastery:
+			if not hero_mastery.has(str(hero_id)):
+				continue
+			var saved_entry: Dictionary = saved_mastery[hero_id]
+			var entry: Dictionary = hero_mastery[hero_id]
+			for metric in ["wins", "kills", "damage", "ultimates"]:
+				entry[metric] = maxi(0, int(saved_entry.get(metric, entry.get(metric, 0))))
+			if saved_entry.get("trials", []) is Array:
+				for trial_id in saved_entry.trials:
+					if trial_catalog().any(func(trial): return str(trial.get("id", "")) == str(trial_id)) and not entry.trials.has(str(trial_id)):
+						entry.trials.append(str(trial_id))
+	var saved_doctrines = parsed.get("doctrines", {})
+	if saved_doctrines is Dictionary:
+		for hero_id in saved_doctrines:
+			if not doctrine_catalog(str(hero_id)).get("paths", {}).has(str(saved_doctrines[hero_id])):
+				continue
+			doctrines[str(hero_id)] = str(saved_doctrines[hero_id])
+	var saved_achievements = parsed.get("achievements", [])
+	if saved_achievements is Array:
+		for achievement_id in saved_achievements:
+			if achievement_catalog().any(func(entry): return str(entry.get("id", "")) == str(achievement_id)):
+				achievements.append(str(achievement_id))
+	var saved_recruitments = parsed.get("recruitment_completed", [])
+	if saved_recruitments is Array:
+		for hero_id in saved_recruitments:
+			if recruitment_catalog().has(str(hero_id)):
+				recruitment_completed.append(str(hero_id))
+	var saved_tactics = parsed.get("tactic_archive", [])
+	if saved_tactics is Array:
+		for chapter_id in data.get("chapter_tactics", {}):
+			for tactic in chapter_tactics(str(chapter_id)):
+				var tactic_id := str(tactic.get("id", ""))
+				if saved_tactics.has(tactic_id):
+					tactic_archive.append(tactic_id)
+	new_game_plus = maxi(0, int(parsed.get("new_game_plus", 0)))
 	alignment.merge(parsed.get("alignment", {}), true)
 	choices = parsed.get("choices", {})
 	rewards_granted = parsed.get("rewards_granted", {})

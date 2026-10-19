@@ -85,6 +85,36 @@ func _run() -> void:
 	await get_tree().process_frame
 	_check(main.arena_running and main.battle.enemies.size() == 3, "arena battles should use the native battle field")
 	main.arena_running = false
+	main.state.current_chapter = 3
+	main.recruitment_hero_id = "yangzhi"
+	main.start_recruitment("yangzhi")
+	await get_tree().process_frame
+	_check(main.recruitment_running and main.screen == "story", "recruitment posts should open their own native story")
+	for _line in 10:
+		if main.screen == "choice":
+			break
+		main.advance_recruitment_story()
+		await get_tree().process_frame
+	_check(main.screen == "choice", "recruitment stories should reach their branch choice")
+	main.choose_recruitment_option(0)
+	await get_tree().process_frame
+	main.advance_recruitment_story()
+	for _line in 5:
+		if main.screen == "battle":
+			break
+		main.advance_recruitment_story()
+		await get_tree().process_frame
+	_check(main.screen == "battle" and main.battle != null, "recruitment choices should lead to a native battle")
+	main.state.mastery("linchong").trials.assign(["first_star", "oath_echo", "slayer_name"])
+	main.state.doctrines.clear()
+	_check(main.state.set_doctrine("linchong", "garrison"), "the native mastery data should select an unlocked doctrine")
+	main.state.check_achievements()
+	main.show_mastery("linchong")
+	await get_tree().process_frame
+	_check(main.menu_layer.visible, "native mastery study should open from the camp")
+	main.show_achievements()
+	await get_tree().process_frame
+	_check(main.menu_layer.visible, "the native achievement ledger should open")
 	main.show_settings()
 	await get_tree().process_frame
 	_check(main.settings_layer.visible, "settings overlay should open")

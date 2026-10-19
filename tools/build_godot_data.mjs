@@ -3,6 +3,7 @@
 import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 
 const data = await import("../src/data.js");
+const { CHAPTER_TACTICS } = await import("../src/chapter-tactics.js");
 const assetPath = (value) => value?.replace(/^\/?assets\//, "res://assets/");
 
 const pickHero = (hero) => ({
@@ -193,8 +194,21 @@ const pickChapter = (chapter) => ({
   outro: chapter.outro,
 });
 
+const pickRecruitment = (recruitment) => {
+  const copy = structuredClone(recruitment);
+  if (typeof copy.bg === "string") copy.bg = assetPath(copy.bg);
+  return copy;
+};
+
+// The browser source uses state checks for achievements. Godot evaluates the
+// same conditions through native helpers, so only definitions and rewards are
+// exported here.
+const achievementDefinitions = data.ACHIEVEMENTS.map(
+  ({ check: _check, ...achievement }) => achievement,
+);
+
 const payload = {
-  version: 1,
+  version: 2,
   rows: data.ROWS,
   paths: Object.fromEntries(
     Object.entries(data.PATHS).map(([id, path]) => [
@@ -237,6 +251,16 @@ const payload = {
   chronicle_recruits: chronicleRecruits,
   hero_quests: data.HERO_QUESTS,
   hero_legends: data.HERO_LEGENDS,
+  hero_trials: data.HERO_TRIALS,
+  hero_doctrines: data.HERO_DOCTRINES,
+  achievements: achievementDefinitions,
+  hero_recruitments: Object.fromEntries(
+    Object.entries(data.HERO_RECRUITMENTS).map(([heroId, recruitment]) => [
+      heroId,
+      pickRecruitment(recruitment),
+    ]),
+  ),
+  chapter_tactics: CHAPTER_TACTICS,
 };
 
 await writeFile(

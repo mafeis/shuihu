@@ -62,6 +62,10 @@ var arena_encounter_id := ""
 var arena_running := false
 var chronicle_hero_id := ""
 var legend_running := false
+var recruitment_hero_id := ""
+var recruitment_running := false
+var mastery_hero_id := "linchong"
+var _menu_back_target := ""
 var _choice_feedback: Label
 var _choice_panel: PanelContainer
 var _battle_events: Array[Dictionary] = []
@@ -329,9 +333,14 @@ func _is_fullscreen() -> bool:
 
 func _dismiss_menu() -> void:
 	var previous := _menu_back_callable
+	var previous_target := _menu_back_target
 	_menu_back_callable = Callable()
+	_menu_back_target = ""
 	menu_layer.visible = false
 	_clear_menu_layer()
+	if previous_target == "chronicles" and screen == SCREEN_CAMP:
+		show_camp()
+		return
 	if previous.is_valid():
 		previous.call()
 
@@ -395,6 +404,8 @@ func _set_screen(next_screen: String) -> void:
 
 func show_title() -> void:
 	arena_running = false
+	recruitment_running = false
+	state.chapter_tactic_enabled = true
 	_set_screen(SCREEN_TITLE)
 	_play_music("res://assets/audio/title_theme.mp3")
 	var page := _new_screen()
@@ -487,6 +498,9 @@ func continue_game() -> void:
 
 func show_map() -> void:
 	arena_running = false
+	recruitment_running = false
+	legend_running = false
+	state.chapter_tactic_enabled = true
 	_set_screen(SCREEN_MAP)
 	_play_music("res://assets/audio/jianghu_theme.mp3")
 	var page := _new_screen()
@@ -516,7 +530,19 @@ func show_map() -> void:
 	var enter := _button("启程", enter_chapter, true, 210)
 	enter.disabled = not state.chapter_available(chapter_index)
 	actions.add_child(enter)
+	if state.completed_chapters.has(str(chapter.get("id", ""))):
+		actions.add_child(_button("重演前回", replay_current_chapter, false, 170))
 	actions.add_child(_button("先回营整备", show_camp, false, 180))
+	var tactic: Dictionary = state.chapter_tactic(str(chapter.get("id", "")), int(state.choices.get(str(chapter.get("id", "")), 0)))
+	if not tactic.is_empty():
+		var tactic_copy := str(tactic.get("desc", ""))
+		if tactic_copy.length() > 100:
+			tactic_copy = tactic_copy.left(100) + "..."
+		copy.add_child(_label("临阵战意 · %s%s\n%s" % [
+			tactic.get("name", "未定"),
+			"" if state.tactic_known(str(tactic.get("id", ""))) else "  ·  尚未收录",
+			tactic_copy,
+		], 14, PAPER_300))
 	var rail := PanelContainer.new()
 	rail.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.97), INK_700, 1, 4))
 	rail.position = Vector2(1100, 88)
@@ -537,6 +563,11 @@ func show_map() -> void:
 	goal.add_theme_constant_override("line_spacing", 4)
 	goal.add_theme_stylebox_override("normal", _panel_style(Color("#1a2424"), Color("#806d41"), 1, 4))
 	rail_box.add_child(goal)
+	rail_box.add_child(_label("战术收录  %d / %d\n星命命途  %d / %d\n梁山功簿  %d / %d" % [
+		state.tactic_archive.size(), _tactic_total(),
+		_doctrine_count(), state.recruited.size(),
+		state.achievements.size(), state.achievement_catalog().size(),
+	], 14, BRONZE))
 	for index in state.chapters().size():
 		var item: Dictionary = state.chapters()[index]
 		var available := state.chapter_available(index)
@@ -573,6 +604,13 @@ func show_map() -> void:
 	enter.grab_focus()
 
 
+func _tactic_total() -> int:
+	var total := 0
+	for chapter_id in game_data.get("chapter_tactics", {}):
+		total += state.chapter_tactics(str(chapter_id)).size()
+	return total
+
+
 func enter_chapter() -> void:
 	if not state.chapter_available(chapter_index):
 		_toast("继续推进前回，方可抵达此处。")
@@ -580,8 +618,21 @@ func enter_chapter() -> void:
 	story_stage = "intro"
 	story_line = 0
 	selected_choice = -1
+	state.chapter_tactic_enabled = true
 	show_story()
 	_make_immersive(not bool(state.settings.get("reduced_motion", false)))
+
+
+func replay_current_chapter() -> void:
+	var chapter_id := str(state.chapter().get("id", ""))
+	if not state.completed_chapters.has(chapter_id):
+		_toast("前回尚未结束，无需重演。")
+		return
+	story_stage = "intro"
+	story_line = 0
+	selected_choice = -1
+	state.chapter_tactic_enabled = true
+	show_story()
 
 
 func _make_immersive(animate := true) -> void:
@@ -788,13 +839,19 @@ func choose_option(index: int) -> void:
 		return
 	var effect: Dictionary = choices[index].get("effect", {})
 	state.choices[chapter.get("id", "")] = index
+	state.selected_choice = index
 	for key in effect:
 		state.alignment[key] = int(state.alignment.get(key, 0)) + int(effect[key])
 	state.save()
+	var tactic := state.chapter_tactic(str(chapter.get("id", "")), index)
+	var tactical_note := ""
+	if bool(state.settings.get("battle_hints", true)):
+		tactical_note = "\n战意 · %s：%s" % [tactic.get("name", ""), tactic.get("desc", "")]
 	if _choice_feedback:
-		_choice_feedback.text = "此路已定。星命随之转向 " + "、".join(effect.keys())
-	_battle_events = [{"kind": "choice", "title": _choice_tendency(effect), "text": str(choices[index].get("tactic", {}).get("desc", choices[index].get("response", "")))}]
+		_choice_feedback.text = "此路已定。星命随之转向 " + "、".join(effect.keys()) + tactical_note
 	start_battle()
+	_battle_events = [{"kind": "choice", "title": tactic.get("name", _choice_tendency(effect)), "text": str(tactic.get("desc", choices[index].get("response", "")))}]
+	show_battle()
 
 
 func start_battle() -> void:
@@ -894,13 +951,13 @@ func show_battle() -> void:
 		var continuation := battle_result_continuation()
 		box.add_child(_label("战阵已结", 30, BRONZE))
 		box.add_child(_label("我军胜利。" if battle.victory else "我军败退。", 20, PAPER_100))
-		var action_text := "收下战果" if continuation == "reward" else ("收下捷报" if continuation == "legend" else ("续战擂台" if continuation == "arena" else "重新整备"))
+		var action_text := "收下战果" if continuation == "reward" else ("收下捷报" if continuation in ["legend", "recruitment"] else ("续战擂台" if continuation == "arena" else "重新整备"))
 		var retry_callback := battle_result_continue if battle.victory else retry_battle_prep
 		box.add_child(_button(action_text, retry_callback, true, 280))
 		box.add_child(_button("返回行军图", show_map, false, 280))
 		box.add_child(_sep())
 		box.add_child(_label("战阵记要", 14, PAPER_500))
-		if legend_running:
+		if legend_running or recruitment_running:
 			box.add_child(_label("敌阵评分  %d\n回合  %d" % [battle.enemy_score, battle.round_number], 14, PAPER_500))
 		for line in battle.log_lines.slice(0, 4 if legend_running else 6):
 			box.add_child(_label(line, 14, PAPER_300))
@@ -974,7 +1031,7 @@ func show_battle() -> void:
 	var attack := _button("施展「%s」" % battle.selected_skill().get("name", "招式"), perform_attack, true, 288)
 	attack.disabled = not battle.can_use_selected_skill()
 	box.add_child(attack)
-	box.add_child(_button("撤退" if arena_running else ("离开列传" if legend_running else "返回行军图"), abandon_battle, false, 288))
+	box.add_child(_button("撤退" if arena_running else ("离开列传" if legend_running else ("暂离聚义帖" if recruitment_running else "返回行军图")), abandon_battle, false, 288))
 	var log_box := VBoxContainer.new()
 	box.add_child(_sep())
 	for line in battle.log_lines.slice(0, 3):
@@ -1572,6 +1629,8 @@ func battle_result_continuation() -> String:
 		return "arena"
 	if legend_running:
 		return "legend"
+	if recruitment_running:
+		return "recruitment"
 	return "reward"
 
 
@@ -1659,6 +1718,9 @@ func settle_battle_result() -> void:
 		"legend":
 			legend_running = false
 			_finish_legend_victory()
+		"recruitment":
+			recruitment_running = false
+			_finish_recruitment_victory()
 		"reward":
 			_finish_victory()
 		_:
@@ -1675,6 +1737,12 @@ func battle_result_continue() -> void:
 		show_chronicles()
 		_toast("终章尚未破阵，可整备武备后再来。")
 		return
+	if recruitment_running and not battle.victory:
+		recruitment_running = false
+		battle = null
+		show_recruitments()
+		_toast("这一战尚未破阵，可整备后再赴聚义帖。")
+		return
 	settle_battle_result()
 
 
@@ -1689,6 +1757,12 @@ func retry_battle_prep() -> void:
 	if arena_running:
 		arena_running = false
 		show_arena()
+		return
+	if recruitment_running:
+		recruitment_running = false
+		battle = null
+		show_recruitments()
+		_toast("先回营整备，再来接应此帖。")
 		return
 	var cost := state.camp_rest_cost()
 	if cost < 0:
@@ -1715,6 +1789,10 @@ func abandon_battle() -> void:
 		legend_running = false
 		battle = null
 		show_camp()
+	elif recruitment_running:
+		recruitment_running = false
+		battle = null
+		show_recruitments()
 	else:
 		show_map()
 
@@ -1738,6 +1816,9 @@ func _finish_victory() -> void:
 		state.rewards_granted[chapter_id] = true
 	state.complete_chapter(chapter_id)
 	state.record_battle_progress(battle)
+	var tactic_result := state.record_tactic(chapter_id, int(state.choices.get(chapter_id, 0)))
+	if tactic_result.get("discovered", false):
+		_toast("新收录临阵战意：%s" % tactic_result.tactic.get("name", ""))
 	for formation_id in battle.chain_formation_ids:
 		if not state.chain_archive.has(formation_id):
 			state.chain_archive.append(formation_id)
@@ -1748,6 +1829,9 @@ func _finish_victory() -> void:
 func show_reward(reward_context := "chapter") -> void:
 	if reward_context == "legend":
 		_show_legend_reward()
+		return
+	if reward_context == "recruitment":
+		_show_recruitment_reward()
 		return
 	_set_screen(SCREEN_REWARD)
 	var page := _new_screen()
@@ -1779,9 +1863,15 @@ func show_reward(reward_context := "chapter") -> void:
 		box.add_child(_label(settlement_stats, 15, PAPER_300))
 	if battle.level_ups > 0:
 		box.add_child(_label("战阵磨砺，好汉有所精进。", 16, BRONZE))
+	if not battle.mastery_unlocks.is_empty():
+		var mastery_names: Array[String] = []
+		for unlock in battle.mastery_unlocks:
+			mastery_names.append("%s·%s" % [state.hero(str(unlock.hero_id)).get("name", ""), unlock.trial.get("name", "")])
+		box.add_child(_label("星命试炼新录  " + "、".join(mastery_names), 15, TEAL))
 	var settlement = chapter.get("battle", {}).get("settlement", "")
 	box.add_child(_button("继续" if settlement != "ending" else "收束星命", func():
 		if settlement == "ending":
+			state.check_achievements()
 			show_ending()
 			return
 		story_stage = "outro"
@@ -1890,11 +1980,49 @@ func show_ending() -> void:
 		else:
 			show_camp()
 	actions.add_child(_button("回到聚义厅", camp_return, true, 280))
+	actions.add_child(_button("携星图重开", confirm_new_game_plus, false, 220))
 	actions.add_child(_button("重返标题", show_title, false, 200))
 	box.add_child(actions)
 
 
+func confirm_new_game_plus() -> void:
+	menu_layer.visible = true
+	_clear_menu_layer()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.86)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(410, 280)
+	panel.size = Vector2(620, 336)
+	menu_layer.add_child(panel)
+	var box := VBoxContainer.new()
+	box.offset_left = 18
+	box.offset_right = -18
+	box.offset_top = 16
+	box.offset_bottom = -16
+	box.add_theme_constant_override("separation", 11)
+	panel.add_child(box)
+	box.add_child(_label("重展星图？", 30, PAPER_100))
+	box.add_child(_label("新卷会重置章回、营寨、武备与阵势，并保留试炼、命途、功簿、聚义帖、战术、羁绊、结局和设置。", 16, PAPER_300))
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 9)
+	box.add_child(actions)
+	actions.add_child(_button("保留当前卷", func(): menu_layer.visible = false, false, 250))
+	actions.add_child(_button("开启第 %d 周目" % [state.new_game_plus + 2], func():
+		state.start_new_game_plus()
+		state.save()
+		chapter_index = 0
+		recruitment_running = false
+		battle = null
+		show_map()
+		_toast("星图传承已展开。战功与命途仍在，新卷从头写起。")
+	, true, 280))
+
+
 func show_camp() -> void:
+	state.chapter_tactic_enabled = true
 	_set_screen(SCREEN_CAMP)
 	_play_music("res://assets/audio/qingfeng_theme.mp3")
 	var page := _new_screen()
@@ -1971,10 +2099,13 @@ func show_camp() -> void:
 	side.add_theme_constant_override("separation", 10)
 	page.add_child(side)
 	side.add_child(_label("营中日常", 17, BRONZE))
-	side.add_child(_label("休整让众人累积历练；产品可入厨成食，也可作为下一战的路粮。", 15, PAPER_300))
+	side.add_child(_label("整备阵势、研学星命，再择一路出战。", 15, PAPER_300))
 	var rest_cost := state.camp_rest_cost()
 	side.add_child(_button("休整全营  ·  %d 贯" % rest_cost, camp_rest_action, false, 300))
 	side.add_child(_button("查看仓储与工坊", show_camp_store, false, 300))
+	side.add_child(_button("星命研学  ·  %d / %d 人" % [_doctrine_count(), state.recruited.size()], show_mastery, true, 300))
+	side.add_child(_button("梁山功簿  ·  %d / %d" % [state.achievements.size(), state.achievement_catalog().size()], show_achievements, false, 300))
+	side.add_child(_button("聚义帖  ·  %d / %d" % [state.recruitment_completed.size(), state.recruitment_catalog().size()], show_recruitments, false, 300))
 	side.add_child(_button("梁山演武", show_arena, true, 300))
 	side.add_child(_sep())
 	side.add_child(_label("结义羁绊  %d / %d" % [state.bond_archive.size(), game_data.get("bonds", {}).size()], 17, BRONZE))
@@ -1990,6 +2121,211 @@ func show_camp() -> void:
 	var back_button := _button("返回行军图", show_map, false, 190)
 	back_button.position = Vector2(50, 842)
 	page.add_child(back_button)
+
+
+func _doctrine_count() -> int:
+	var count := 0
+	for hero_id in state.doctrines:
+		if not state.doctrine(str(hero_id)).is_empty():
+			count += 1
+	return count
+
+
+func show_mastery(hero_id := "") -> void:
+	if not hero_id.is_empty():
+		mastery_hero_id = hero_id
+	if not state.recruited.has(mastery_hero_id):
+		mastery_hero_id = state.recruited[-1] if not state.recruited.is_empty() else "linchong"
+	menu_layer.visible = true
+	_menu_back_callable = show_camp
+	_menu_back_target = ""
+	_clear_menu_layer()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.84)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := UISlidePanel.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(92, 72)
+	panel.size = Vector2(1256, 756)
+	menu_layer.add_child(panel)
+	var box := VBoxContainer.new()
+	box.offset_left = 24
+	box.offset_right = -24
+	box.offset_top = 17
+	box.offset_bottom = -17
+	box.add_theme_constant_override("separation", 8)
+	panel.add_child(box)
+	var heading_row := HBoxContainer.new()
+	heading_row.add_theme_constant_override("separation", 14)
+	box.add_child(heading_row)
+	var heading := _label("星命研学", 36, PAPER_100)
+	heading.custom_minimum_size.x = 260
+	heading_row.add_child(heading)
+	var progress := _label("星途  %d / %d     三试圆满  %d 人" % [_doctrine_count(), state.recruited.size(), _fully_trialed_heroes()], 15, BRONZE)
+	progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	progress.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	heading_row.add_child(progress)
+	box.add_child(_label("战斗历练会推动三项试炼；试炼圆满后，可为好汉选定一条命途。", 15, PAPER_300))
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 12)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(body)
+	var roster_rail := VBoxContainer.new()
+	roster_rail.custom_minimum_size.x = 248
+	roster_rail.add_theme_constant_override("separation", 5)
+	body.add_child(roster_rail)
+	roster_rail.add_child(_label("入阵好汉", 16, BRONZE))
+	var roster_scroll := ScrollContainer.new()
+	roster_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	roster_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	roster_rail.add_child(roster_scroll)
+	var roster_list := VBoxContainer.new()
+	roster_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	roster_list.add_theme_constant_override("separation", 4)
+	roster_scroll.add_child(roster_list)
+	for listed_hero_id in state.recruited:
+		var mastery_entry := state.mastery(listed_hero_id)
+		var list_button := _button("%s\n三试 %d / %d%s" % [
+			state.hero(listed_hero_id).get("name", ""),
+			mastery_entry.get("trials", []).size(),
+			state.trial_catalog().size(),
+			("  ·  命途已定" if not state.doctrine(listed_hero_id).is_empty() else ""),
+		], func(): show_mastery(listed_hero_id), listed_hero_id == mastery_hero_id, 238)
+		list_button.custom_minimum_size.y = 55
+		list_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		roster_list.add_child(list_button)
+	var detail_scroll := ScrollContainer.new()
+	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	detail_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_child(detail_scroll)
+	var detail := VBoxContainer.new()
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.add_theme_constant_override("separation", 8)
+	detail_scroll.add_child(detail)
+	var config := state.hero(mastery_hero_id)
+	var mastery := state.mastery(mastery_hero_id)
+	var hero_heading := HBoxContainer.new()
+	hero_heading.add_theme_constant_override("separation", 16)
+	detail.add_child(hero_heading)
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(164, 172)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if ResourceLoader.exists(config.get("cutout", "")):
+		portrait.texture = load(str(config.cutout))
+	hero_heading.add_child(portrait)
+	var hero_copy := VBoxContainer.new()
+	hero_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hero_copy.add_theme_constant_override("separation", 4)
+	hero_heading.add_child(hero_copy)
+	hero_copy.add_child(_label("%s · %s" % [config.get("name", ""), config.get("nickname", "")], 15, BRONZE))
+	var hero_title := _label("%s   Lv.%d" % [config.get("name", ""), int(state.derive_hero_stats(mastery_hero_id).level)], 29, PAPER_100)
+	hero_title.custom_minimum_size.y = 44
+	hero_copy.add_child(hero_title)
+	hero_copy.add_child(_label("胜阵 %d     亲手击败 %d     累计伤害 %d     义技 %d" % [
+		mastery.get("wins", 0), mastery.get("kills", 0), mastery.get("damage", 0), mastery.get("ultimates", 0),
+	], 15, PAPER_200))
+	hero_copy.add_child(_label("三试每成一项，四维属性提高 2%。", 14, PAPER_500))
+	var trial_strip := HBoxContainer.new()
+	trial_strip.add_theme_constant_override("separation", 8)
+	detail.add_child(trial_strip)
+	for trial in state.trial_catalog():
+		var trial_id := str(trial.get("id", ""))
+		var done: bool = mastery.get("trials", []).has(trial_id)
+		var value := int(mastery.get(str(trial.get("metric", "")), 0))
+		var target := int(trial.get("target", 1))
+		var trial_box := PanelContainer.new()
+		trial_box.add_theme_stylebox_override("panel", _panel_style(
+			Color("#23322f") if done else Color(INK_900, 0.96),
+			TEAL if done else Color(BRONZE_DARK, 0.62), 1, 4,
+		))
+		trial_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		trial_box.custom_minimum_size = Vector2(250, 104)
+		var trial_copy := VBoxContainer.new()
+		trial_copy.add_theme_constant_override("separation", 1)
+		trial_copy.offset_left = 10
+		trial_copy.offset_right = -10
+		trial_copy.offset_top = 7
+		trial_box.add_child(trial_copy)
+		trial_copy.add_child(_label(("已录 · " if done else "试炼 · ") + str(trial.get("name", "")), 16, TEAL if done else PAPER_100))
+		trial_copy.add_child(_label(str(trial.get("desc", "")), 13, PAPER_300))
+		trial_copy.add_child(_label(("完成" if done else "%d / %d" % [mini(value, target), target]) + "     铜钱 %d · 历练 %d" % [
+			int(trial.get("reward", {}).get("copper", 0)), int(trial.get("reward", {}).get("xp", 0)),
+		], 13, BRONZE))
+		trial_strip.add_child(trial_box)
+	detail.add_child(_sep())
+	detail.add_child(_label("星命命途", 21, PAPER_100))
+	var doctrine_config := state.doctrine_catalog(mastery_hero_id)
+	if not state.doctrine_unlocked(mastery_hero_id):
+		var locked_copy := _label("三试圆满后可选命途。当前 %d / %d，仅差 %d 项试炼。" % [
+			mastery.get("trials", []).size(), state.trial_catalog().size(),
+			maxi(0, state.trial_catalog().size() - mastery.get("trials", []).size()),
+		], 15, PAPER_500)
+		locked_copy.custom_minimum_size.y = 118
+		detail.add_child(locked_copy)
+	else:
+		var paths: Dictionary = doctrine_config.get("paths", {})
+		var path_row := HBoxContainer.new()
+		path_row.add_theme_constant_override("separation", 9)
+		detail.add_child(path_row)
+		for path_id in paths:
+			var path_data: Dictionary = paths[path_id]
+			var selected := str(state.doctrines.get(mastery_hero_id, "")) == str(path_id)
+			var choose := _button("", func(): choose_doctrine(mastery_hero_id, str(path_id)), selected, 342)
+			choose.custom_minimum_size.y = 156
+			choose.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			var choose_copy := VBoxContainer.new()
+			choose_copy.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			choose_copy.offset_left = 12
+			choose_copy.offset_right = -12
+			choose_copy.offset_top = 9
+			choose_copy.offset_bottom = -9
+			choose_copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			choose_copy.add_theme_constant_override("separation", 4)
+			choose_copy.add_child(_label(str(path_data.get("name", "")), 20, PAPER_100 if not selected else BRONZE))
+			choose_copy.add_child(_label(str(path_data.get("desc", "")), 14, PAPER_300))
+			choose_copy.add_child(_label("已选定" if selected else "择此命途", 14, TEAL if selected else BRONZE))
+			choose.add_child(choose_copy)
+			path_row.add_child(choose)
+	if not doctrine_config.is_empty():
+		var selected_doctrine := state.doctrine(mastery_hero_id)
+		detail.add_child(_label("战斗生效 · " + (str(selected_doctrine.get("name", "")) + "：" + str(selected_doctrine.get("desc", ""))) if not selected_doctrine.is_empty() else "尚未选定命途。", 14, PAPER_300))
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	detail.add_child(actions)
+	actions.add_child(_button("查看武备", func():
+		_menu_back_callable = func(): show_mastery(mastery_hero_id)
+		show_equipment(mastery_hero_id)
+	, false, 210))
+	actions.add_child(_button("查看列传", show_chronicles, false, 210))
+	var close := _button("回到营寨", _dismiss_menu, false, 210)
+	actions.add_child(close)
+	panel.prepare(Vector2(92, 72), not bool(state.settings.get("reduced_motion", false)))
+	panel.reveal()
+	close.grab_focus()
+
+
+func _fully_trialed_heroes() -> int:
+	var count := 0
+	for hero_id in state.recruited:
+		if state.mastery(hero_id).get("trials", []).size() >= state.trial_catalog().size():
+			count += 1
+	return count
+
+
+func choose_doctrine(hero_id: String, doctrine_id: String) -> void:
+	if not state.set_doctrine(hero_id, doctrine_id):
+		_toast("三项试炼尚未圆满，命途仍锁。")
+		return
+	var unlocked := state.check_achievements()
+	state.save()
+	_toast("%s已定命途。%s" % [
+		state.hero(hero_id).get("name", ""),
+		(" 功簿新录：%s。" % unlocked[0].get("name", "")) if not unlocked.is_empty() else "",
+	])
+	show_mastery(hero_id)
 
 
 func camp_rest_action() -> void:
@@ -2146,6 +2482,7 @@ func start_hero_legend(hero_id: String) -> void:
 	chronicle_hero_id = hero_id
 	legend_running = true
 	arena_running = false
+	state.chapter_tactic_enabled = false
 	menu_layer.visible = false
 	battle = BattleModel.new(state, battle_data, {}, legend.get("enemyModifiers", {}))
 	battle_target = 0
@@ -2165,8 +2502,11 @@ func _finish_legend_victory() -> void:
 			state.grant_experience(chronicle_hero_id, int(reward.get("xp", 0)))
 			state.add_item(str(reward.get("item", "")), int(reward.get("amount", 1)))
 			state.record_battle_progress(battle)
+			if not battle.mastery_unlocks.is_empty():
+				_toast("星命试炼新录。")
 			state.save()
 	legend_running = false
+	state.chapter_tactic_enabled = true
 	show_reward("legend")
 
 
@@ -2284,6 +2624,508 @@ func _clear_menu_layer() -> void:
 	for child in menu_layer.get_children():
 		menu_layer.remove_child(child)
 		child.queue_free()
+
+
+func show_achievements() -> void:
+	menu_layer.visible = true
+	_menu_back_callable = show_camp
+	_clear_menu_layer()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.84)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := UISlidePanel.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(190, 84)
+	panel.size = Vector2(1060, 732)
+	menu_layer.add_child(panel)
+	var box := VBoxContainer.new()
+	box.offset_left = 24
+	box.offset_right = -24
+	box.offset_top = 17
+	box.offset_bottom = -17
+	box.add_theme_constant_override("separation", 8)
+	panel.add_child(box)
+	box.add_child(_label("梁山功簿", 36, PAPER_100))
+	box.add_child(_label("已录 %d / %d 笔    新功会直接入账铜钱与全队历练" % [
+		state.achievements.size(), state.achievement_catalog().size(),
+	], 15, BRONZE))
+	var filter_row := HBoxContainer.new()
+	filter_row.add_theme_constant_override("separation", 7)
+	box.add_child(filter_row)
+	var filter := "all"
+	var list_holder := VBoxContainer.new()
+	var refresh_list := func():
+		for child in list_holder.get_children():
+			list_holder.remove_child(child)
+			child.queue_free()
+		var shown := 0
+		for achievement in state.achievement_catalog():
+			var done := state.achievements.has(str(achievement.get("id", "")))
+			if (filter == "done" and not done) or (filter == "open" and done):
+				continue
+			var achievement_row := PanelContainer.new()
+			achievement_row.add_theme_stylebox_override("panel", _panel_style(
+				Color("#20302d") if done else Color(INK_900, 0.94),
+				TEAL if done else Color(BRONZE_DARK, 0.55), 1, 4,
+			))
+			achievement_row.custom_minimum_size.y = 57
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 16)
+			row.offset_left = 12
+			row.offset_right = -12
+			achievement_row.add_child(row)
+			var mark := _label("已录" if done else "待录", 14, TEAL if done else PAPER_500)
+			mark.custom_minimum_size.x = 54
+			mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			row.add_child(mark)
+			var title_box := VBoxContainer.new()
+			title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			title_box.add_theme_constant_override("separation", 1)
+			row.add_child(title_box)
+			title_box.add_child(_label(str(achievement.get("name", "")), 17, PAPER_100 if done else PAPER_200))
+			title_box.add_child(_label(str(achievement.get("desc", "")), 14, PAPER_300))
+			var reward: Dictionary = achievement.get("reward", {})
+			var reward_label := _label("铜钱 +%d  ·  历练 +%d" % [
+				int(reward.get("copper", 0)), int(reward.get("xp", 0)),
+			], 14, BRONZE)
+			reward_label.custom_minimum_size.x = 190
+			reward_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			reward_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			row.add_child(reward_label)
+			list_holder.add_child(achievement_row)
+			shown += 1
+		if shown == 0:
+			list_holder.add_child(_label("这一页尚无记录。", 16, PAPER_500))
+	for filter_data in [["all", "全部"], ["open", "待录"], ["done", "已录"]]:
+		var filter_button := _button(filter_data[1], func():
+			filter = filter_data[0]
+			refresh_list.call()
+		, filter == filter_data[0], 120)
+		filter_button.custom_minimum_size.y = 31
+		filter_row.add_child(filter_button)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(scroll)
+	list_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_holder.add_theme_constant_override("separation", 5)
+	scroll.add_child(list_holder)
+	refresh_list.call()
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	box.add_child(actions)
+	actions.add_child(_button("回看星命研学", show_mastery, false, 230))
+	var close := _button("回到营寨", _dismiss_menu, true, 230)
+	actions.add_child(close)
+	panel.prepare(Vector2(190, 84), not bool(state.settings.get("reduced_motion", false)))
+	panel.reveal()
+	close.grab_focus()
+
+
+func show_recruitments() -> void:
+	menu_layer.visible = true
+	_menu_back_callable = show_camp
+	_clear_menu_layer()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.84)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := UISlidePanel.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(106, 76)
+	panel.size = Vector2(1228, 748)
+	menu_layer.add_child(panel)
+	var box := VBoxContainer.new()
+	box.offset_left = 22
+	box.offset_right = -22
+	box.offset_top = 16
+	box.offset_bottom = -16
+	box.add_theme_constant_override("separation", 8)
+	panel.add_child(box)
+	box.add_child(_label("聚义帖", 36, PAPER_100))
+	var done_count := 0
+	var ready_count := 0
+	for hero_id in state.recruitment_catalog():
+		if state.recruitment_completed_check(str(hero_id)):
+			done_count += 1
+		elif state.recruitment_unlocked(str(hero_id)):
+			ready_count += 1
+	box.add_child(_label("结义 %d / %d     已赴 %d 帖     当前可赴 %d 帖" % [
+		state.recruited.size(), state.heroes().size(), done_count, ready_count,
+	], 15, BRONZE))
+	box.add_child(_label("每帖各有前置与两选剧情。破阵后，帖中好汉入伙，奖励直接入账。", 14, PAPER_300))
+	var body := HBoxContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 12)
+	box.add_child(body)
+	var post_list := _recruitment_post_list()
+	body.add_child(post_list.get_parent())
+	var selected_recruitment := recruitment_hero_id
+	if selected_recruitment.is_empty() or not state.recruitment_catalog().has(selected_recruitment):
+		for hero_id in state.recruitment_catalog():
+			if not state.recruitment_completed_check(str(hero_id)):
+				selected_recruitment = str(hero_id)
+				break
+		if selected_recruitment.is_empty() and not state.recruitment_catalog().is_empty():
+			selected_recruitment = str(state.recruitment_catalog().keys()[0])
+	show_recruitment_detail(selected_recruitment, false)
+	panel.prepare(Vector2(106, 76), not bool(state.settings.get("reduced_motion", false)))
+	panel.reveal()
+
+
+func show_recruitment_detail(hero_id: String, rebuild_list := true) -> void:
+	recruitment_hero_id = hero_id
+	if rebuild_list:
+		show_recruitments()
+		return
+	menu_layer.visible = true
+	_clear_menu_layer()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.84)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := UISlidePanel.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(106, 76)
+	panel.size = Vector2(1228, 748)
+	menu_layer.add_child(panel)
+	var outer := VBoxContainer.new()
+	outer.offset_left = 22
+	outer.offset_right = -22
+	outer.offset_top = 16
+	outer.offset_bottom = -16
+	outer.add_theme_constant_override("separation", 8)
+	panel.add_child(outer)
+	outer.add_child(_label("聚义帖", 36, PAPER_100))
+	outer.add_child(_label("结义 %d / %d" % [state.recruited.size(), state.heroes().size()], 15, BRONZE))
+	var body := HBoxContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 12)
+	outer.add_child(body)
+	var post_list := _recruitment_post_list()
+	body.add_child(post_list.get_parent())
+	var detail_scroll := ScrollContainer.new()
+	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	detail_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_child(detail_scroll)
+	var detail := VBoxContainer.new()
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.add_theme_constant_override("separation", 7)
+	detail_scroll.add_child(detail)
+	var post_data := state.recruitment(hero_id)
+	var hero := state.hero(hero_id)
+	if post_data.is_empty():
+		detail.add_child(_label("暂无聚义帖。", 17, PAPER_500))
+	else:
+		var art := TextureRect.new()
+		art.custom_minimum_size = Vector2(0, 236)
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		var art_path := str(post_data.get("bg", hero.get("keyart", "")))
+		if ResourceLoader.exists(art_path):
+			art.texture = load(art_path)
+		detail.add_child(art)
+		detail.add_child(_label("%s · %s" % [hero.get("nickname", ""), hero.get("star", "")], 14, BRONZE))
+		detail.add_child(_label(str(post_data.get("title", "")), 31, PAPER_100))
+		detail.add_child(_label("%s · %s\n%s" % [post_data.get("location", ""), hero.get("role", ""), post_data.get("teaser", "")], 16, PAPER_200))
+		detail.add_child(_label("战帖 · %s\n%s" % [post_data.get("rule", {}).get("name", ""), post_data.get("rule", {}).get("desc", "")], 14, TEAL))
+		var prerequisite := str(post_data.get("prerequisite", ""))
+		var completed := state.recruitment_completed_check(hero_id)
+		var unlocked := state.recruitment_unlocked(hero_id)
+		if completed:
+			detail.add_child(_label("此帖已录，好汉已在梁山中。", 15, TEAL))
+		elif not unlocked:
+			detail.add_child(_label("尚需抵达第 %d 回%s。" % [
+				int(post_data.get("requiredChapter", 1)),
+				("，并先完成%s聚义帖" % state.hero(prerequisite).get("name", "")) if not prerequisite.is_empty() else "",
+			], 15, PAPER_500))
+		var actions := HBoxContainer.new()
+		actions.add_theme_constant_override("separation", 8)
+		detail.add_child(actions)
+		actions.add_child(_button("回到营寨", _dismiss_menu, false, 190))
+		var award: Dictionary = post_data.get("reward", {})
+		detail.add_child(_label("入伙后：铜钱 %d · 历练 %d · %s" % [
+			int(award.get("copper", 0)), int(award.get("xp", 0)),
+			state.equipment(str(award.get("item", ""))).get("name", award.get("item", "")),
+		], 14, BRONZE))
+		var start := _button("赴帖接应", func(): start_recruitment(hero_id), true, 240)
+		start.disabled = not unlocked
+		actions.add_child(start)
+	panel.prepare(Vector2(106, 76), not bool(state.settings.get("reduced_motion", false)))
+	panel.reveal()
+
+
+func _recruitment_post_list() -> VBoxContainer:
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size.x = 390
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var post_list := VBoxContainer.new()
+	post_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	post_list.add_theme_constant_override("separation", 5)
+	scroll.add_child(post_list)
+	for listed_hero_id in state.recruitment_catalog():
+		var listed_id := str(listed_hero_id)
+		var post := state.recruitment(listed_id)
+		var completed := state.recruitment_completed_check(listed_id)
+		var unlocked := state.recruitment_unlocked(listed_id)
+		var status := "已录" if completed else ("可赴" if unlocked else "第 %d 回" % int(post.get("requiredChapter", 1)))
+		var post_button := _button("%s · %s\n%s    ·    %s" % [
+			state.hero(listed_id).get("name", ""), post.get("title", ""),
+			post.get("location", ""), status,
+		], func(): show_recruitment_detail(listed_id, true), listed_id == recruitment_hero_id, 370)
+		post_button.custom_minimum_size.y = 61
+		post_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		post_button.modulate = Color(1, 1, 1, 1) if unlocked or completed else Color(0.7, 0.74, 0.72, 0.82)
+		post_list.add_child(post_button)
+	return post_list
+
+
+func start_recruitment(hero_id: String) -> void:
+	if not state.recruitment_unlocked(hero_id):
+		_toast("聚义帖的前置战功尚未完成。")
+		return
+	recruitment_hero_id = hero_id
+	recruitment_running = true
+	legend_running = false
+	arena_running = false
+	menu_layer.visible = false
+	story_stage = "recruitment_intro"
+	story_line = 0
+	show_recruitment_story()
+	_play_music("res://assets/audio/recruitment_theme.mp3")
+
+
+func show_recruitment_story() -> void:
+	if not recruitment_running:
+		return
+	_set_screen(SCREEN_STORY)
+	var page := _new_screen()
+	var post := state.recruitment(recruitment_hero_id)
+	_background_image(page, str(post.get("bg", "")), 0.25)
+	_topbar(page, "camp")
+	var lines: Array = post.get("intro", [])
+	if story_stage == "recruitment_choice":
+		lines = post.get("choice", {}).get("options", [])
+		if story_line < lines.size():
+			lines = [lines[story_line]]
+		else:
+			lines = []
+	elif story_stage == "recruitment_response":
+		var choices: Array = post.get("choice", {}).get("options", [])
+		lines = []
+		if story_line < choices.size():
+			lines = [{
+				"speaker": state.hero(recruitment_hero_id).get("name", ""),
+				"portrait": recruitment_hero_id,
+				"text": choices[story_line].get("response", ""),
+			}]
+	elif story_stage == "recruitment_outro":
+		lines = post.get("outro", [])
+	var line_data: Dictionary = lines[clampi(story_line, 0, maxi(lines.size() - 1, 0))] if not lines.is_empty() else {}
+	var portrait_id := str(line_data.get("portrait", ""))
+	if not portrait_id.is_empty():
+		var config := state.hero(portrait_id)
+		if ResourceLoader.exists(config.get("cutout", "")):
+			var portrait := TextureRect.new()
+			portrait.name = "StoryPortrait"
+			portrait.texture = load(str(config.cutout))
+			portrait.position = Vector2(966, 126)
+			portrait.size = Vector2(406, 562)
+			portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			page.add_child(portrait)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(Color(INK_950, 0.94), BRONZE_DARK, 1, 4))
+	panel.position = Vector2(74, 676)
+	panel.size = Vector2(1292, 208)
+	page.add_child(panel)
+	var box := VBoxContainer.new()
+	box.offset_left = 22
+	box.offset_right = -22
+	box.offset_top = 10
+	box.offset_bottom = -10
+	box.add_theme_constant_override("separation", 3)
+	panel.add_child(box)
+	box.add_child(_label("聚义帖 · " + str(post.get("title", "")), 18, BRONZE))
+	var copy := str(line_data.get("text", line_data.get("response", "")))
+	var speaker := str(line_data.get("speaker", state.hero(recruitment_hero_id).get("name", "")))
+	if story_stage == "recruitment_choice":
+		speaker = "抉择 %d · %s" % [story_line + 1, _choice_tendency(line_data.get("effect", {}))]
+	box.add_child(_label(speaker, 15, TEAL if story_stage == "recruitment_choice" else BRONZE))
+	var dialogue := _label(copy, 21, PAPER_100)
+	dialogue.custom_minimum_size.y = 63
+	dialogue.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(dialogue)
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_END
+	actions.add_theme_constant_override("separation", 8)
+	box.add_child(actions)
+	actions.add_child(_button("暂离此帖", abandon_recruitment, false, 150))
+	var advance := _button("继续", advance_recruitment_story, true, 210)
+	actions.add_child(advance)
+	advance.grab_focus()
+
+
+func advance_recruitment_story() -> void:
+	var post := state.recruitment(recruitment_hero_id)
+	if story_stage == "recruitment_intro":
+		var lines: Array = post.get("intro", [])
+		if story_line + 1 < lines.size():
+			story_line += 1
+			show_recruitment_story()
+		else:
+			story_line = 0
+			show_recruitment_choice()
+	elif story_stage == "recruitment_choice":
+		story_stage = "recruitment_response"
+		show_recruitment_story()
+	elif story_stage == "recruitment_response":
+		story_stage = "recruitment_outro"
+		story_line = 0
+		show_recruitment_story()
+	elif story_stage == "recruitment_outro":
+		var lines: Array = post.get("outro", [])
+		if story_line + 1 < lines.size():
+			story_line += 1
+			show_recruitment_story()
+		else:
+			start_recruitment_battle()
+
+
+func show_recruitment_choice() -> void:
+	_set_screen(SCREEN_CHOICE)
+	var page := _new_screen()
+	var post := state.recruitment(recruitment_hero_id)
+	_background_image(page, str(post.get("bg", "")), 0.2)
+	_topbar(page, "camp")
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.97), BRONZE_DARK, 1, 5))
+	panel.position = Vector2(220, 120)
+	panel.size = Vector2(1000, 704)
+	page.add_child(panel)
+	var box := VBoxContainer.new()
+	box.offset_left = 20
+	box.offset_right = -20
+	box.offset_top = 16
+	box.offset_bottom = 16
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	box.add_child(_label("聚义帖 · %s" % post.get("title", ""), 15, BRONZE))
+	box.add_child(_label(str(post.get("choice", {}).get("prompt", "")), 22, PAPER_100))
+	box.add_child(_sep())
+	for index in post.get("choice", {}).get("options", []).size():
+		var option: Dictionary = post.choice.options[index]
+		var option_button := _button("", func(): choose_recruitment_option(index), false, 900)
+		option_button.custom_minimum_size.y = 218
+		var option_copy := VBoxContainer.new()
+		option_copy.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		option_copy.offset_left = 44
+		option_copy.offset_right = -16
+		option_copy.offset_top = 12
+		option_copy.offset_bottom = -12
+		option_copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		option_copy.add_child(_label(_choice_tendency(option.get("effect", {})), 14, BRONZE))
+		var option_text := _label(str(option.get("text", "")), 20, PAPER_100)
+		option_text.custom_minimum_size.y = 38
+		option_copy.add_child(option_text)
+		option_copy.add_child(_label("此后 · " + str(option.get("response", "")), 14, PAPER_300))
+		option_button.add_child(option_copy)
+		box.add_child(option_button)
+	var close_row := HBoxContainer.new()
+	close_row.add_child(_button("暂离此帖", abandon_recruitment, false, 180))
+	box.add_child(close_row)
+
+
+func choose_recruitment_option(index: int) -> void:
+	var post := state.recruitment(recruitment_hero_id)
+	var options: Array = post.get("choice", {}).get("options", [])
+	if index < 0 or index >= options.size():
+		return
+	var option: Dictionary = options[index]
+	for key in option.get("effect", {}):
+		state.alignment[key] = int(state.alignment.get(key, 0)) + int(option.effect[key])
+	state.selected_choice = index
+	state.save()
+	story_stage = "recruitment_choice"
+	story_line = index
+	show_recruitment_story()
+
+
+func start_recruitment_battle() -> void:
+	var post := state.recruitment(recruitment_hero_id)
+	var battle_data := {
+		"id": "recruitment_%s" % recruitment_hero_id,
+		"title": post.get("title", ""),
+		"bg": post.get("bg", ""),
+		"special_rule": post.get("rule", {}),
+		"battle": {"enemies": post.get("enemies", [])},
+	}
+	recruitment_running = true
+	state.chapter_tactic_enabled = true
+	battle = BattleModel.new(state, battle_data, {}, post.get("enemyModifiers", {}))
+	battle_target = 0
+	_battle_continuation = "recruitment"
+	_set_screen(SCREEN_BATTLE)
+	_play_music("res://assets/audio/battle_theme.mp3")
+	show_battle()
+
+
+func _finish_recruitment_victory() -> void:
+	if recruitment_hero_id.is_empty():
+		return
+	var post := state.recruitment(recruitment_hero_id)
+	if state.complete_recruitment(recruitment_hero_id):
+		state.record_battle_progress(battle)
+		state.save()
+		_toast("%s已入梁山。聚义帖奖励入账。" % state.hero(recruitment_hero_id).get("name", ""))
+	recruitment_running = false
+	state.chapter_tactic_enabled = true
+	show_reward("recruitment")
+
+
+func abandon_recruitment() -> void:
+	recruitment_running = false
+	state.chapter_tactic_enabled = true
+	battle = null
+	show_recruitments()
+
+
+func _show_recruitment_reward() -> void:
+	_set_screen(SCREEN_REWARD)
+	var post := state.recruitment(recruitment_hero_id)
+	var reward: Dictionary = post.get("reward", {})
+	var page := _new_screen()
+	_background_image(page, str(post.get("bg", "")), 0.42)
+	_topbar(page, "camp")
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.97), BRONZE_DARK, 2, 5))
+	panel.position = Vector2(376, 200)
+	panel.size = Vector2(688, 534)
+	page.add_child(panel)
+	var box := VBoxContainer.new()
+	box.offset_left = 20
+	box.offset_right = -20
+	box.offset_top = 16
+	box.offset_bottom = -16
+	box.add_theme_constant_override("separation", 12)
+	panel.add_child(box)
+	box.add_child(_label("聚义帖 · 已录", 15, BRONZE))
+	box.add_child(_label("%s入伙" % state.hero(recruitment_hero_id).get("name", ""), 36, PAPER_100))
+	box.add_child(_sep())
+	box.add_child(_label("铜钱 +%d     队伍历练 +%d\n随身物  %s" % [
+		int(reward.get("copper", 0)), int(reward.get("xp", 0)),
+		state.equipment(str(reward.get("item", ""))).get("name", reward.get("item", "")),
+	], 17, PAPER_100))
+	if battle != null and battle.level_ups > 0:
+		box.add_child(_label("战阵磨砺，好汉有所精进。", 15, BRONZE))
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	box.add_child(actions)
+	actions.add_child(_button("回到聚义帖", show_recruitments, true, 240))
+	actions.add_child(_button("回营整备", show_camp, false, 200))
 
 
 func show_camp_store() -> void:
@@ -2860,6 +3702,21 @@ func show_settings() -> void:
 	box.add_child(display_section)
 	box.add_child(_sep())
 	box.add_child(_label("存档", 17, BRONZE))
+	var save_mode := OptionButton.new()
+	save_mode.add_item("仅本地存档", 0)
+	save_mode.add_item("导出存档文件", 1)
+	save_mode.add_item("导入存档文件", 2)
+	save_mode.custom_minimum_size = Vector2(396, 38)
+	save_mode.add_theme_font_override("font", SANS_FONT)
+	save_mode.add_theme_font_size_override("font_size", 15)
+	box.add_child(save_mode)
+	save_mode.item_selected.connect(func(index: int):
+		if index == 1:
+			export_save_file()
+		elif index == 2:
+			import_save_file()
+		save_mode.select(0)
+	)
 	var save_actions := HBoxContainer.new()
 	save_actions.add_theme_constant_override("separation", 6)
 	save_actions.add_child(_button("立即保存", func(): state.save(); _toast("战卷已保存。"), true, 196))
@@ -2884,6 +3741,85 @@ func focus_player_name() -> void:
 func _text_input_has_focus() -> bool:
 	var focus := get_viewport().gui_get_focus_owner()
 	return focus != null and (focus is LineEdit or focus is TextEdit)
+
+
+func export_save_file() -> void:
+	state.save()
+	var source := FileAccess.open(state.save_path, FileAccess.READ)
+	if source == null:
+		_toast("尚无可导出的战卷。")
+		return
+	var bytes := source.get_as_text().to_utf8_buffer()
+	source.close()
+	var destination := "user://%s战卷_周目%d.json" % [state.player_name.validate_filename(), state.new_game_plus + 1]
+	var output := FileAccess.open(destination, FileAccess.WRITE)
+	if output == null:
+		_toast("无法写入导出文件。")
+		return
+	output.store_buffer(bytes)
+	output.close()
+	_toast("战卷副本已写入：" + ProjectSettings.globalize_path(destination))
+
+
+func import_save_file() -> void:
+	var picker := FileDialog.new()
+	picker.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	picker.access = FileDialog.ACCESS_FILESYSTEM
+	picker.use_native_dialog = true
+	picker.add_filter("*.json", "星命水浒战卷")
+	picker.title = "导入星命水浒战卷"
+	picker.file_selected.connect(func(path: String):
+		import_save_path(path)
+		picker.queue_free()
+	)
+	picker.canceled.connect(picker.queue_free)
+	settings_layer.add_child(picker)
+	picker.popup_centered_ratio(0.7)
+
+
+func import_save_path(path: String) -> void:
+	var source := FileAccess.open(path, FileAccess.READ)
+	if source == null:
+		_toast("无法读取此战卷。")
+		return
+	var text := source.get_as_text()
+	source.close()
+	var candidate := GameState.new(game_data)
+	var previous_current := state.save_path
+	var previous_backup := state.backup_path
+	candidate.save_path = previous_current
+	candidate.backup_path = previous_backup
+	var probe_path := "user://import_probe_%d.json" % OS.get_process_id()
+	candidate.save_path = probe_path
+	candidate.backup_path = probe_path + ".backup"
+	if FileAccess.file_exists(probe_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(probe_path))
+	var probe := FileAccess.open(probe_path, FileAccess.WRITE)
+	if probe == null:
+		_toast("无法写入导入校验文件。")
+		return
+	probe.store_string(text)
+	probe.close()
+	var valid := candidate.load_save()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(probe_path))
+	if not valid:
+		_toast("战卷格式或版本不受支持。")
+		return
+	state.save()
+	var imported_text := text
+	var current := FileAccess.open(state.save_path, FileAccess.WRITE)
+	if current == null:
+		_toast("无法覆盖当前存档。")
+		return
+	current.store_string(imported_text)
+	current.close()
+	if state.load_save():
+		chapter_index = state.current_chapter
+		settings_layer.visible = false
+		show_map()
+		_toast("战卷已导入。")
+	else:
+		_toast("导入失败，可继续读取当前或备份存档。")
 
 
 func _volume_row(text: String, key: String) -> HBoxContainer:

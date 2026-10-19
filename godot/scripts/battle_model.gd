@@ -39,7 +39,10 @@ var reward_lines: Array[String] = []
 var level_ups := 0
 var ultimate_uses: Dictionary = {}
 var damage_by_hero: Dictionary = {}
+var kills_by_hero: Dictionary = {}
+var mastery_unlocks: Array[Dictionary] = []
 var action_events: Array[Dictionary] = []
+var allow_turn_advance := true
 var enemy_score := 0
 var poise_breaks := 0
 
@@ -55,6 +58,10 @@ func _init(game_state: GameState, chapter: Dictionary, battle_modifiers: Diction
 		enemy_modifiers[key] = float(enemy_modifiers.get(key, 0.0)) + float(special_effects.enemyModifiers[key])
 	for key in special_effects.get("teamModifiers", {}):
 		modifiers[key] = float(modifiers.get(key, 0.0)) + float(special_effects.teamModifiers[key])
+	if state.chapter_tactic_enabled:
+		var tactic := state.current_tactic() if str(chapter_data.get("id", "")) == str(state.chapter().get("id", "")) else {}
+		for key in tactic.get("effects", {}).get("teamModifiers", {}):
+			modifiers[key] = float(modifiers.get(key, 0.0)) + float(tactic.effects.teamModifiers[key])
 	for key in battle_modifiers:
 		modifiers[key] = float(modifiers.get(key, 0.0)) + float(battle_modifiers[key])
 	for bond in state.active_bonds():
@@ -89,6 +96,8 @@ func _build_heroes() -> void:
 		if float(modifiers.get("waveHealPct", 0)) > 0:
 			starting_hp = int(round(float(max_hp) * float(modifiers.waveHealPct)))
 		var yiqi_multiplier := 1.0 + (int(state.facilities.get("tower", 1)) - 1) * 0.1
+		var doctrine_data := state.doctrine(hero_id)
+		var doctrine_effects: Dictionary = doctrine_data.get("effects", {})
 		heroes.append({
 			"side": "hero",
 			"hero_id": hero_id,
@@ -98,7 +107,7 @@ func _build_heroes() -> void:
 			"row": row,
 			"level": int(stats.level),
 			"hp": starting_hp,
-			"max_hp": max_hp,
+			"max_hp": int(round(float(max_hp) * (1.0 + float(doctrine_effects.get("hpPct", 0))))),
 			"atk": int(round(float(stats.atk) * (1.0 + float(modifiers.get("atkPct", 0))))),
 			"def": int(round(float(stats.def) * (1.0 + float(modifiers.get("defPct", 0))))),
 			"spd": int(round(float(stats.spd) * (1.0 + float(modifiers.get("spdPct", 0))))),
@@ -112,14 +121,26 @@ func _build_heroes() -> void:
 			"broken": 0,
 			"skills": skills,
 			"portrait": config.get("cutout", ""),
+			"doctrine_id": doctrine_data.get("id", ""),
+			"doctrine_name": doctrine_data.get("name", ""),
+			"doctrine": doctrine_data.duplicate(true),
 		})
 		var built := heroes[-1]
+		built.max_hp = int(round(float(built.max_hp) * (1.0 + float(modifiers.get("hpPct", 0)))))
+		built.hp = built.max_hp
+		if float(modifiers.get("waveHealPct", 0)) > 0:
+			built.hp = int(round(float(built.max_hp) * float(modifiers.waveHealPct)))
 		if int(modifiers.get("openingGuard", 0)) > 0:
 			built.statuses["guard"] = int(modifiers.openingGuard)
 		if int(modifiers.get("openingInspiration", 0)) > 0:
 			built.statuses["inspiration"] = int(modifiers.openingInspiration)
+		if int(doctrine_effects.get("openingGuard", 0)) > 0:
+			built.statuses["guard"] = maxi(int(built.statuses.get("guard", 0)), int(doctrine_effects.openingGuard))
 	for status_info in _opening_statuses("heroOpeningStatuses"):
+		var tactic_row := int(status_info.get("row", -1))
 		for hero in heroes:
+			if tactic_row >= 0 and int(hero.row) != tactic_row:
+				continue
 			hero.statuses[status_info.status] = maxi(int(hero.statuses.get(status_info.status, 0)), int(status_info.duration))
 
 
@@ -193,6 +214,9 @@ func _build_enemies() -> void:
 func _opening_statuses(key: String) -> Array:
 	var combined: Array = []
 	combined.append_array(chapter_data.get("special_rule", {}).get("effects", {}).get(key, []))
+	if state.chapter_tactic_enabled:
+		var tactic := state.current_tactic() if str(chapter_data.get("id", "")) == str(state.chapter().get("id", "")) else {}
+		combined.append_array(tactic.get("effects", {}).get(key, []))
 	combined.append_array(arena_encounter.get("effects", {}).get(key, []))
 	return combined
 
@@ -393,6 +417,7 @@ func target_auto_index(skill: Dictionary, target_index: int = 0) -> int:
 
 
 func _apply_skill(actor: Dictionary, skill: Dictionary, target_index: int) -> void:
+	var action_actor := actor
 	var target_type := str(skill.get("target", "enemy"))
 	var hits := maxi(1, int(skill.get("hits", 1)))
 	var power := float(skill.get("power", 0.8))
@@ -417,15 +442,20 @@ func _apply_skill(actor: Dictionary, skill: Dictionary, target_index: int) -> vo
 			if target.hp <= 0:
 				break
 			var variance := rng.randf_range(0.92, 1.08)
-			var raw := float(actor.atk) * power * 1.82 * variance
+			var raw := float(action_actor.atk) * power * 1.82 * variance
 			if target_type == "allEnemies":
 				raw *= 1.0 + float(modifiers.get("allEnemiesPowerPct", 0))
-			var mitigation := float(target.def) * 0.55
-			var path_multiplier := _path_multiplier(actor.path, target.path)
+			var doctrine_flags: Dictionary = action_actor.get("doctrine", {})
+			var hp_advantage: bool = str(action_actor.get("side", "")) == "hero" and float(action_actor.hp) / float(action_actor.max_hp) < float(target.hp) / float(target.max_hp)
+			var defense_ignore := float(doctrine_flags.get("defenseIgnorePct", 0)) if hp_advantage else 0.0
+			var mitigation := float(target.def) * 0.55 * (1.0 - defense_ignore)
+			var path_multiplier := _path_multiplier(action_actor.path, target.path)
 			if int(target.get("broken", 0)) > 0:
 				raw *= 1.22 + float(modifiers.get("brokenDamageBonus", 0))
 			if int(target.statuses.get("armorBreak", 0)) > 0:
 				raw *= 1.15
+			if float(doctrine_flags.get("executeDamagePct", 0)) > 0 and float(target.hp) / float(target.max_hp) < 0.45:
+				raw *= 1.0 + float(doctrine_flags.executeDamagePct)
 			var damage := maxi(1, int(round((raw - mitigation) * path_multiplier)))
 			if hit == hits - 1 and skill.get("finalCrit", false):
 				damage = int(round(damage * 1.65))
@@ -436,7 +466,8 @@ func _apply_skill(actor: Dictionary, skill: Dictionary, target_index: int) -> vo
 				damage_by_hero[actor_id] = int(damage_by_hero.get(actor_id, 0)) + damage
 			log_lines.push_front("%s施展「%s」对%s造成 %d 伤害。" % [actor.name, skill.get("name", "招式"), target.name, damage])
 			if target.side == "enemy" and target.hp > 0:
-				var poise_damage := int(round(float(skill.get("poise", 8)) * (1.0 + float(modifiers.get("poisePct", 0)))))
+				var doctrine_poise := float(doctrine_flags.get("allEnemiesPoisePct", 0)) if target_type == "allEnemies" else 0.0
+				var poise_damage := int(round(float(skill.get("poise", 8)) * (1.0 + float(modifiers.get("poisePct", 0)) + doctrine_poise)))
 				target.poise = mini(int(target.poise_max), int(target.poise) + poise_damage)
 				if int(target.poise) >= int(target.poise_max):
 					target.poise = 0
@@ -444,26 +475,41 @@ func _apply_skill(actor: Dictionary, skill: Dictionary, target_index: int) -> vo
 					poise_breaks += 1
 					log_lines.push_front("%s护势崩解，露出破绽。" % target.name)
 			if target.hp <= 0:
-				enemies_defeated += 1
-				reward_lines.append("%s败退" % target.name)
-				var defeat_statuses: Dictionary = arena_encounter.get("effects", {}).get("onEnemyDefeat", {}).duplicate(true)
-				for status in chapter_data.get("special_rule", {}).get("effects", {}).get("onEnemyDefeat", {}):
-					defeat_statuses[status] = chapter_data.special_rule.effects.onEnemyDefeat[status]
-				for enemy in living_enemies():
-					for status in defeat_statuses:
-						enemy.statuses[status] = maxi(int(enemy.statuses.get(status, 0)), int(defeat_statuses[status]))
-				if bond_ids.has("swift_walker") and _claim_bond_trigger("swift_walker"):
-					for hero in living_heroes():
-						hero.yiqi = mini(100, int(hero.yiqi) + 10)
-					log_lines.push_front("行者神行：全队获得 10 义气。")
-				log_lines.push_front("%s败退。" % target.name)
+				if target.side == "enemy":
+					enemies_defeated += 1
+					if not actor_id.is_empty():
+						kills_by_hero[actor_id] = int(kills_by_hero.get(actor_id, 0)) + 1
+					var defeat_statuses: Dictionary = arena_encounter.get("effects", {}).get("onEnemyDefeat", {}).duplicate(true)
+					for status in chapter_data.get("special_rule", {}).get("effects", {}).get("onEnemyDefeat", {}):
+						defeat_statuses[status] = chapter_data.special_rule.effects.onEnemyDefeat[status]
+					for enemy in living_enemies():
+						for status in defeat_statuses:
+							enemy.statuses[status] = maxi(int(enemy.statuses.get(status, 0)), int(defeat_statuses[status]))
+					reward_lines.append("%s败退" % target.name)
+					var kill_yiqi := int(doctrine_flags.get("killYiqi", 0))
+					if kill_yiqi > 0:
+						for hero in living_heroes():
+							hero.yiqi = mini(100, int(hero.yiqi) + kill_yiqi)
+						log_lines.push_front("%s命途发动，全队获得 %d 义气。" % [actor.name, kill_yiqi])
+					if bond_ids.has("swift_walker") and _claim_bond_trigger("swift_walker"):
+						for hero in living_heroes():
+							hero.yiqi = mini(100, int(hero.yiqi) + 10)
+						log_lines.push_front("行者神行：全队获得 10 义气。")
+					log_lines.push_front("%s败退。" % target.name)
+				else:
+					log_lines.push_front("%s力竭。" % target.name)
 	if float(skill.get("heal", 0)) > 0:
+		var doctrine_flags: Dictionary = actor.get("doctrine", {})
 		for target in targets:
 			if target.hp > 0:
 				var amount := maxi(1, int(round(float(actor.atk) * float(skill.heal) * 1.55 * (1.0 + float(modifiers.get("healPct", 0))))))
+				if float(doctrine_flags.get("lowHealBonus", 0)) > 0 and float(target.hp) / float(target.max_hp) < 0.3:
+					amount = int(round(float(amount) * (1.0 + float(doctrine_flags.lowHealBonus))))
 				var recovered := mini(target.max_hp - target.hp, amount)
 				target.hp += recovered
 				log_lines.push_front("%s恢复 %d 生命。" % [target.name, recovered])
+				if bool(doctrine_flags.get("supportGuard", false)):
+					target.statuses["guard"] = maxi(int(target.statuses.get("guard", 0)), 1)
 	_apply_skill_effects(actor, skill, targets)
 	actor.yiqi = mini(100, int(actor.yiqi) + int(round(int(skill.get("yiqi", 12)) * float(actor.get("yiqi_multiplier", 1.0)) * (1.0 + float(modifiers.get("yiqiPct", 0))))))
 	_update_chain(actor, skill)
@@ -473,7 +519,8 @@ func _apply_skill(actor: Dictionary, skill: Dictionary, target_index: int) -> vo
 		player_won_last_battle = true
 		log_lines.push_front("战阵已破，胜利。")
 	else:
-		_next_turn()
+		if allow_turn_advance:
+			_next_turn()
 
 
 func chain_paths() -> Array[String]:
@@ -527,12 +574,21 @@ func chain_attack() -> Dictionary:
 	var participants_before: Dictionary = _unit_snapshot(participants)
 	var before_enemies := _unit_snapshot(enemies)
 	var before_heroes := _unit_snapshot(heroes)
+	var defeated_before := _defeated_enemy_uids()
 	for target in target_list:
 		var damage := maxi(1, int(round(total_force * 1.58 - float(target.def) * 0.42)))
 		target.hp = maxi(0, int(target.hp) - damage)
 		damage_dealt += damage
 		target.poise += maxi(1, int(formation.get("poiseBonus", 0)))
+		if target.hp <= 0:
+			if not defeated_before.has(_unit_uid(target)):
+				enemies_defeated += 1
+				var combo_actor_id := str(participants[0].get("hero_id", "")) if not participants.is_empty() else ""
+				if not combo_actor_id.is_empty():
+					kills_by_hero[combo_actor_id] = int(kills_by_hero.get(combo_actor_id, 0)) + 1
 		log_lines.push_front("合击对%s造成 %d 伤害。" % [target.name, damage])
+	if total_force > 0.0:
+		_trigger_enemy_defeat_effects(defeated_before)
 	for hero in living_heroes():
 		var team_guard := int(formation.get("teamGuard", 0))
 		if team_guard > 0:
@@ -559,7 +615,8 @@ func chain_attack() -> Dictionary:
 		player_won_last_battle = true
 		log_lines.push_front("星命合击破阵，胜利。")
 	else:
-		_next_turn()
+		if allow_turn_advance:
+			_next_turn()
 	var formation_paths: Array = formation.get("paths", [])
 	var combo_skill := {"id": "chain", "name": formation.get("name", "三星同辉"), "role": "combo", "path": str(formation_paths[0]) if not formation_paths.is_empty() else "gang", "heavy": true}
 	var formation_event := {"kind": "combo", "skill": combo_skill, "actor": _unit_uid(participants[0]) if not participants.is_empty() else "", "target": _unit_uid(target_list[0]) if not target_list.is_empty() else "", "events": []}
@@ -613,6 +670,29 @@ func _claim_bond_trigger(bond_id: String) -> bool:
 		return false
 	bond_trigger_rounds[bond_id] = round_number
 	return true
+
+
+func _defeated_enemy_uids() -> Array[String]:
+	var result: Array[String] = []
+	for enemy in enemies:
+		if int(enemy.get("hp", 0)) <= 0:
+			result.append(_unit_uid(enemy))
+	return result
+
+
+func _trigger_enemy_defeat_effects(defeated_before: Array[String]) -> void:
+	if _defeated_enemy_uids().size() <= defeated_before.size():
+		return
+	var defeat_statuses: Dictionary = arena_encounter.get("effects", {}).get("onEnemyDefeat", {}).duplicate(true)
+	for status in chapter_data.get("special_rule", {}).get("effects", {}).get("onEnemyDefeat", {}):
+		defeat_statuses[status] = chapter_data.special_rule.effects.onEnemyDefeat[status]
+	for enemy in living_enemies():
+		for status in defeat_statuses:
+			enemy.statuses[status] = maxi(int(enemy.statuses.get(status, 0)), int(defeat_statuses[status]))
+	if bond_ids.has("swift_walker") and _claim_bond_trigger("swift_walker"):
+		for hero in living_heroes():
+			hero.yiqi = mini(100, int(hero.yiqi) + 10)
+		log_lines.push_front("行者神行：全队获得 10 义气。")
 
 
 func _apply_skill_effects(actor: Dictionary, skill: Dictionary, targets: Array[Dictionary]) -> void:

@@ -19,8 +19,12 @@ Godot 素材与源素材分开管理，两者都通过 Git LFS 提交。
 
 界面组件使用固定版本的开源 Godot 项目，来源、许可证与文件哈希记录在 `godot/addons/*/UPSTREAM.md`：
 
-- [Naddy's Extra Controls](https://github.com/don-tnowe/godot-extra-controls)：可折叠设置分区与表单控件，MIT。
+- [TNowe Extra Controls](https://github.com/don-tnowe/godot-extra-controls)：可折叠设置分区与表单控件，MIT。
 - [ProtonControlAnimation](https://github.com/HungryProton/proton_control_animation)：现有 Control 节点的界面动画，MIT。
+
+主界面沿用 Godot 原生 `Control` 布局和可聚焦按钮，不引入整套仿 Web 的 UI 框架。这样键盘、手柄、鼠标和触屏可以共用同一套焦点与操作逻辑；开源插件只承担动效和少量表单控件，减少上游框架与战斗界面的耦合。
+
+营寨中的“星命研学”包含三项好汉试炼和两条命途，试炼与命途会进入战斗；“梁山功簿”收录 19 项跨周目成就；“聚义帖”包含 28 份带前置条件、剧情抉择和独立战斗的招贤帖。首通章回会收录临阵战意，通关后可携星图开启新周目，并保留功簿、试炼、命途、战术与设置。
 
 重新获取固定版本：
 
@@ -41,4 +45,4 @@ node tools/vendor_godot_ui_addons.mjs
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path godot res://scenes/campaign_runner.tscn
 ```
 
-`export_presets.cfg` 提供 macOS 和 Windows 桌面导出预设，测试场景不会打包进正式游戏。导出的 Windows 版需要将同目录的 `星命水浒.exe` 与 `星命水浒.pck` 一起分发。
+`export_presets.cfg` 提供 macOS 和 Windows 桌面导出预设，测试场景不会打包进正式游戏。导出目录位于工程外的 `artifacts/`，避免 Godot 扫描导出临时目录后把错误内容打进包中。导出的 Windows 版需要将同目录的 `xingming-shuihu-windows.exe` 与 `xingming-shuihu-windows.pck` 一起分发。
