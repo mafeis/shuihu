@@ -1,4 +1,5 @@
 import { mkdir } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
 
@@ -7,7 +8,8 @@ import { createInitialState, SAVE_KEY } from "../src/state.js";
 
 const origin = process.env.GAME_ORIGIN || "http://localhost:4173";
 const outputDir =
-  "/Users/mac/.codex/visualizations/2026/10/19/shuihu-issue-13";
+  process.env.ISSUE13_OUTPUT_DIR ||
+  fileURLToPath(new URL("../artifacts/qa/issue13", import.meta.url));
 
 function fixture(wins, copper = 3000) {
   const state = createInitialState();
@@ -70,11 +72,18 @@ try {
 
   const smallCamp = await page.evaluate(() => ({
     size: document.querySelector(".camp-main-heading h2")?.textContent.trim(),
-    cells: document.querySelectorAll(".camp-grid-cell").length,
     buildings: document.querySelectorAll(".camp-building").length,
     built: document.querySelectorAll(".camp-building.is-built").length,
     available: document.querySelectorAll(".camp-building.is-available").length,
     locked: document.querySelectorAll(".camp-building.is-locked").length,
+    columns: getComputedStyle(document.querySelector(".camp-map"))
+      .gridTemplateColumns.split(" ").length,
+    mapHeight: Math.round(
+      document.querySelector(".camp-map").getBoundingClientRect().height,
+    ),
+    statusLabels: [
+      ...document.querySelectorAll(".camp-building-status"),
+    ].every((label) => label.textContent.trim().length > 0),
     overflow:
       document.documentElement.scrollWidth -
       document.documentElement.clientWidth,
@@ -83,10 +92,15 @@ try {
     smallCamp.size === "5 × 4 营区",
     `二胜时营区应为 5 × 4 营区，实际为 ${smallCamp.size}`,
   );
-  assert(smallCamp.cells === 20, "营图应实际画出二十个格子");
   assert(smallCamp.buildings === 9, "营图应显示九种建筑");
   assert(smallCamp.built === 1, "聚义厅是初始已建建筑");
   assert(smallCamp.available === 3, "二胜应解锁演武场、农田和星台");
+  assert(smallCamp.columns === 3, "桌面营寨应以三列建筑卡阵展示");
+  assert(
+    smallCamp.mapHeight < 620,
+    `桌面建筑卡阵不应再次占用大块空白 ${JSON.stringify(smallCamp)}`,
+  );
+  assert(smallCamp.statusLabels, "每座建筑都应显示清楚的建造状态");
   assert(smallCamp.overflow === 0, "桌面营寨不应横向溢出");
   await page.screenshot({
     path: `${outputDir}/camp-victories-2.png`,
@@ -130,7 +144,6 @@ try {
   }
   const largeCamp = await page.evaluate(() => ({
     size: document.querySelector(".camp-main-heading h2")?.textContent.trim(),
-    cells: document.querySelectorAll(".camp-grid-cell").length,
     area: JSON.parse(localStorage.getItem("xingming-shuihu-save-v1")).camp
       .areaUnlocked,
     buildingsInside: [...document.querySelectorAll(".camp-building")].every(
@@ -150,7 +163,6 @@ try {
     largeCamp.size === "8 × 5 营区",
     `十胜时营区应扩展为 8 × 5，实际为 ${JSON.stringify(largeCamp)}`,
   );
-  assert(largeCamp.cells === 40, "八乘五营图应有四十个格子");
   assert(largeCamp.buildingsInside, "扩展后的建筑不能越出营图");
   await page.screenshot({
     path: `${outputDir}/camp-victories-10.png`,
@@ -170,12 +182,17 @@ try {
     const layout = await page.evaluate(() => {
       const map = document.querySelector(".camp-map");
       const buildings = [...document.querySelectorAll(".camp-building")];
+      const columns = getComputedStyle(map).gridTemplateColumns.split(" ").length;
       return {
         width: innerWidth,
+        columns,
         overflow:
           document.documentElement.scrollWidth -
           document.documentElement.clientWidth,
         mapOverflow: map.scrollWidth - map.clientWidth,
+        cardHeight: Math.round(
+          buildings[0]?.getBoundingClientRect().height || 0,
+        ),
         buildingOverflow: buildings.filter(
           (building) => building.scrollWidth > building.clientWidth + 1,
         ).length,
@@ -193,6 +210,14 @@ try {
     });
     assert(layout.overflow === 0, `${name} 营寨不应横向溢出`);
     assert(layout.mapOverflow === 0, `${name} 营图不应横向溢出`);
+    assert(
+      layout.columns === (width <= 680 ? 2 : 3),
+      `${name} 营寨列数不正确 ${JSON.stringify(layout)}`,
+    );
+    assert(
+      layout.cardHeight >= (width <= 680 ? 140 : 145),
+      `${name} 建筑卡高度不足 ${JSON.stringify(layout)}`,
+    );
     if (layout.buildingOverflow) {
       layout.buildingNames = await page.evaluate(() =>
         [...document.querySelectorAll(".camp-building")]
