@@ -261,6 +261,18 @@ const EQUIPMENT_STYLE_LABELS = {
   balanced: "均衡",
 };
 
+const CAMP_BUILDING_ZONES = {
+  hall: "寨务",
+  arena: "寨务",
+  tower: "寨务",
+  farmland: "产出",
+  mine: "产出",
+  woodland: "产出",
+  fishery: "产出",
+  mill: "工坊",
+  kitchen: "工坊",
+};
+
 const HERO_GROUPS = [
   { id: "all", name: "全路数" },
   ...Object.values(PATHS).map((path) => ({
@@ -1530,8 +1542,19 @@ function renderCamp() {
   const [campCols, campRows] = campAreaSize(state);
   const campLevel = campAreaLevel(state);
   const nextAreaWins = campAreaRequirement(state);
-  const cellWidth = 100 / campCols;
-  const cellHeight = 100 / campRows;
+  const campBuildings = Object.values(CAMP_BUILDINGS).map((building) => ({
+    building,
+    status: campBuildingStatus(state, building.id),
+  }));
+  const builtCount = campBuildings.filter(
+    ({ status }) => status === "built",
+  ).length;
+  const availableCount = campBuildings.filter(
+    ({ status }) => status === "available",
+  ).length;
+  const lockedCount = campBuildings.filter(
+    ({ status }) => status === "locked",
+  ).length;
   const stockEntries = Object.entries(state.camp.stock).filter(
     ([productId, amount]) => CAMP_PRODUCTS[productId] && amount > 0,
   );
@@ -1568,30 +1591,67 @@ function renderCamp() {
         <section class="camp-main">
           <div class="section-heading camp-main-heading">
             <div><p class="eyebrow">水泊营图 · 第 ${campLevel} 期</p><h2>${campCols} × ${campRows} 营区</h2></div>
-            <button class="button small ${nextAreaWins !== null && state.stats.battlesWon >= nextAreaWins ? "secondary" : "ghost"}" data-action="expand-camp-area" ${nextAreaWins === null || state.stats.battlesWon < nextAreaWins ? "disabled" : ""}>${icon(nextAreaWins === null ? "check" : "grid-3x3", 15)}<span>${nextAreaWins === null ? "营区全开" : `扩建营区 · ${nextAreaWins} 胜`}</span></button>
+            <div class="camp-main-tools">
+              <div class="camp-building-counts" aria-label="营寨建筑状态">
+                <span class="is-built"><b>${builtCount}</b>已建</span>
+                <span class="is-available"><b>${availableCount}</b>可建</span>
+                <span class="is-locked"><b>${lockedCount}</b>未开</span>
+              </div>
+              <button class="button small ${nextAreaWins !== null && state.stats.battlesWon >= nextAreaWins ? "secondary" : "ghost"}" data-action="expand-camp-area" ${nextAreaWins === null || state.stats.battlesWon < nextAreaWins ? "disabled" : ""}>${icon(nextAreaWins === null ? "check" : "grid-3x3", 15)}<span>${nextAreaWins === null ? "营区全开" : `扩建营区 · ${nextAreaWins} 胜`}</span></button>
+            </div>
           </div>
-          <div class="camp-map" style="--camp-cols:${campCols};--camp-rows:${campRows}">
-            ${Array.from({ length: campCols * campRows }, () => `<i class="camp-grid-cell" aria-hidden="true"></i>`).join("")}
-            ${Object.values(CAMP_BUILDINGS)
-              .map((building) => {
-                const status = campBuildingStatus(state, building.id);
+          <div class="camp-map" aria-label="${campCols} × ${campRows} 梁山营寨建筑布局">
+            ${campBuildings
+              .map(({ building, status }) => {
                 const [spanCols, spanRows] = building.size;
                 const level = state.facilities[building.id] || 1;
                 const recipe = CAMP_RECIPES.find(
                   (entry) => entry.buildingId === building.id,
                 );
+                const statusLabel =
+                  status === "built"
+                    ? "已建成"
+                    : status === "available"
+                      ? "可建造"
+                      : "未解锁";
+                const statusIcon =
+                  status === "built"
+                    ? "circle-check"
+                    : status === "available"
+                      ? "hammer"
+                      : "lock-keyhole";
+                const detail =
+                  status === "built"
+                    ? building.resource
+                      ? `存量 ${state.camp.stock[building.resource] || 0}`
+                      : recipe
+                        ? "可加工"
+                        : "设施已启用"
+                    : status === "available"
+                      ? `建造需 ${building.cost} 贯`
+                      : `累计 ${building.unlockVictories} 胜开放`;
                 return `
                   <button
                     class="camp-building is-${status}"
-                    style="--building-col:${building.col - 1};--building-row:${building.row - 1};--building-cols:${spanCols};--building-rows:${spanRows};--cell-width:${cellWidth}%;--cell-height:${cellHeight}%"
                     data-action="select-camp-building"
                     data-building="${building.id}"
+                    data-zone="${CAMP_BUILDING_ZONES[building.id] || "寨务"}"
                     aria-label="${building.name}，${status === "built" ? `等级 ${level}` : status === "available" ? `可建造，需 ${building.cost} 贯` : `胜利 ${building.unlockVictories} 场后开放`}"
                     ${status === "locked" ? "disabled" : ""}
                   >
-                    <span class="camp-building-icon">${icon(building.icon, spanCols > 1 ? 27 : 20)}</span>
-                    <span class="camp-building-copy"><b>${building.name}</b><small>${spanCols} × ${spanRows}${status === "built" ? ` · Lv.${level}` : ""}</small></span>
-                    ${status === "available" ? `<em>${icon("hammer", 12)}${building.cost} 贯</em>` : status === "locked" ? `<em>${icon("lock-keyhole", 12)}${building.unlockVictories} 胜</em>` : building.resource ? `<em>${icon("package-open", 12)}${state.camp.stock[building.resource] || 0}</em>` : recipe ? `<em>${icon("refresh-cw", 12)}加工</em>` : ""}
+                    <span class="camp-building-top">
+                      <span class="camp-building-icon">${icon(building.icon, 24)}</span>
+                      <span class="camp-building-status">${icon(statusIcon, 12)}${statusLabel}</span>
+                    </span>
+                    <span class="camp-building-copy">
+                      <small>${CAMP_BUILDING_ZONES[building.id] || "寨务"} · 占地 ${spanCols} × ${spanRows}</small>
+                      <b>${building.name}</b>
+                    </span>
+                    <span class="camp-building-desc">${building.desc}</span>
+                    <span class="camp-building-meta">
+                      <em>${status === "built" ? `Lv.${level}` : detail}</em>
+                      <small>${status === "built" ? detail : status === "available" ? "点击查看" : "继续征战"}</small>
+                    </span>
                   </button>
                 `;
               })
