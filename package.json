@@ -45,7 +45,7 @@
     "steamworks:verify": "node tools/validate_steamworks.mjs",
     "release:checksums": "node tools/update_release_checksums.mjs",
     "release:verify": "node tools/validate_release.mjs",
-    "desktop:dev": "electron .",
+    "desktop:dev": "node tools/run_desktop_dev.mjs",
     "desktop:dir": "npm run build && electron-builder --dir",
     "desktop:pack": "npm run build && electron-builder",
     "desktop:pack:mac": "npm run build && electron-builder --mac",
