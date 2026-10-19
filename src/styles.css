@@ -2994,6 +2994,17 @@ button[aria-pressed="true"] {
   font-size: 0.625rem;
 }
 
+.equipment-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.equipment-heading-actions .button {
+  min-height: 38px;
+  white-space: nowrap;
+}
+
 .equipment-hero-tabs {
   display: flex;
   gap: 7px;
@@ -3217,6 +3228,7 @@ button[aria-pressed="true"] {
 }
 
 .inventory-item {
+  position: relative;
   display: grid;
   min-height: 68px;
   align-items: center;
@@ -3231,6 +3243,28 @@ button[aria-pressed="true"] {
 
 .inventory-item:hover {
   border-color: var(--bronze-400);
+}
+
+.inventory-item.is-recommended {
+  border-color: rgba(112, 158, 148, 0.72);
+  background:
+    linear-gradient(90deg, rgba(72, 120, 111, 0.13), transparent 55%),
+    var(--ink-850);
+}
+
+.inventory-item.is-recommended::after {
+  position: absolute;
+  top: -1px;
+  right: 26px;
+  padding: 2px 5px;
+  border: 1px solid rgba(131, 180, 169, 0.58);
+  border-top: 0;
+  background: #1c302e;
+  color: #a8d0c7;
+  content: "荐";
+  font-family: var(--serif);
+  font-size: 0.5625rem;
+  line-height: 1.2;
 }
 
 .item-glyph {
@@ -13234,6 +13268,18 @@ html[data-motion="reduced"] *::after {
     width: 100%;
   }
 
+  .equipment-heading-actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .equipment-heading-actions .button {
+    width: 100%;
+    white-space: normal;
+  }
+
   .formation-slot {
     min-height: 215px;
   }
@@ -14866,7 +14912,7 @@ html[data-motion="reduced"] *::after {
   .equipment-main {
     min-height: 0;
     flex: 1 1 auto;
-    grid-template-columns: minmax(0, 1.25fr) minmax(330px, 0.75fr);
+    grid-template-columns: 1fr;
   }
 
   .equipped-panel,
