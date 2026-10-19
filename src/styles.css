@@ -8323,11 +8323,11 @@ small {
 }
 
 .enemy-formation {
-  min-height: 278px;
+  min-height: 252px;
 }
 
 .hero-formation {
-  min-height: 275px;
+  min-height: 302px;
 }
 
 .formation-caption {
@@ -8383,11 +8383,11 @@ small {
 }
 
 .enemy-line {
-  height: 265px;
+  height: 244px;
 }
 
 .hero-line {
-  height: 260px;
+  height: 292px;
 }
 
 .enemy-line.is-striking,
@@ -8411,6 +8411,30 @@ small {
   padding: 0;
   border: 0;
   background: transparent;
+}
+
+.enemy-unit {
+  max-width: 190px;
+  height: 242px;
+}
+
+.hero-unit {
+  max-width: 248px;
+  height: 292px;
+}
+
+.hero-unit .hero-figure {
+  inset: -12px -18px 52px;
+}
+
+.hero-unit .hero-figure img {
+  width: 112%;
+  height: 110%;
+  max-width: none;
+}
+
+.enemy-unit .enemy-figure {
+  inset: 10px 2px 60px;
 }
 
 .battle-unit.is-striking {
@@ -8441,6 +8465,62 @@ small {
 
 .battle-unit.is-healed .hero-figure {
   animation: unit-heal 560ms ease-out both;
+}
+
+.battle-unit.is-casting::after {
+  position: absolute;
+  z-index: 2;
+  bottom: 55px;
+  left: 50%;
+  width: 132px;
+  height: 26px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  content: "";
+  color: var(--bronze-300);
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, currentColor 24%, transparent),
+    transparent 68%
+  );
+  filter: drop-shadow(0 0 12px currentColor);
+  transform: translateX(-50%);
+  animation: caster-ring 620ms ease-out both;
+  pointer-events: none;
+}
+
+.battle-unit.is-casting.tone-teal::after {
+  color: var(--teal-300);
+}
+
+.battle-unit.is-casting.tone-blue::after {
+  color: #8fb1c8;
+}
+
+.battle-unit.is-casting.tone-cinnabar::after {
+  color: var(--cinnabar-300);
+}
+
+.battle-unit.is-casting .unit-hud {
+  border-color: rgba(215, 188, 125, 0.58);
+  box-shadow:
+    0 0 18px rgba(215, 188, 125, 0.19),
+    inset 0 0 12px rgba(255, 255, 255, 0.025);
+}
+
+.battle-unit.is-casting.tone-teal .unit-hud {
+  border-color: rgba(103, 142, 136, 0.62);
+  box-shadow: 0 0 18px rgba(103, 142, 136, 0.2);
+}
+
+.battle-unit.is-casting.tone-blue .unit-hud {
+  border-color: rgba(143, 177, 200, 0.62);
+  box-shadow: 0 0 18px rgba(111, 145, 165, 0.2);
+}
+
+.battle-unit.is-casting.tone-cinnabar .unit-hud {
+  border-color: rgba(199, 101, 84, 0.64);
+  box-shadow: 0 0 18px rgba(199, 101, 84, 0.2);
 }
 
 .battle-motion {
@@ -8554,6 +8634,328 @@ small {
 .battle-motion.is-evade .battle-motion-flash::before,
 .battle-motion.is-evade .battle-motion-flash::after {
   display: none;
+}
+
+.battle-skill-callout {
+  position: absolute;
+  z-index: 14;
+  top: 43%;
+  left: 50%;
+  display: grid;
+  min-width: 176px;
+  align-items: center;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 7px 11px 8px 8px;
+  border: 1px solid rgba(215, 188, 125, 0.42);
+  border-left: 2px solid var(--bronze-300);
+  background:
+    linear-gradient(90deg, rgba(143, 109, 50, 0.16), transparent 66%),
+    rgba(5, 10, 11, 0.9);
+  box-shadow:
+    0 13px 34px rgba(0, 0, 0, 0.38),
+    0 0 24px rgba(215, 188, 125, 0.08);
+  color: var(--bronze-300);
+  transform: translate(-50%, -50%);
+  animation: skill-callout 680ms ease-out both;
+  pointer-events: none;
+  backdrop-filter: blur(9px);
+}
+
+.battle-skill-callout > span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.battle-skill-callout > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.battle-skill-callout small {
+  color: var(--paper-500);
+  font-size: 0.4375rem;
+}
+
+.battle-skill-callout b {
+  overflow: hidden;
+  color: var(--paper-100);
+  font-family: var(--serif);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battle-skill-callout em {
+  padding: 2px 5px;
+  border: 1px solid currentColor;
+  color: currentColor;
+  font-size: 0.4375rem;
+  font-style: normal;
+}
+
+.battle-skill-callout.tone-teal {
+  border-left-color: var(--teal-300);
+  color: var(--teal-300);
+  background:
+    linear-gradient(90deg, rgba(63, 111, 104, 0.17), transparent 66%),
+    rgba(5, 10, 11, 0.9);
+}
+
+.battle-skill-callout.tone-blue {
+  border-left-color: #8fb1c8;
+  color: #8fb1c8;
+  background:
+    linear-gradient(90deg, rgba(63, 91, 111, 0.18), transparent 66%),
+    rgba(5, 10, 11, 0.9);
+}
+
+.battle-skill-callout.tone-cinnabar {
+  border-left-color: var(--cinnabar-300);
+  color: var(--cinnabar-300);
+  background:
+    linear-gradient(90deg, rgba(127, 55, 43, 0.2), transparent 66%),
+    rgba(5, 10, 11, 0.9);
+}
+
+.skill-impact {
+  position: absolute;
+  z-index: 11;
+  top: 41%;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+  color: var(--bronze-300);
+  pointer-events: none;
+}
+
+.skill-impact i,
+.skill-impact em {
+  position: absolute;
+  display: block;
+  content: "";
+  pointer-events: none;
+}
+
+.skill-impact.is-slash {
+  color: #ffd7b0;
+}
+
+.skill-impact.is-slash i {
+  top: calc(-32px + var(--vfx-index) * 10px);
+  left: -62px;
+  width: 124px;
+  height: 2px;
+  border-radius: 99px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    currentColor 38%,
+    #fff8e7 72%,
+    transparent
+  );
+  box-shadow: 0 0 9px currentColor;
+  transform: rotate(calc(-32deg + var(--vfx-index) * 11deg));
+  animation: vfx-slash 520ms ease-out both;
+  animation-delay: calc(var(--vfx-index) * 22ms);
+}
+
+.skill-impact.is-quake {
+  color: #ff9c71;
+}
+
+.skill-impact.is-quake i {
+  bottom: 0;
+  left: calc(-58px + var(--vfx-index) * 19px);
+  width: 4px;
+  height: calc(18px + var(--vfx-index) * 4px);
+  background: linear-gradient(0deg, transparent, currentColor);
+  box-shadow: 0 0 8px currentColor;
+  transform: rotate(calc(-25deg + var(--vfx-index) * 8deg));
+  transform-origin: bottom;
+  animation: vfx-crack 520ms ease-out both;
+}
+
+.skill-impact.is-quake em,
+.skill-impact.is-bulwark em,
+.skill-impact.is-ward em {
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-shadow:
+    0 0 14px currentColor,
+    inset 0 0 12px currentColor;
+  transform: translate(-50%, -50%);
+  animation: vfx-ground-ring 620ms ease-out both;
+}
+
+.skill-impact.is-projectile {
+  color: #d6fcff;
+}
+
+.skill-impact.is-projectile i {
+  top: calc(-35px + var(--vfx-index) * 11px);
+  left: -86px;
+  width: 122px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(158, 231, 230, 0.35) 45%,
+    #f5ffff 82%,
+    transparent
+  );
+  box-shadow: 0 0 7px currentColor;
+  transform: rotate(-14deg);
+  animation: vfx-projectile 460ms ease-in both;
+  animation-delay: calc(var(--vfx-index) * 18ms);
+}
+
+.skill-impact.is-rain {
+  color: #c8fbff;
+}
+
+.skill-impact.is-rain i {
+  top: -98px;
+  left: calc(-58px + var(--vfx-index) * 20px);
+  width: 1px;
+  height: 74px;
+  background: linear-gradient(180deg, transparent, currentColor, #fff);
+  box-shadow: 0 0 7px currentColor;
+  transform: rotate(13deg);
+  animation: vfx-rain 560ms ease-in both;
+  animation-delay: calc(var(--vfx-index) * 30ms);
+}
+
+.skill-impact.is-sigil,
+.skill-impact.is-tempest {
+  color: #f2d591;
+}
+
+.skill-impact.is-sigil i,
+.skill-impact.is-tempest i {
+  top: calc(-25px + var(--vfx-index) * 8px);
+  left: calc(-34px + var(--vfx-index) * 11px);
+  width: 8px;
+  height: 8px;
+  border: 1px solid currentColor;
+  background: rgba(242, 213, 145, 0.2);
+  box-shadow: 0 0 10px currentColor;
+  transform: rotate(45deg);
+  animation: vfx-sigil 700ms ease-out both;
+  animation-delay: calc(var(--vfx-index) * 34ms);
+}
+
+.skill-impact.is-sigil em,
+.skill-impact.is-tempest em {
+  top: 50%;
+  left: 50%;
+  width: 92px;
+  height: 92px;
+  border: 1px solid currentColor;
+  box-shadow:
+    0 0 15px currentColor,
+    inset 0 0 18px rgba(242, 213, 145, 0.18);
+  transform: translate(-50%, -50%) rotate(45deg);
+  animation: vfx-sigil-ring 720ms ease-out both;
+}
+
+.skill-impact.is-tempest i {
+  width: 4px;
+  height: 36px;
+  border: 0;
+  background: linear-gradient(180deg, transparent, currentColor, #fff);
+  box-shadow: 0 0 8px currentColor;
+  animation-name: vfx-tempest;
+}
+
+.skill-impact.is-guard,
+.skill-impact.is-bulwark,
+.skill-impact.is-ward {
+  color: #b9dbef;
+}
+
+.skill-impact.is-guard em,
+.skill-impact.is-bulwark em,
+.skill-impact.is-ward em {
+  width: 82px;
+  height: 82px;
+  border-radius: 7px;
+  box-shadow:
+    0 0 15px currentColor,
+    inset 0 0 18px rgba(143, 177, 200, 0.22);
+  transform: translate(-50%, -50%) rotate(45deg);
+  animation: vfx-ward-ring 720ms ease-out both;
+}
+
+.skill-impact.is-guard i,
+.skill-impact.is-bulwark i,
+.skill-impact.is-ward i {
+  top: calc(-28px + var(--vfx-index) * 8px);
+  left: calc(-38px + var(--vfx-index) * 13px);
+  width: 7px;
+  height: 18px;
+  border: 1px solid currentColor;
+  background: rgba(143, 177, 200, 0.1);
+  box-shadow: 0 0 8px currentColor;
+  animation: vfx-ward-shard 660ms ease-out both;
+  animation-delay: calc(var(--vfx-index) * 24ms);
+}
+
+.skill-impact.is-mend {
+  color: #9be8bc;
+}
+
+.skill-impact.is-mend i {
+  top: calc(-36px + var(--vfx-index) * 10px);
+  left: calc(-34px + var(--vfx-index) * 11px);
+  width: 9px;
+  height: 9px;
+  background:
+    linear-gradient(90deg, transparent 35%, currentColor 35% 65%, transparent 65%),
+    linear-gradient(0deg, transparent 35%, currentColor 35% 65%, transparent 65%);
+  filter: drop-shadow(0 0 5px currentColor);
+  animation: vfx-mend 760ms ease-out both;
+  animation-delay: calc(var(--vfx-index) * 40ms);
+}
+
+.skill-impact.is-starfall {
+  color: #ffe1a1;
+}
+
+.skill-impact.is-starfall i {
+  top: -130px;
+  left: calc(-48px + var(--vfx-index) * 16px);
+  width: 2px;
+  height: 120px;
+  background: linear-gradient(180deg, transparent, currentColor, #fff9df);
+  box-shadow: 0 0 10px currentColor;
+  transform: rotate(16deg);
+  animation: vfx-starfall 720ms ease-in both;
+  animation-delay: calc(var(--vfx-index) * 34ms);
+}
+
+.skill-impact.is-starfall em {
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: #fff8dc;
+  box-shadow:
+    0 0 12px #fff2b4,
+    0 0 28px #e6b458,
+    -38px -18px 0 -2px #d9b86e,
+    42px 22px 0 -2px #d9b86e;
+  transform: translate(-50%, -50%) rotate(45deg);
+  animation: vfx-star-burst 700ms ease-out both;
 }
 
 @media (max-width: 920px) {
@@ -10627,6 +11029,226 @@ small {
   100% {
     opacity: 0;
     transform: translate(-50%, -42px) scale(0.96);
+  }
+}
+
+@keyframes skill-callout {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -42%) scale(0.92);
+  }
+  18%,
+  72% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -58%) scale(0.98);
+  }
+}
+
+@keyframes caster-ring {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.45);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(1.65);
+  }
+}
+
+@keyframes vfx-slash {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  24% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 0 100%);
+    transform: translateX(24px) rotate(calc(-32deg + var(--vfx-index) * 11deg));
+  }
+}
+
+@keyframes vfx-crack {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.2) rotate(calc(-25deg + var(--vfx-index) * 8deg));
+  }
+  28% {
+    opacity: 1;
+    transform: scaleY(1) rotate(calc(-25deg + var(--vfx-index) * 8deg));
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(1.2) translateY(16px)
+      rotate(calc(-25deg + var(--vfx-index) * 8deg));
+  }
+}
+
+@keyframes vfx-ground-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(4.4);
+  }
+}
+
+@keyframes vfx-projectile {
+  0% {
+    opacity: 0;
+    transform: translate(-38px, 12px) rotate(-14deg) scaleX(0.2);
+  }
+  24% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(54px, -12px) rotate(-14deg) scaleX(1);
+  }
+}
+
+@keyframes vfx-rain {
+  0% {
+    opacity: 0;
+    transform: translate(-18px, -18px) rotate(13deg) scaleY(0.3);
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(22px, 76px) rotate(13deg) scaleY(1);
+  }
+}
+
+@keyframes vfx-sigil {
+  0% {
+    opacity: 0;
+    transform: translateY(26px) rotate(45deg) scale(0.2);
+  }
+  34% {
+    opacity: 1;
+    transform: translateY(0) rotate(135deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-32px) rotate(225deg) scale(0.45);
+  }
+}
+
+@keyframes vfx-sigil-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0) scale(0.25);
+  }
+  28% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(135deg) scale(1.7);
+  }
+}
+
+@keyframes vfx-tempest {
+  0% {
+    opacity: 0;
+    transform: translate(-28px, -38px) rotate(22deg) scaleY(0.2);
+  }
+  26% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(34px, 64px) rotate(22deg) scaleY(1.45);
+  }
+}
+
+@keyframes vfx-ward-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0) scale(0.3);
+  }
+  28% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(90deg) scale(1.38);
+  }
+}
+
+@keyframes vfx-ward-shard {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scaleY(0.25);
+  }
+  34% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-24px) scaleY(0.7);
+  }
+}
+
+@keyframes vfx-mend {
+  0% {
+    opacity: 0;
+    transform: translateY(25px) rotate(45deg) scale(0.25);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(0) rotate(45deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-48px) rotate(45deg) scale(0.72);
+  }
+}
+
+@keyframes vfx-starfall {
+  0% {
+    opacity: 0;
+    transform: translate(-36px, -20px) rotate(16deg) scaleY(0.35);
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(34px, 84px) rotate(16deg) scaleY(1);
+  }
+}
+
+@keyframes vfx-star-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0) scale(0.2);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(45deg) scale(2.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(90deg) scale(5.2);
   }
 }
 
@@ -14097,5 +14719,142 @@ html[data-motion="reduced"] *::after {
 
   .hero-chronicle-heading > div:last-child {
     padding: 0;
+  }
+}
+
+@media (max-width: 1180px) {
+  .enemy-formation {
+    min-height: 232px;
+  }
+
+  .hero-formation {
+    min-height: 276px;
+  }
+
+  .enemy-line {
+    height: 224px;
+  }
+
+  .hero-line {
+    height: 266px;
+  }
+
+  .enemy-unit {
+    max-width: 178px;
+    height: 222px;
+  }
+
+  .hero-unit {
+    max-width: 226px;
+    height: 266px;
+  }
+}
+
+@media (max-width: 920px) {
+  .enemy-formation {
+    min-height: 186px;
+  }
+
+  .hero-formation {
+    min-height: 216px;
+  }
+
+  .enemy-line {
+    height: 180px;
+  }
+
+  .hero-line {
+    height: 210px;
+  }
+
+  .enemy-unit {
+    max-width: 150px;
+    height: 178px;
+  }
+
+  .hero-unit {
+    max-width: 174px;
+    height: 208px;
+  }
+
+  .hero-unit .hero-figure {
+    inset: -7px -10px 60px;
+  }
+
+  .enemy-unit .enemy-figure {
+    inset: 7px 1px 66px;
+  }
+
+  .battle-skill-callout {
+    top: 37%;
+    min-width: 148px;
+    grid-template-columns: 29px minmax(0, 1fr) auto;
+    padding: 5px 8px 6px 5px;
+  }
+
+  .battle-skill-callout > span {
+    width: 27px;
+    height: 27px;
+  }
+
+  .skill-impact {
+    top: 34%;
+    transform: scale(0.82);
+  }
+}
+
+@media (max-width: 680px) {
+  .enemy-formation {
+    min-height: 150px;
+  }
+
+  .hero-formation {
+    min-height: 180px;
+  }
+
+  .enemy-line {
+    height: 146px;
+  }
+
+  .hero-line {
+    height: 176px;
+  }
+
+  .enemy-unit {
+    max-width: 122px;
+    height: 144px;
+  }
+
+  .hero-unit {
+    max-width: 140px;
+    height: 174px;
+  }
+
+  .hero-unit .hero-figure {
+    inset: -3px -6px 65px;
+  }
+
+  .enemy-unit .enemy-figure {
+    inset: 4px 0 69px;
+  }
+
+  .battle-skill-callout {
+    top: 31%;
+    min-width: 128px;
+    gap: 5px;
+    padding-right: 6px;
+  }
+
+  .battle-skill-callout b {
+    font-size: 0.625rem;
+  }
+
+  .battle-skill-callout em {
+    display: none;
+  }
+
+  .skill-impact {
+    top: 28%;
+    transform: scale(0.62);
   }
 }
