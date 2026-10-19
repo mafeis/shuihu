@@ -10699,10 +10699,36 @@ button[aria-pressed="true"] {
 .reward-panel {
   position: relative;
   z-index: 2;
+  display: grid;
   width: min(760px, calc(100% - 42px));
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
   margin: 0 auto;
-  padding: 70px 0 40px;
+  grid-template-rows: minmax(0, 1fr) auto;
   text-align: center;
+}
+
+.reward-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 44px 8px 14px;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--ink-600) transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.reward-actions {
+  position: relative;
+  z-index: 3;
+  padding: 14px 8px 20px;
+  background: linear-gradient(180deg, transparent, rgba(6, 10, 11, 0.94) 38%);
+}
+
+.reward-actions .button {
+  min-width: 240px;
 }
 
 .victory-seal {
@@ -14679,7 +14705,19 @@ html[data-motion="reduced"] *::after {
 
   .reward-panel {
     width: calc(100% - 24px);
-    padding-top: 45px;
+  }
+
+  .reward-scroll {
+    padding: 34px 4px 10px;
+  }
+
+  .reward-actions {
+    padding: 10px 4px 14px;
+  }
+
+  .reward-actions .button {
+    width: 100%;
+    min-width: 0;
   }
 
   .reward-panel h1 {
