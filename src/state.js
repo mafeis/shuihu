@@ -1158,7 +1158,31 @@ function heroTeamSupport(hero) {
   );
 }
 
-function recommendFormationScore(
+const TEAM_RECOMMENDATION_PROFILES = [
+  {
+    id: "balanced",
+    name: "均衡制胜",
+    summary: "兼顾三路连携、有效羁绊与前中后阵承伤。",
+  },
+  {
+    id: "burst",
+    name: "雷霆强攻",
+    summary: "优先高攻、群体伤害与破阵压制，尽快结束战斗。",
+  },
+  {
+    id: "endurance",
+    name: "稳阵久战",
+    summary: "优先治疗、护势、生命与防御，适合首次开荒和越级战。",
+  },
+  {
+    id: "chain",
+    name: "星命合击",
+    summary: "优先三路齐备与多重羁绊，以星命合击创造爆发窗口。",
+  },
+];
+const recommendationCache = new Map();
+
+function recommendFormationMetrics(
   state,
   heroIds,
   team,
@@ -1167,13 +1191,14 @@ function recommendFormationScore(
   pathCount,
 ) {
   const stats = heroIds.map((heroId) => deriveHeroStats(state, heroId));
+  const atk = stats.reduce((total, entry) => total + entry.atk, 0);
+  const maxHp = stats.reduce((total, entry) => total + entry.maxHp, 0);
+  const def = stats.reduce((total, entry) => total + entry.def, 0);
+  const spd = stats.reduce((total, entry) => total + entry.spd, 0);
   const damage =
-    stats.reduce((total, entry) => total + entry.atk * 2.4, 0) +
-    stats.reduce((total, entry) => total + entry.maxHp * 0.12, 0) +
-    stats.reduce(
-      (total, entry) => total + (entry.def + entry.spd) * 1.5,
-      0,
-    );
+    atk * 2.4 +
+    maxHp * 0.12 +
+    (def + spd) * 1.5;
   const heroes = team.map((heroId) => HEROES[heroId]);
   const attackers = heroes.filter(heroCanAttack).length;
   const healers = heroes.filter(heroCanHeal).length;
@@ -1185,22 +1210,27 @@ function recommendFormationScore(
     0,
   );
   const teamSupport = heroes.filter(heroTeamSupport).length;
-  const synergy = bonds.reduce((total, bond) => {
+  const synergy = bonds.reduce((totals, bond) => {
     const effects = bond.effects || {};
-    return (
-      total +
+    totals.attack +=
       (effects.atkPct || 0) * 60000 +
-      (effects.hpPct || 0) * 1000 +
-      (effects.defPct || 0) * 1000 +
-      (effects.healPct || 0) * 1000 +
       (effects.poisePct || 0) * 100 +
       (effects.allEnemiesPowerPct || 0) * 60000 +
-      (effects.critPct || 0) * 1000
-    );
-  }, 0);
-  return (
+      (effects.critPct || 0) * 1000;
+    totals.defense +=
+      (effects.hpPct || 0) * 1000 +
+      (effects.defPct || 0) * 1000 +
+      (effects.healPct || 0) * 1000;
+    return totals;
+  }, { attack: 0, defense: 0 });
+  const totalLevels = heroIds.reduce(
+    (total, heroId) =>
+      total + Math.max(0, Number(state.roster[heroId]?.level) || 1) - 1,
+    0,
+  );
+  const balanced =
     bonds.length * 600 +
-    pathCount * 1200 +
+    (pathCount === 3 ? 12000 : pathCount * 1200) +
     preferredRowCount * 240 +
     damage +
     attackers * 3000 +
@@ -1208,16 +1238,59 @@ function recommendFormationScore(
     Math.min(1, healers) * 2500 +
     Math.min(1, teamSupport) * 2000 +
     Math.min(1, controllers) * 1000 +
-    Math.min(
-      3,
-      stats.reduce(
-        (total, entry) => total + Math.max(0, entry.level - 1),
-        0,
-      ),
-    ) * 2000 +
-    synergy * 1.5 +
-    (bonds.length >= 2 ? 5000 : 0)
-  );
+    totalLevels * 2000 +
+    (synergy.attack + synergy.defense) * 1.5 +
+    (bonds.length >= 2 ? 6000 : 0);
+  return {
+    balanced,
+    atk,
+    maxHp,
+    def,
+    spd,
+    damage,
+    attackers,
+    healers,
+    controllers,
+    areaDamage,
+    teamSupport,
+    totalLevels,
+    pathCount,
+    preferredRowCount,
+    bonds: bonds.length,
+    attackSynergy: synergy.attack,
+    defenseSynergy: synergy.defense,
+  };
+}
+
+function recommendFormationProfileScores(metrics) {
+  return {
+    balanced: metrics.balanced,
+    burst:
+      metrics.atk * 3.2 +
+      metrics.damage * 1.15 +
+      metrics.attackers * 7200 +
+      metrics.areaDamage * 7800 +
+      metrics.controllers * 2600 +
+      metrics.attackSynergy * 2.1 +
+      metrics.totalLevels * 2200 +
+      metrics.bonds * 750 +
+      metrics.pathCount * 900,
+    endurance:
+      metrics.maxHp * 0.62 +
+      metrics.def * 8.5 +
+      metrics.spd * 2.2 +
+      metrics.healers * 12000 +
+      metrics.teamSupport * 7200 +
+      metrics.defenseSynergy * 2.35 +
+      metrics.totalLevels * 2600 +
+      metrics.bonds * 900 +
+      metrics.pathCount * 700,
+    chain:
+      metrics.balanced +
+      (metrics.pathCount === 3 ? 18000 : -12000) +
+      metrics.bonds * 1600 +
+      metrics.controllers * 2200,
+  };
 }
 
 function recommendFormationTieBreak(
@@ -1248,20 +1321,69 @@ function recommendFormationTieBreak(
   );
 }
 
-export function recommendTeam(state) {
+function recommendationSignature(state, available) {
+  return JSON.stringify({
+    available,
+    roster: available.map((heroId) => state.roster[heroId]),
+    mastery: state.heroMastery,
+    doctrines: state.doctrines,
+    quests: state.heroQuests,
+  });
+}
+
+function insertRecommendation(list, candidate, limit = 12) {
+  list.push(candidate);
+  list.sort(
+    (a, b) =>
+      b.profileScore - a.profileScore ||
+      a.tieBreak - b.tieBreak,
+  );
+  if (list.length > limit) list.pop();
+}
+
+function recommendationReason(profileId, metrics, bonds) {
+  const bondNames = bonds.map((bond) => bond.name).join("、");
+  if (profileId === "burst") {
+    return `群体招式威力 ${metrics.areaDamage.toFixed(2)}，${metrics.attackers} 名输出好汉抢在敌军成形前压阵${bondNames ? `，并保留${bondNames}` : ""}。`;
+  }
+  if (profileId === "endurance") {
+    return `${metrics.healers} 名治疗、${metrics.teamSupport} 名支援好汉稳住血线${bondNames ? `，${bondNames}进一步增强续航` : ""}。`;
+  }
+  if (profileId === "chain") {
+    return `三路齐备并覆盖 ${metrics.bonds} 重羁绊，战斗中以星命合击打开决胜窗口。`;
+  }
+  return `三路、羁绊与前后阵承伤最均衡${bondNames ? `，当前可激活${bondNames}` : ""}。`;
+}
+
+export function recommendTeams(state, limit = 4) {
   const available = [...new Set(state.recruited)].filter(
     (heroId) => HEROES[heroId] && state.roster[heroId],
   );
   if (available.length < 3) {
-    return {
-      team: fillTeam(state, available),
-      bonds: [],
-      score: 0,
-    };
+    const team = fillTeam(state, available);
+    return [
+      {
+        id: "balanced",
+        name: "均衡制胜",
+        summary: TEAM_RECOMMENDATION_PROFILES[0].summary,
+        reason: "现有好汉不足三人，军师先以可用人选补齐阵位。",
+        team,
+        bonds: [],
+        score: 0,
+        pathCount: 0,
+        metrics: null,
+      },
+    ].slice(0, limit);
   }
 
+  const signature = recommendationSignature(state, available);
+  const cached = recommendationCache.get(signature);
+  if (cached) return cached.slice(0, limit);
+
   const heroRank = new Map(HERO_ORDER.map((heroId, index) => [heroId, index]));
-  let best = null;
+  const profileTop = Object.fromEntries(
+    TEAM_RECOMMENDATION_PROFILES.map((profile) => [profile.id, []]),
+  );
   for (let first = 0; first < available.length - 2; first += 1) {
     for (let second = first + 1; second < available.length - 1; second += 1) {
       for (let third = second + 1; third < available.length; third += 1) {
@@ -1285,7 +1407,7 @@ export function recommendTeam(state) {
           const preferredRows = team.filter(
             (heroId, row) => HEROES[heroId].preferredRow === row,
           ).length;
-          const score = recommendFormationScore(
+          const metrics = recommendFormationMetrics(
             state,
             heroIds,
             team,
@@ -1293,6 +1415,8 @@ export function recommendTeam(state) {
             preferredRows,
             pathCount,
           );
+          const profileScores =
+            recommendFormationProfileScores(metrics);
           const tieBreak = recommendFormationTieBreak(
             state,
             heroIds,
@@ -1301,21 +1425,59 @@ export function recommendTeam(state) {
             preferredRows,
             heroRank,
           );
-          if (
-            !best ||
-            score > best.score + 0.001 ||
-            (Math.abs(score - best.score) <= 0.001 &&
-              tieBreak < best.tieBreak)
-          ) {
-            best = { team, bonds, score, tieBreak };
+          for (const profile of TEAM_RECOMMENDATION_PROFILES) {
+            insertRecommendation(profileTop[profile.id], {
+              team,
+              bonds,
+              metrics,
+              tieBreak,
+              profileScore: profileScores[profile.id],
+            });
           }
         }
       }
     }
   }
 
-  return best
-    ? { team: best.team, bonds: best.bonds, score: best.score }
+  const recommendations = [];
+  const seenTeams = new Set();
+  for (const profile of TEAM_RECOMMENDATION_PROFILES) {
+    for (const candidate of profileTop[profile.id]) {
+      const teamKey = [...candidate.team].sort().join("|");
+      if (seenTeams.has(teamKey)) continue;
+      seenTeams.add(teamKey);
+      recommendations.push({
+        id: profile.id,
+        name: profile.name,
+        summary: profile.summary,
+        reason: recommendationReason(
+          profile.id,
+          candidate.metrics,
+          candidate.bonds,
+        ),
+        team: candidate.team,
+        bonds: candidate.bonds,
+        score: candidate.metrics.balanced,
+        pathCount: candidate.metrics.pathCount,
+        metrics: candidate.metrics,
+      });
+      break;
+    }
+  }
+
+  if (recommendationCache.size >= 8) recommendationCache.clear();
+  recommendationCache.set(signature, recommendations);
+  return recommendations.slice(0, limit);
+}
+
+export function recommendTeam(state) {
+  const recommendation = recommendTeams(state, 1)[0];
+  return recommendation
+    ? {
+        team: recommendation.team,
+        bonds: recommendation.bonds,
+        score: recommendation.score,
+      }
     : { team: fillTeam(state, []), bonds: [], score: 0 };
 }
 
