@@ -562,6 +562,21 @@ button[aria-pressed="true"] {
   font-size: 0.75rem;
 }
 
+.nav-button::before {
+  position: absolute;
+  inset: 11px 4px 10px;
+  border-radius: 4px;
+  content: "";
+  background: transparent;
+  pointer-events: none;
+  transition: background-color 150ms ease;
+}
+
+.nav-button > * {
+  position: relative;
+  z-index: 1;
+}
+
 .nav-button::after {
   position: absolute;
   right: 12px;
@@ -577,8 +592,25 @@ button[aria-pressed="true"] {
   color: var(--paper-100);
 }
 
+.nav-button:hover::before {
+  background: rgba(199, 169, 106, 0.06);
+}
+
+.nav-button.is-active {
+  outline: none;
+}
+
+.nav-button.is-active::before {
+  background: rgba(199, 169, 106, 0.13);
+}
+
 .nav-button.is-active::after {
   background: var(--bronze-400);
+}
+
+.nav-button:focus-visible {
+  outline: 2px solid var(--bronze-300);
+  outline-offset: -3px;
 }
 
 .progress-compact {
