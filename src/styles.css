@@ -12103,7 +12103,8 @@ html[data-motion="reduced"] *::after {
   .quests-layout,
   .codex-layout,
   .settings-layout,
-  .arena-layout {
+  .arena-layout,
+  .arena-reward-layout {
     min-height: 0;
     overflow-y: auto;
     flex: 1 1 auto;
