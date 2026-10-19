@@ -143,6 +143,7 @@ import {
   isHeroQuestComplete,
   loadGame,
   recommendTeam,
+  recommendTeams,
   recordChapterTactic,
   recordChoice,
   SAVE_BACKUP_KEY,
@@ -2901,6 +2902,11 @@ function renderFormation() {
   const activeBonds = activeHeroBonds(state);
   const activeBondIds = new Set(activeBonds.map((bond) => bond.id));
   const chainPreview = teamChainPreview();
+  const advisorOptions = recommendTeams(state, 4);
+  const currentTeamKey = [...state.team]
+    .filter(Boolean)
+    .sort()
+    .join("|");
   return `
     <div class="app-screen formation-screen">
       ${topbar("roster", "nav-roster")}
@@ -2908,6 +2914,53 @@ function renderFormation() {
         <section class="formation-heading">
           <div><p class="eyebrow">三阵之势</p><h1>点将编成</h1><p>先选阵位，再点好汉。前阵承受更多近战攻击，后阵更不易被集火。</p></div>
           <button class="button ghost" data-action="auto-team">${icon("wand-sparkles", 18)}<span>军师荐阵</span></button>
+        </section>
+        <section class="advisor-panel" aria-label="军师多目标荐阵">
+          <header>
+            <div><p class="eyebrow">军师推演 · 多阵并举</p><h2>不同目标，不同三阵</h2></div>
+            <span>${icon("compass", 15)} ${advisorOptions.length} 套可用方案</span>
+          </header>
+          <div class="advisor-option-grid">
+            ${advisorOptions
+              .map((option, index) => {
+                const teamKey = [...option.team].filter(Boolean).sort().join("|");
+                const pathNames = [
+                  ...new Set(
+                    option.team
+                      .filter(Boolean)
+                      .map((heroId) => PATHS[HEROES[heroId].path].name),
+                  ),
+                ];
+                return `
+                  <button class="advisor-option ${teamKey === currentTeamKey ? "is-current" : ""}" data-action="apply-team-recommendation" data-index="${index}">
+                    <span class="advisor-option-head">
+                      <b>${option.name}</b>
+                      <em>${option.pathCount}/3 路 · ${option.bonds.length} 契</em>
+                    </span>
+                    <span class="advisor-option-members">
+                      ${option.team
+                        .filter(Boolean)
+                        .map(
+                          (heroId, row) => `
+                            <span>
+                              ${heroPortrait(heroId, "")}
+                              <i>${ROWS[row].name}</i>
+                              <strong>${HEROES[heroId].name}</strong>
+                            </span>
+                          `,
+                        )
+                        .join("")}
+                    </span>
+                    <p>${option.reason}</p>
+                    <span class="advisor-option-foot">
+                      <span>${pathNames.join(" · ")}</span>
+                      <em>${teamKey === currentTeamKey ? `${icon("check", 14)} 当前采用` : `${icon("arrow-right", 14)} 采用此阵`}</em>
+                    </span>
+                  </button>
+                `;
+              })
+              .join("")}
+          </div>
         </section>
         <section class="formation-board">
           ${[0, 1, 2]
@@ -7260,7 +7313,8 @@ function handleAction(action, element) {
       setScreen("formation");
       return;
     case "auto-team": {
-      const recommendation = recommendTeam(state);
+      const recommendation = recommendTeams(state, 1)[0];
+      if (!recommendation) return;
       state.team = recommendation.team;
       persist();
       sound.confirm();
@@ -7276,8 +7330,26 @@ function handleAction(action, element) {
       render();
       toast(
         bondNames
-          ? `军师荐阵：${state.team.map((heroId) => HEROES[heroId]?.name).filter(Boolean).join(" · ")}，三路为${pathNames}，激活${bondNames}`
-          : "军师已按惯用阵位排成三阵",
+          ? `${recommendation.name}：${state.team.map((heroId) => HEROES[heroId]?.name).filter(Boolean).join(" · ")}，三路为${pathNames}，激活${bondNames}`
+          : `${recommendation.name}：军师已按惯用阵位排成三阵`,
+        "success",
+      );
+      return;
+    }
+    case "apply-team-recommendation": {
+      const recommendation = recommendTeams(state, 4)[
+        Number(element.dataset.index)
+      ];
+      if (!recommendation) {
+        toast("这套荐阵已不可用，请重新推演", "danger");
+        return;
+      }
+      state.team = recommendation.team;
+      persist();
+      sound.confirm();
+      render();
+      toast(
+        `${recommendation.name}已列阵：${recommendation.team.map((heroId) => HEROES[heroId]?.name).filter(Boolean).join(" · ")}`,
         "success",
       );
       return;

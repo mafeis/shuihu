@@ -53,6 +53,7 @@ import {
   heroQuestUnlocked,
   isHeroQuestComplete,
   recommendTeam,
+  recommendTeams,
   setHeroDoctrine,
   validateSaveText,
 } from "../src/state.js";
@@ -118,6 +119,45 @@ test("recommended formation keeps chain-ready path diversity while stacking bond
       `${bond.id} should be active in the recommended formation`,
     );
   }
+});
+
+test("the advisor offers distinct formations for different tactical goals", () => {
+  const state = createInitialState();
+  state.recruited = [];
+  state.roster = {};
+  state.team = [null, null, null];
+  for (const heroId of HERO_ORDER) {
+    state.recruited.push(heroId);
+    state.roster[heroId] = { level: 1, xp: 0, equipment: {} };
+  }
+
+  const recommendations = recommendTeams(state, 4);
+  assert.equal(recommendations.length, 4);
+  assert.deepEqual(
+    recommendations.map((entry) => entry.id),
+    ["balanced", "burst", "endurance", "chain"],
+  );
+  assert.equal(
+    new Set(
+      recommendations.map((entry) => [...entry.team].sort().join("|")),
+    ).size,
+    4,
+    "each goal should recommend a different trio",
+  );
+  for (const recommendation of recommendations) {
+    assert.equal(recommendation.team.length, 3);
+    assert.equal(new Set(recommendation.team).size, 3);
+    assert.ok(recommendation.reason.length > 0);
+    assert.ok(recommendation.summary.length > 0);
+  }
+
+  const byId = Object.fromEntries(
+    recommendations.map((entry) => [entry.id, entry]),
+  );
+  assert.ok(byId.burst.metrics.areaDamage > 0);
+  assert.ok(byId.endurance.metrics.healers >= 1);
+  assert.ok(byId.endurance.metrics.teamSupport >= 1);
+  assert.equal(byId.chain.pathCount, 3);
 });
 
 test("camp grid expands through victories and unlocks buildings", () => {
