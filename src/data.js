@@ -5,6 +5,7 @@ import {
   WATER_MARGIN_CHAPTERS,
   WATER_MARGIN_MEMORIES,
 } from "./lore/waterMarginChapters.js";
+import { extraHeroStoryArc } from "./lore/heroStoryArcs.js";
 
 export const PATHS = {
   gang: {
@@ -9626,9 +9627,9 @@ const CORE_HERO_RECRUITMENTS = {
       id: "qilin_leaves_house",
       name: "玉麟出府",
       icon: "flag",
-      desc: "全队攻击提高 8%；前三回合暴击率提高 8%，开局获得鼓舞。",
+      desc: "全队攻击提高 12%；前三回合暴击率提高 10%，开局获得鼓舞。",
       effects: {
-        teamModifiers: { atkPct: 0.08, critPct: 0.08 },
+        teamModifiers: { atkPct: 0.12, critPct: 0.1 },
         teamOpeningInspiration: 2,
       },
     },
@@ -9664,8 +9665,8 @@ const CORE_HERO_RECRUITMENTS = {
       { id: "instructor", row: 1 },
       { id: "archer", row: 2 },
     ],
-    enemyScale: 1.01,
-    enemyModifiers: { hpPct: 0.1, defPct: 0.08 },
+    enemyScale: 0.96,
+    enemyModifiers: { hpPct: 0.04, defPct: 0.04 },
     reward: { copper: 1080, xp: 720, item: "jade_lamellar" },
   },
   zhangshun: {
@@ -12916,7 +12917,7 @@ const CORE_STORY_SCENES = {
   daizong: ["jiangzhou"],
   likui: ["jiangzhou"],
   shijin: ["qingfeng"],
-  leihang: ["jiangzhou"],
+  leiheng: ["jiangzhou"],
   zhangshun: ["jiangzhou"],
   ruanxiaoqi: ["liangshan"],
   yangxiong: ["boar_forest"],
@@ -12940,6 +12941,15 @@ const EXTRA_STORY_SCENES = [
   "boar_forest",
   "liangshan",
 ];
+const STORY_SCENE_LABELS = {
+  yellow_river_ferry: "黄河渡口",
+  jiangzhou: "江州法场",
+  qingfeng: "清风寨",
+  zhujiazhuang: "祝家庄",
+  damingfu: "大名府",
+  boar_forest: "野猪林",
+  liangshan: "梁山泊",
+};
 const CORE_BONDED = new Set(["shenxing"]);
 const EXTRA_BONDS = [
   ["zhujiazhuang", "独龙冈三杰", ["zhutong", "liying", "husanniang"], "前阵获得 1 层护御，反击身法提高 6%。", { openingGuard: 1, counterBonus: 0.06 }],
@@ -12955,7 +12965,17 @@ const EXTRA_BONDS = [
 const FULL_HEROES = Object.fromEntries(
   WATER_MARGIN_RANKS.map(([rank, id, name, nickname, star, path, row, role, identity, line, legendLine, quality]) => {
     const existing = CORE_HEROES[id];
-    if (existing) return [id, existing];
+    if (existing) {
+      return [
+        id,
+        {
+          ...existing,
+          bio: new RegExp(name).test(existing.bio)
+            ? existing.bio
+            : `${name}，${existing.bio}`,
+        },
+      ];
+    }
     const pathActions = FULL_HERO_ACTION_NAMES[path];
     const effects = FULL_HERO_EFFECTS[path];
     const tendency = {
@@ -13039,7 +13059,7 @@ const FULL_HEROES = Object.fromEntries(
           effects: effects.ultimate,
         },
       ],
-      bio: identity,
+      bio: `${name}${line}${identity}这名号与旧路一同进入梁山，也留下新的护寨责任。`,
       identity,
       legendLine,
       tendency,
@@ -13050,6 +13070,10 @@ const FULL_HEROES = Object.fromEntries(
 
 export const HEROES = FULL_HEROES;
 export const HERO_ORDER = WATER_MARGIN_RANKS.map((entry) => entry[1]);
+export const HERO_ID_ALIASES = {
+  lehe: "yuehe",
+  leihang: "leiheng",
+};
 export const HERO_BONDS = Object.fromEntries(
   Object.values(CORE_HERO_BONDS)
     .filter((bond) => bond.heroIds.every((heroId) => HERO_ORDER.includes(heroId)))
@@ -13077,27 +13101,40 @@ export const HERO_QUESTS = Object.fromEntries(
   WATER_MARGIN_RANKS.map(([rank, id, name, nickname, star, path, row, role, identity, line, legendLine, quality]) => {
     const existing = CORE_HERO_QUESTS[id];
     if (existing) return [id, existing];
-    const chapter = Math.min(9, 1 + (rank % 9));
-    return [id, [1, 2, 3].map((stage) => ({
-      id: `${id}_chronicle_${stage}`,
-      stage,
-      requiredChapter: Math.min(9, chapter + stage - 1),
-      title: ["初见义名", "旧事重提", "梁山归心"][stage - 1],
-      premise: `${name}在${identity}的旧事并未随梁山聚义结束。第${stage}段异闻里，他需要面对自己的名声、旧人和新的护寨责任。`,
-      objective: {
-        metric: stage === 1 ? "wins" : stage === 2 ? "ultimates" : "damage",
-        target: stage === 1 ? 2 : stage === 2 ? 1 : 1200 + rank * 8,
-        label: `${stage === 1 ? "携" : stage === 2 ? "发动" : "以"}${name}${stage === 1 ? "取得 2 场胜利" : stage === 2 ? "义技 1 次" : `累计造成 ${1200 + rank * 8} 伤害`}`,
-      },
-      epithet: `${nickname}·${stage === 1 ? "初义" : stage === 2 ? "旧约" : "归心"}`,
+    return [id, extraHeroStoryArc(
+      { id, name, nickname, identity, line },
+      rank,
+    ).quests.map((quest) => ({
+      ...quest,
       reward: { copper: 100 + rank * 3, xp: 60 + rank * 2 },
     }))];
   }),
 );
+const STORY_SCENE_ALIASES = {
+  damingfu: "damingfu_lantern_night",
+  jiangzhou: "jiangzhou_execution",
+  liangshan: "liangshan_water_fort",
+  qingfeng: "qingfeng_fort",
+  zhujiazhuang: "zhujiazhuang_snow_night",
+};
+
+function normalizeStoryScenePath(assetPath) {
+  if (typeof assetPath !== "string") return assetPath;
+  const match = assetPath.match(/^\/assets\/environments\/([^/]+)\.png$/);
+  if (!match || !STORY_SCENE_ALIASES[match[1]]) return assetPath;
+  return `/assets/environments/${STORY_SCENE_ALIASES[match[1]]}.png`;
+}
+
 export const HERO_LEGENDS = Object.fromEntries(
   WATER_MARGIN_RANKS.map(([rank, id, name, nickname, star, path, row, role, identity, line, legendLine, quality]) => {
     const existing = CORE_HERO_LEGENDS[id];
-    if (existing) return [id, existing];
+    if (existing) {
+      return [id, {
+        ...existing,
+        title: `${nickname}·终章`,
+        bg: normalizeStoryScenePath(existing.bg),
+      }];
+    }
     const scene = EXTRA_STORY_SCENES[rank % EXTRA_STORY_SCENES.length];
     return [id, {
       id: `${id}_legend`,
@@ -13106,19 +13143,19 @@ export const HERO_LEGENDS = Object.fromEntries(
       minLevel: 3,
       levelOffset: 1,
       title: `${nickname}·梁山终章`,
-      location: typeof scene === "string" ? `水浒异闻 · ${scene}` : "梁山泊",
-      bg: `/assets/environments/${scene}.png`,
+      location: `水浒异闻 · ${STORY_SCENE_LABELS[scene] || "梁山泊"}`,
+      bg: normalizeStoryScenePath(`/assets/environments/${scene}.png`),
       objective: `让${name}在梁山旧事中守住自己认下的义，并击败截断归路的人马。`,
-      readyText: `${legendLine}梁山众人把这段旧事重新摆到${name}面前，接下来要由他亲手决定，从前的名声要落在谁的身上。`,
+      readyText: `${legendLine}梁山众人把这段旧事重新摆到${name}面前。${name}在${STORY_SCENE_LABELS[scene] || "梁山泊"}旧路前立下军令：先护百姓，再当面守住自己的名号。`,
       rule: {
         id: `${id}_legend_rule`,
         name: `${nickname}·守心`,
         icon: path === "shou" ? "shield" : path === "tao" ? "scroll-text" : "swords",
         desc: path === "shou"
-          ? "前阵获得 1 层护御，反击后为同伴补义气。"
+          ? "前阵获得 1 层护御，反击后为生命最低的同伴补充义气。"
           : path === "tao"
-            ? "开局敌军护势受损，我方全体获得少量义气。"
-            : "前阵攻击提高，并对破甲目标追加压制。",
+            ? "开局敌军护势受损，我方全体获得少量义气并提高破阵效率。"
+            : "前阵攻击提高，对破甲目标追加压制并增强追击伤害。",
         effects: path === "shou"
           ? { protagonist: { defPct: 0.08 }, teamModifiers: { openingGuard: 1 }, counterTeamYiqi: 8 }
           : path === "tao"
@@ -13150,7 +13187,19 @@ const GENERATED_HERO_RECRUITMENTS = Object.fromEntries(
   WATER_MARGIN_RANKS.map(([rank, id, name, nickname, star, path, row, role, identity, line, legendLine, quality]) => {
     const existing = CORE_HERO_RECRUITMENTS[id];
     if (existing) return [id, existing];
-    const scene = EXTRA_STORY_SCENES[rank % EXTRA_STORY_SCENES.length];
+    const storyArc = extraHeroStoryArc(
+      { id, name, nickname, identity, line },
+      rank,
+    );
+    const recruitmentScene = {
+      "城门": "damingfu",
+      "渡口": "yellow_river_ferry",
+      "牢门": "jiangzhou",
+      "粮仓": "qingfeng",
+      "码头": "liangshan",
+      "山路": "boar_forest",
+    }[storyArc.location] || "liangshan";
+    const scene = recruitmentScene;
     const tendency = {
       gang: { brotherhood: 2 },
       ling: { freedom: 2 },
@@ -13160,24 +13209,16 @@ const GENERATED_HERO_RECRUITMENTS = Object.fromEntries(
     return [id, {
       heroId: id,
       requiredChapter: 1 + ((rank - 1) % 8),
-      title: `${nickname}聚义帖`,
-      location: `水浒群英 · ${scene}`,
+      title: `${nickname}${['赴约', '归义', '守渡'][rank % 3]}`,
+      location: `水浒群英 · ${STORY_SCENE_LABELS[scene] || scene}`,
       bg: `/assets/environments/${scene}.png`,
-      teaser: identity,
+      teaser: `${identity}${line}梁山若要接应此人，须先走完这段旧路。`,
       choice: {
-        prompt: `${name}的旧路与梁山新路在${scene}前交汇。你要如何接应这位${nickname}？`,
-        options: [
-          {
-            text: "先护住路边的百姓，再与梁山合阵。",
-            effect: { brotherhood: 2 },
-            response: `梁山众人先把百姓送过险路。${name}看着最后一辆板车过桥，才把武器横到阵前，替所有人截住追兵。`,
-          },
-          {
-            text: "让${nickname}自行选路，梁山在后面接应。",
-            effect: tendency,
-            response: `${name}没有等别人替他决定归处。他先走向旧路，又在最危险的一刻回头，让梁山旗帜出现在身后。`,
-          },
-        ],
+        prompt: storyArc.choice.prompt,
+        options: storyArc.choice.options.map((option, index) => ({
+          ...option,
+          effect: index === 0 ? { brotherhood: 2 } : tendency,
+        })),
       },
       rule: {
         id: `${id}_recruitment_rule`,
@@ -13190,13 +13231,13 @@ const GENERATED_HERO_RECRUITMENTS = Object.fromEntries(
         },
       },
       intro: [
-        { speaker: "旁白", text: `${scene}的官道上，${name}没有立刻亮出武器。他先看着身后的人，再看着梁山来的旗。` },
+        { speaker: "旁白", text: storyArc.intro },
         { speaker: name, portrait: id, text: line },
         { speaker: "林冲", portrait: "linchong", text: "梁山不只收一身武艺。你若还有不肯丢下的人，就带他们一起过阵。" },
       ],
       outro: [
-        { speaker: name, portrait: id, text: `${nickname}今日入梁山，不是为了换个名号。往后有人被旧路挡住，我也要在前面开一条新路。` },
-        { speaker: "旁白", text: `${name}收整衣甲，随梁山众人回到水泊。聚义簿上多了一个姓名，也多了一段还没有走完的水浒旧事。` },
+        { speaker: name, portrait: id, text: `${nickname}今日入梁山，${storyArc.choice.options[0].response}` },
+        { speaker: "旁白", text: `${name}收整衣甲，把${storyArc.location}的旧路交给梁山与百姓共同照看，随后随众人回到水泊。` },
       ],
       enemies: [
         { id: "runner", row: 0 },
@@ -13211,11 +13252,25 @@ const GENERATED_HERO_RECRUITMENTS = Object.fromEntries(
 );
 
 export const HERO_RECRUITMENTS = {
-  ...GENERATED_HERO_RECRUITMENTS,
   ...Object.fromEntries(
-    Object.entries(CORE_HERO_RECRUITMENTS).filter(([heroId]) =>
-      HERO_ORDER.includes(heroId),
-    ),
+    Object.entries(GENERATED_HERO_RECRUITMENTS).map(([heroId, recruitment]) => [
+      heroId,
+      {
+        ...recruitment,
+        bg: normalizeStoryScenePath(recruitment.bg),
+      },
+    ]),
+  ),
+  ...Object.fromEntries(
+    Object.entries(CORE_HERO_RECRUITMENTS)
+      .filter(([heroId]) => HERO_ORDER.includes(heroId))
+      .map(([heroId, recruitment]) => [
+        heroId,
+        {
+          ...recruitment,
+          bg: normalizeStoryScenePath(recruitment.bg),
+        },
+      ]),
   ),
 };
 
@@ -14027,6 +14082,17 @@ export const CORE_CHAPTER_IDS = new Set(
 export const STRATEGY_CHAPTERS = [
   ...WATER_MARGIN_CHAPTERS.filter(
     (chapter) => !CORE_CHAPTER_IDS.has(chapter.id),
+  ),
+];
+export const STORY_ARCHIVE_CHAPTERS = [
+  ...WATER_MARGIN_CHAPTERS.filter(
+    (chapter) => chapter.id === "stone_tablet",
+  ),
+  ...CORE_CHAPTERS,
+  ...WATER_MARGIN_CHAPTERS.filter(
+    (chapter) =>
+      chapter.id !== "stone_tablet" &&
+      !CORE_CHAPTER_IDS.has(chapter.id),
   ),
 ];
 export const STORY_MEMORIES = WATER_MARGIN_MEMORIES;

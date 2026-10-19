@@ -79,6 +79,35 @@ try {
   const arenaSelection = await measureActiveNav(page);
   assertInsetBackground(arenaSelection, "arena");
   assert.equal(arenaSelection.action, "nav-arena");
+
+  await page.click('.topbar button[data-action="nav-story-hub"]');
+  await page.waitForSelector(".screen-story-hub");
+  const storySelection = await measureActiveNav(page);
+  assertInsetBackground(storySelection, "story-hub");
+  assert.equal(storySelection.action, "nav-story-hub");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(120);
+  const mobileStorySelection = await measureActiveNav(page);
+  assertInsetBackground(mobileStorySelection, "mobile-story-hub");
+  assert.equal(mobileStorySelection.action, "nav-story-hub");
+  const mobileNav = await page.evaluate(() => {
+    const nav = document.querySelector(".topbar-nav");
+    const rect = nav.getBoundingClientRect();
+    return {
+      buttons: nav.querySelectorAll(".nav-button").length,
+      columns: getComputedStyle(nav).gridTemplateColumns.split(" ").length,
+      overflow: Math.max(0, nav.scrollWidth - nav.clientWidth),
+      contained:
+        rect.left >= 0 &&
+        rect.right <= innerWidth &&
+        rect.bottom <= innerHeight,
+    };
+  });
+  assert.equal(mobileNav.buttons, 8);
+  assert.equal(mobileNav.columns, 8);
+  assert.equal(mobileNav.overflow, 0);
+  assert.equal(mobileNav.contained, true);
   assert.deepEqual(runtimeErrors, [], "nav interaction should not throw");
 
   await page.screenshot({

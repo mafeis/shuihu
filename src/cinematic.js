@@ -192,20 +192,24 @@ const ENDING_CINEMATICS = {
   },
 };
 
-export function openingCinematicProfile(state) {
+export function openingCinematicProfile(state, options = {}) {
+  const titleAsset = options.titleAsset || TITLE_FINAL_FRAME.asset;
+  const scenes = OPENING_COMMON_SCENES.map((scene) =>
+    scene === TITLE_FINAL_FRAME ? { ...scene, asset: titleAsset } : scene,
+  );
   const endingId = state?.ending;
   const echo = ENDING_OPENING_ECHO[endingId];
   if (!echo) {
     return {
       variant: "first-cycle",
-      scenes: OPENING_COMMON_SCENES,
+      scenes,
     };
   }
   return {
     variant: endingId,
     scenes: [
       echo,
-      ...OPENING_COMMON_SCENES.slice(1),
+      ...scenes.slice(1),
     ],
   };
 }

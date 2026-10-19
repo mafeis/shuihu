@@ -80,7 +80,7 @@ try {
   await page.locator(".screen-roster").waitFor();
 
   const roster = page.locator(".roster-list-panel");
-  assert((await roster.locator(".hero-card").count()) === 16, "名册第一页应显示 16 人");
+  assert((await roster.locator(".hero-card").count()) === 12, "名册第一页应显示 12 人");
   assert((await roster.locator(".roster-filters button").count()) === 5, "名册应有五个路数筛选项");
   await page.locator('button[data-action="filter-roster-path"][data-path="ling"]').click();
   const rosterPaths = await roster
@@ -98,8 +98,14 @@ try {
   await page.screenshot({ path: `${outputDir}/roster-page-2.png`, fullPage: true });
 
   await page
-    .locator('button[data-action="equipment-hero"][data-hero="linchong"]')
+    .locator('.roster-list-panel button[data-action="open-hero"]')
+    .first()
     .click();
+  const equipmentAction = page
+    .locator('.hero-dossier button[data-action="equipment-hero"]:visible')
+    .first();
+  await equipmentAction.waitFor();
+  await equipmentAction.click();
   await page.locator(".screen-equipment").waitFor();
   assert((await itemCount(page)) > 5, "测试存档应覆盖装备分页");
   assert((await page.locator(".inventory-item").count()) <= 5, "装备列表每页最多五件");
@@ -145,7 +151,7 @@ try {
   await page.waitForTimeout(250);
 
   const rosterDesktop = await page.evaluate(() => {
-    const layout = document.querySelector(".roster-layout").getBoundingClientRect();
+    const galleryPanel = document.querySelector(".hero-gallery");
     const gallery = [...document.querySelectorAll(".roster-list-panel .hero-card")];
     return {
       columns: getComputedStyle(document.querySelector(".hero-gallery")).gridTemplateColumns.split(" ").length,
@@ -164,13 +170,23 @@ try {
       }),
       layoutColumns: getComputedStyle(document.querySelector(".roster-layout")).gridTemplateColumns,
       rows: new Set(gallery.map((card) => Math.round(card.getBoundingClientRect().top))).size,
-      extraHeight: layout.scrollHeight - layout.clientHeight,
+      galleryOverflowY: getComputedStyle(galleryPanel).overflowY,
+      galleryScrollable: galleryPanel.scrollHeight > galleryPanel.clientHeight,
+      pageOverflow:
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight,
+      pageOverflowX:
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
     };
   });
   console.log(rosterDesktop);
-  assert(rosterDesktop.columns === 4, "桌面名册应四列展示");
+  assert(rosterDesktop.columns === 3, "桌面名册应三列展示");
   assert(rosterDesktop.rows === 4, "桌面名册每页应四行展示");
-  assert(rosterDesktop.extraHeight === 0, "桌面名册首屏不应出现纵向滚动");
+  assert(rosterDesktop.galleryOverflowY === "auto", "名册列表应独立滚动");
+  assert(rosterDesktop.galleryScrollable, "名册列表应可滚动查看当前页好汉");
+  assert(rosterDesktop.pageOverflow === 0, "桌面名册不应出现页面纵向滚动");
+  assert(rosterDesktop.pageOverflowX === 0, "桌面名册不应出现页面横向滚动");
 
   const viewports = [
     ["wide", 1920, 1080],
@@ -194,7 +210,14 @@ try {
       element.scrollTop = 0;
     });
     await page.locator('button[data-action="filter-roster-path"][data-path="all"]').click();
-    await page.locator('.roster-list-panel button[data-action="equipment-hero"][data-hero="linchong"]').click();
+    await page
+      .locator('.roster-list-panel button[data-action="open-hero"]')
+      .first()
+      .click();
+    await page
+      .locator('.hero-dossier button[data-action="equipment-hero"]:visible')
+      .first()
+      .click();
     await page.locator(".screen-equipment").waitFor();
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.locator(".equipment-layout").evaluate((element) => {

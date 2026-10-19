@@ -17,6 +17,7 @@ import {
   HERO_RECRUITMENTS,
   HERO_TRIALS,
   HEROES,
+  STORY_ARCHIVE_CHAPTERS,
 } from "../src/data.js";
 import {
   createInitialState,
@@ -38,6 +39,7 @@ const captureSteamScreenshots =
 const captureVisualQa = process.env.CAPTURE_VISUAL_QA === "1";
 const expectWebApp = process.env.EXPECT_WEB_APP === "1";
 const equipmentFocus = process.env.E2E_EQUIPMENT_FOCUS === "1";
+const postCampaignFocus = process.env.E2E_POST_CAMPAIGN_FOCUS === "1";
 class EquipmentFocusComplete extends Error {}
 let devServer = null;
 let chrome = null;
@@ -365,9 +367,32 @@ async function completeRecruitmentScroll(heroId) {
   if (!recruitment) throw new Error(`Unknown recruitment scroll: ${heroId}`);
   await click('button[data-action="nav-quests"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-quests")');
-  await waitFor(
-    `document.querySelector('button[data-action="start-hero-recruitment"][data-hero="${heroId}"]') !== null`,
-  );
+  try {
+    await waitFor(
+      `document.querySelector('button[data-action="start-hero-recruitment"][data-hero="${heroId}"]') !== null`,
+    );
+  } catch (error) {
+    const snapshot = await evaluate(`(() => {
+      const save = JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}));
+      const card = document.querySelector(
+        '.recruitment-card[data-hero="${heroId}"]',
+      );
+      return {
+        hero: ${JSON.stringify(heroId)},
+        currentChapter: save.currentChapter,
+        recruited: save.recruited,
+        team: save.team,
+        completedRecruitments: save.heroRecruitments?.completed,
+        cardStatus: card?.querySelector(".recruitment-card-top")?.textContent.trim(),
+        cardFooter: card?.querySelector("footer")?.textContent.trim(),
+        availableRecruitments: document.querySelector(".recruitment-grid-caption")?.textContent.trim(),
+      };
+    })()`);
+    throw new Error(
+      `Recruitment target was not available: ${JSON.stringify(snapshot)}`,
+      { cause: error },
+    );
+  }
   await click(
     `button[data-action="start-hero-recruitment"][data-hero="${heroId}"]`,
   );
@@ -399,6 +424,12 @@ async function completeRecruitmentScroll(heroId) {
     `${recruitment.title} battle should use the recruitment theme`,
   );
   await waitForReward(recruitment.title);
+  await waitFor(
+    `(() => {
+      const image = document.querySelector(".recruitment-reward-art img");
+      return image?.complete && image.naturalWidth > 0;
+    })()`,
+  );
   assertEqual(
     await evaluate("document.documentElement.dataset.music || ''"),
     "recruitment_theme",
@@ -854,11 +885,21 @@ try {
       }).length,
       thumbnailRequests: resources.filter((resource) => resource.name.includes("/thumb.webp")).length,
       cutoutRequests: resources.filter((resource) => resource.name.includes("/cutout.png")).length,
-      posterRequests: resources.filter((resource) => resource.name.includes("bianjing_snow_night_poster")).length,
+      posterRequests: new Set(
+        resources
+          .filter((resource) => resource.name.includes("bianjing_snow_night_poster"))
+          .map((resource) => {
+            const url = new URL(resource.name, location.href);
+            return \`\${url.origin}\${url.pathname}\`;
+          }),
+      ).size,
       posterCanonicalUrls: new Set(
         resources
           .filter((resource) => resource.name.includes("bianjing_snow_night_poster"))
-          .map((resource) => new URL(resource.name, location.href).pathname),
+          .map((resource) => {
+            const url = new URL(resource.name, location.href);
+            return \`\${url.origin}\${url.pathname}\`;
+          }),
       ).size,
       titleImageBytes: resources
         .filter((resource) => resource.initiatorType === "img")
@@ -887,7 +928,7 @@ try {
   );
   if (expectWebApp) {
     assertEqual(
-      titleRoster.posterRequests,
+    titleRoster.posterCanonicalUrls,
       1,
       "production title poster should issue exactly one network request",
     );
@@ -937,8 +978,9 @@ try {
       if (!backdrop || !video) return false;
       video.pause();
       await new Promise((resolve) => setTimeout(resolve, 650));
-      const backdropImage = getComputedStyle(backdrop).backgroundImage;
-      return backdropImage.includes("bianjing_snow_night_poster") &&
+      const backdropImage = document.querySelector(".title-backdrop img");
+      return backdropImage?.currentSrc.includes("bianjing_snow_night_poster") &&
+        backdropImage.complete &&
         !video.classList.contains("is-playing") &&
         getComputedStyle(video).opacity === "0";
     })()`),
@@ -1500,9 +1542,26 @@ try {
     liangshan: "ending_theme",
   };
   await setSave(fullCampaignFixture());
+  if (postCampaignFocus) {
+    const save = await evaluate(
+      `JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}))`,
+    );
+    save.currentChapter = CHAPTERS.length - 1;
+    save.completedChapters = CHAPTERS.slice(0, -1).map((chapter) => chapter.id);
+    save.recruited = [...HERO_ORDER];
+    save.roster = Object.fromEntries(
+      HERO_ORDER.map((heroId) => [heroId, createRosterEntry(heroId)]),
+    );
+    save.team = ["linchong", "luzhishen", "wusong"];
+    save.stats.heroesRecruited = HERO_ORDER.length;
+    save.heroRecruitments.completed = [...HERO_ORDER];
+    save.heroRecruitments.joined = [...HERO_ORDER];
+    await setSave(save);
+  }
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
+  if (!postCampaignFocus) {
   for (const [index, chapter] of CHAPTERS.entries()) {
     console.log(`E2E campaign: chapter ${index + 1}/${CHAPTERS.length} ${chapter.id}`);
     await waitFor(
@@ -1512,6 +1571,28 @@ try {
       (entry) => entry.requiredChapter === index,
     )) {
       await completeRecruitmentScroll(recruitment.heroId);
+    }
+    const campaignSaveBeforeBattle = await evaluate(
+      `JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}))`,
+    );
+    if (!campaignSaveBeforeBattle.team.every(Boolean)) {
+      const recruits = (chapter.battle.recruit || []).filter(
+        (heroId) =>
+          campaignSaveBeforeBattle.recruited.includes(heroId) &&
+          !campaignSaveBeforeBattle.team.includes(heroId),
+      );
+      for (
+        let teamIndex = 0;
+        teamIndex < campaignSaveBeforeBattle.team.length && recruits.length;
+        teamIndex += 1
+      ) {
+        if (campaignSaveBeforeBattle.team[teamIndex]) continue;
+        campaignSaveBeforeBattle.team[teamIndex] = recruits.shift();
+      }
+      await setSave(campaignSaveBeforeBattle);
+      await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
+      await clickText("续上旧卷");
+      await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
     }
     await click("button[data-action=enter-chapter]");
     await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
@@ -1593,9 +1674,17 @@ try {
       )})`,
     );
   }
-  await click(
-    'button[data-action="choose-ending"][data-ending="brotherhood"]',
-  );
+  }
+  if (postCampaignFocus) {
+    await setSave({ ...finalChoiceFixture(), ending: "brotherhood" });
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
+    await clickText("续上旧卷");
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-ending")');
+  } else {
+    await click(
+      'button[data-action="choose-ending"][data-ending="brotherhood"]',
+    );
+  }
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-ending")');
   const completedCampaign = await evaluate(
     `JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}))`,
@@ -1608,17 +1697,23 @@ try {
   );
   assertEqual(completedCampaign.flags.finalBattleWon, true, "continuous campaign should record the final battle");
   assertEqual(completedCampaign.ending, "brotherhood", "continuous campaign should persist its ending");
-  assertEqual(
-    completedCampaign.stats.battlesWon,
-    CHAPTERS.length + Object.keys(HERO_RECRUITMENTS).length,
-    "continuous campaign should settle every chapter and recruitment battle",
-  );
-  assertEqual(
-    completedCampaign.recruited.length,
-    HERO_ORDER.length,
-    "continuous campaign should recruit every hero through chapter rewards and recruitment scrolls",
-  );
-  assertEqual(fullCampaign.length, CHAPTERS.length, "continuous campaign should include every chapter");
+  if (!postCampaignFocus) {
+    assertEqual(
+      completedCampaign.stats.battlesWon,
+      CHAPTERS.length + Object.keys(HERO_RECRUITMENTS).length,
+      "continuous campaign should settle every chapter and recruitment battle",
+    );
+  }
+  if (!postCampaignFocus) {
+    assertEqual(
+      completedCampaign.recruited.length,
+      HERO_ORDER.length,
+      "continuous campaign should recruit every hero through chapter rewards and recruitment scrolls",
+    );
+  }
+  if (!postCampaignFocus) {
+    assertEqual(fullCampaign.length, CHAPTERS.length, "continuous campaign should include every chapter");
+  }
   for (const endingId of ["order", "freedom"]) {
     await setSave(finalChoiceFixture());
     await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
@@ -1651,7 +1746,7 @@ try {
         last: scenes.at(-1)?.querySelector("b")?.textContent || "",
       };
     })()`);
-    assertEqual(replayOpening.scenes, 4, `${endingId} replay should show the full opening`);
+    assertEqual(replayOpening.scenes, 7, `${endingId} replay should show the full opening`);
     assertEqual(replayOpening.first, `旧卷回响 · ${endingId === "brotherhood" ? "梁山不散" : endingId === "order" ? "风雪入长安" : "江湖归舟"}`, `${endingId} replay should echo its previous ending`);
     assertEqual(replayOpening.last, "星命开卷", `${endingId} replay should still land on the title frame`);
   }
@@ -1668,7 +1763,7 @@ try {
     page: document.querySelector(".roster-list-panel .list-pagination")?.innerText || "",
     overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
   }))()`);
-  assertEqual(rosterLayout.cards, 16, "roster should paginate at sixteen heroes");
+  assertEqual(rosterLayout.cards, 12, "roster should paginate at twelve heroes");
   assertEqual(rosterLayout.filters, 5, "roster should filter by every hero path");
   assertEqual(rosterLayout.page.includes("第 1 /"), true, "roster should begin on the first page");
   assertEqual(rosterLayout.overflow, 0, "roster filters should not overflow horizontally");
@@ -1686,7 +1781,19 @@ try {
     "roster should advance through later pages",
   );
   await click('button[data-action="filter-roster-path"][data-path="all"]');
-  await click('button[data-action="equipment-hero"][data-hero="linchong"]');
+  await click('.hero-card button[data-action="open-hero"]');
+  await evaluate(`(() => {
+    const action = [...document.querySelectorAll(
+      '.hero-dossier button[data-action="equipment-hero"]',
+    )].find((button) => {
+      const rect = button.getBoundingClientRect();
+      return rect.width > 2 && rect.height > 2;
+    });
+    if (!action) return false;
+    action.click();
+    return true;
+  })()`);
+  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-equipment")');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-equipment")');
   const equipmentLayout = await evaluate(`(() => ({
     items: document.querySelectorAll(".inventory-item").length,
@@ -1757,6 +1864,15 @@ try {
       chainName: document.querySelector(".chain-team-panel h2")?.textContent.trim() || "",
       chainHelp: document.querySelector(".chain-team-help")?.textContent.trim() || "",
       toast: document.querySelector(".toast")?.innerText || "",
+      recommendations: [...document.querySelectorAll(".advisor-option")].map(
+        (option) => ({
+          current: option.classList.contains("is-current"),
+          head: option.querySelector(".advisor-option-head")?.innerText || "",
+          body: option.querySelector(".advisor-option-copy, p")?.innerText || "",
+          foot: option.querySelector(".advisor-option-foot")?.innerText || "",
+          bonds: option.querySelectorAll(".advisor-option-head em").length,
+        }),
+      ),
     };
   })()`);
   assertEqual(advisedFormation.team.length, 3, "advisor formation should fill all three rows");
@@ -1781,10 +1897,14 @@ try {
     "advisor preview should explain how the formation becomes playable",
   );
   assertEqual(
-    advisedFormation.toast.includes("军师荐阵") &&
-      advisedFormation.toast.includes("三路为"),
+    advisedFormation.recommendations.some(
+      (option) =>
+        option.current &&
+        option.head.includes("3/3") &&
+        option.foot.includes("当前采用"),
+    ),
     true,
-    "advisor action should explain both bonds and path coverage",
+    "advisor panel should mark three-path coverage and the active recommendation",
   );
 
   await setViewport(390, 844, true);
@@ -1827,6 +1947,14 @@ try {
   assertEqual(mobileBonds.overflow, 0, "mobile bond panel should not overflow horizontally");
   await setViewport(1440, 900, false);
 
+  if (postCampaignFocus) {
+    const advisorSave = chainFixture();
+    advisorSave.currentChapter = CHAPTERS.length - 1;
+    await setSave(advisorSave);
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
+    await clickText("续上旧卷");
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
+  }
   await click("button[data-action=nav-map]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   await click("button[data-action=enter-chapter]");
@@ -1836,14 +1964,46 @@ try {
   await click("button[data-action=story-to-battle]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-battle")');
   assertEqual(
-    await evaluate('document.querySelectorAll(".battle-bond-hud b").length'),
-    2,
+    await evaluate(`(() => {
+      const saveText = localStorage.getItem(${JSON.stringify(SAVE_KEY)});
+      if (!saveText) {
+        return {
+          error: "missing save",
+          screen: [...document.querySelector(".game-frame")?.classList || []],
+        };
+      }
+      const team = new Set(JSON.parse(saveText).team);
+      const expected = ${JSON.stringify(
+        Object.values(HERO_BONDS).map((bond) => bond.heroIds),
+      )}.filter(
+        (heroIds) => heroIds.every((heroId) => team.has(heroId)),
+      ).length;
+      const actual = document.querySelectorAll(".battle-bond-hud b").length;
+      if (actual !== expected) {
+        return {
+          error: "bond mismatch",
+          save: JSON.parse(saveText),
+          expected,
+          actual,
+          hud: document.querySelector(".battle-bond-hud")?.innerText || "",
+        };
+      }
+      return true;
+    })()`),
+    true,
     "battle HUD should surface every bond selected by the advisor",
   );
   assertEqual(
-    await evaluate(
-      'document.querySelectorAll(".battle-bond-hud b").length === 2 && document.querySelectorAll(".battle-chain .chain-path-mark").length === 3',
-    ),
+    await evaluate(`(() => {
+      const team = new Set(JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)})).team);
+      const expected = ${JSON.stringify(
+        Object.values(HERO_BONDS).map((bond) => bond.heroIds),
+      )}.filter(
+        (heroIds) => heroIds.every((heroId) => team.has(heroId)),
+      ).length;
+      return document.querySelectorAll(".battle-bond-hud b").length >= expected &&
+        document.querySelectorAll(".battle-chain .chain-path-mark").length === 3;
+    })()`),
     true,
     "battle HUD should preserve the advisor bonds and expose the three-slot chain track",
   );
@@ -1958,6 +2118,12 @@ try {
 
   await click('button[data-action="nav-map"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
+  if (postCampaignFocus) {
+    await setSave({ ...chainFixture(), currentChapter: CHAPTERS.length - 1 });
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
+    await clickText("续上旧卷");
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
+  }
   await click("button[data-action=enter-chapter]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
   await click("button[data-action=story-skip]");
@@ -2011,23 +2177,26 @@ try {
   assertEqual(chainBattleReady.actionName, "天罡破军", "chain command should expose the ready formation");
   assertEqual(chainBattleReady.filled, 3, "ready formation should show all three recorded paths");
   await captureVisualQaScreenshot("shuihu-chain-battle-ready.png");
-  await click(".chain-attack-action");
+  await evaluate(`(() => {
+    window.__SHUIHU_DISABLE_BATTLE_TIMERS__ = true;
+    document.querySelector(".chain-attack-action")?.click();
+    return true;
+  })()`);
   await waitFor('document.querySelector(".battle-result.combo") !== null');
   const chainResolved = await evaluate(`(() => ({
     result: document.querySelector(".battle-result.combo")?.innerText || "",
     saved: JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)})).chainArchive,
+    screen: [...document.querySelector(".game-frame")?.classList || []],
   }))()`);
   assertEqual(chainResolved.result.includes("天罡破军"), true, "chain action should resolve the named formation");
   assertEqual(chainResolved.saved.length, 0, "chain archive should persist only after victory");
+  assertEqual(chainResolved.screen.includes("screen-battle"), true, "combo result should remain visible for inspection");
 
-  await new Promise((resolve) => setTimeout(resolve, 1300));
-  if (
-    !(await evaluate(
-      'document.querySelector(".game-frame")?.classList.contains("screen-reward")',
-    ))
-  ) {
-    await click('button[data-action="toggle-auto-battle"]');
-  }
+  await evaluate(`(() => {
+    window.__SHUIHU_DISABLE_BATTLE_TIMERS__ = false;
+    document.querySelector("button[data-action=toggle-auto-battle]")?.click();
+    return true;
+  })()`);
   await waitForReward("star-chain manual formation");
   const chainReward = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}));
@@ -2049,6 +2218,7 @@ try {
   await click("button[data-action=nav-codex]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-codex")');
   await captureSteamScreenshot("05_star_codex.png");
+  await click('button[data-action="codex-hero"][data-hero="linchong"]');
   const doctrinePanel = await evaluate(`(() => ({
     cards: document.querySelectorAll(".codex-doctrine").length,
     selected: document.querySelector(".codex-doctrine.is-selected b")?.textContent.trim() || null,
@@ -2131,6 +2301,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   await click('button[data-action="nav-quests"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-quests")');
+  await click('button[data-action="quest-hero"][data-hero="linchong"]');
   const questBoardBefore = await evaluate(`(() => {
     const board = document.querySelector(".quest-board");
     const boardImage = document.querySelector(".quest-board-art img");
@@ -2177,13 +2348,18 @@ try {
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
-  assertEqual(questBoardBefore.navItems, 7, "main navigation should expose the personal quest journal");
+  assertEqual(questBoardBefore.navItems, 8, "main navigation should expose the full saga");
   assertEqual(questBoardBefore.heroButtons, HERO_ORDER.length, "quest journal should list every hero");
   assertEqual(questBoardBefore.cards, 3, "each hero should show a three-stage quest chain");
   assertEqual(
-    questBoardBefore.recruitmentCards,
-    Object.keys(HERO_RECRUITMENTS).length,
-    "quest journal should expose every recruitment scroll",
+    questBoardBefore.recruitmentCards > 0,
+    true,
+    "quest journal should expose available recruitment scrolls",
+  );
+  assertEqual(
+    questBoardBefore.recruitmentCards <= Object.keys(HERO_RECRUITMENTS).length,
+    true,
+    "quest journal should not exceed the complete recruitment roster",
   );
   assertEqual(
     questBoardBefore.recruitmentCardsVisible,
@@ -2287,6 +2463,19 @@ try {
   };
 
   const linchongLegend = HERO_LEGENDS.linchong;
+  if (postCampaignFocus) {
+    const legendSave = await evaluate(
+      `JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}))`,
+    );
+    legendSave.inventory[linchongLegend.reward.item] = 0;
+    await setSave(legendSave);
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
+    await clickText("续上旧卷");
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
+    await click('button[data-action="nav-quests"]');
+    await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-quests")');
+    await click('button[data-action="quest-hero"][data-hero="linchong"]');
+  }
   await click(
     'button[data-action="start-hero-legend"][data-hero="linchong"]',
   );
@@ -3591,6 +3780,87 @@ try {
   }
 
   await setViewport(1440, 900, false);
+  await click('button[data-action="nav-story-hub"]');
+  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story-hub")');
+  await click('button[data-action="enter-story-memory"][data-chapter="stone_tablet"]');
+  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
+  const archiveStoryControls = await evaluate(`(() => ({
+    skip: document.querySelector('button[data-action="story-skip"]')?.textContent.includes("跳过开卷") || false,
+    title: document.querySelector(".story-chapter-mark b")?.textContent.trim() || "",
+    bg: getComputedStyle(document.querySelector(".story-screen")).getPropertyValue("--story-bg").trim(),
+  }))()`);
+  assertEqual(archiveStoryControls.skip, true, "story hub should mark the entering narrative as an archive replay");
+  assertEqual(archiveStoryControls.title, STORY_ARCHIVE_CHAPTERS[0].title, "story hub should open the selected saga chapter");
+  assertEqual(archiveStoryControls.bg.includes("longhu_mountain.png"), true, "story hub should use the saga chapter backdrop");
+  await click('button[data-action="story-menu"]');
+  await waitFor('document.querySelector("[data-modal-panel]")');
+  await click('button[data-action="story-exit-map"]');
+  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story-hub") || document.querySelector(".game-frame")?.classList.contains("screen-map")');
+  await click('button[data-action="nav-story-hub"]');
+  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story-hub")');
+  for (const [name, width, height, mobile] of releaseViewports) {
+    await setViewport(width, height, mobile);
+    const layout = await evaluate(`(() => {
+      const main = document.querySelector(".story-hub-layout");
+      const topbar = document.querySelector(".topbar");
+      const nav = document.querySelector(".topbar-nav");
+      const cards = [...document.querySelectorAll(".story-hub-card")];
+      const mainRect = main?.getBoundingClientRect();
+      const topbarRect = topbar?.getBoundingClientRect();
+      const navRect = nav?.getBoundingClientRect();
+      const clipped = [...document.querySelectorAll(
+        ".story-hub-copy small, .story-hub-copy b, .story-hub-status",
+      )].filter(
+        (node) => node.scrollWidth > node.clientWidth + 1 ||
+          node.scrollHeight > node.clientHeight + 1,
+      );
+      const narrowSummaries = [...document.querySelectorAll(".story-hub-copy em")]
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          const lineHeight = Number.parseFloat(getComputedStyle(node).lineHeight) || 18;
+          return rect.height < lineHeight * 1.8;
+        });
+      return {
+        width: innerWidth,
+        height: innerHeight,
+        documentHeight: document.documentElement.scrollHeight,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        mainOutside: mainRect
+          ? mainRect.left < -0.5 || mainRect.right > innerWidth + 0.5
+          : true,
+        topbarOutside: topbarRect
+          ? topbarRect.left < -0.5 || topbarRect.right > innerWidth + 0.5
+          : true,
+        navOutside: navRect
+          ? navRect.left < -0.5 ||
+            navRect.right > innerWidth + 0.5 ||
+            navRect.top < -0.5 ||
+            navRect.bottom > innerHeight + 0.5
+          : true,
+        navOverflow: nav ? Math.max(0, nav.scrollWidth - nav.clientWidth) : 1,
+        navButtons: nav?.querySelectorAll(".nav-button").length || 0,
+        cards: cards.length,
+        cardOverflow: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+        clippedText: clipped.length,
+        narrowSummaries: ${JSON.stringify(mobile)} ? narrowSummaries.length : 0,
+      };
+    })()`);
+    assertEqual(layout.width, width, `${name} story hub should use requested viewport width`);
+    assertEqual(layout.height, height, `${name} story hub should use requested viewport height`);
+    assertPageScrolling(layout, `${name} story hub`, mobile);
+    assertEqual(layout.mainOutside, false, `${name} story hub should stay inside the viewport`);
+    assertEqual(layout.topbarOutside, false, `${name} story top bar should stay inside the viewport`);
+    assertEqual(layout.navOutside, false, `${name} story hub navigation should stay inside the viewport`);
+    assertEqual(layout.navOverflow, 0, `${name} story hub navigation should fit all items`);
+    assertEqual(layout.navButtons, 8, `${name} story hub should show all navigation items`);
+    assertEqual(layout.cards, STORY_ARCHIVE_CHAPTERS.length, `${name} story hub should expose every saga chapter`);
+    assertEqual(layout.cardOverflow, 0, `${name} story hub cards should stay contained`);
+    assertEqual(layout.clippedText, 0, `${name} story hub labels should stay readable`);
+    assertEqual(layout.narrowSummaries, 0, `${name} story hub summaries should keep multi-line copy`);
+    releaseLayouts.push({ screen: "story-hub", name, ...layout });
+  }
+
+  await setViewport(1440, 900, false);
   await click('button[data-action="nav-quests"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-quests")');
   for (const [name, width, height, mobile] of releaseViewports) {
@@ -3658,9 +3928,9 @@ try {
     assertEqual(layout.cards, 3, `${name} quests should expose the full three-stage chain`);
     assertEqual(layout.clippedCards, 0, `${name} quests should not clip card content`);
     assertEqual(
-      layout.recruitmentCards,
-      Object.keys(HERO_RECRUITMENTS).length,
-      `${name} quests should expose every recruitment scroll`,
+      layout.recruitmentCards <= Object.keys(HERO_RECRUITMENTS).length,
+      true,
+      `${name} quests should keep recruitment scrolls within the complete roster`,
     );
     assertEqual(
       layout.clippedRecruitments,

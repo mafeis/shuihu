@@ -8,7 +8,7 @@
 | `steam_assets/screenshots/02_campaign_map.png` | 清风寨行军图与队伍信息 |
 | `steam_assets/screenshots/03_qingfeng_story.png` | 清风寨群像叙事与场景 |
 | `steam_assets/screenshots/04_qingfeng_battle.png` | 自动战斗与四倍速首领战 |
-| `steam_assets/screenshots/05_star_codex.png` | 四十位好汉星图 |
+| `steam_assets/screenshots/05_star_codex.png` | 一百单八将星图 |
 
 全部截图均为 1920×1080，来自实际运行版本。
 

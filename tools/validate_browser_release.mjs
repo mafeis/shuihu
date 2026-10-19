@@ -156,8 +156,8 @@ if (!manifest) {
     const key = `${match[1]}:${match[2]}`;
     heroAssets.set(key, entry.file);
   }
-  if (heroDirs.size !== 40) {
-    fail(`browser release should contain 40 runtime hero folders, found ${heroDirs.size}`);
+  if (heroDirs.size !== 108) {
+    fail(`browser release should contain 108 runtime hero folders, found ${heroDirs.size}`);
   }
   for (const heroId of heroDirs) {
     for (const asset of ["cutout", "keyart", "thumb"]) {

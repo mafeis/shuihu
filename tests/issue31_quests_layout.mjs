@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
 
-import { CHAPTERS, HERO_ORDER } from "../src/data.js";
+import { CHAPTERS, HERO_ORDER, HERO_RECRUITMENTS } from "../src/data.js";
 import {
   createInitialState,
   createRosterEntry,
@@ -52,7 +52,11 @@ async function measureRecruitment(page, viewportName) {
         ? {
             clientWidth: scroller.clientWidth,
             scrollWidth: scroller.scrollWidth,
+            clientHeight: scroller.clientHeight,
+            scrollHeight: scroller.scrollHeight,
             overflowX: getComputedStyle(scroller).overflowX,
+            overflowY: getComputedStyle(scroller).overflowY,
+            tabIndex: scroller.tabIndex,
             left: scrollerRect.left,
             right: scrollerRect.right,
           }
@@ -98,10 +102,25 @@ async function measureRecruitment(page, viewportName) {
       metrics.scroller,
     )}`,
   );
-  assert.notEqual(
-    metrics.scroller.overflowX,
-    "auto",
-    `${viewportName}: recruitment area uses horizontal auto-scroll`,
+  if (metrics.viewport.width > 680) {
+    assert.equal(
+      metrics.scroller.overflowY,
+      "auto",
+      `${viewportName}: recruitment cards should use a bounded vertical scroller`,
+    );
+    assert.ok(
+      metrics.scroller.scrollHeight > metrics.scroller.clientHeight,
+      `${viewportName}: recruitment scroller should contain the complete card list`,
+    );
+    assert.ok(
+      metrics.scroller.clientHeight >= 320,
+      `${viewportName}: recruitment scroller should keep a usable viewport`,
+    );
+  }
+  assert.equal(
+    metrics.scroller.tabIndex,
+    0,
+    `${viewportName}: recruitment scroller should be keyboard focusable`,
   );
   assert.equal(
     metrics.cardsOutsideBoard.length,
@@ -112,7 +131,7 @@ async function measureRecruitment(page, viewportName) {
   );
   assert.equal(
     metrics.cardCount,
-    28,
+    HERO_ORDER.length,
     `${viewportName}: expected every recruitment card to render`,
   );
   await page.screenshot({

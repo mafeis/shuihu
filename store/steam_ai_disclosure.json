@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "disclosureVersion": "2026-10-19",
+  "disclosureVersion": "2026-10-20",
   "runtimeGeneration": false,
   "generatedContentPresent": true,
   "playerDataUsedForTraining": false,
@@ -14,12 +14,12 @@
         "Qwen Image 2.1",
         "Qwen Image Edit"
       ],
-      "assetCount": 155,
+      "assetCount": 593,
       "usage": [
-        "forty hero key-art portraits",
-        "forty transparent hero battle cutouts",
-        "forty hero turnaround sheets",
-        "forty responsive transparent title thumbnails derived from battle cutouts",
+        "108 hero key-art portraits",
+        "108 transparent hero battle cutouts",
+        "108 hero turnaround sheets",
+        "108 responsive title thumbnails derived from battle cutouts",
         "eight environment paintings",
         "two enemy key-art portraits",
         "seven enemy battle sprites",
