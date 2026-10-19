@@ -1,0 +1,35 @@
+name: Assets
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "assets/**"
+      - "tools/validate_audio_assets.py"
+      - "tools/validate_steam_assets.mjs"
+      - "tools/validate_ai_disclosure.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - run: python3 -m pip install --disable-pip-version-check Pillow
+      - run: npm run check:py
+      - run: npm run audio:verify
+      - run: npm run steam:ai:verify
+      - run: npm run steam:verify
