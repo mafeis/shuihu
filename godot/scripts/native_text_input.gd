@@ -16,11 +16,13 @@ func attach(owner: Object, commit: Callable, preedit: Callable, dismiss: Callabl
 	_dismiss = dismiss
 	if not owner.has_method("_open_native_text_input"):
 		return false
-	return false
+	available = bool(owner.call("_open_native_text_input"))
+	return available
 
 
-func attach_to_parent(_parent: Variant) -> void:
-	pass
+func attach_to_parent(parent: Variant) -> void:
+	if available and is_instance_valid(parent) and parent.has_method("grab_focus"):
+		parent.grab_focus()
 
 
 func set_text(value: String) -> void:
@@ -53,4 +55,7 @@ func apply_native_event(payload: String) -> void:
 
 
 func detach() -> void:
-	pass
+	_owner = null
+	_commit = Callable()
+	_preedit = Callable()
+	_dismiss = Callable()

@@ -26,8 +26,9 @@ func _run() -> void:
 		printerr("Visual screenshot setup failed: text input missing")
 		get_tree().quit(1)
 		return
-	player_name.text = "替天行道"
-	await _capture("settings_cjk")
+	if not main.native_name_input.available:
+		player_name.text = "替天行道"
+		await _capture("settings_cjk")
 	main.close_settings()
 	main.new_game()
 	await _capture("map")
@@ -45,8 +46,29 @@ func _run() -> void:
 	await _capture("battle")
 	main.show_camp()
 	await _capture("camp")
+	main.state.statistics.battles_won = maxi(2, int(main.state.statistics.battles_won))
+	main.state.copper = maxi(1000, int(main.state.copper))
+	main.state.camp_built.append("farmland")
+	main.state.camp_built.append("tower")
+	main.show_camp_building("farmland")
+	await _capture("camp_detail")
+	main.menu_layer.visible = false
 	main.show_roster()
 	await _capture("roster")
+	main.state.recruit(["luzhishen"])
+	main.state.team.assign(["linchong", "luzhishen", ""])
+	main.show_equipment("linchong")
+	await _capture("equipment")
+	main.menu_layer.visible = false
+	if not main.state.camp_built.has("arena"):
+		main.state.camp_built.append("arena")
+	main.show_arena()
+	await _capture("arena")
+	main.begin_arena_battle(main.arena_offer[0])
+	await _capture("arena_battle")
+	main.arena_running = false
+	main.show_ending()
+	await _capture("ending")
 	main.state.delete_save()
 	main.state.save_path = real_save_path
 	main.state.backup_path = real_backup_path

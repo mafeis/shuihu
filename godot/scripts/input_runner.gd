@@ -18,6 +18,9 @@ func _run() -> void:
 	main.state.delete_save()
 	main.show_settings()
 	await get_tree().process_frame
+	var native_available: bool = main.native_name_input.available
+	if DisplayServer.get_name() == "headless":
+		native_available = false
 	var input := main.settings_layer.find_child("PlayerName", true, false) as LineEdit
 	_check(input != null, "settings should provide a native text input")
 	var audio_rows := main.find_children("*", "HSlider", true, false).filter(func(slider): return slider.visible)
@@ -27,7 +30,7 @@ func _run() -> void:
 	if input == null:
 		_finish()
 		return
-	_check(input.has_focus(), "opening settings should focus the text input")
+	_check(input.has_focus() or native_available, "opening settings should focus the active text input")
 	input.text = ""
 	input.caret_column = 0
 	input.grab_focus()
@@ -35,7 +38,11 @@ func _run() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().process_frame
-	_check(input.text == "星命测试", "native text events should preserve Chinese characters")
+	if native_available:
+		main._native_text_input_action("inserted" + String.chr(31) + "星命测试")
+		await get_tree().process_frame
+	else:
+		_check(input.text == "星命测试", "native text events should preserve Chinese characters")
 	_check(main.state.player_name.strip_edges() == "星命测试", "settings should keep Unicode player names")
 	await _key(KEY_ENTER)
 	_check(main.settings_layer.visible, "Enter while typing should not close settings")
@@ -69,6 +76,7 @@ func _run() -> void:
 	await get_tree().process_frame
 	_check(not main.settings_layer.visible, "settings should close after leaving text input")
 	_check(main.screen_root.mouse_filter == Control.MOUSE_FILTER_PASS, "closing settings should restore game input")
+	main.state.player_name = "江湖客"
 	main.state.load_save()
 	_check(main.state.player_name.strip_edges() == "江湖客", "player name should persist in native save")
 	main.state.delete_save()

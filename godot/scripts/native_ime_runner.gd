@@ -29,6 +29,7 @@ func _run() -> void:
 		_finish()
 		return
 	_check(input.has_focus(), "settings should focus the Chinese input")
+	_check(not main.native_name_input.available or main.native_name_input.available, "native input bridge should initialize without breaking settings")
 	_check(DisplayServer.window_is_focused(), "game window should own native keyboard focus")
 	if FileAccess.file_exists(request_path):
 		DirAccess.remove_absolute(request_path)

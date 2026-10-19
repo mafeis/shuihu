@@ -78,6 +78,2386 @@
       "rewardMultiplier": 1.15
     }
   },
+  "equipment": {
+    "worn_spear": {
+      "id": "worn_spear",
+      "name": "旧制长枪",
+      "slot": "weapon",
+      "rarity": "凡品",
+      "desc": "禁军制式长枪，枪缨已经褪色。",
+      "stats": {
+        "atk": 6
+      }
+    },
+    "iron_staff": {
+      "id": "iron_staff",
+      "name": "浑铁禅杖",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "杖身沉重，两端铁环碰击如钟。",
+      "stats": {
+        "atk": 8,
+        "def": 2
+      }
+    },
+    "ring_saber": {
+      "id": "ring_saber",
+      "name": "环首戒刀",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "行者随身短刀，刀背厚实。",
+      "stats": {
+        "atk": 9,
+        "spd": 1
+      }
+    },
+    "dispatch_blade": {
+      "id": "dispatch_blade",
+      "name": "驿路短刀",
+      "slot": "weapon",
+      "rarity": "凡品",
+      "desc": "轻便耐用，适合急行途中护身。",
+      "stats": {
+        "atk": 5,
+        "spd": 4
+      }
+    },
+    "needle_case": {
+      "id": "needle_case",
+      "name": "银针药匣",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "针、药、灸具俱备，救人也伤人。",
+      "stats": {
+        "atk": 3,
+        "def": 3,
+        "hp": 20
+      }
+    },
+    "climbing_hook": {
+      "id": "climbing_hook",
+      "name": "壁虎钩",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "时迁惯用的细铁钩，翻墙无声。",
+      "stats": {
+        "atk": 7,
+        "spd": 5
+      }
+    },
+    "patrol_armor": {
+      "id": "patrol_armor",
+      "name": "巡铺皮甲",
+      "slot": "armor",
+      "rarity": "凡品",
+      "desc": "旧皮与铁片拼成的轻甲。",
+      "stats": {
+        "hp": 28,
+        "def": 5
+      }
+    },
+    "lamellar_vest": {
+      "id": "lamellar_vest",
+      "name": "旧制札甲",
+      "slot": "armor",
+      "rarity": "良品",
+      "desc": "甲片上的刀痕比纹样更多。",
+      "stats": {
+        "hp": 45,
+        "def": 8
+      }
+    },
+    "monk_robe": {
+      "id": "monk_robe",
+      "name": "百衲护衣",
+      "slot": "armor",
+      "rarity": "良品",
+      "desc": "层层旧布缝制，挡不住酒，却能挡刀。",
+      "stats": {
+        "hp": 50,
+        "def": 5
+      }
+    },
+    "scout_boots": {
+      "id": "scout_boots",
+      "name": "神行绑腿",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "绑腿内缝着空白朱印纸符。",
+      "stats": {
+        "hp": 20,
+        "def": 3,
+        "spd": 7
+      }
+    },
+    "physician_robe": {
+      "id": "physician_robe",
+      "name": "青囊长衫",
+      "slot": "armor",
+      "rarity": "良品",
+      "desc": "药香浸透衣料，针线细密。",
+      "stats": {
+        "hp": 38,
+        "def": 5,
+        "spd": 2
+      }
+    },
+    "night_cloth": {
+      "id": "night_cloth",
+      "name": "夜行短打",
+      "slot": "armor",
+      "rarity": "凡品",
+      "desc": "贴身、安静，边缘缝着软布。",
+      "stats": {
+        "hp": 24,
+        "def": 4,
+        "spd": 4
+      }
+    },
+    "bamboo_token": {
+      "id": "bamboo_token",
+      "name": "渡口竹符",
+      "slot": "token",
+      "rarity": "凡品",
+      "desc": "黄河船户认得的旧竹符。",
+      "stats": {
+        "hp": 12,
+        "def": 2
+      }
+    },
+    "imperial_seal": {
+      "id": "imperial_seal",
+      "name": "禁军旧印",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "旧主已死，印上的军令仍有人认得。",
+      "stats": {
+        "atk": 5,
+        "def": 3
+      }
+    },
+    "tiger_tooth": {
+      "id": "tiger_tooth",
+      "name": "景阳冈虎牙",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "武松从猛虎颌骨上取下，牙根仍带血色。",
+      "stats": {
+        "atk": 8,
+        "spd": 2
+      }
+    },
+    "crimson_tassel": {
+      "id": "crimson_tassel",
+      "name": "旧枪红缨",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "林冲妻子缝过的枪缨，已洗得发白。",
+      "stats": {
+        "atk": 6,
+        "hp": 18
+      }
+    },
+    "courier_token": {
+      "id": "courier_token",
+      "name": "驿路火牌",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "凭此牌可夜开驿门。",
+      "stats": {
+        "spd": 8
+      }
+    },
+    "herb_satchel": {
+      "id": "herb_satchel",
+      "name": "百草囊",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "安道全亲手缝制的药囊。",
+      "stats": {
+        "hp": 30,
+        "def": 4
+      }
+    },
+    "lockpick_roll": {
+      "id": "lockpick_roll",
+      "name": "百锁针囊",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "十二枚细针，能开锁，也能封穴。",
+      "stats": {
+        "atk": 4,
+        "spd": 6
+      }
+    },
+    "chieftain_whip": {
+      "id": "chieftain_whip",
+      "name": "沧州押差皮鞭",
+      "slot": "token",
+      "rarity": "绝品",
+      "desc": "从押差首领手中夺得，鞭梢浸过黑蜡。",
+      "stats": {
+        "atk": 10,
+        "hp": 24
+      }
+    },
+    "black_axe_pair": {
+      "id": "black_axe_pair",
+      "name": "双板黑斧",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "李逵惯用的两柄厚背板斧，斧刃上满是豁口。",
+      "stats": {
+        "atk": 12,
+        "hp": 10
+      }
+    },
+    "blood_tunic": {
+      "id": "blood_tunic",
+      "name": "血渍短褐",
+      "slot": "armor",
+      "rarity": "良品",
+      "desc": "粗布短褐被反复缝补，仍挡得住寻常刀锋。",
+      "stats": {
+        "hp": 42,
+        "def": 4,
+        "atk": 4
+      }
+    },
+    "ox_head_belt": {
+      "id": "ox_head_belt",
+      "name": "铁牛腰带",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "沉重铁扣刻着牛首，是李逵在江州留下的旧物。",
+      "stats": {
+        "atk": 6,
+        "hp": 18,
+        "spd": 2
+      }
+    },
+    "horn_bow": {
+      "id": "horn_bow",
+      "name": "银梢角弓",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "弓臂以水牛角层压而成，远射仍能贯穿札甲。",
+      "stats": {
+        "atk": 11,
+        "spd": 6
+      }
+    },
+    "feather_scale": {
+      "id": "feather_scale",
+      "name": "青羽轻甲",
+      "slot": "armor",
+      "rarity": "良品",
+      "desc": "细密甲片外覆青布，便于骑射时转身开弓。",
+      "stats": {
+        "hp": 32,
+        "def": 6,
+        "spd": 4
+      }
+    },
+    "hawk_tassel": {
+      "id": "hawk_tassel",
+      "name": "海东青羽",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "花荣箭囊上的青羽，迎风时能判断高低风向。",
+      "stats": {
+        "atk": 5,
+        "spd": 7
+      }
+    },
+    "righteous_polearm": {
+      "id": "righteous_polearm",
+      "name": "呼保义朴刀",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "刀杆缠着旧麻布，刀刃不华贵，却是宋江奔走江湖多年的随身兵器。",
+      "stats": {
+        "atk": 7,
+        "hp": 20
+      }
+    },
+    "timely_cloak": {
+      "id": "timely_cloak",
+      "name": "及时雨披风",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "深色厚布披风，内衬缝着梁山各寨送来的碎银与药包。",
+      "stats": {
+        "hp": 38,
+        "def": 7,
+        "spd": 2
+      }
+    },
+    "liangshan_banner": {
+      "id": "liangshan_banner",
+      "name": "替天行道令旗",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "旗面没有写死一人的姓名，留给每一个愿意上山的人。",
+      "stats": {
+        "atk": 4,
+        "def": 4,
+        "hp": 22
+      }
+    },
+    "sun_moon_blades": {
+      "id": "sun_moon_blades",
+      "name": "日月双刀",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "一长一短两柄狭锋刀，刀环相击时能扰乱敌手呼吸。",
+      "stats": {
+        "atk": 11,
+        "spd": 4
+      }
+    },
+    "red_brocade_armor": {
+      "id": "red_brocade_armor",
+      "name": "红锦连环甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "细密甲片以红锦绳编连，行动时几乎没有金属碰撞声。",
+      "stats": {
+        "hp": 34,
+        "def": 6,
+        "spd": 3
+      }
+    },
+    "crimson_lasso": {
+      "id": "crimson_lasso",
+      "name": "红锦套索",
+      "slot": "token",
+      "rarity": "绝品",
+      "desc": "扈三娘成名的软索，索结里藏着细铜环，收束时快如毒蛇。",
+      "stats": {
+        "atk": 4,
+        "spd": 7,
+        "hp": 10
+      }
+    },
+    "strategist_chain": {
+      "id": "strategist_chain",
+      "name": "铜链点穴尺",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "吴用从不把它当作兵器，只在推演阵势时用来压住地图四角。",
+      "stats": {
+        "atk": 5,
+        "spd": 4,
+        "def": 2
+      }
+    },
+    "crane_cloak": {
+      "id": "crane_cloak",
+      "name": "军师鹤氅",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "墨绿鹤氅内缝暗袋，装着军令、药散与三份互相矛盾的退路。",
+      "stats": {
+        "hp": 32,
+        "def": 5,
+        "spd": 4
+      }
+    },
+    "wisdom_fan": {
+      "id": "wisdom_fan",
+      "name": "智多星羽扇",
+      "slot": "token",
+      "rarity": "绝品",
+      "desc": "扇骨以老竹削成，扇面上没有字，只画了九条可进可退的山路。",
+      "stats": {
+        "atk": 6,
+        "def": 3,
+        "spd": 3
+      }
+    },
+    "wanderer_spear": {
+      "id": "wanderer_spear",
+      "name": "浪子短枪",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "枪身轻韧，既可马战，也可贴身相扑时突然反挑。",
+      "stats": {
+        "atk": 10,
+        "spd": 6
+      }
+    },
+    "swallow_armor": {
+      "id": "swallow_armor",
+      "name": "燕青轻甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "蓝黑皮甲上缀着燕羽纹铜片，兼顾护身与翻纵。",
+      "stats": {
+        "hp": 30,
+        "def": 6,
+        "spd": 4
+      }
+    },
+    "wrestling_belt": {
+      "id": "wrestling_belt",
+      "name": "相扑胜带",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "燕青在东京擂台赢下的旧腰带，结扣处磨得发亮。",
+      "stats": {
+        "atk": 5,
+        "hp": 20,
+        "spd": 4
+      }
+    },
+    "blueface_spear": {
+      "id": "blueface_spear",
+      "name": "青面点钢枪",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "杨家旧枪，枪头锻有暗纹，重心比寻常长枪更靠前。",
+      "stats": {
+        "atk": 9,
+        "def": 3
+      }
+    },
+    "convoy_armor": {
+      "id": "convoy_armor",
+      "name": "押纲旧甲",
+      "slot": "armor",
+      "rarity": "良品",
+      "desc": "曾护送生辰纲的制式札甲，肩甲留着一道刀痕。",
+      "stats": {
+        "hp": 44,
+        "def": 7
+      }
+    },
+    "convoy_seal": {
+      "id": "convoy_seal",
+      "name": "黄泥冈封条",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "已经断裂的官封，提醒杨志功名与责任从来不是一回事。",
+      "stats": {
+        "def": 5,
+        "hp": 18
+      }
+    },
+    "pine_sword": {
+      "id": "pine_sword",
+      "name": "松纹古定剑",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "剑身有松纹暗光，公孙胜用以斩断阵中邪祟与军心迷乱。",
+      "stats": {
+        "atk": 7,
+        "spd": 5,
+        "def": 2
+      }
+    },
+    "cloud_robe": {
+      "id": "cloud_robe",
+      "name": "入云鹤氅",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "双层旧布上绣着极淡的云纹，雨雪不易浸透。",
+      "stats": {
+        "hp": 36,
+        "def": 6,
+        "spd": 3
+      }
+    },
+    "thunder_seal": {
+      "id": "thunder_seal",
+      "name": "五雷法印",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "青铜小印，印面没有神名，只刻着五道收束的雷纹。",
+      "stats": {
+        "atk": 4,
+        "spd": 5,
+        "hp": 12
+      }
+    },
+    "qilin_spear": {
+      "id": "qilin_spear",
+      "name": "麒麟铁枪",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "卢俊义成名长枪，枪杆乌沉，举重若轻。",
+      "stats": {
+        "atk": 13,
+        "spd": 3
+      }
+    },
+    "jade_lamellar": {
+      "id": "jade_lamellar",
+      "name": "碧纹连环甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "细密铁片外覆青绿锦线，既显门第，也经得起枪棒试炼。",
+      "stats": {
+        "hp": 48,
+        "def": 10,
+        "spd": 2
+      }
+    },
+    "hebei_jade": {
+      "id": "hebei_jade",
+      "name": "河北玉牌",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "大名府武行公认的玉牌，边角被摩挲得温润。",
+      "stats": {
+        "atk": 6,
+        "def": 4,
+        "hp": 16
+      }
+    },
+    "water_trident": {
+      "id": "water_trident",
+      "name": "分水短叉",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "张顺在水战中惯用的双叉，叉锋短而狠，入水阻力极小。",
+      "stats": {
+        "atk": 8,
+        "spd": 7
+      }
+    },
+    "fish_scale_suit": {
+      "id": "fish_scale_suit",
+      "name": "鱼鳞水靠",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "以细皮与鱼鳞片层层缝成，浸水后仍不碍翻腾。",
+      "stats": {
+        "hp": 30,
+        "def": 6,
+        "spd": 6
+      }
+    },
+    "river_token": {
+      "id": "river_token",
+      "name": "浔阳鱼符",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "浔阳江船户认得的旧鱼符，能换来一夜顺风。",
+      "stats": {
+        "atk": 4,
+        "spd": 7,
+        "hp": 10
+      }
+    },
+    "yellow_mud_writ": {
+      "id": "yellow_mud_writ",
+      "name": "天暗军令",
+      "slot": "token",
+      "rarity": "绝品",
+      "desc": "杨志亲手重写的押纲军令，末尾只记一句：先护人，再护名。",
+      "stats": {
+        "def": 8,
+        "hp": 32,
+        "atk": 5
+      }
+    },
+    "thunder_tablet": {
+      "id": "thunder_tablet",
+      "name": "天罡雷符",
+      "slot": "token",
+      "rarity": "绝品",
+      "desc": "公孙胜以雷纹封住旧日妄念，符背留着梁山第一次合阵的墨印。",
+      "stats": {
+        "atk": 8,
+        "def": 5,
+        "spd": 6
+      }
+    },
+    "qilin_golden_spear": {
+      "id": "qilin_golden_spear",
+      "name": "玉麒破阵枪",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "枪杆缠金线，枪锋却没有半点浮华，一击只为破阵。",
+      "stats": {
+        "atk": 17,
+        "spd": 5,
+        "hp": 12
+      }
+    },
+    "white_wave_trident": {
+      "id": "white_wave_trident",
+      "name": "白浪分水叉",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "双叉在水中几乎不留声响，出水时却比箭还快。",
+      "stats": {
+        "atk": 14,
+        "spd": 10
+      }
+    },
+    "nine_dragon_spear": {
+      "id": "nine_dragon_spear",
+      "name": "九纹龙枪",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "枪杆以老白蜡木重制，枪锋窄长，最适合接连追刺。",
+      "stats": {
+        "atk": 10,
+        "spd": 4
+      }
+    },
+    "embroidered_vest": {
+      "id": "embroidered_vest",
+      "name": "龙纹战袄",
+      "slot": "armor",
+      "rarity": "良品",
+      "desc": "深青战袄上绣着九龙暗纹，肩臂活动不受拘束。",
+      "stats": {
+        "hp": 32,
+        "def": 4,
+        "spd": 2
+      }
+    },
+    "dragon_sash": {
+      "id": "dragon_sash",
+      "name": "少华缠腰",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "少华山旧部所赠的织带，收枪时能稳住腰马。",
+      "stats": {
+        "atk": 4,
+        "hp": 16,
+        "spd": 2
+      }
+    },
+    "wolf_tooth_mace": {
+      "id": "wolf_tooth_mace",
+      "name": "狼牙重棒",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "棒首嵌满倒齿铁钉，挥出时带起沉闷风声。",
+      "stats": {
+        "atk": 13,
+        "hp": 10
+      }
+    },
+    "black_iron_armor": {
+      "id": "black_iron_armor",
+      "name": "青州玄甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "厚重复甲以黑漆封边，正面能硬吃一记长枪。",
+      "stats": {
+        "hp": 48,
+        "def": 7
+      }
+    },
+    "thunder_brace": {
+      "id": "thunder_brace",
+      "name": "霹雳护腕",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "铁腕箍内垫着旧皮带，举棒时不至于震伤虎口。",
+      "stats": {
+        "atk": 6,
+        "hp": 14
+      }
+    },
+    "folding_fan": {
+      "id": "folding_fan",
+      "name": "乌骨折扇",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "扇骨沉黑，展开能遮面，合起也能点在阵图要害。",
+      "stats": {
+        "atk": 5,
+        "def": 2,
+        "spd": 5
+      }
+    },
+    "noble_robe": {
+      "id": "noble_robe",
+      "name": "青金义士袍",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "看似华贵的深青长袍，内衬却缝着一层轻软皮甲。",
+      "stats": {
+        "hp": 38,
+        "def": 5,
+        "spd": 3
+      }
+    },
+    "golden_leaf": {
+      "id": "golden_leaf",
+      "name": "柴府金叶",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "可在柴进旧识处兑粮换药的一片薄金叶。",
+      "stats": {
+        "hp": 20,
+        "def": 3
+      }
+    },
+    "green_dragon_blade": {
+      "id": "green_dragon_blade",
+      "name": "青龙偃月刀",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "刀身宽阔沉稳，刀背压阵，刀刃只在不退时见光。",
+      "stats": {
+        "atk": 15,
+        "def": 4
+      }
+    },
+    "green_lamellar": {
+      "id": "green_lamellar",
+      "name": "蒲东青甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "蒲东巡检旧甲，青漆下密布细小锻痕。",
+      "stats": {
+        "hp": 52,
+        "def": 9
+      }
+    },
+    "war_seal": {
+      "id": "war_seal",
+      "name": "巡检军印",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "关胜随身军印，印文端正，边角已被战火熏黑。",
+      "stats": {
+        "atk": 5,
+        "def": 5,
+        "hp": 18
+      }
+    },
+    "dragon_spear_oath": {
+      "id": "dragon_spear_oath",
+      "name": "九龙断甲枪",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "枪锋开有三道血槽，枪缨以少华山旧旗重编。",
+      "stats": {
+        "atk": 18,
+        "spd": 8
+      }
+    },
+    "thunder_mace_heirloom": {
+      "id": "thunder_mace_heirloom",
+      "name": "霹雳震军棒",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "秦明亲铸的狼牙重棒，棒首每一枚铁齿都重新淬火。",
+      "stats": {
+        "atk": 19,
+        "hp": 16
+      }
+    },
+    "righteous_ledger": {
+      "id": "righteous_ledger",
+      "name": "小旋风义账",
+      "slot": "token",
+      "rarity": "绝品",
+      "desc": "记着粮、药、银钱与每条人命的旧账，末尾没有债主。",
+      "stats": {
+        "atk": 7,
+        "def": 7,
+        "hp": 30
+      }
+    },
+    "green_dragon_halberd": {
+      "id": "green_dragon_halberd",
+      "name": "天勇青龙刀",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "刀锋映出整座军阵，却始终只向乱军最前方落下。",
+      "stats": {
+        "atk": 21,
+        "def": 6,
+        "hp": 18
+      }
+    },
+    "shaohua_banner": {
+      "id": "shaohua_banner",
+      "name": "少华义旗",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "旗上不写山主姓名，只写一路借粮、护路与守寨的旧约。",
+      "stats": {
+        "atk": 6,
+        "hp": 24
+      }
+    },
+    "qingzhou_signet": {
+      "id": "qingzhou_signet",
+      "name": "青州雷印",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "秦明重铸的军印，印侧刻着霹雳火三字。",
+      "stats": {
+        "atk": 8,
+        "def": 4
+      }
+    },
+    "chai_family_ledger": {
+      "id": "chai_family_ledger",
+      "name": "柴门义簿",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "旧贵族账簿被改成流民名册，每一页都按着不同人的手印。",
+      "stats": {
+        "hp": 30,
+        "def": 4,
+        "spd": 3
+      }
+    },
+    "guan_war_seal": {
+      "id": "guan_war_seal",
+      "name": "天勇战印",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "以败军旗角包住旧印，提醒持刀者军令先护阵后护名。",
+      "stats": {
+        "atk": 7,
+        "def": 6,
+        "hp": 20
+      }
+    },
+    "feishi_sling": {
+      "id": "feishi_sling",
+      "name": "没羽飞石索",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "短索末端系着磨圆的青石，出手时几乎没有破风之声。",
+      "stats": {
+        "atk": 12,
+        "spd": 6
+      }
+    },
+    "qing_rider_armor": {
+      "id": "qing_rider_armor",
+      "name": "青骢皮甲",
+      "slot": "armor",
+      "rarity": "良品",
+      "desc": "轻便骑装外覆软皮甲，适合在阵间换位与回身掷石。",
+      "stats": {
+        "hp": 40,
+        "def": 6,
+        "spd": 4
+      }
+    },
+    "stone_pouch": {
+      "id": "stone_pouch",
+      "name": "飞石百宝囊",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "大小石子分袋收束，囊口一抖便能连取三枚。",
+      "stats": {
+        "atk": 5,
+        "spd": 8
+      }
+    },
+    "rain_stone_pouch": {
+      "id": "rain_stone_pouch",
+      "name": "漫天花雨囊",
+      "slot": "token",
+      "rarity": "绝品",
+      "desc": "张清亲手缝制的百石囊，内衬按石子轻重分成七层。",
+      "stats": {
+        "atk": 10,
+        "spd": 12,
+        "hp": 20
+      }
+    },
+    "hook_sickle_spear": {
+      "id": "hook_sickle_spear",
+      "name": "雁翎钩镰枪",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "枪锋一侧带倒钩，能在收枪时扯乱甲绦与马阵。",
+      "stats": {
+        "atk": 16,
+        "spd": 5
+      }
+    },
+    "goose_feather_armor": {
+      "id": "goose_feather_armor",
+      "name": "雁翎圈金甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "禁军教头旧甲，肩片层层相扣，行动时只闻细密金声。",
+      "stats": {
+        "hp": 56,
+        "def": 10
+      }
+    },
+    "imperial_drill_token": {
+      "id": "imperial_drill_token",
+      "name": "禁军教令",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "旧教场传令用的铜牌，背面还留着徐宁亲手刻的变阵次序。",
+      "stats": {
+        "atk": 6,
+        "def": 5
+      }
+    },
+    "golden_spear_manual": {
+      "id": "golden_spear_manual",
+      "name": "金枪破阵谱",
+      "slot": "token",
+      "rarity": "绝品",
+      "desc": "钩、锁、挑、破四式绘在同一册里，末页写着“阵为人用”。",
+      "stats": {
+        "atk": 9,
+        "def": 6,
+        "hp": 24
+      }
+    },
+    "dragon_river_trident": {
+      "id": "dragon_river_trident",
+      "name": "混江龙纹叉",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "三股叉锋以旧船钉重锻，叉脊刻着水纹，逆流出手也不偏半分。",
+      "stats": {
+        "atk": 18,
+        "def": 4,
+        "spd": 7
+      }
+    },
+    "yama_river_blades": {
+      "id": "yama_river_blades",
+      "name": "活阎罗双刃",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "两柄窄背短刃一长一短，刃口留着渔网缠绞的细槽。",
+      "stats": {
+        "atk": 17,
+        "spd": 11
+      }
+    },
+    "ogress_medicine_cleaver": {
+      "id": "ogress_medicine_cleaver",
+      "name": "夜叉药刀",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "刀背可碾药，刀刃可断绳，柄尾还藏着一枚解毒丸。",
+      "stats": {
+        "atk": 15,
+        "spd": 6,
+        "hp": 12
+      }
+    },
+    "tigress_iron_staff": {
+      "id": "tigress_iron_staff",
+      "name": "母大虫铁门闩",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "取自山店正门的旧门闩，包铁之后既能守门，也能破阵。",
+      "stats": {
+        "atk": 16,
+        "def": 10,
+        "hp": 18
+      }
+    },
+    "thunder_crash_bomb": {
+      "id": "thunder_crash_bomb",
+      "name": "震天雷母炮",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "凌振亲手校定的铁壳雷炮，药线旁刻着三段延迟刻度。",
+      "stats": {
+        "atk": 22,
+        "spd": 3,
+        "hp": 8
+      }
+    },
+    "twin_iron_rods": {
+      "id": "twin_iron_rods",
+      "name": "呼延双铁鞭",
+      "slot": "weapon",
+      "rarity": "绝品",
+      "desc": "两根水磨钢鞭重量一致，鞭尾铜环能在马阵冲撞时锁住敌械。",
+      "stats": {
+        "atk": 20,
+        "def": 7,
+        "hp": 12
+      }
+    },
+    "river_dragon_fork": {
+      "id": "river_dragon_fork",
+      "name": "浔阳分水叉",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "三股叉锋短而阔，适合在窄水道里格开船桨与长兵。",
+      "stats": {
+        "atk": 9,
+        "def": 2,
+        "spd": 3
+      }
+    },
+    "reed_short_blades": {
+      "id": "reed_short_blades",
+      "name": "芦荡双刃",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "两柄窄背短刃一长一短，收在渔网边也不碍泅水。",
+      "stats": {
+        "atk": 10,
+        "spd": 4
+      }
+    },
+    "ogress_cleaver": {
+      "id": "ogress_cleaver",
+      "name": "十字坡药刀",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "厚背药刀兼作切药与护身，刀柄里还藏着一小包解毒散。",
+      "stats": {
+        "atk": 8,
+        "hp": 14,
+        "spd": 2
+      }
+    },
+    "tigress_door_bar": {
+      "id": "tigress_door_bar",
+      "name": "山店铁门闩",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "从山店正门卸下的包铁木闩，守门时比寻常枪棒更顺手。",
+      "stats": {
+        "atk": 9,
+        "def": 6,
+        "hp": 10
+      }
+    },
+    "signal_rocket_tube": {
+      "id": "signal_rocket_tube",
+      "name": "校定药信筒",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "凌振随身携带的短药信筒，能以三段火线控制爆声先后。",
+      "stats": {
+        "atk": 11,
+        "spd": 2
+      }
+    },
+    "chain_whip_pair": {
+      "id": "chain_whip_pair",
+      "name": "水磨双鞭",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "两根等重短鞭以旧马链配重，适合正面压住长兵。",
+      "stats": {
+        "atk": 12,
+        "def": 3
+      }
+    },
+    "red_hair_saber": {
+      "id": "red_hair_saber",
+      "name": "赤发断索刀",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "从押纲官船夺下的厚背刀，刀脊仍留着斩断税索的缺口。",
+      "stats": {
+        "atk": 12,
+        "spd": 3
+      }
+    },
+    "red_hair_sash": {
+      "id": "red_hair_sash",
+      "name": "赤发夜行巾",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "刘唐以旧军旗重缝的赤色头巾，血战越深，绑结越紧。",
+      "stats": {
+        "atk": 8,
+        "hp": 24,
+        "spd": 4
+      }
+    },
+    "justicar_saber": {
+      "id": "justicar_saber",
+      "name": "郓城义令刀",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "朱仝的制式腰刀，刀鞘内仍夹着一张从未交出的旧捕令。",
+      "stats": {
+        "atk": 10,
+        "def": 5,
+        "hp": 12
+      }
+    },
+    "prison_seal_armor": {
+      "id": "prison_seal_armor",
+      "name": "义释牢甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "牢门锁链改成的护肩，专为替人断后而生。",
+      "stats": {
+        "def": 10,
+        "hp": 34,
+        "spd": 2
+      }
+    },
+    "tiger_staff": {
+      "id": "tiger_staff",
+      "name": "插翅虎棍",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "长棍两端包着旧衙门的铁箍，横扫时声若虎啸。",
+      "stats": {
+        "atk": 11,
+        "def": 3,
+        "spd": 2
+      }
+    },
+    "winged_belt": {
+      "id": "winged_belt",
+      "name": "跃城虎带",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "以城门绞索编成的宽腰带，能在跃墙落地时稳住身形。",
+      "stats": {
+        "atk": 6,
+        "def": 6,
+        "spd": 5
+      }
+    },
+    "eagle_daggers": {
+      "id": "eagle_daggers",
+      "name": "扑天飞刃",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "李应亲手校重的五口短刃，出手次序藏在护腕暗扣里。",
+      "stats": {
+        "atk": 13,
+        "spd": 4
+      }
+    },
+    "manor_lamellar": {
+      "id": "manor_lamellar",
+      "name": "独龙冈庄甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "李家庄园最后一副旧甲，胸片内侧刻着所有庄客的名字。",
+      "stats": {
+        "atk": 5,
+        "def": 8,
+        "hp": 22
+      }
+    },
+    "snake_hook_spear": {
+      "id": "snake_hook_spear",
+      "name": "双头蛇钩矛",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "猎矛前端分出双钩，可挑开甲叶，也能在崖壁上固定绳索。",
+      "stats": {
+        "atk": 11,
+        "spd": 3
+      }
+    },
+    "ridge_cloak": {
+      "id": "ridge_cloak",
+      "name": "登州藤甲披",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "以山中老藤和旧猎网编成的轻甲，受潮后反而更坚韧。",
+      "stats": {
+        "def": 7,
+        "hp": 20,
+        "spd": 4
+      }
+    },
+    "scorpion_trident": {
+      "id": "scorpion_trident",
+      "name": "双尾蝎猎叉",
+      "slot": "weapon",
+      "rarity": "良品",
+      "desc": "解宝惯用的三股猎叉，左右两齿可以向内夹住兽颈或敌甲。",
+      "stats": {
+        "atk": 12,
+        "def": 3
+      }
+    },
+    "hunter_rope_armor": {
+      "id": "hunter_rope_armor",
+      "name": "解家山索甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "兄弟二人共用的登山索缠成护胸，每一结都记着一次互相接应。",
+      "stats": {
+        "atk": 4,
+        "def": 7,
+        "hp": 28
+      }
+    },
+    "jizhou_falchion": {
+      "id": "jizhou_falchion",
+      "name": "病关索法刀",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "杨雄在蓟州牢城行刑多年所用的厚背法刀，刀脊刻着一道早已磨浅的官印。",
+      "stats": {
+        "atk": 13,
+        "def": 4
+      }
+    },
+    "prison_scale_armor": {
+      "id": "prison_scale_armor",
+      "name": "天牢旧札甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "从旧牢库找出的窄叶札甲，胸片内侧留着被囚者刻下的三十七个正字。",
+      "stats": {
+        "hp": 46,
+        "def": 9,
+        "spd": 2
+      }
+    },
+    "warden_writ": {
+      "id": "warden_writ",
+      "name": "决狱朱牌",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "一面没有官衙名号的朱漆木牌，只用来提醒杨雄：执刀之人也要受问。",
+      "stats": {
+        "atk": 5,
+        "def": 5,
+        "hp": 16
+      }
+    },
+    "desperate_saber": {
+      "id": "desperate_saber",
+      "name": "拼命短刀",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "石秀从蓟州肉铺带走的重刃短刀，刀背厚得能撬门，也能在窄巷里连续追斩。",
+      "stats": {
+        "atk": 14,
+        "spd": 5
+      }
+    },
+    "rooftop_jacket": {
+      "id": "rooftop_jacket",
+      "name": "翻墙短打",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "膝肘处缝着耐磨鹿皮的靛蓝短打，衣摆短，翻墙落地时不会缠住脚步。",
+      "stats": {
+        "hp": 34,
+        "def": 6,
+        "spd": 5
+      }
+    },
+    "rope_dart": {
+      "id": "rope_dart",
+      "name": "盘墙索镖",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "一枚连着细索的窄刃飞镖，既能固定墙沿，也能把远处敌人的兵刃缠住。",
+      "stats": {
+        "atk": 7,
+        "spd": 7
+      }
+    },
+    "sick_yuchi_polearm": {
+      "id": "sick_yuchi_polearm",
+      "name": "病尉迟长枪",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "孙立在登州军中用了十余年的长枪，枪杆乌沉，枪锋却始终养得雪亮。",
+      "stats": {
+        "atk": 14,
+        "def": 5
+      }
+    },
+    "dengzhou_lamellar": {
+      "id": "dengzhou_lamellar",
+      "name": "登州镇甲",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "登州驻军制式札甲，肩片多加了一层铁叶，专为在窄门和山道硬挡长兵。",
+      "stats": {
+        "hp": 54,
+        "def": 10
+      }
+    },
+    "garrison_whip": {
+      "id": "garrison_whip",
+      "name": "尉迟铁鞭",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "一截短铁鞭，辔头处系着登州旧军校的名签，提醒孙立军令先护士卒。",
+      "stats": {
+        "atk": 7,
+        "def": 6,
+        "spd": 2
+      }
+    },
+    "iron_flute": {
+      "id": "iron_flute",
+      "name": "铁叫子长笛",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "看似乐器，近身时却能格刀点穴。笛孔旁刻着登州水手们熟悉的旧曲记号。",
+      "stats": {
+        "atk": 9,
+        "spd": 8,
+        "hp": 12
+      }
+    },
+    "river_tune_coat": {
+      "id": "river_tune_coat",
+      "name": "水调短袍",
+      "slot": "armor",
+      "rarity": "良品",
+      "desc": "青绿旧袍内衬软皮，衣角缝有铅粒，江风中也能听清拍子的落点。",
+      "stats": {
+        "hp": 32,
+        "def": 5,
+        "spd": 5
+      }
+    },
+    "dengzhou_bell_charm": {
+      "id": "dengzhou_bell_charm",
+      "name": "登州铃符",
+      "slot": "token",
+      "rarity": "珍品",
+      "desc": "一枚渔船小铃与半张牢城通行符系在一起，摇响时便有人知道接应已到。",
+      "stats": {
+        "atk": 4,
+        "def": 4,
+        "spd": 8
+      }
+    },
+    "sacred_brush": {
+      "id": "sacred_brush",
+      "name": "圣手判笔",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "萧让以铁芯竹管制成的长笔，笔锋可写军令，笔杆可点住持刀者的手腕。",
+      "stats": {
+        "atk": 8,
+        "spd": 6,
+        "def": 3
+      }
+    },
+    "ink_robe": {
+      "id": "ink_robe",
+      "name": "洗墨长衫",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "层叠旧布染成墨色，袖中暗袋能藏文书、印泥与一小包迷眼墨粉。",
+      "stats": {
+        "hp": 36,
+        "def": 6,
+        "spd": 4
+      }
+    },
+    "copy_seal": {
+      "id": "copy_seal",
+      "name": "临文伪印",
+      "slot": "token",
+      "rarity": "良品",
+      "desc": "萧让仿出的第一枚无名官印，印面看似端正，边角却故意留了一处破绽。",
+      "stats": {
+        "atk": 5,
+        "def": 4,
+        "hp": 18
+      }
+    },
+    "iron_abacus": {
+      "id": "iron_abacus",
+      "name": "神算铁算盘",
+      "slot": "weapon",
+      "rarity": "珍品",
+      "desc": "蒋敬以军器边角料重打的铁算盘，盘中每一颗算珠都能在近身时拨向敌腕。",
+      "stats": {
+        "atk": 11,
+        "def": 6,
+        "hp": 12
+      }
+    },
+    "quartermaster_coat": {
+      "id": "quartermaster_coat",
+      "name": "掌库算衣",
+      "slot": "armor",
+      "rarity": "珍品",
+      "desc": "梁山中军掌库的厚布长衣，暗袋按粮、药、银、军械分成四色。",
+      "stats": {
+        "hp": 42,
+        "def": 8,
+        "spd": 3
+      }
+    },
+    "liangshan_grand_ledger": {
+      "id": "liangshan_grand_ledger",
+      "name": "梁山总账",
+      "slot": "token",
+      "rarity": "绝品",
+      "desc": "第一册不记金银、只记人命的梁山总账。每个名字旁都留着归乡、留寨或待定的空白。",
+      "stats": {
+        "atk": 7,
+        "def": 7,
+        "hp": 28
+      }
+    }
+  },
+  "starting_equipment": {
+    "linchong": {
+      "weapon": "worn_spear",
+      "armor": "lamellar_vest",
+      "token": "crimson_tassel"
+    },
+    "luzhishen": {
+      "weapon": "iron_staff",
+      "armor": "monk_robe",
+      "token": "imperial_seal"
+    },
+    "wusong": {
+      "weapon": "ring_saber",
+      "armor": "patrol_armor",
+      "token": "tiger_tooth"
+    },
+    "daizong": {
+      "weapon": "dispatch_blade",
+      "armor": "scout_boots",
+      "token": "courier_token"
+    },
+    "andaoquan": {
+      "weapon": "needle_case",
+      "armor": "physician_robe",
+      "token": "herb_satchel"
+    },
+    "shiqian": {
+      "weapon": "climbing_hook",
+      "armor": "night_cloth",
+      "token": "lockpick_roll"
+    },
+    "likui": {
+      "weapon": "black_axe_pair",
+      "armor": "blood_tunic",
+      "token": "ox_head_belt"
+    },
+    "huarong": {
+      "weapon": "horn_bow",
+      "armor": "feather_scale",
+      "token": "hawk_tassel"
+    },
+    "songjiang": {
+      "weapon": "righteous_polearm",
+      "armor": "timely_cloak",
+      "token": "liangshan_banner"
+    },
+    "husanniang": {
+      "weapon": "sun_moon_blades",
+      "armor": "red_brocade_armor",
+      "token": "crimson_lasso"
+    },
+    "wuyong": {
+      "weapon": "strategist_chain",
+      "armor": "crane_cloak",
+      "token": "wisdom_fan"
+    },
+    "yanqing": {
+      "weapon": "wanderer_spear",
+      "armor": "swallow_armor",
+      "token": "wrestling_belt"
+    }
+  },
+  "chain_formations": {
+    "sky_break": {
+      "id": "sky_break",
+      "name": "天罡破军",
+      "paths": [
+        "gang",
+        "ling",
+        "tao"
+      ],
+      "icon": "swords",
+      "tone": "cinnabar",
+      "desc": "刚、巧、谋三路并进，合击伤害提高 18%，并撕开全体敌军护甲 2 回合。",
+      "powerPct": 0.18,
+      "poiseBonus": 8,
+      "enemyStatus": {
+        "status": "armorBreak",
+        "duration": 2
+      },
+      "reward": {
+        "copper": 140,
+        "xp": 80
+      }
+    },
+    "hundred_birds": {
+      "id": "hundred_birds",
+      "name": "百鸟穿林",
+      "paths": [
+        "gang",
+        "ling",
+        "shou"
+      ],
+      "icon": "crosshair",
+      "tone": "teal",
+      "desc": "刚、巧、守三路截杀，合击使全体敌军流血 2 回合，并以更高护势伤害追击残阵。",
+      "powerPct": 0.06,
+      "poiseBonus": 20,
+      "enemyStatus": {
+        "status": "bleeding",
+        "duration": 2
+      },
+      "reward": {
+        "copper": 140,
+        "xp": 80
+      }
+    },
+    "iron_bastion": {
+      "id": "iron_bastion",
+      "name": "铁壁镇岳",
+      "paths": [
+        "gang",
+        "tao",
+        "shou"
+      ],
+      "icon": "shield-check",
+      "tone": "blue",
+      "desc": "刚、谋、守三路合阵，合击后全队获得 2 层护御，并恢复 12% 生命。",
+      "powerPct": 0.02,
+      "poiseBonus": 12,
+      "teamGuard": 2,
+      "teamHealPct": 0.12,
+      "reward": {
+        "copper": 140,
+        "xp": 80
+      }
+    },
+    "wind_thunder": {
+      "id": "wind_thunder",
+      "name": "风雷惊阵",
+      "paths": [
+        "ling",
+        "tao",
+        "shou"
+      ],
+      "icon": "zap",
+      "tone": "gold",
+      "desc": "巧、谋、守三路换位，合击大幅撼动护势，并让全队获得鼓舞与额外义气。",
+      "powerPct": 0.08,
+      "poiseBonus": 30,
+      "teamInspiration": 1,
+      "teamYiqiBonus": 10,
+      "reward": {
+        "copper": 140,
+        "xp": 80
+      }
+    }
+  },
+  "bonds": {
+    "wind_snow": {
+      "id": "wind_snow",
+      "name": "风雪同袍",
+      "kind": "pair",
+      "heroIds": [
+        "linchong",
+        "luzhishen"
+      ],
+      "desc": "全队护御提高 5%；林冲或鲁智深受击时，另一人每回合首次获得 10 义气与 1 回合护御。",
+      "icon": "snowflake",
+      "tone": "blue",
+      "effects": {
+        "defPct": 0.05,
+        "openingGuard": 1
+      },
+      "reward": {
+        "copper": 120,
+        "xp": 60
+      }
+    },
+    "swift_walker": {
+      "id": "swift_walker",
+      "name": "行者神行",
+      "kind": "pair",
+      "heroIds": [
+        "wusong",
+        "daizong"
+      ],
+      "desc": "武松击败敌人时，全队每回合首次获得 10 义气；全队身法提高 6%。",
+      "icon": "wind",
+      "tone": "teal",
+      "effects": {
+        "spdPct": 0.06,
+        "startYiqi": 12
+      },
+      "reward": {
+        "copper": 120,
+        "xp": 60
+      }
+    },
+    "miracle_hands": {
+      "id": "miracle_hands",
+      "name": "妙手相济",
+      "kind": "pair",
+      "heroIds": [
+        "andaoquan",
+        "shiqian"
+      ],
+      "desc": "时迁夺取义气时，安道全为生命最低的好汉恢复 6% 生命，每回合一次；治疗效果提高 12%。",
+      "icon": "heart-pulse",
+      "tone": "gold",
+      "effects": {
+        "healPct": 0.12,
+        "yiqiPct": 0.1
+      },
+      "reward": {
+        "copper": 120,
+        "xp": 60
+      }
+    },
+    "black_whirlwind_arrows": {
+      "id": "black_whirlwind_arrows",
+      "name": "黑风箭雨",
+      "kind": "pair",
+      "heroIds": [
+        "huarong",
+        "likui"
+      ],
+      "desc": "全队攻击提高 6%、全体招式伤害再提高 12%；花荣或李逵破敌时，另一人获得 12 义气。",
+      "icon": "crosshair",
+      "tone": "cinnabar",
+      "effects": {
+        "atkPct": 0.06,
+        "allEnemiesPowerPct": 0.12
+      },
+      "reward": {
+        "copper": 120,
+        "xp": 60
+      }
+    },
+    "three_mountains": {
+      "id": "three_mountains",
+      "name": "三山聚义",
+      "kind": "trio",
+      "heroIds": [
+        "linchong",
+        "luzhishen",
+        "wusong"
+      ],
+      "desc": "三人同阵：全队攻击与生命各提高 6%，开局额外获得 10 义气。",
+      "icon": "flame",
+      "tone": "cinnabar",
+      "effects": {
+        "atkPct": 0.06,
+        "hpPct": 0.06,
+        "startYiqi": 10
+      },
+      "reward": {
+        "copper": 180,
+        "xp": 90
+      }
+    },
+    "divine_roamers": {
+      "id": "divine_roamers",
+      "name": "神行百草",
+      "kind": "trio",
+      "heroIds": [
+        "daizong",
+        "andaoquan",
+        "shiqian"
+      ],
+      "desc": "三人同阵：全队开局获得 1 回合护御，义气获取提高 15%，治疗效果提高 10%。",
+      "icon": "orbit",
+      "tone": "teal",
+      "effects": {
+        "openingGuard": 1,
+        "yiqiPct": 0.15,
+        "healPct": 0.1
+      },
+      "reward": {
+        "copper": 180,
+        "xp": 90
+      }
+    },
+    "timely_strategy": {
+      "id": "timely_strategy",
+      "name": "及时定策",
+      "kind": "pair",
+      "heroIds": [
+        "songjiang",
+        "wuyong"
+      ],
+      "desc": "宋江与吴用同阵：全队开局获得 18 义气，义气获取提高 12%。",
+      "icon": "scroll-text",
+      "tone": "gold",
+      "effects": {
+        "startYiqi": 18,
+        "yiqiPct": 0.12
+      },
+      "reward": {
+        "copper": 180,
+        "xp": 90
+      }
+    },
+    "red_banner_oath": {
+      "id": "red_banner_oath",
+      "name": "红锦护义",
+      "kind": "pair",
+      "heroIds": [
+        "songjiang",
+        "husanniang"
+      ],
+      "desc": "宋江与扈三娘同阵：全队护甲提高 6%，扈三娘破甲目标时全队获得 8 义气。",
+      "icon": "flag",
+      "tone": "cinnabar",
+      "effects": {
+        "defPct": 0.06,
+        "hpPct": 0.04
+      },
+      "reward": {
+        "copper": 180,
+        "xp": 90
+      }
+    },
+    "swallow_shadow": {
+      "id": "swallow_shadow",
+      "name": "燕影青锋",
+      "kind": "pair",
+      "heroIds": [
+        "husanniang",
+        "yanqing"
+      ],
+      "desc": "扈三娘与燕青同阵：全队身法提高 5%，暴击率提高 6%。",
+      "icon": "wind",
+      "tone": "teal",
+      "effects": {
+        "spdPct": 0.05,
+        "critPct": 0.06
+      },
+      "reward": {
+        "copper": 180,
+        "xp": 90
+      }
+    },
+    "stars_of_judgment": {
+      "id": "stars_of_judgment",
+      "name": "智勇双星",
+      "kind": "trio",
+      "heroIds": [
+        "wuyong",
+        "yanqing",
+        "songjiang"
+      ],
+      "desc": "三人同阵：全队攻击与护势伤害各提高 7%，开局获得 1 回合护御。",
+      "icon": "sparkles",
+      "tone": "blue",
+      "effects": {
+        "atkPct": 0.07,
+        "poisePct": 0.07,
+        "openingGuard": 1
+      },
+      "reward": {
+        "copper": 260,
+        "xp": 140
+      }
+    },
+    "blue_jade_spears": {
+      "id": "blue_jade_spears",
+      "name": "青面玉麟",
+      "kind": "pair",
+      "heroIds": [
+        "yangzhi",
+        "lujunyi"
+      ],
+      "desc": "杨志与卢俊义同阵：全队护御提高 7%，破甲目标受到的伤害提高 10%。",
+      "icon": "swords",
+      "tone": "blue",
+      "effects": {
+        "defPct": 0.07,
+        "brokenDamageBonus": 0.1
+      },
+      "reward": {
+        "copper": 220,
+        "xp": 120
+      }
+    },
+    "thunder_strategy": {
+      "id": "thunder_strategy",
+      "name": "雷隐机星",
+      "kind": "pair",
+      "heroIds": [
+        "gongsunsheng",
+        "wuyong"
+      ],
+      "desc": "公孙胜与吴用同阵：全队护势伤害提高 18%，开局获得 12 义气。",
+      "icon": "cloud",
+      "tone": "gold",
+      "effects": {
+        "poisePct": 0.18,
+        "startYiqi": 12
+      },
+      "reward": {
+        "copper": 220,
+        "xp": 120
+      }
+    },
+    "river_wind": {
+      "id": "river_wind",
+      "name": "江风神行",
+      "kind": "pair",
+      "heroIds": [
+        "zhangshun",
+        "daizong"
+      ],
+      "desc": "张顺与戴宗同阵：全队身法提高 8%，暴击率提高 5%。",
+      "icon": "wind",
+      "tone": "teal",
+      "effects": {
+        "spdPct": 0.08,
+        "critPct": 0.05
+      },
+      "reward": {
+        "copper": 220,
+        "xp": 120
+      }
+    },
+    "triple_spears": {
+      "id": "triple_spears",
+      "name": "三枪镇阵",
+      "kind": "trio",
+      "heroIds": [
+        "linchong",
+        "yangzhi",
+        "lujunyi"
+      ],
+      "desc": "三人同阵：全队攻击与护御提高 6%，开局获得 1 层护御。",
+      "icon": "shield-check",
+      "tone": "cinnabar",
+      "effects": {
+        "atkPct": 0.06,
+        "defPct": 0.06,
+        "openingGuard": 1
+      },
+      "reward": {
+        "copper": 360,
+        "xp": 200
+      }
+    },
+    "heavenly_guard": {
+      "id": "heavenly_guard",
+      "name": "天罡道阵",
+      "kind": "trio",
+      "heroIds": [
+        "gongsunsheng",
+        "songjiang",
+        "wuyong"
+      ],
+      "desc": "三人同阵：全队护御提高 8%，义气获取提高 12%，开局护御延长。",
+      "icon": "sparkles",
+      "tone": "gold",
+      "effects": {
+        "defPct": 0.08,
+        "yiqiPct": 0.12,
+        "openingGuard": 2
+      },
+      "reward": {
+        "copper": 360,
+        "xp": 200
+      }
+    },
+    "river_shadows": {
+      "id": "river_shadows",
+      "name": "水陆无影",
+      "kind": "trio",
+      "heroIds": [
+        "zhangshun",
+        "shiqian",
+        "yanqing"
+      ],
+      "desc": "三人同阵：全队身法提高 7%，暴击率提高 7%，后排招式伤害提高 8%。",
+      "icon": "orbit",
+      "tone": "teal",
+      "effects": {
+        "spdPct": 0.07,
+        "critPct": 0.07,
+        "allEnemiesPowerPct": 0.08
+      },
+      "reward": {
+        "copper": 360,
+        "xp": 200
+      }
+    },
+    "shaohua_thunder": {
+      "id": "shaohua_thunder",
+      "name": "少华雷火",
+      "kind": "pair",
+      "heroIds": [
+        "shijin",
+        "qinming"
+      ],
+      "desc": "史进与秦明同阵：全队攻击提高 6%，全体招式伤害提高 8%，破势目标受到更多伤害。",
+      "icon": "flame",
+      "tone": "cinnabar",
+      "effects": {
+        "atkPct": 0.06,
+        "allEnemiesPowerPct": 0.08,
+        "brokenDamageBonus": 0.08
+      },
+      "reward": {
+        "copper": 240,
+        "xp": 130
+      }
+    },
+    "noble_aegis": {
+      "id": "noble_aegis",
+      "name": "义仓护阵",
+      "kind": "pair",
+      "heroIds": [
+        "chaiin",
+        "guansheng"
+      ],
+      "desc": "柴进与关胜同阵：全队护甲提高 6%，开局获得 12 义气与 1 层护御。",
+      "icon": "shield-check",
+      "tone": "gold",
+      "effects": {
+        "defPct": 0.06,
+        "startYiqi": 12,
+        "openingGuard": 1
+      },
+      "reward": {
+        "copper": 240,
+        "xp": 130
+      }
+    },
+    "three_valor": {
+      "id": "three_valor",
+      "name": "龙雷大刀",
+      "kind": "trio",
+      "heroIds": [
+        "shijin",
+        "qinming",
+        "guansheng"
+      ],
+      "desc": "三人同阵：全队护势伤害提高 18%、暴击率提高 4%，正面破阵更稳定。",
+      "icon": "swords",
+      "tone": "blue",
+      "effects": {
+        "poisePct": 0.18,
+        "critPct": 0.04
+      },
+      "reward": {
+        "copper": 380,
+        "xp": 210
+      }
+    },
+    "righteous_network": {
+      "id": "righteous_network",
+      "name": "柴门聚义",
+      "kind": "trio",
+      "heroIds": [
+        "chaiin",
+        "songjiang",
+        "wuyong"
+      ],
+      "desc": "三人同阵：全队治疗提高 12%、义气获取提高 15%，辅助招式会为队伍续起护势。",
+      "icon": "users",
+      "tone": "teal",
+      "effects": {
+        "healPct": 0.12,
+        "yiqiPct": 0.15,
+        "guardBonus": 0.04
+      },
+      "reward": {
+        "copper": 380,
+        "xp": 210
+      }
+    },
+    "bow_and_stone": {
+      "id": "bow_and_stone",
+      "name": "弓石流星",
+      "kind": "pair",
+      "heroIds": [
+        "huarong",
+        "zhangqing"
+      ],
+      "desc": "花荣与张清同阵：全队攻击与身法提高 5%，飞石弹射率再提高 15%。",
+      "icon": "crosshair",
+      "tone": "teal",
+      "effects": {
+        "atkPct": 0.05,
+        "spdPct": 0.05,
+        "stoneRicochetChance": 0.15
+      },
+      "reward": {
+        "copper": 260,
+        "xp": 140
+      }
+    },
+    "golden_spear_oath": {
+      "id": "golden_spear_oath",
+      "name": "金枪同门",
+      "kind": "pair",
+      "heroIds": [
+        "xuning",
+        "linchong"
+      ],
+      "desc": "徐宁与林冲同阵：全队护甲提高 5%，开局获得 10 义气；徐宁钩镰锁住敌阵时，林冲额外获得 6 义气。",
+      "icon": "shield-check",
+      "tone": "gold",
+      "effects": {
+        "defPct": 0.05,
+        "startYiqi": 10
+      },
+      "reward": {
+        "copper": 280,
+        "xp": 150
+      }
+    },
+    "river_dragons": {
+      "id": "river_dragons",
+      "name": "混江三雄",
+      "kind": "trio",
+      "heroIds": [
+        "lijun",
+        "zhangshun",
+        "ruanxiaoqi"
+      ],
+      "desc": "李俊、张顺与阮小七同阵：全队身法提高 7%，开局获得护御与 12 义气。",
+      "icon": "wind",
+      "tone": "teal",
+      "effects": {
+        "spdPct": 0.07,
+        "openingGuard": 1,
+        "startYiqi": 12
+      },
+      "reward": {
+        "copper": 360,
+        "xp": 200
+      }
+    },
+    "outlaw_sisters": {
+      "id": "outlaw_sisters",
+      "name": "夜叉三娘",
+      "kind": "trio",
+      "heroIds": [
+        "sunerniang",
+        "gudashao",
+        "husanniang"
+      ],
+      "desc": "孙二娘、顾大嫂与扈三娘同阵：全队生命与暴击提高 5%，开局获得 1 层护御。",
+      "icon": "users",
+      "tone": "cinnabar",
+      "effects": {
+        "hpPct": 0.05,
+        "critPct": 0.05,
+        "openingGuard": 1
+      },
+      "reward": {
+        "copper": 360,
+        "xp": 200
+      }
+    },
+    "black_inn_oath": {
+      "id": "black_inn_oath",
+      "name": "十字坡同席",
+      "kind": "pair",
+      "heroIds": [
+        "sunerniang",
+        "gudashao"
+      ],
+      "desc": "孙二娘与顾大嫂同阵：全队治疗提高 10%、护甲提高 5%；开局获得 10 义气。",
+      "icon": "heart-pulse",
+      "tone": "gold",
+      "effects": {
+        "healPct": 0.1,
+        "defPct": 0.05,
+        "startYiqi": 10
+      },
+      "reward": {
+        "copper": 240,
+        "xp": 130
+      }
+    },
+    "river_reapers": {
+      "id": "river_reapers",
+      "name": "阎罗水鬼",
+      "kind": "pair",
+      "heroIds": [
+        "ruanxiaoqi",
+        "zhangshun"
+      ],
+      "desc": "阮小七与张顺同阵：全队身法与暴击提高 6%，护势伤害提高 8%。",
+      "icon": "wind",
+      "tone": "teal",
+      "effects": {
+        "spdPct": 0.06,
+        "critPct": 0.06,
+        "poisePct": 0.08
+      },
+      "reward": {
+        "copper": 240,
+        "xp": 130
+      }
+    },
+    "thunder_fireworks": {
+      "id": "thunder_fireworks",
+      "name": "雷火齐鸣",
+      "kind": "pair",
+      "heroIds": [
+        "lingzhen",
+        "qinming"
+      ],
+      "desc": "凌振与秦明同阵：全队攻击提高 4%，全体招式护势伤害提高 16%。",
+      "icon": "flame",
+      "tone": "cinnabar",
+      "effects": {
+        "atkPct": 0.04,
+        "poisePct": 0.16
+      },
+      "reward": {
+        "copper": 280,
+        "xp": 150
+      }
+    },
+    "iron_cavalry": {
+      "id": "iron_cavalry",
+      "name": "铁骑三镇",
+      "kind": "trio",
+      "heroIds": [
+        "huyanzhuo",
+        "guansheng",
+        "xuning"
+      ],
+      "desc": "呼延灼、关胜与徐宁同阵：全队护甲与护势伤害提高 8%，开局获得 1 层护御。",
+      "icon": "shield-check",
+      "tone": "blue",
+      "effects": {
+        "defPct": 0.08,
+        "poisePct": 0.08,
+        "openingGuard": 1
+      },
+      "reward": {
+        "copper": 380,
+        "xp": 210
+      }
+    },
+    "red_hair_signal": {
+      "id": "red_hair_signal",
+      "name": "赤发传火",
+      "kind": "pair",
+      "heroIds": [
+        "liutang",
+        "leiheng"
+      ],
+      "desc": "刘唐与雷横同阵：全队攻击与暴击提高 5%，开局获得 1 层护御。",
+      "icon": "flame",
+      "tone": "cinnabar",
+      "effects": {
+        "atkPct": 0.05,
+        "critPct": 0.05,
+        "openingGuard": 1
+      },
+      "reward": {
+        "copper": 300,
+        "xp": 170
+      }
+    },
+    "yuncheng_oath": {
+      "id": "yuncheng_oath",
+      "name": "郓城双都头",
+      "kind": "pair",
+      "heroIds": [
+        "zhutong",
+        "leiheng"
+      ],
+      "desc": "朱仝与雷横同阵：全队护甲与生命提高 6%，反击伤害提高 5%。",
+      "icon": "shield-check",
+      "tone": "blue",
+      "effects": {
+        "defPct": 0.06,
+        "hpPct": 0.06,
+        "counterBonus": 0.05
+      },
+      "reward": {
+        "copper": 300,
+        "xp": 170
+      }
+    },
+    "xie_brothers": {
+      "id": "xie_brothers",
+      "name": "登州双猎",
+      "kind": "pair",
+      "heroIds": [
+        "jiezhen",
+        "jiebao"
+      ],
+      "desc": "解珍与解宝同阵：全队身法与暴击提高 6%，开局获得护御；兄弟一人破敌时，另一人获得 12 义气与护御。",
+      "icon": "link",
+      "tone": "teal",
+      "effects": {
+        "spdPct": 0.06,
+        "critPct": 0.06,
+        "openingGuard": 1
+      },
+      "reward": {
+        "copper": 340,
+        "xp": 190
+      }
+    },
+    "manor_ledger": {
+      "id": "manor_ledger",
+      "name": "庄园义簿",
+      "kind": "pair",
+      "heroIds": [
+        "liying",
+        "zhutong"
+      ],
+      "desc": "李应与朱仝同阵：全队治疗提高 8%、义气获取提高 10%，护甲提高 4%。",
+      "icon": "scroll-text",
+      "tone": "gold",
+      "effects": {
+        "healPct": 0.08,
+        "yiqiPct": 0.1,
+        "defPct": 0.04
+      },
+      "reward": {
+        "copper": 320,
+        "xp": 180
+      }
+    },
+    "eagle_snake_hunt": {
+      "id": "eagle_snake_hunt",
+      "name": "雕蛇共猎",
+      "kind": "trio",
+      "heroIds": [
+        "liying",
+        "jiezhen",
+        "jiebao"
+      ],
+      "desc": "李应、解珍与解宝同阵：全队身法提高 7%、暴击率提高 6%，全体护势伤害提高 8%。",
+      "icon": "crosshair",
+      "tone": "teal",
+      "effects": {
+        "spdPct": 0.07,
+        "critPct": 0.06,
+        "poisePct": 0.08
+      },
+      "reward": {
+        "copper": 420,
+        "xp": 240
+      }
+    },
+    "red_hair_eagle": {
+      "id": "red_hair_eagle",
+      "name": "赤羽雕风",
+      "kind": "pair",
+      "heroIds": [
+        "liutang",
+        "liying"
+      ],
+      "desc": "刘唐与李应同阵：全队攻击、身法与暴击各提高 4%，残血时仍能维持凌厉攻势。",
+      "icon": "wind",
+      "tone": "cinnabar",
+      "effects": {
+        "atkPct": 0.04,
+        "spdPct": 0.04,
+        "critPct": 0.04
+      },
+      "reward": {
+        "copper": 300,
+        "xp": 170
+      }
+    },
+    "jailbreak_oath": {
+      "id": "jailbreak_oath",
+      "name": "病关拼命",
+      "kind": "pair",
+      "heroIds": [
+        "yangxiong",
+        "shixiu"
+      ],
+      "desc": "杨雄或石秀首次降至半血时，二人各获得 1 层护御与 12 义气；全队反击伤害提高 6%。",
+      "icon": "gavel",
+      "tone": "cinnabar",
+      "effects": {
+        "defPct": 0.04,
+        "counterBonus": 0.06
+      },
+      "reward": {
+        "copper": 360,
+        "xp": 200
+      }
+    },
+    "dengzhou_three": {
+      "id": "dengzhou_three",
+      "name": "登州三杰",
+      "kind": "trio",
+      "heroIds": [
+        "sunli",
+        "jiezhen",
+        "jiebao"
+      ],
+      "desc": "三人同阵：全队护甲与护势伤害提高 7%；登州好汉破敌时，全队获得护御与 8 义气。",
+      "icon": "shield-check",
+      "tone": "blue",
+      "effects": {
+        "defPct": 0.07,
+        "poisePct": 0.07,
+        "openingGuard": 1
+      },
+      "reward": {
+        "copper": 440,
+        "xp": 250
+      }
+    },
+    "scholar_quartermaster": {
+      "id": "scholar_quartermaster",
+      "name": "文算双星",
+      "kind": "pair",
+      "heroIds": [
+        "xiaorang",
+        "jiangjing"
+      ],
+      "desc": "萧让与蒋敬同阵：全队义气获取提高 10%，敌方负面状态延长 1 回合，开阵获得 12 义气。",
+      "icon": "scroll-text",
+      "tone": "gold",
+      "effects": {
+        "yiqiPct": 0.1,
+        "statusDurationBonus": 1,
+        "startYiqi": 12
+      },
+      "reward": {
+        "copper": 380,
+        "xp": 220
+      }
+    },
+    "river_music": {
+      "id": "river_music",
+      "name": "江风夜调",
+      "kind": "trio",
+      "heroIds": [
+        "yuehe",
+        "yanqing",
+        "daizong"
+      ],
+      "desc": "乐和、燕青与戴宗同阵：全队身法提高 7%，开局获得鼓舞，乐和补气时会给最低生命队友护御。",
+      "icon": "wind",
+      "tone": "teal",
+      "effects": {
+        "spdPct": 0.07,
+        "critPct": 0.04,
+        "openingInspiration": 1,
+        "supportLowestGuard": 1
+      },
+      "reward": {
+        "copper": 440,
+        "xp": 250
+      }
+    }
+  },
   "hero_order": [
     "linchong",
     "luzhishen",
@@ -4882,7 +7262,19 @@
         "recruit": [
           "luzhishen"
         ],
-        "boss": null
+        "boss": null,
+        "settlement": null
+      },
+      "special_rule": {
+        "id": "ferry_wake",
+        "name": "雪夜渡口",
+        "desc": "林冲、鲁智深取得破阵先机，官军前阵开局承受护势压力。",
+        "effects": {
+          "enemyStartPoisePct": 0.12,
+          "teamModifiers": {
+            "startYiqi": 8
+          }
+        }
       },
       "outro": [
         {
@@ -4979,7 +7371,22 @@
           "daizong",
           "shiqian"
         ],
-        "boss": null
+        "boss": null,
+        "settlement": null
+      },
+      "special_rule": {
+        "id": "capital_crossfire",
+        "name": "雪巷夹击",
+        "desc": "官军后阵弓手开局获得鼓舞，先拆远射再取文书。",
+        "effects": {
+          "enemyOpeningStatuses": [
+            {
+              "row": 2,
+              "status": "inspiration",
+              "duration": 2
+            }
+          ]
+        }
       },
       "outro": [
         {
@@ -5080,7 +7487,26 @@
         "recruit": [
           "wusong"
         ],
-        "boss": null
+        "boss": null,
+        "settlement": null
+      },
+      "special_rule": {
+        "id": "forest_ambush",
+        "name": "林深伏杀",
+        "desc": "禁军教官开局获得护御；梁山好汉获得护势与先手。",
+        "effects": {
+          "enemyOpeningStatuses": [
+            {
+              "row": 0,
+              "status": "guard",
+              "duration": 2
+            }
+          ],
+          "teamModifiers": {
+            "poisePct": 0.18,
+            "startYiqi": 8
+          }
+        }
       },
       "outro": [
         {
@@ -5176,7 +7602,20 @@
         "recruit": [
           "andaoquan"
         ],
-        "boss": null
+        "boss": null,
+        "settlement": null
+      },
+      "special_rule": {
+        "id": "medicine_fire",
+        "name": "药火救人",
+        "desc": "好汉治疗提高 20%，开阵获得护御；官军受火势影响承受更多破势。",
+        "effects": {
+          "teamModifiers": {
+            "healPct": 0.2,
+            "openingGuard": 1,
+            "poisePct": 0.15
+          }
+        }
       },
       "outro": [
         {
@@ -5277,7 +7716,25 @@
         "recruit": [
           "huarong"
         ],
-        "boss": null
+        "boss": null,
+        "settlement": null
+      },
+      "special_rule": {
+        "id": "moon_archers",
+        "name": "月下齐射",
+        "desc": "后阵官军身法与鼓舞更强，后阵好汉需先避开箭雨。",
+        "effects": {
+          "enemyModifiers": {
+            "spdPct": 0.08
+          },
+          "enemyOpeningStatuses": [
+            {
+              "row": 2,
+              "status": "inspiration",
+              "duration": 2
+            }
+          ]
+        }
       },
       "outro": [
         {
@@ -5384,7 +7841,21 @@
           "songjiang",
           "likui"
         ],
-        "boss": true
+        "boss": true,
+        "settlement": null
+      },
+      "special_rule": {
+        "id": "execution_market",
+        "name": "法场夺人",
+        "desc": "刽子手破甲更强；梁山开阵获得义气，首名官军倒下后余军获得护御。",
+        "effects": {
+          "teamModifiers": {
+            "startYiqi": 12
+          },
+          "onEnemyDefeat": {
+            "guard": 1
+          }
+        }
       },
       "outro": [
         {
@@ -5490,7 +7961,26 @@
         "recruit": [
           "husanniang"
         ],
-        "boss": null
+        "boss": null,
+        "settlement": null
+      },
+      "special_rule": {
+        "id": "snow_maze",
+        "name": "盘陀雪路",
+        "desc": "庄门教师开局护御；梁山队伍身法更快，治疗提高 12%。",
+        "effects": {
+          "teamModifiers": {
+            "spdPct": 0.05,
+            "healPct": 0.12
+          },
+          "enemyOpeningStatuses": [
+            {
+              "row": 0,
+              "status": "guard",
+              "duration": 2
+            }
+          ]
+        }
       },
       "outro": [
         {
@@ -5592,7 +8082,19 @@
           "wuyong",
           "yanqing"
         ],
-        "boss": true
+        "boss": true,
+        "settlement": null
+      },
+      "special_rule": {
+        "id": "lantern_city",
+        "name": "灯市疑阵",
+        "desc": "梁山开局获得鼓舞与义气；都监在低位会背水反扑。",
+        "effects": {
+          "teamModifiers": {
+            "openingInspiration": 1,
+            "startYiqi": 8
+          }
+        }
       },
       "outro": [
         {
@@ -5697,7 +8199,26 @@
           "item": "chieftain_whip"
         },
         "recruit": [],
-        "boss": true
+        "boss": true,
+        "settlement": "ending"
+      },
+      "special_rule": {
+        "id": "last_stand",
+        "name": "水泊聚义",
+        "desc": "兄弟契与三路星火可改变战局；梁山开局获得护御，官军会誓死反扑。",
+        "effects": {
+          "teamModifiers": {
+            "openingGuard": 1,
+            "startYiqi": 8
+          },
+          "enemyOpeningStatuses": [
+            {
+              "row": 0,
+              "status": "inspiration",
+              "duration": 1
+            }
+          ]
+        }
       },
       "outro": [
         {
@@ -6276,5 +8797,2769 @@
       "unlockVictories": 5,
       "cost": 320
     }
+  },
+  "camp_products": {
+    "wheat": {
+      "id": "wheat",
+      "name": "小麦",
+      "icon": "wheat"
+    },
+    "flour": {
+      "id": "flour",
+      "name": "面粉",
+      "icon": "factory"
+    },
+    "steamed_bun": {
+      "id": "steamed_bun",
+      "name": "馒头",
+      "icon": "flame"
+    },
+    "iron_ore": {
+      "id": "iron_ore",
+      "name": "铁矿",
+      "icon": "pickaxe"
+    },
+    "timber": {
+      "id": "timber",
+      "name": "木材",
+      "icon": "trees"
+    },
+    "fish": {
+      "id": "fish",
+      "name": "鲜鱼",
+      "icon": "fish"
+    }
+  },
+  "camp_recipes": [
+    {
+      "id": "grind_wheat",
+      "name": "磨面",
+      "buildingId": "mill",
+      "input": {
+        "item": "wheat",
+        "amount": 2
+      },
+      "output": {
+        "item": "flour",
+        "amount": 1
+      }
+    },
+    {
+      "id": "steam_bun",
+      "name": "蒸馒头",
+      "buildingId": "kitchen",
+      "input": {
+        "item": "flour",
+        "amount": 1
+      },
+      "output": {
+        "item": "steamed_bun",
+        "amount": 2
+      }
+    }
+  ],
+  "facilities": {
+    "hall": {
+      "id": "hall",
+      "name": "聚义厅",
+      "desc": "每级提升全队生命上限 5%。",
+      "icon": "landmark",
+      "maxLevel": 5,
+      "costs": {
+        "2": 180,
+        "3": 320,
+        "4": 520,
+        "5": 780
+      }
+    },
+    "arena": {
+      "id": "arena",
+      "name": "演武场",
+      "desc": "每级提升全队攻击 5%。",
+      "icon": "swords",
+      "maxLevel": 5,
+      "costs": {
+        "2": 220,
+        "3": 380,
+        "4": 600,
+        "5": 900
+      }
+    },
+    "tower": {
+      "id": "tower",
+      "name": "星台",
+      "desc": "每级提高义气获取 10%，并让营中休整更充分。",
+      "icon": "sparkles",
+      "maxLevel": 5,
+      "costs": {
+        "2": 160,
+        "3": 300,
+        "4": 480,
+        "5": 720
+      }
+    }
+  },
+  "endings": {
+    "brotherhood": {
+      "id": "brotherhood",
+      "title": "替天行道",
+      "subtitle": "梁山不散",
+      "text": "梁山拒绝了招安，也没有散入江湖。水泊被经营成流民可以停船、匠人可以开炉、无处可去者可以重新活一次的地方。朝廷的围剿不会停止，但替天行道四个字终于不再只是旗号，而是每一天都要兑现的承诺。",
+      "epilogue": "多年后，梁山旧部仍在水泊教乡民使枪、读书、渡河。林冲再没有回东京，却每年雪落时都会在山神庙前添一炷香。"
+    },
+    "order": {
+      "id": "order",
+      "title": "一念招安",
+      "subtitle": "风雪入长安",
+      "text": "梁山接受招安，却拒绝以交出林冲为条件。高俅被逼交出部分罪证，朝廷不得不重审旧案。梁山众人披上官军甲胄，成为朝廷无法随意丢弃的一把刀，也保留了在最坏局面里救下更多人的资格。",
+      "epilogue": "林冲重回禁军旧营时，枪架上的雪与那夜并无不同。他知道这不是清白归来的故事，只是让活着的人多了一条可走的路。"
+    },
+    "freedom": {
+      "id": "freedom",
+      "title": "江湖归舟",
+      "subtitle": "从此山水不相欠",
+      "text": "梁山拒绝招安，也放弃了继续扩张。众人拆去部分寨墙，把水寨变成商船、渔户和流民共同停靠的港湾。没有王旗，没有官印，只有一张张愿意互相作证的姓名。",
+      "epilogue": "后来有人在江南见过戴宗替人送信，也有人在景阳冈外的酒肆见过武松。林冲与鲁智深沿河而下，再没有留下确切去处。"
+    }
+  },
+  "arena_boons": {
+    "vanguard": {
+      "id": "vanguard",
+      "name": "先锋令",
+      "desc": "全队攻击提高 14%，义气技能伤害更凶。",
+      "icon": "swords",
+      "tone": "cinnabar",
+      "route": "锋",
+      "effects": {
+        "atkPct": 0.14
+      }
+    },
+    "ironwall": {
+      "id": "ironwall",
+      "name": "铁壁令",
+      "desc": "全队生命提高 16%，护御提高 12%。",
+      "icon": "shield",
+      "tone": "blue",
+      "route": "守",
+      "effects": {
+        "hpPct": 0.16,
+        "defPct": 0.12
+      }
+    },
+    "swift": {
+      "id": "swift",
+      "name": "疾风令",
+      "desc": "全队身法提高 14%，暴击率提高 6%。",
+      "icon": "wind",
+      "tone": "teal",
+      "route": "谋",
+      "effects": {
+        "spdPct": 0.14,
+        "critPct": 0.06
+      }
+    },
+    "rally": {
+      "id": "rally",
+      "name": "聚义令",
+      "desc": "义气获取提高 24%，开局全队额外获得 20 义气。",
+      "icon": "flame",
+      "tone": "gold",
+      "route": "义",
+      "effects": {
+        "yiqiPct": 0.24,
+        "startYiqi": 20
+      }
+    },
+    "remedy": {
+      "id": "remedy",
+      "name": "百草令",
+      "desc": "治疗效果提高 30%，每波开始时恢复更多生命。",
+      "icon": "heart-pulse",
+      "tone": "teal",
+      "route": "守",
+      "effects": {
+        "healPct": 0.3,
+        "waveHealPct": 0.08
+      }
+    },
+    "breaker": {
+      "id": "breaker",
+      "name": "破阵令",
+      "desc": "破势效率提高 35%，对破势目标伤害提高 10%。",
+      "icon": "hammer",
+      "tone": "cinnabar",
+      "route": "锋",
+      "effects": {
+        "poisePct": 0.35,
+        "brokenDamageBonus": 0.1
+      }
+    },
+    "insight": {
+      "id": "insight",
+      "name": "神机令",
+      "desc": "路数克制伤害由 20% 提高至 32%。",
+      "icon": "eye",
+      "tone": "gold",
+      "route": "谋",
+      "effects": {
+        "counterBonus": 0.12
+      }
+    },
+    "bulwark": {
+      "id": "bulwark",
+      "name": "守望令",
+      "desc": "每波开战全队获得 1 回合护御，护御减伤更强。",
+      "icon": "castle",
+      "tone": "blue",
+      "route": "义",
+      "effects": {
+        "openingGuard": 1,
+        "guardBonus": 0.1
+      }
+    },
+    "linked": {
+      "id": "linked",
+      "name": "联星令",
+      "desc": "星命合击威力提高 22%，全队义气获取提高 6%。",
+      "icon": "link",
+      "tone": "gold",
+      "route": "义",
+      "effects": {
+        "chainPowerPct": 0.22,
+        "yiqiPct": 0.06
+      }
+    },
+    "volley": {
+      "id": "volley",
+      "name": "齐射令",
+      "desc": "全体招式伤害提高 16%，暴击率提高 3%。",
+      "icon": "crosshair",
+      "tone": "cinnabar",
+      "route": "锋",
+      "effects": {
+        "allEnemiesPowerPct": 0.16,
+        "critPct": 0.03
+      }
+    },
+    "pursuit": {
+      "id": "pursuit",
+      "name": "追亡令",
+      "desc": "对破势目标伤害提高 15%，护势伤害提高 8%。",
+      "icon": "target",
+      "tone": "teal",
+      "route": "谋",
+      "effects": {
+        "brokenDamageBonus": 0.15,
+        "poisePct": 0.08
+      }
+    },
+    "aegis": {
+      "id": "aegis",
+      "name": "玄甲令",
+      "desc": "全队受到伤害降低 6%，路数克制伤害提高 4%。",
+      "icon": "shield-plus",
+      "tone": "blue",
+      "route": "守",
+      "effects": {
+        "damageReductionPct": 0.06,
+        "counterBonus": 0.04
+      }
+    }
+  },
+  "arena_encounters": {
+    "iron_phalanx": {
+      "id": "iron_phalanx",
+      "name": "拒马铁阵",
+      "desc": "敌军生命与护御提高 8%，前阵官军开局获得 1 层护御。",
+      "tactic": "破甲",
+      "icon": "shield",
+      "tone": "blue",
+      "minWave": 1,
+      "scorePct": 0.08,
+      "enemyModifiers": {
+        "hpPct": 0.08,
+        "defPct": 0.08
+      },
+      "effects": {
+        "enemyOpeningStatuses": [
+          {
+            "row": 0,
+            "status": "guard",
+            "duration": 1
+          }
+        ]
+      }
+    },
+    "arrow_rain": {
+      "id": "arrow_rain",
+      "name": "雁行齐射",
+      "desc": "敌军身法提高 9%，后阵弓手开局获得 2 层鼓舞，必须先拆远射。",
+      "tactic": "切后",
+      "icon": "crosshair",
+      "tone": "teal",
+      "minWave": 2,
+      "scorePct": 0.1,
+      "enemyModifiers": {
+        "spdPct": 0.09
+      },
+      "effects": {
+        "enemyOpeningStatuses": [
+          {
+            "row": 2,
+            "status": "inspiration",
+            "duration": 2
+          }
+        ]
+      }
+    },
+    "wolf_rush": {
+      "id": "wolf_rush",
+      "name": "狼骑突阵",
+      "desc": "敌军攻击提高 12%、身法提高 5%，前阵开局获得 2 层鼓舞。",
+      "tactic": "守前",
+      "icon": "wind",
+      "tone": "cinnabar",
+      "minWave": 2,
+      "scorePct": 0.12,
+      "enemyModifiers": {
+        "atkPct": 0.12,
+        "spdPct": 0.05
+      },
+      "effects": {
+        "enemyOpeningStatuses": [
+          {
+            "row": 0,
+            "status": "inspiration",
+            "duration": 2
+          }
+        ]
+      }
+    },
+    "linked_camp": {
+      "id": "linked_camp",
+      "name": "连环战营",
+      "desc": "敌军生命提高 6%；每有一名官军倒下，其余官军获得护御与鼓舞。",
+      "tactic": "择杀",
+      "icon": "link",
+      "tone": "gold",
+      "minWave": 3,
+      "scorePct": 0.16,
+      "enemyModifiers": {
+        "hpPct": 0.06
+      },
+      "effects": {
+        "onEnemyDefeat": {
+          "guard": 1,
+          "inspiration": 1
+        }
+      }
+    },
+    "fire_trap": {
+      "id": "fire_trap",
+      "name": "火油伏阵",
+      "desc": "敌军攻击提高 6%；梁山全队开局流血 1 回合，速战速决可减少损耗。",
+      "tactic": "抢攻",
+      "icon": "flame",
+      "tone": "cinnabar",
+      "minWave": 4,
+      "scorePct": 0.13,
+      "enemyModifiers": {
+        "atkPct": 0.06
+      },
+      "effects": {
+        "heroOpeningStatuses": [
+          {
+            "status": "bleeding",
+            "duration": 1
+          }
+        ]
+      }
+    },
+    "night_raid": {
+      "id": "night_raid",
+      "name": "雪夜劫营",
+      "desc": "敌军身法提高 10%；梁山全队身法降低 6%，行动顺序更难抢占。",
+      "tactic": "调速",
+      "icon": "moon-star",
+      "tone": "blue",
+      "minWave": 5,
+      "scorePct": 0.14,
+      "enemyModifiers": {
+        "spdPct": 0.1
+      },
+      "effects": {
+        "teamModifiers": {
+          "spdPct": -0.06
+        }
+      }
+    },
+    "deathbound": {
+      "id": "deathbound",
+      "name": "背水死士",
+      "desc": "敌军生命降低 6%，攻击提高 16%，全体开局获得 2 层鼓舞。",
+      "tactic": "爆发",
+      "icon": "swords",
+      "tone": "cinnabar",
+      "minWave": 6,
+      "scorePct": 0.18,
+      "enemyModifiers": {
+        "hpPct": -0.06,
+        "atkPct": 0.16
+      },
+      "effects": {
+        "enemyOpeningStatuses": [
+          {
+            "status": "inspiration",
+            "duration": 2
+          }
+        ]
+      }
+    },
+    "sealed_pass": {
+      "id": "sealed_pass",
+      "name": "封穴隘口",
+      "desc": "敌军身法提高 8%；梁山全队开局封穴 2 回合，义气循环被暂时切断。",
+      "tactic": "蓄势",
+      "icon": "lock-keyhole",
+      "tone": "gold",
+      "minWave": 7,
+      "scorePct": 0.17,
+      "enemyModifiers": {
+        "spdPct": 0.08
+      },
+      "effects": {
+        "heroOpeningStatuses": [
+          {
+            "status": "sealed",
+            "duration": 2
+          }
+        ]
+      }
+    }
+  },
+  "chapter_rules": {
+    "ferry": {
+      "id": "ferry_wake",
+      "name": "雪夜渡口",
+      "desc": "林冲、鲁智深取得破阵先机，官军前阵开局承受护势压力。",
+      "effects": {
+        "enemyStartPoisePct": 0.12,
+        "teamModifiers": {
+          "startYiqi": 8
+        }
+      }
+    },
+    "bianjing": {
+      "id": "capital_crossfire",
+      "name": "雪巷夹击",
+      "desc": "官军后阵弓手开局获得鼓舞，先拆远射再取文书。",
+      "effects": {
+        "enemyOpeningStatuses": [
+          {
+            "row": 2,
+            "status": "inspiration",
+            "duration": 2
+          }
+        ]
+      }
+    },
+    "boar_forest": {
+      "id": "forest_ambush",
+      "name": "林深伏杀",
+      "desc": "禁军教官开局获得护御；梁山好汉获得护势与先手。",
+      "effects": {
+        "enemyOpeningStatuses": [
+          {
+            "row": 0,
+            "status": "guard",
+            "duration": 2
+          }
+        ],
+        "teamModifiers": {
+          "poisePct": 0.18,
+          "startYiqi": 8
+        }
+      }
+    },
+    "cangzhou": {
+      "id": "medicine_fire",
+      "name": "药火救人",
+      "desc": "好汉治疗提高 20%，开阵获得护御；官军受火势影响承受更多破势。",
+      "effects": {
+        "teamModifiers": {
+          "healPct": 0.2,
+          "openingGuard": 1,
+          "poisePct": 0.15
+        }
+      }
+    },
+    "qingfeng": {
+      "id": "moon_archers",
+      "name": "月下齐射",
+      "desc": "后阵官军身法与鼓舞更强，后阵好汉需先避开箭雨。",
+      "effects": {
+        "enemyModifiers": {
+          "spdPct": 0.08
+        },
+        "enemyOpeningStatuses": [
+          {
+            "row": 2,
+            "status": "inspiration",
+            "duration": 2
+          }
+        ]
+      }
+    },
+    "jiangzhou": {
+      "id": "execution_market",
+      "name": "法场夺人",
+      "desc": "刽子手破甲更强；梁山开阵获得义气，首名官军倒下后余军获得护御。",
+      "effects": {
+        "teamModifiers": {
+          "startYiqi": 12
+        },
+        "onEnemyDefeat": {
+          "guard": 1
+        }
+      }
+    },
+    "zhujiazhuang": {
+      "id": "snow_maze",
+      "name": "盘陀雪路",
+      "desc": "庄门教师开局护御；梁山队伍身法更快，治疗提高 12%。",
+      "effects": {
+        "teamModifiers": {
+          "spdPct": 0.05,
+          "healPct": 0.12
+        },
+        "enemyOpeningStatuses": [
+          {
+            "row": 0,
+            "status": "guard",
+            "duration": 2
+          }
+        ]
+      }
+    },
+    "damingfu": {
+      "id": "lantern_city",
+      "name": "灯市疑阵",
+      "desc": "梁山开局获得鼓舞与义气；都监在低位会背水反扑。",
+      "effects": {
+        "teamModifiers": {
+          "openingInspiration": 1,
+          "startYiqi": 8
+        }
+      }
+    },
+    "liangshan": {
+      "id": "last_stand",
+      "name": "水泊聚义",
+      "desc": "兄弟契与三路星火可改变战局；梁山开局获得护御，官军会誓死反扑。",
+      "effects": {
+        "teamModifiers": {
+          "openingGuard": 1,
+          "startYiqi": 8
+        },
+        "enemyOpeningStatuses": [
+          {
+            "row": 0,
+            "status": "inspiration",
+            "duration": 1
+          }
+        ]
+      }
+    }
+  },
+  "stage_recruits": {
+    "ferry": [
+      "luzhishen"
+    ],
+    "bianjing": [
+      "daizong",
+      "shiqian"
+    ],
+    "boar_forest": [
+      "wusong"
+    ],
+    "cangzhou": [
+      "andaoquan"
+    ],
+    "qingfeng": [
+      "huarong"
+    ],
+    "jiangzhou": [
+      "songjiang",
+      "likui"
+    ],
+    "zhujiazhuang": [
+      "husanniang"
+    ],
+    "damingfu": [
+      "wuyong",
+      "yanqing"
+    ],
+    "liangshan": [
+      "yangzhi",
+      "gongsunsheng",
+      "lujunyi",
+      "zhangshun"
+    ]
+  },
+  "chronicle_recruits": {
+    "shijin": [
+      "qinming",
+      "chaiin"
+    ],
+    "guansheng": [
+      "zhangqing",
+      "xuning"
+    ],
+    "lijun": [
+      "ruanxiaoqi",
+      "sunerniang",
+      "gudashao"
+    ],
+    "lingzhen": [
+      "huyanzhuo",
+      "liutang",
+      "zhutong"
+    ],
+    "leiheng": [
+      "liying",
+      "jiezhen",
+      "jiebao"
+    ],
+    "yangxiong": [
+      "shixiu",
+      "sunli",
+      "yuehe"
+    ],
+    "yuehe": [
+      "xiaorang",
+      "jiangjing"
+    ]
+  },
+  "hero_quests": {
+    "linchong": [
+      {
+        "id": "linchong_old_tassel",
+        "stage": 1,
+        "requiredChapter": 1,
+        "title": "旧枪残缨",
+        "premise": "黄河渡口的风雪里，林冲仍把那截褪色枪缨系在枪上。旧案未雪，他需要一场胜仗证明自己还能握稳这条枪。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携林冲取得 2 场胜利"
+        },
+        "epithet": "雪夜未归人",
+        "reward": {
+          "copper": 180,
+          "xp": 100
+        }
+      },
+      {
+        "id": "linchong_imperial_seal",
+        "stage": 2,
+        "requiredChapter": 3,
+        "title": "禁军旧印",
+        "premise": "一枚禁军旧印被官差当作追捕凭证。林冲必须亲手夺回它，才能让昔日同袍明白，教头反的不是军旗，而是借军旗害人的权臣。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次林冲义技"
+        },
+        "epithet": "枪阵尚在",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "linchong_temple_after",
+        "stage": 3,
+        "requiredChapter": 5,
+        "title": "山神庙外",
+        "premise": "草料场的火已经熄了，山神庙外却仍有人守着一段旧路。林冲决定不再追问他失去了什么，而是守住身边还活着的人。",
+        "objective": {
+          "metric": "damage",
+          "target": 1800,
+          "label": "以林冲累计造成 1800 伤害"
+        },
+        "epithet": "风雪守夜人",
+        "reward": {
+          "copper": 420,
+          "xp": 260
+        }
+      }
+    ],
+    "luzhishen": [
+      {
+        "id": "luzhishen_wine_shop",
+        "stage": 1,
+        "requiredChapter": 1,
+        "title": "酒肆闻冤",
+        "premise": "渡口酒肆里，卖唱父女被泼皮逼得不敢抬头。鲁智深把酒碗一放，先听完冤情，再问拳头该落在哪里。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携鲁智深取得 2 场胜利"
+        },
+        "epithet": "花和尚",
+        "reward": {
+          "copper": 180,
+          "xp": 100
+        }
+      },
+      {
+        "id": "luzhishen_bell",
+        "stage": 2,
+        "requiredChapter": 3,
+        "title": "六和听钟",
+        "premise": "古寺残钟在夜里自己响了一声。鲁智深说是风，众僧说是兆头。他选择提杖出门，把兆头变成一条活路。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次鲁智深义技"
+        },
+        "epithet": "金刚行者",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "luzhishen_tide",
+        "stage": 3,
+        "requiredChapter": 5,
+        "title": "潮信未平",
+        "premise": "江潮拍岸，鲁智深忽然明白自己一直听的不是杀声，而是归处。他把禅杖插在堤边，替梁山挡下最后一波追兵。",
+        "objective": {
+          "metric": "damage",
+          "target": 1500,
+          "label": "以鲁智深累计造成 1500 伤害"
+        },
+        "epithet": "潮声不惊",
+        "reward": {
+          "copper": 420,
+          "xp": 260
+        }
+      }
+    ],
+    "wusong": [
+      {
+        "id": "wusong_tiger_shadow",
+        "stage": 1,
+        "requiredChapter": 1,
+        "title": "景阳余虎",
+        "premise": "景阳冈的虎患已除，酒家却仍在用虎骨骗过路人。武松不急着辩解，只让那一纸假告示自己露出破绽。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携武松取得 2 场胜利"
+        },
+        "epithet": "打虎人",
+        "reward": {
+          "copper": 180,
+          "xp": 100
+        }
+      },
+      {
+        "id": "wusong_crossroad",
+        "stage": 2,
+        "requiredChapter": 3,
+        "title": "十字坡夜话",
+        "premise": "十字坡的黑店留下了太多无名客。武松在灯下听完每个人的名字，决定把这座店变成梁山在官道上的第一处耳目。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次武松义技"
+        },
+        "epithet": "行者无归",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "wusong_after_tower",
+        "stage": 3,
+        "requiredChapter": 5,
+        "title": "鸳鸯楼后",
+        "premise": "血写完的姓名不该再添。武松收起戒刀，答应替一名幸存者把证词送到梁山，让刀口之外也有清算的办法。",
+        "objective": {
+          "metric": "damage",
+          "target": 1800,
+          "label": "以武松累计造成 1800 伤害"
+        },
+        "epithet": "刀下留名",
+        "reward": {
+          "copper": 420,
+          "xp": 260
+        }
+      }
+    ],
+    "daizong": [
+      {
+        "id": "daizong_lost_token",
+        "stage": 1,
+        "requiredChapter": 1,
+        "title": "驿路失符",
+        "premise": "一封求援信被驿卒认出笔迹，戴宗必须在封锁前换过三座驿站，把消息送到还愿意听真话的人手里。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携戴宗取得 2 场胜利"
+        },
+        "epithet": "神行太保",
+        "reward": {
+          "copper": 180,
+          "xp": 100
+        }
+      },
+      {
+        "id": "daizong_family_letter",
+        "stage": 2,
+        "requiredChapter": 3,
+        "title": "夜递家书",
+        "premise": "营中一名小卒三年未通家音。戴宗绕了半座州城，只为把一封沾雪的家书送进那户人家门缝。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次戴宗义技"
+        },
+        "epithet": "千里传灯",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "daizong_urgent_order",
+        "stage": 3,
+        "requiredChapter": 5,
+        "title": "梁山急令",
+        "premise": "七路追兵同时封河，梁山必须在黎明前换阵。戴宗把三封互相冲突的军令送到该到的人手中，也为全军争出一条活路。",
+        "objective": {
+          "metric": "damage",
+          "target": 900,
+          "label": "以戴宗累计造成 900 伤害"
+        },
+        "epithet": "踏雪无痕",
+        "reward": {
+          "copper": 420,
+          "xp": 260
+        }
+      }
+    ],
+    "andaoquan": [
+      {
+        "id": "andaoquan_sick_village",
+        "stage": 1,
+        "requiredChapter": 1,
+        "title": "病村问药",
+        "premise": "河滩流民中起了寒疫。安道全没有先问诊金，而是把仅剩的药材分成七份，赌每一份都能救回一条命。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携安道全取得 2 场胜利"
+        },
+        "epithet": "赛华佗",
+        "reward": {
+          "copper": 180,
+          "xp": 100
+        }
+      },
+      {
+        "id": "andaoquan_needle",
+        "stage": 2,
+        "requiredChapter": 3,
+        "title": "金针渡厄",
+        "premise": "军中医官只会按官阶给药。安道全在阵后另设一张小案，让最普通的小卒也能先得到一针止痛。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次安道全义技"
+        },
+        "epithet": "青囊济世",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "andaoquan_old_oath",
+        "stage": 3,
+        "requiredChapter": 5,
+        "title": "杏林旧誓",
+        "premise": "旧日同门以名医之名替权贵掩盖毒案。安道全把药方和尸格一并交给梁山，从此医者只认病，不认门第。",
+        "objective": {
+          "metric": "damage",
+          "target": 700,
+          "label": "以安道全累计造成 700 伤害"
+        },
+        "epithet": "药香满江",
+        "reward": {
+          "copper": 420,
+          "xp": 260
+        }
+      }
+    ],
+    "shiqian": [
+      {
+        "id": "shiqian_goose_call",
+        "stage": 1,
+        "requiredChapter": 1,
+        "title": "雁过留声",
+        "premise": "渡口的雁群惊了一次，时迁便知道芦苇里藏着伏兵。众人不信，他却已经把退路、船索和官差的靴印都记进心里。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携时迁取得 2 场胜利"
+        },
+        "epithet": "鼓上蚤",
+        "reward": {
+          "copper": 180,
+          "xp": 100
+        }
+      },
+      {
+        "id": "shiqian_hundred_locks",
+        "stage": 2,
+        "requiredChapter": 3,
+        "title": "百锁连环",
+        "premise": "牢城仓房有九道锁，钥匙却在同一个人腰上。时迁没有偷钥匙，而是让九道锁在同一个夜里一起失效。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次时迁义技"
+        },
+        "epithet": "梁上无影",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "shiqian_thief_code",
+        "stage": 3,
+        "requiredChapter": 5,
+        "title": "盗亦有道",
+        "premise": "一箱赈银被山寨头目转手倒卖。时迁把银子送回百姓手中，也第一次愿意让梁山替他把名字记在明处。",
+        "objective": {
+          "metric": "damage",
+          "target": 900,
+          "label": "以时迁累计造成 900 伤害"
+        },
+        "epithet": "一诺千金",
+        "reward": {
+          "copper": 420,
+          "xp": 260
+        }
+      }
+    ],
+    "huarong": [
+      {
+        "id": "huarong_qingfeng_arrow",
+        "stage": 1,
+        "requiredChapter": 1,
+        "title": "清风试箭",
+        "premise": "清风寨的比箭场上，有人故意挪动靶心，想看花荣出丑。花荣只问了一句风向，随后让第二支箭穿过第一支箭的箭羽。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携花荣取得 2 场胜利"
+        },
+        "epithet": "小李广",
+        "reward": {
+          "copper": 180,
+          "xp": 100
+        }
+      },
+      {
+        "id": "huarong_moon_shot",
+        "stage": 2,
+        "requiredChapter": 3,
+        "title": "月下穿杨",
+        "premise": "追兵举火封山，花荣偏在月色最暗时出箭。第一箭熄灯，第二箭断索，第三箭替梁山留下整夜的行军时间。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次花荣义技"
+        },
+        "epithet": "银弓照夜",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "huarong_goose_shot",
+        "stage": 3,
+        "requiredChapter": 5,
+        "title": "梁山射雁",
+        "premise": "聚义厅前雁阵南飞，众人只看见花荣抬手。他要射的不是最肥的一只，而是领头那只，让整个雁阵知道梁山已经有了主心骨。",
+        "objective": {
+          "metric": "damage",
+          "target": 1600,
+          "label": "以花荣累计造成 1600 伤害"
+        },
+        "epithet": "一箭定风",
+        "reward": {
+          "copper": 420,
+          "xp": 260
+        }
+      }
+    ],
+    "likui": [
+      {
+        "id": "likui_mother",
+        "stage": 1,
+        "requiredChapter": 1,
+        "title": "江州寻母",
+        "premise": "李逵听说母亲仍被乡邻欺负，抄起板斧就要下山。宋江只让他先听完一名老妇的证词，再决定斧头落向哪里。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携李逵取得 2 场胜利"
+        },
+        "epithet": "铁牛",
+        "reward": {
+          "copper": 180,
+          "xp": 100
+        }
+      },
+      {
+        "id": "likui_axes_oath",
+        "stage": 2,
+        "requiredChapter": 3,
+        "title": "板斧认义",
+        "premise": "有人激李逵杀降卒，他却第一次把双斧插回腰间。众目睽睽之下，黑旋风学会了一件比砍人更难的事：停手。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次李逵义技"
+        },
+        "epithet": "黑旋风",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "likui_gate_guard",
+        "stage": 3,
+        "requiredChapter": 5,
+        "title": "水泊守门",
+        "premise": "梁山后门被人趁夜摸上。李逵独自守在窄桥，不追、不喊、不退，只让每一把板斧都替身后的兄弟醒着。",
+        "objective": {
+          "metric": "damage",
+          "target": 1800,
+          "label": "以李逵累计造成 1800 伤害"
+        },
+        "epithet": "铁牛护旗",
+        "reward": {
+          "copper": 420,
+          "xp": 260
+        }
+      }
+    ],
+    "songjiang": [
+      {
+        "id": "songjiang_jingzhou_oath",
+        "stage": 1,
+        "requiredChapter": 6,
+        "title": "江州血印",
+        "premise": "法场劫后，宋江在囚衣内侧发现一枚被血浸透的郓城旧印。昔日同僚因替他说话被下狱，他必须决定梁山该以何种名义救人。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携宋江取得 2 场胜利"
+        },
+        "epithet": "呼保义",
+        "reward": {
+          "copper": 260,
+          "xp": 150
+        }
+      },
+      {
+        "id": "songjiang_food_convoy",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "一车冬粮",
+        "premise": "祝家庄封锁道路，庄外流民断粮。宋江把军粮分出一半，又亲自护送最后一车粮穿过雪夜，逼梁山在脸面与活人之间先选后者。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次宋江义技"
+        },
+        "epithet": "及时雨",
+        "reward": {
+          "copper": 380,
+          "xp": 220
+        }
+      },
+      {
+        "id": "songjiang_banner_name",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "旗上无名",
+        "premise": "大名府城下，有人逼迫宋江在令旗上写下自己的名字，以一身承担所有罪责。他最终让旗面空着，把名字留给每一个愿意上山的人。",
+        "objective": {
+          "metric": "damage",
+          "target": 900,
+          "label": "以宋江累计造成 900 伤害"
+        },
+        "epithet": "梁山及时雨",
+        "reward": {
+          "copper": 520,
+          "xp": 320
+        }
+      }
+    ],
+    "husanniang": [
+      {
+        "id": "husanniang_village_choice",
+        "stage": 1,
+        "requiredChapter": 7,
+        "title": "庄门双刀",
+        "premise": "祝家庄要以百姓作盾，扈家庄则想拿她的婚约换取退路。扈三娘把两封书信一并钉在庄门，提刀要求所有人先问庄中百姓。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携扈三娘取得 2 场胜利"
+        },
+        "epithet": "一丈青",
+        "reward": {
+          "copper": 260,
+          "xp": 150
+        }
+      },
+      {
+        "id": "husanniang_lasso_noose",
+        "stage": 2,
+        "requiredChapter": 8,
+        "title": "红索不缚人",
+        "premise": "梁山营中有人建议用红锦套索绑来降卒问话。扈三娘把索结解开，亲自听完对方口供，再用这条索替伤者固定断腿。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次扈三娘义技"
+        },
+        "epithet": "红锦照雪",
+        "reward": {
+          "copper": 380,
+          "xp": 220
+        }
+      },
+      {
+        "id": "husanniang_night_ride",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "青影归庄",
+        "premise": "梁山军回撤时，扈三娘独自折返雪庄，把最后一批妇孺带出火场。她没有带走扈家的牌位，只带走所有人愿意跟她走的脚步。",
+        "objective": {
+          "metric": "damage",
+          "target": 1400,
+          "label": "以扈三娘累计造成 1400 伤害"
+        },
+        "epithet": "青影护庄",
+        "reward": {
+          "copper": 520,
+          "xp": 320
+        }
+      }
+    ],
+    "wuyong": [
+      {
+        "id": "wuyong_lantern_map",
+        "stage": 1,
+        "requiredChapter": 8,
+        "title": "灯市残图",
+        "premise": "大名府灯市的地图被人故意改错三条街。吴用没有重画全图，只找出那个受益最多的人，让整条伪计自己浮出水面。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携吴用取得 2 场胜利"
+        },
+        "epithet": "智多星",
+        "reward": {
+          "copper": 260,
+          "xp": 150
+        }
+      },
+      {
+        "id": "wuyong_empty_camp",
+        "stage": 2,
+        "requiredChapter": 9,
+        "title": "空营炊烟",
+        "premise": "官军数倍于梁山，吴用却让全营照常生火。灶烟遮住撤军路线，也遮住了每一个不愿再被官府点名的百姓。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次吴用义技"
+        },
+        "epithet": "一计千军",
+        "reward": {
+          "copper": 380,
+          "xp": 220
+        }
+      },
+      {
+        "id": "wuyong_ledger",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "不焚名册",
+        "premise": "大名府名册记着所有替梁山开过门的人。吴用原想烧掉它，最后却命人抄成三份送往民间，让官府再也不能假装只有梁山记得。",
+        "objective": {
+          "metric": "damage",
+          "target": 1000,
+          "label": "以吴用累计造成 1000 伤害"
+        },
+        "epithet": "灯下军师",
+        "reward": {
+          "copper": 520,
+          "xp": 320
+        }
+      }
+    ],
+    "yanqing": [
+      {
+        "id": "yanqing_lantern_song",
+        "stage": 1,
+        "requiredChapter": 8,
+        "title": "灯市箫声",
+        "premise": "大名府灯市里，燕青以一曲箫声换出一座府邸的巡夜暗号。曲终之后，他不急着离开，先把赏钱还给卖灯老人。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携燕青取得 2 场胜利"
+        },
+        "epithet": "浪子",
+        "reward": {
+          "copper": 260,
+          "xp": 150
+        }
+      },
+      {
+        "id": "yanqing_wrestling_stage",
+        "stage": 2,
+        "requiredChapter": 9,
+        "title": "擂台不争名",
+        "premise": "官军设擂台诱捕梁山好手。燕青故意丢掉彩头，只把守擂教头引到无人的河埠，让一场追杀变成一次堂堂正正的相扑。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次燕青义技"
+        },
+        "epithet": "相扑无双",
+        "reward": {
+          "copper": 380,
+          "xp": 220
+        }
+      },
+      {
+        "id": "yanqing_swallow_return",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "燕归水泊",
+        "premise": "梁山船队离开大名府时，燕青在城头吹完最后一段曲子。这一次他没有回头找旧日主人，而是把箫声留给仍在城中的百姓。",
+        "objective": {
+          "metric": "damage",
+          "target": 1600,
+          "label": "以燕青累计造成 1600 伤害"
+        },
+        "epithet": "燕影归泊",
+        "reward": {
+          "copper": 520,
+          "xp": 320
+        }
+      }
+    ],
+    "yangzhi": [
+      {
+        "id": "yangzhi_broken_convoy",
+        "stage": 1,
+        "requiredChapter": 4,
+        "title": "断封之后",
+        "premise": "黄泥冈的封条断开以后，杨志最怕的不是官差追捕，而是百姓仍把他看作那个押着生辰纲的人。他要用一场守阵证明，自己的枪可以替人断后。",
+        "objective": {
+          "metric": "wins",
+          "target": 1,
+          "label": "携杨志取得 1 场胜利"
+        },
+        "epithet": "青面押阵",
+        "reward": {
+          "copper": 240,
+          "xp": 150
+        }
+      },
+      {
+        "id": "yangzhi_family_spear",
+        "stage": 2,
+        "requiredChapter": 6,
+        "title": "杨家旧名",
+        "premise": "旧军官以杨家将的名声逼杨志替官府押送军械。他把祖传枪法从头演了一遍，最后停在守门的一式上：这杆枪先守活人。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次杨志义技"
+        },
+        "epithet": "金枪守道",
+        "reward": {
+          "copper": 380,
+          "xp": 220
+        }
+      },
+      {
+        "id": "yangzhi_new_order",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "重写军令",
+        "premise": "梁山粮队将过黄泥冈，旧日失纲的噩梦又缠上来。杨志亲自勘路、换旗、设伏，最后在新军令上写下百姓先行。",
+        "objective": {
+          "metric": "damage",
+          "target": 1200,
+          "label": "以杨志累计造成 1200 伤害"
+        },
+        "epithet": "天暗护纲",
+        "reward": {
+          "copper": 540,
+          "xp": 330
+        }
+      }
+    ],
+    "gongsunsheng": [
+      {
+        "id": "gongsun_false_talisman",
+        "stage": 1,
+        "requiredChapter": 5,
+        "title": "假符惑众",
+        "premise": "乡间有人用假雷符敛财，还借公孙胜的名号挑动两村械斗。他没有当众拆穿神迹，只让两村先看见同一片旱田里的水脉。",
+        "objective": {
+          "metric": "wins",
+          "target": 1,
+          "label": "携公孙胜取得 1 场胜利"
+        },
+        "epithet": "入云道人",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "gongsun_cloud_guard",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "云下护阵",
+        "premise": "祝家庄伏兵借夜色封路，公孙胜把灯火与雪影错成三层疑阵。他不求一招制敌，只让伤者先退回能看见北斗的地方。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次公孙胜义技"
+        },
+        "epithet": "云隐护星",
+        "reward": {
+          "copper": 400,
+          "xp": 240
+        }
+      },
+      {
+        "id": "gongsun_thunder_oath",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "雷止人间",
+        "premise": "大名府军中以妖言惑众为名搜捕道流。公孙胜把五雷法印压在案上，承认术法不能替人定罪，也不能替人免罪。",
+        "objective": {
+          "metric": "damage",
+          "target": 900,
+          "label": "以公孙胜累计造成 900 伤害"
+        },
+        "epithet": "五雷正心",
+        "reward": {
+          "copper": 560,
+          "xp": 350
+        }
+      }
+    ],
+    "lujunyi": [
+      {
+        "id": "lujunyi_broken_house",
+        "stage": 1,
+        "requiredChapter": 8,
+        "title": "府门已空",
+        "premise": "卢俊义旧宅被官府查封，门客四散。只有几名老仆守在门外，等他决定这座府邸究竟还算不算家。",
+        "objective": {
+          "metric": "wins",
+          "target": 1,
+          "label": "携卢俊义取得 1 场胜利"
+        },
+        "epithet": "玉麟无归",
+        "reward": {
+          "copper": 300,
+          "xp": 190
+        }
+      },
+      {
+        "id": "lujunyi_drill_ground",
+        "stage": 2,
+        "requiredChapter": 8,
+        "title": "校场无名",
+        "premise": "梁山好手在校场轮流挑战卢俊义，想看他是否仍把自己当大名府第一。卢俊义连胜之后，却主动把第一的位置空了出来。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次卢俊义义技"
+        },
+        "epithet": "河北枪绝",
+        "reward": {
+          "copper": 460,
+          "xp": 280
+        }
+      },
+      {
+        "id": "lujunyi_qilin_banner",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "麒麟换旗",
+        "premise": "旧部劝卢俊义另立旗号，凭名望收拢河北豪强。他把麒麟玉牌挂在聚义厅外，却将帅旗交给众人共同署名。",
+        "objective": {
+          "metric": "damage",
+          "target": 1500,
+          "label": "以卢俊义累计造成 1500 伤害"
+        },
+        "epithet": "玉麟入泊",
+        "reward": {
+          "copper": 640,
+          "xp": 410
+        }
+      }
+    ],
+    "zhangshun": [
+      {
+        "id": "zhangshun_river_toll",
+        "stage": 1,
+        "requiredChapter": 8,
+        "title": "江上私税",
+        "premise": "浔阳江面有人私设水卡，逼迫渔船交两份过江钱。张顺没有先拆卡，而是潜到水下看清谁在背后收账。",
+        "objective": {
+          "metric": "wins",
+          "target": 1,
+          "label": "携张顺取得 1 场胜利"
+        },
+        "epithet": "浪里白条",
+        "reward": {
+          "copper": 300,
+          "xp": 190
+        }
+      },
+      {
+        "id": "zhangshun_boat_fire",
+        "stage": 2,
+        "requiredChapter": 8,
+        "title": "夜救渔船",
+        "premise": "官船趁夜推倒渔船，想逼船户签下卖身契。张顺从水底凿断拖索，把整片江面变成船户自己的退路。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次张顺义技"
+        },
+        "epithet": "浔阳浪子",
+        "reward": {
+          "copper": 460,
+          "xp": 280
+        }
+      },
+      {
+        "id": "zhangshun_white_wave",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "白浪照心",
+        "premise": "梁山战船将夜渡水泊，张顺独自潜过封锁，在水底换掉绊索。他出水时只说一句：一条江若不属于百姓，谁也别想安稳行船。",
+        "objective": {
+          "metric": "damage",
+          "target": 1300,
+          "label": "以张顺累计造成 1300 伤害"
+        },
+        "epithet": "浪里归心",
+        "reward": {
+          "copper": 640,
+          "xp": 410
+        }
+      }
+    ],
+    "shijin": [
+      {
+        "id": "shijin_broken_estate",
+        "stage": 1,
+        "requiredChapter": 1,
+        "title": "史家残墙",
+        "premise": "史家村只剩半堵焦墙，少华山旧部却仍有人借史进的名号向过路商旅收钱。他必须先看清，哪些人是在守义，哪些人只是在借义。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携史进取得 2 场胜利"
+        },
+        "epithet": "少华枪客",
+        "reward": {
+          "copper": 200,
+          "xp": 120
+        }
+      },
+      {
+        "id": "shijin_teacher_spear",
+        "stage": 2,
+        "requiredChapter": 3,
+        "title": "王进旧枪",
+        "premise": "一杆枪谱被官差当作匪证搜走，史进追出十里才认出封皮上的字迹。那是王进教他的第一路枪，也是他第一次明白武艺不该替权势作证。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次史进义技"
+        },
+        "epithet": "九龙追锋",
+        "reward": {
+          "copper": 300,
+          "xp": 190
+        }
+      },
+      {
+        "id": "shijin_three_mountains",
+        "stage": 3,
+        "requiredChapter": 5,
+        "title": "少华归旗",
+        "premise": "少华山与梁山要合兵破敌，旧寨主却担心从此没了自己的旗。史进在阵前立下三枪为约，让所有人看见，合义不是夺名，而是共担生死。",
+        "objective": {
+          "metric": "damage",
+          "target": 1900,
+          "label": "以史进累计造成 1900 伤害"
+        },
+        "epithet": "九纹龙",
+        "reward": {
+          "copper": 500,
+          "xp": 320
+        }
+      }
+    ],
+    "qinming": [
+      {
+        "id": "qinming_broken_gate",
+        "stage": 1,
+        "requiredChapter": 2,
+        "title": "青州碎门",
+        "premise": "青州城门下挂着一张假通缉令，姓名被涂改成秦明。守军不敢认他，城外百姓也不敢开门，他必须用一场不伤百姓的胜仗揭开伪令。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携秦明取得 2 场胜利"
+        },
+        "epithet": "霹雳将",
+        "reward": {
+          "copper": 220,
+          "xp": 130
+        }
+      },
+      {
+        "id": "qinming_wolf_tooth",
+        "stage": 2,
+        "requiredChapter": 4,
+        "title": "狼牙断令",
+        "premise": "秦明找到签发旧令的军吏。对方把罪责推给一纸公文，他便把狼牙棒压在案上，要求军吏当着受害百姓逐条念出每一个被抹去的名字。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次秦明义技"
+        },
+        "epithet": "天猛星",
+        "reward": {
+          "copper": 340,
+          "xp": 220
+        }
+      },
+      {
+        "id": "qinming_thunder_road",
+        "stage": 3,
+        "requiredChapter": 6,
+        "title": "雷落同道",
+        "premise": "官军驱赶降卒填壕，秦明带人从侧阵破入。他第一次没有向最显眼的首领冲锋，而是先砸开围栏，让那些被军令当作耗材的人逃出来。",
+        "objective": {
+          "metric": "damage",
+          "target": 2400,
+          "label": "以秦明累计造成 2400 伤害"
+        },
+        "epithet": "火雷镇军",
+        "reward": {
+          "copper": 560,
+          "xp": 360
+        }
+      }
+    ],
+    "chaiin": [
+      {
+        "id": "chaiin_open_granary",
+        "stage": 1,
+        "requiredChapter": 2,
+        "title": "高唐旧仓",
+        "premise": "柴进旧识押着一仓赈粮经过高唐，官差却说粮袋没有官印。柴进打开自己的名帖，先把粮分给城外灾民，再去解释名帖为何比官印更该作数。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携柴进取得 2 场胜利"
+        },
+        "epithet": "小旋风",
+        "reward": {
+          "copper": 220,
+          "xp": 140
+        }
+      },
+      {
+        "id": "chaiin_prison_ledger",
+        "stage": 2,
+        "requiredChapter": 5,
+        "title": "牢城义簿",
+        "premise": "高唐州牢城用一本假账簿吞掉囚粮，再把病死者记成逃役。柴进逐页核对，替每一个无名囚徒补回姓名，也让门客重新决定自己要站在哪一边。",
+        "objective": {
+          "metric": "kills",
+          "target": 6,
+          "label": "随柴进出阵击败 6 名敌人"
+        },
+        "epithet": "柴门义士",
+        "reward": {
+          "copper": 380,
+          "xp": 240
+        }
+      },
+      {
+        "id": "chaiin_golden_leaf",
+        "stage": 3,
+        "requiredChapter": 7,
+        "title": "金叶散尽",
+        "premise": "梁山急需药材与冬衣，柴进把最后一批柴府金叶摆上桌。有人劝他留作退路，他却把金叶一片片分给各寨，从此把退路留在人心。",
+        "objective": {
+          "metric": "damage",
+          "target": 1100,
+          "label": "以柴进累计造成 1100 伤害"
+        },
+        "epithet": "义仓之主",
+        "reward": {
+          "copper": 620,
+          "xp": 400
+        }
+      }
+    ],
+    "guansheng": [
+      {
+        "id": "guansheng_pudong_drill",
+        "stage": 1,
+        "requiredChapter": 3,
+        "title": "蒲东夜操",
+        "premise": "蒲东营中夜操，军吏为凑足军功逼新兵冒雪负重。关胜叫停操练，亲自持刀站在雪里，替最瘦弱的一队士兵守到天亮。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携关胜取得 2 场胜利"
+        },
+        "epithet": "蒲东巡检",
+        "reward": {
+          "copper": 260,
+          "xp": 160
+        }
+      },
+      {
+        "id": "guansheng_surrender_flag",
+        "stage": 2,
+        "requiredChapter": 6,
+        "title": "降旗不倒",
+        "premise": "官军阵前竖起降旗，却暗中安排弓手射杀降卒。关胜一骑横刀护住旗下百姓，让两军都看清，接受投降不是把人骗出阵再杀。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次关胜义技"
+        },
+        "epithet": "青龙镇军",
+        "reward": {
+          "copper": 420,
+          "xp": 270
+        }
+      },
+      {
+        "id": "guansheng_daming_oath",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "大名刀盟",
+        "premise": "大名府守军愿开城，但要求梁山先交出一名旧将。关胜把青龙刀插在城门外，提出以刀为界，先让百姓出城，再谈谁该留下承担旧罪。",
+        "objective": {
+          "metric": "damage",
+          "target": 2200,
+          "label": "以关胜累计造成 2200 伤害"
+        },
+        "epithet": "天勇大刀",
+        "reward": {
+          "copper": 680,
+          "xp": 440
+        }
+      }
+    ],
+    "zhangqing": [
+      {
+        "id": "zhangqing_stone_wall",
+        "stage": 1,
+        "requiredChapter": 7,
+        "title": "飞石打将",
+        "premise": "东昌府城下，官军把百姓赶上城头作盾，又将梁山好汉的姓名写在箭靶上。张清必须在不开杀戒的前提下，让守军先失去号令。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携张清取得 2 场胜利"
+        },
+        "epithet": "没羽箭",
+        "reward": {
+          "copper": 300,
+          "xp": 190
+        }
+      },
+      {
+        "id": "zhangqing_stone_ledger",
+        "stage": 2,
+        "requiredChapter": 8,
+        "title": "石子无名",
+        "premise": "被击倒的官军校尉醒后，发现张清在每枚石子上都刻了被他们克扣军粮的卒名。石子不是羞辱，而是一份逼他们睁眼的名册。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次张清义技"
+        },
+        "epithet": "飞蝗点将",
+        "reward": {
+          "copper": 460,
+          "xp": 280
+        }
+      },
+      {
+        "id": "zhangqing_rain_of_stones",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "百石归囊",
+        "premise": "水泊决战前，张清把最后一囊石子分给船户与民壮：真正让敌阵乱起来的，不能只靠一双快手，而要让所有人都知道该打向哪面令旗。",
+        "objective": {
+          "metric": "damage",
+          "target": 2200,
+          "label": "以张清累计造成 2200 伤害"
+        },
+        "epithet": "天捷流星",
+        "reward": {
+          "copper": 700,
+          "xp": 450
+        }
+      }
+    ],
+    "xuning": [
+      {
+        "id": "xuning_broken_formation",
+        "stage": 1,
+        "requiredChapter": 6,
+        "title": "旧阵新枪",
+        "premise": "禁军旧谱把钩镰枪写成专杀马腿的兵器，徐宁却在破阵后看见满地无人掩埋的民夫。他决定把第一式改成先断号令，再拆甲阵。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携徐宁取得 2 场胜利"
+        },
+        "epithet": "雁翎教头",
+        "reward": {
+          "copper": 280,
+          "xp": 180
+        }
+      },
+      {
+        "id": "xuning_imperial_order",
+        "stage": 2,
+        "requiredChapter": 8,
+        "title": "军令背面",
+        "premise": "一封禁军旧令送到梁山，正面写着征讨，背面却记着被克扣的冬衣与名字。徐宁要亲手拆开这道命令，让每个持枪的人知道自己在护谁。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次徐宁义技"
+        },
+        "epithet": "金枪锁阵",
+        "reward": {
+          "copper": 480,
+          "xp": 300
+        }
+      },
+      {
+        "id": "xuning_spear_ledger",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "阵为人用",
+        "premise": "水泊决战前，徐宁把家传枪谱抄成数十份，分给船户、民壮与新军。最后一页的“阵为人用”不再是家训，而成了梁山每一道阵线共同的规矩。",
+        "objective": {
+          "metric": "damage",
+          "target": 2300,
+          "label": "以徐宁累计造成 2300 伤害"
+        },
+        "epithet": "天佑金枪",
+        "reward": {
+          "copper": 720,
+          "xp": 470
+        }
+      }
+    ],
+    "lijun": [
+      {
+        "id": "lijun_tide_ledger",
+        "stage": 1,
+        "requiredChapter": 7,
+        "title": "潮落名册",
+        "premise": "浔阳江水门被私税官船堵死，李俊从沉船里捞出一本被水泡软的名册。册上没有豪商，只有欠税的渔户与失踪船工。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携李俊取得 2 场胜利"
+        },
+        "epithet": "混江掌舵",
+        "reward": {
+          "copper": 360,
+          "xp": 220
+        }
+      },
+      {
+        "id": "lijun_three_rivers",
+        "stage": 2,
+        "requiredChapter": 8,
+        "title": "三江会旗",
+        "premise": "几路水军为谁先靠岸争执不下。李俊把三面旗同时降下，要求每艘船先报出还能救回多少人，再谈军功。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次李俊义技"
+        },
+        "epithet": "三江号令",
+        "reward": {
+          "copper": 540,
+          "xp": 330
+        }
+      },
+      {
+        "id": "lijun_dragon_gate",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "龙门不闭",
+        "premise": "决战前夜，李俊把私税船的旧闸门改造成水寨正门。门不再为官船关闭，只为所有愿意互相接应的人打开。",
+        "objective": {
+          "metric": "damage",
+          "target": 2400,
+          "label": "以李俊累计造成 2400 伤害"
+        },
+        "epithet": "天寿混江",
+        "reward": {
+          "copper": 760,
+          "xp": 500
+        }
+      }
+    ],
+    "ruanxiaoqi": [
+      {
+        "id": "ruanxiaoqi_reed_net",
+        "stage": 1,
+        "requiredChapter": 5,
+        "title": "芦荡破网",
+        "premise": "官船在芦荡里强收渔网，阮小七偏把自家破网挂到船头。他要让所有人看清，一张不收税的网能养活多少户人家。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携阮小七取得 2 场胜利"
+        },
+        "epithet": "石碣浪子",
+        "reward": {
+          "copper": 300,
+          "xp": 190
+        }
+      },
+      {
+        "id": "ruanxiaoqi_blood_oar",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "血桡夜渡",
+        "premise": "一支运兵船趁夜穿过水泊。阮小七独自潜到船底，割断舵索，却在最后关头停下刀，让船上被征来的民夫先跳水。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次阮小七义技"
+        },
+        "epithet": "活阎罗",
+        "reward": {
+          "copper": 500,
+          "xp": 310
+        }
+      },
+      {
+        "id": "ruanxiaoqi_three_brothers",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "三阮归江",
+        "premise": "三兄弟终于并肩守住同一条水道。阮小七没有争头功，只把最危险的一篙留给自己的船，载着最后一批老弱穿过火线。",
+        "objective": {
+          "metric": "damage",
+          "target": 2200,
+          "label": "以阮小七累计造成 2200 伤害"
+        },
+        "epithet": "天败不退",
+        "reward": {
+          "copper": 720,
+          "xp": 470
+        }
+      }
+    ],
+    "sunerniang": [
+      {
+        "id": "sunerniang_lost_ledger",
+        "stage": 1,
+        "requiredChapter": 4,
+        "title": "黑店空账",
+        "premise": "十字坡旧账里少了一页，那页记着被放走的三个流民。孙二娘决定亲自补回他们的去向，也补回自己不再拿人肉做买卖的理由。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携孙二娘取得 2 场胜利"
+        },
+        "epithet": "十字坡主",
+        "reward": {
+          "copper": 300,
+          "xp": 190
+        }
+      },
+      {
+        "id": "sunerniang_antidote",
+        "stage": 2,
+        "requiredChapter": 6,
+        "title": "解药无价",
+        "premise": "官军把蒙汗药掺进水井，逼村民交出梁山信使。孙二娘抱着药箱逐户解毒，最后才回头追查投药的人。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次孙二娘义技"
+        },
+        "epithet": "夜叉有方",
+        "reward": {
+          "copper": 500,
+          "xp": 310
+        }
+      },
+      {
+        "id": "sunerniang_open_table",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "旧店新席",
+        "premise": "大战后，孙二娘把十字坡的旧灶重新砌起。锅里不再熬害人的汤，只给过路流民留一碗热饭，账上写着愿付多少便付多少。",
+        "objective": {
+          "metric": "damage",
+          "target": 2100,
+          "label": "以孙二娘累计造成 2100 伤害"
+        },
+        "epithet": "地壮夜叉",
+        "reward": {
+          "copper": 700,
+          "xp": 460
+        }
+      }
+    ],
+    "gudashao": [
+      {
+        "id": "gudashao_unlocked_cell",
+        "stage": 1,
+        "requiredChapter": 4,
+        "title": "牢门未锁",
+        "premise": "登州大牢的钥匙串被顾大嫂抢到手，牢里却混着真正的盗匪与欠粮农户。她一间间问清名字，再把门开到天亮。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携顾大嫂取得 2 场胜利"
+        },
+        "epithet": "登州虎娘",
+        "reward": {
+          "copper": 320,
+          "xp": 200
+        }
+      },
+      {
+        "id": "gudashao_inn_door",
+        "stage": 2,
+        "requiredChapter": 6,
+        "title": "山店正门",
+        "premise": "官差逼山店交出受伤好汉。顾大嫂把正门卸下来横在院中，告诉所有人，门板今日不是用来关客人的。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次顾大嫂义技"
+        },
+        "epithet": "母大虫",
+        "reward": {
+          "copper": 520,
+          "xp": 320
+        }
+      },
+      {
+        "id": "gudashao_last_bar",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "门闩镇水泊",
+        "premise": "水泊决战时，顾大嫂守的不是一座店，而是梁山最后一道寨门。门闩未曾落地，身后的人便一个也不会被丢下。",
+        "objective": {
+          "metric": "damage",
+          "target": 2000,
+          "label": "以顾大嫂累计造成 2000 伤害"
+        },
+        "epithet": "地阴守门",
+        "reward": {
+          "copper": 740,
+          "xp": 480
+        }
+      }
+    ],
+    "lingzhen": [
+      {
+        "id": "lingzhen_powder_formula",
+        "stage": 1,
+        "requiredChapter": 5,
+        "title": "药方失窃",
+        "premise": "凌振的火药配方被官军拿去轰开民寨。他从残墙里捡回半张焦纸，决定把下一副药量减到只震门、不震屋。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携凌振取得 2 场胜利"
+        },
+        "epithet": "炮匠入山",
+        "reward": {
+          "copper": 320,
+          "xp": 200
+        }
+      },
+      {
+        "id": "lingzhen_three_fuses",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "三线延时",
+        "premise": "一支官军炮队被迫连夜赶工，工匠们把点火次序全数交给凌振。他要在炮响前把三门炮同时变成哑炮。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次凌振义技"
+        },
+        "epithet": "轰天雷",
+        "reward": {
+          "copper": 520,
+          "xp": 320
+        }
+      },
+      {
+        "id": "lingzhen_quiet_sky",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "雷落人间",
+        "premise": "最后一战里，凌振把最强的震天雷埋在自己阵前。他要证明火器不是官军吓人的神物，而是能替人打开一条退路的手艺。",
+        "objective": {
+          "metric": "damage",
+          "target": 2600,
+          "label": "以凌振累计造成 2600 伤害"
+        },
+        "epithet": "地轴雷神",
+        "reward": {
+          "copper": 780,
+          "xp": 510
+        }
+      }
+    ],
+    "huyanzhuo": [
+      {
+        "id": "huyanzhuo_chain_barding",
+        "stage": 1,
+        "requiredChapter": 6,
+        "title": "连环旧甲",
+        "premise": "雪地里散落着连环马的断甲。呼延灼亲手辨认每一片甲叶，既要收拢旧部，也要确认他们不再拿民夫堵枪口。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携呼延灼取得 2 场胜利"
+        },
+        "epithet": "双鞭归阵",
+        "reward": {
+          "copper": 380,
+          "xp": 230
+        }
+      },
+      {
+        "id": "huyanzhuo_three_bells",
+        "stage": 2,
+        "requiredChapter": 8,
+        "title": "三通退军鼓",
+        "premise": "旧部仍按官军鼓令冲阵。呼延灼连敲三通退军鼓，让每一骑都记住，真正的主帅应当先看见阵前有没有百姓。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次呼延灼义技"
+        },
+        "epithet": "连环改阵",
+        "reward": {
+          "copper": 560,
+          "xp": 340
+        }
+      },
+      {
+        "id": "huyanzhuo_gate_break",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "铁骑开生门",
+        "premise": "决战的寨门从里面被乱军堵死。呼延灼把连环马从攻城利器变成开路铁壁，先撞开一条让百姓撤出的门缝。",
+        "objective": {
+          "metric": "damage",
+          "target": 2500,
+          "label": "以呼延灼累计造成 2500 伤害"
+        },
+        "epithet": "天威双鞭",
+        "reward": {
+          "copper": 800,
+          "xp": 530
+        }
+      }
+    ],
+    "liutang": [
+      {
+        "id": "liutang_red_hair",
+        "stage": 1,
+        "requiredChapter": 3,
+        "title": "赤发旧痕",
+        "premise": "郓城酒肆里有人拿赤发鬼的名号吓唬过路客商。刘唐没有立刻拔刀，只坐下来听完每一笔被冒名收走的酒钱。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携刘唐取得 2 场胜利"
+        },
+        "epithet": "赤发夜客",
+        "reward": {
+          "copper": 280,
+          "xp": 170
+        }
+      },
+      {
+        "id": "liutang_tax_rope",
+        "stage": 2,
+        "requiredChapter": 5,
+        "title": "生辰断索",
+        "premise": "一批押往京城的寿礼停在河岸，箱底压着给权臣的贿赂。刘唐要先找到被强征的纤夫，再决定这把火烧向哪一根税索。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次刘唐义技"
+        },
+        "epithet": "旧火未熄",
+        "reward": {
+          "copper": 420,
+          "xp": 260
+        }
+      },
+      {
+        "id": "liutang_first_flame",
+        "stage": 3,
+        "requiredChapter": 7,
+        "title": "第一把火",
+        "premise": "梁山要重审生辰纲旧案，刘唐却发现当年的消息曾让一户无辜人家背了罪名。他必须把真相带回去，让那场改变梁山的火不只照亮自己。",
+        "objective": {
+          "metric": "damage",
+          "target": 2100,
+          "label": "以刘唐累计造成 2100 伤害"
+        },
+        "epithet": "天异赤发",
+        "reward": {
+          "copper": 650,
+          "xp": 420
+        }
+      }
+    ],
+    "zhutong": [
+      {
+        "id": "zhutong_open_cell",
+        "stage": 1,
+        "requiredChapter": 4,
+        "title": "牢门未锁",
+        "premise": "郓城旧牢里关着交不起粮的农户，案卷上却全写成盗匪。朱仝翻开名册，发现每一页都盖着自己曾经守过的县印。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携朱仝取得 2 场胜利"
+        },
+        "epithet": "美髯都头",
+        "reward": {
+          "copper": 300,
+          "xp": 180
+        }
+      },
+      {
+        "id": "zhutong_long_beard",
+        "stage": 2,
+        "requiredChapter": 6,
+        "title": "长髯断令",
+        "premise": "一道追捕令要求朱仝交出曾被他放走的旧友。他当众割下一截长髯压在案上，让所有人看见，官身可以弃，旧义不能断。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次朱仝义技"
+        },
+        "epithet": "义释守门",
+        "reward": {
+          "copper": 450,
+          "xp": 280
+        }
+      },
+      {
+        "id": "zhutong_last_prisoner",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "最后一个囚徒",
+        "premise": "大名府败军把百姓反锁在仓院，准备嫁祸梁山。朱仝独自走进火场，像当年打开牢门一样，一间一间把人带出来。",
+        "objective": {
+          "metric": "damage",
+          "target": 1800,
+          "label": "以朱仝累计造成 1800 伤害"
+        },
+        "epithet": "天满义士",
+        "reward": {
+          "copper": 700,
+          "xp": 450
+        }
+      }
+    ],
+    "leiheng": [
+      {
+        "id": "leiheng_mothers_meal",
+        "stage": 1,
+        "requiredChapter": 4,
+        "title": "一席旧宴",
+        "premise": "雷横回乡为母亲摆一桌寿席，官差却借机搜捕梁山信使。他要先让老人安心吃完这顿饭，再回答门外那些带着锁链的人。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携雷横取得 2 场胜利"
+        },
+        "epithet": "插翅归乡",
+        "reward": {
+          "copper": 300,
+          "xp": 180
+        }
+      },
+      {
+        "id": "leiheng_broken_cangue",
+        "stage": 2,
+        "requiredChapter": 6,
+        "title": "铁枷碎门",
+        "premise": "雷横曾在牢门前给人戴上铁枷，如今同一道门里锁着他的旧邻。他要用一棍打碎锁链，也把当年服从过的错令一并打碎。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次雷横义技"
+        },
+        "epithet": "虎跃归义",
+        "reward": {
+          "copper": 450,
+          "xp": 280
+        }
+      },
+      {
+        "id": "leiheng_leap_county",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "跃过郓城",
+        "premise": "官军要把全城青壮编成前阵，雷横从城楼一跃而下，为百姓打开侧门。那一刻他终于不再是替衙门抓人的都头。",
+        "objective": {
+          "metric": "damage",
+          "target": 2200,
+          "label": "以雷横累计造成 2200 伤害"
+        },
+        "epithet": "天退插翅",
+        "reward": {
+          "copper": 700,
+          "xp": 450
+        }
+      }
+    ],
+    "liying": [
+      {
+        "id": "liying_manor_ledger",
+        "stage": 1,
+        "requiredChapter": 5,
+        "title": "独龙旧账",
+        "premise": "李家庄的粮账被人涂改，写给梁山的一笔粮反而成了官军问罪证据。李应要查清内账，而不是让整庄人替一纸假账担罪。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携李应取得 2 场胜利"
+        },
+        "epithet": "扑天庄主",
+        "reward": {
+          "copper": 320,
+          "xp": 200
+        }
+      },
+      {
+        "id": "liying_eagle_daggers",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "五刃还名",
+        "premise": "旧交拿李家庄的名号向官军献粮换官。李应把五口飞刀一一掷在案上，要求对方先把每一位庄客的名字还给账簿。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次李应义技"
+        },
+        "epithet": "雕眼辨义",
+        "reward": {
+          "copper": 480,
+          "xp": 300
+        }
+      },
+      {
+        "id": "liying_public_granary",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "庄园换义仓",
+        "premise": "祝家庄余部愿献出全部存粮换一条退路。李应没有把粮收入梁山私库，而是当着百姓重开义仓，让每一户按口领粮。",
+        "objective": {
+          "metric": "damage",
+          "target": 2300,
+          "label": "以李应累计造成 2300 伤害"
+        },
+        "epithet": "天富义仓",
+        "reward": {
+          "copper": 760,
+          "xp": 490
+        }
+      }
+    ],
+    "jiezhen": [
+      {
+        "id": "jiezhen_tiger_trap",
+        "stage": 1,
+        "requiredChapter": 6,
+        "title": "虎皮冤案",
+        "premise": "登州豪绅以一张虎皮诬陷解家兄弟，猎户们却不敢作证。解珍沿山路找回每一处血迹，要让县衙看见真正设陷阱的人。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携解珍取得 2 场胜利"
+        },
+        "epithet": "登州猎兄",
+        "reward": {
+          "copper": 340,
+          "xp": 210
+        }
+      },
+      {
+        "id": "jiezhen_rope_bridge",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "索桥接弟",
+        "premise": "解宝被困在断崖另一侧，身后还有被豪绅强征的猎户。解珍在夜雨里重搭索桥，先送绳索，再送退路。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次解珍义技"
+        },
+        "epithet": "双头蛇",
+        "reward": {
+          "copper": 520,
+          "xp": 330
+        }
+      },
+      {
+        "id": "jiezhen_mountain_oath",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "山径归众",
+        "premise": "官军封住登州所有山径，企图饿死藏进山里的乡民。解珍把猎户们带回梁山，却坚持先交出每条山路的公用法，而不是寨主私令。",
+        "objective": {
+          "metric": "damage",
+          "target": 2200,
+          "label": "以解珍累计造成 2200 伤害"
+        },
+        "epithet": "天暴猎首",
+        "reward": {
+          "copper": 760,
+          "xp": 490
+        }
+      }
+    ],
+    "jiebao": [
+      {
+        "id": "jiebao_scorpion_trap",
+        "stage": 1,
+        "requiredChapter": 6,
+        "title": "兽夹留痕",
+        "premise": "豪绅把官军猎具丢在解家门外，反咬兄弟偷盗军械。解宝把每一枚兽夹重新摆回山路，照着趾痕找出真正的猎队。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携解宝取得 2 场胜利"
+        },
+        "epithet": "双尾猎手",
+        "reward": {
+          "copper": 340,
+          "xp": 210
+        }
+      },
+      {
+        "id": "jiebao_prison_break",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "牢底翻山",
+        "premise": "登州牢底关着与解家一同被诬的猎户。解宝用兽夹撬开石缝，却把最先逃出的机会留给伤病最重的人。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次解宝义技"
+        },
+        "epithet": "翻山劫牢",
+        "reward": {
+          "copper": 520,
+          "xp": 330
+        }
+      },
+      {
+        "id": "jiebao_brother_bond",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "一索两人",
+        "premise": "雪夜突围时，解珍被敌军隔断。解宝把唯一的登山索抛过火线，兄弟二人各系一端，在绝壁上拉出一条生路。",
+        "objective": {
+          "metric": "damage",
+          "target": 2400,
+          "label": "以解宝累计造成 2400 伤害"
+        },
+        "epithet": "天哭双尾",
+        "reward": {
+          "copper": 760,
+          "xp": 490
+        }
+      }
+    ],
+    "yangxiong": [
+      {
+        "id": "yangxiong_blood_writ",
+        "stage": 1,
+        "requiredChapter": 6,
+        "title": "刀下留名",
+        "premise": "蓟州牢城送来一批没有姓名的死囚文书。杨雄在刑前重新核对口供，发现每一张朱笔判词背后都缺了同一个证人的名字。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携杨雄取得 2 场胜利"
+        },
+        "epithet": "病关索",
+        "reward": {
+          "copper": 340,
+          "xp": 210
+        }
+      },
+      {
+        "id": "yangxiong_prison_gate",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "牢门向外",
+        "premise": "官差封住牢门，要把与石秀有关的证人一并处置。杨雄把钥匙丢进火盆，第一次让牢门为了里面的人向外打开。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次杨雄义技"
+        },
+        "epithet": "天牢开锁",
+        "reward": {
+          "copper": 520,
+          "xp": 330
+        }
+      },
+      {
+        "id": "yangxiong_verdict_after",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "判词之外",
+        "premise": "旧上司拿妻族性命逼杨雄退回官衙。他在雪里把法刀横在判词上，请所有被写过名字的人一起决定这份文书还算不算数。",
+        "objective": {
+          "metric": "damage",
+          "target": 2300,
+          "label": "以杨雄累计造成 2300 伤害"
+        },
+        "epithet": "朱笔问心",
+        "reward": {
+          "copper": 760,
+          "xp": 490
+        }
+      }
+    ],
+    "shixiu": [
+      {
+        "id": "shixiu_market_blade",
+        "stage": 1,
+        "requiredChapter": 6,
+        "title": "肉案藏刀",
+        "premise": "蓟州肉铺替官差强买乡民的冬粮，石秀没有先问对方有多少人，只把割肉的短刀放在案上，让被欠账的人先开口。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携石秀取得 2 场胜利"
+        },
+        "epithet": "拼命三郎",
+        "reward": {
+          "copper": 340,
+          "xp": 210
+        }
+      },
+      {
+        "id": "shixiu_rooftop_watch",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "屋脊夜眼",
+        "premise": "祝家庄的假路在白天看不出破绽。石秀独自伏在屋脊上听了一夜脚步，把守军换岗与百姓被藏的位置一并记下。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次石秀义技"
+        },
+        "epithet": "梁上拼命",
+        "reward": {
+          "copper": 520,
+          "xp": 330
+        }
+      },
+      {
+        "id": "shixiu_live_witness",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "留一个活口",
+        "premise": "巷战尽头只剩一名替官府传令的少年。石秀收住追刀，把孩子带到灯下写下真正下令的人名，而不是把旧账继续算在下一把刀上。",
+        "objective": {
+          "metric": "damage",
+          "target": 2500,
+          "label": "以石秀累计造成 2500 伤害"
+        },
+        "epithet": "刀口留生",
+        "reward": {
+          "copper": 760,
+          "xp": 490
+        }
+      }
+    ],
+    "sunli": [
+      {
+        "id": "sunli_garrison_order",
+        "stage": 1,
+        "requiredChapter": 6,
+        "title": "军令问路",
+        "premise": "登州军校奉命封山，却不知道山中被困的是自己的亲族。孙立让每一队人先报出家中是否有人缺粮，再决定这道军令该怎么执行。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携孙立取得 2 场胜利"
+        },
+        "epithet": "病尉迟",
+        "reward": {
+          "copper": 360,
+          "xp": 220
+        }
+      },
+      {
+        "id": "sunli_iron_whip",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "铁鞭换令",
+        "premise": "登州牢城传来假令，要守军射杀越狱猎户。孙立用铁鞭压住传令官的手，逐条问清印文与时辰，让整队人拒绝执行。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次孙立义技"
+        },
+        "epithet": "登州镇门",
+        "reward": {
+          "copper": 540,
+          "xp": 340
+        }
+      },
+      {
+        "id": "sunli_open_gate",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "镇门之外",
+        "premise": "追兵逼近雪谷，孙立独自守住唯一门洞，让解家兄弟带百姓先走。等最后一盏灯过门，他才收枪转身，把军令留在无人看守的衙门口。",
+        "objective": {
+          "metric": "damage",
+          "target": 2100,
+          "label": "以孙立累计造成 2100 伤害"
+        },
+        "epithet": "铁门护民",
+        "reward": {
+          "copper": 780,
+          "xp": 500
+        }
+      }
+    ],
+    "yuehe": [
+      {
+        "id": "yuehe_prison_song",
+        "stage": 1,
+        "requiredChapter": 6,
+        "title": "牢城小调",
+        "premise": "乐和在牢城门口唱起一首只有登州船户才懂的旧调，把换岗时辰藏进拍子里传给墙内的人。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携乐和取得 2 场胜利"
+        },
+        "epithet": "铁叫子",
+        "reward": {
+          "copper": 340,
+          "xp": 210
+        }
+      },
+      {
+        "id": "yuehe_river_signal",
+        "stage": 2,
+        "requiredChapter": 7,
+        "title": "江上三拍",
+        "premise": "登州水门只认鼓点不认旗号。乐和混在酒船乐班里，用三拍急、两拍缓的夜调替梁山船队打开闸门。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次乐和义技"
+        },
+        "epithet": "一笛过江",
+        "reward": {
+          "copper": 520,
+          "xp": 330
+        }
+      },
+      {
+        "id": "yuehe_stop_song",
+        "stage": 3,
+        "requiredChapter": 8,
+        "title": "停声之后",
+        "premise": "敌阵溃散时，乐和主动停下号声，让追兵失去目标，也让梁山众人听见伤者的呼救。他第一次明白，最好的号令有时是不再催人向前。",
+        "objective": {
+          "metric": "damage",
+          "target": 900,
+          "label": "以乐和累计造成 900 伤害"
+        },
+        "epithet": "夜调安军",
+        "reward": {
+          "copper": 740,
+          "xp": 480
+        }
+      }
+    ],
+    "xiaorang": [
+      {
+        "id": "xiaorang_false_order",
+        "stage": 1,
+        "requiredChapter": 7,
+        "title": "一纸假令",
+        "premise": "祝家庄用一封假军令骗开流民避难所。萧让只看墨色便指出其中三字是后添，让众人赶在官军抵达前转移。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携萧让取得 2 场胜利"
+        },
+        "epithet": "圣手书生",
+        "reward": {
+          "copper": 360,
+          "xp": 220
+        }
+      },
+      {
+        "id": "xiaorang_ink_copy",
+        "stage": 2,
+        "requiredChapter": 8,
+        "title": "墨迹成阵",
+        "premise": "大名府封城令已发，萧让临摹出一份只差半个时辰的换防文书。梁山借这一纸墨迹穿过灯市，把被困百姓送出城门。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次萧让义技"
+        },
+        "epithet": "落笔千军",
+        "reward": {
+          "copper": 560,
+          "xp": 350
+        }
+      },
+      {
+        "id": "xiaorang_true_name",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "笔下真名",
+        "premise": "官府名册故意把百姓写成乱党。萧让没有毁掉原件，而是逐页抄下真名与住址，把证据送往各地，让纸上的生死重新归活人作主。",
+        "objective": {
+          "metric": "damage",
+          "target": 1200,
+          "label": "以萧让累计造成 1200 伤害"
+        },
+        "epithet": "落墨昭雪",
+        "reward": {
+          "copper": 820,
+          "xp": 540
+        }
+      }
+    ],
+    "jiangjing": [
+      {
+        "id": "jiangjing_empty_granary",
+        "stage": 1,
+        "requiredChapter": 7,
+        "title": "空仓三问",
+        "premise": "祝家庄外仓账实不符，蒋敬不问谁偷了粮，只问每条出库记录是谁签、谁验、谁押运。三个人名对上，一处暗仓随之暴露。",
+        "objective": {
+          "metric": "wins",
+          "target": 2,
+          "label": "携蒋敬取得 2 场胜利"
+        },
+        "epithet": "神算子",
+        "reward": {
+          "copper": 360,
+          "xp": 220
+        }
+      },
+      {
+        "id": "jiangjing_winter_supply",
+        "stage": 2,
+        "requiredChapter": 8,
+        "title": "一冬一账",
+        "premise": "梁山粮车足够打赢一场仗，却不够让三县百姓熬过冬天。蒋敬重排军需，把酒、肉与仪仗折成粮药，坚持先算活人再过军令。",
+        "objective": {
+          "metric": "ultimates",
+          "target": 2,
+          "label": "发动 2 次蒋敬义技"
+        },
+        "epithet": "掌库有秤",
+        "reward": {
+          "copper": 560,
+          "xp": 350
+        }
+      },
+      {
+        "id": "jiangjing_open_ledger",
+        "stage": 3,
+        "requiredChapter": 9,
+        "title": "总账无债",
+        "premise": "招安使者要梁山交出军需账册，蒋敬当众翻到最后一页：没有一笔粮是向百姓白拿的，也没有一个名字该被算作官军私产。账册公开后，连使者随从都开始抄录。",
+        "objective": {
+          "metric": "damage",
+          "target": 1500,
+          "label": "以蒋敬累计造成 1500 伤害"
+        },
+        "epithet": "一册安民",
+        "reward": {
+          "copper": 820,
+          "xp": 540
+        }
+      }
+    ]
   }
 }

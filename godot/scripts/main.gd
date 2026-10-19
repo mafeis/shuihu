@@ -8,6 +8,9 @@ const SCREEN_STORY := "story"
 const SCREEN_CHOICE := "choice"
 const SCREEN_BATTLE := "battle"
 const SCREEN_REWARD := "reward"
+const SCREEN_ENDING := "ending"
+const SCREEN_ARENA := "arena"
+const SCREEN_ARENA_REWARD := "arena_reward"
 
 const INK_950 := Color("#080d0e")
 const INK_900 := Color("#0d1415")
@@ -49,6 +52,12 @@ var native_name_input: NativeTextInput
 var native_name_field: Control
 var native_name_preview: Label
 var player_name_input: LineEdit
+var selected_hero_id := "linchong"
+var selected_team_slot := 0
+var arena_wave := 1
+var arena_offer: Array[String] = []
+var arena_encounter_id := ""
+var arena_running := false
 
 
 func _ready() -> void:
@@ -127,8 +136,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if event.keycode == KEY_ESCAPE and settings_layer.visible:
 		close_settings()
 		get_viewport().set_input_as_handled()
-	elif event.keycode == KEY_ESCAPE and screen == SCREEN_BATTLE:
-		show_map()
+	elif event.keycode == KEY_ESCAPE and menu_layer.visible:
+		menu_layer.visible = false
+		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_ESCAPE and (screen == SCREEN_BATTLE or screen == SCREEN_ARENA_REWARD):
+		if arena_running:
+			show_arena()
+		else:
+			show_map()
 		get_viewport().set_input_as_handled()
 
 
@@ -136,12 +151,20 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		if state:
 			state.save()
+		if music_player:
+			music_player.stop()
+			music_player.stream = null
+		theme = null
 		get_tree().quit()
 
 
 func _native_text_input_action(payload: Variant) -> void:
 	var text = str(payload)
 	native_name_input.apply_native_event(text)
+
+
+func _open_native_text_input() -> bool:
+	return native_name_input.attach(screen_root, _on_native_name_commit, _on_native_name_preedit, _on_native_name_dismiss)
 
 
 func _make_theme() -> Theme:
@@ -230,10 +253,6 @@ func _new_screen() -> Control:
 	page.name = "Page"
 	page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen_root.add_child(page)
-	if not bool(state.settings.get("reduced_motion", false)):
-		page.modulate = Color(1, 1, 1, 0.2)
-		transition_tween = create_tween()
-		transition_tween.tween_property(page, "modulate:a", 1.0, 0.18)
 	return page
 
 
@@ -241,7 +260,10 @@ func _background_image(page: Control, path: String, dim := 0.42) -> void:
 	if path.is_empty() or not ResourceLoader.exists(path):
 		return
 	var image := TextureRect.new()
-	image.texture = load(path)
+	var background_texture = load(path)
+	if background_texture == null:
+		return
+	image.texture = background_texture
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -312,6 +334,7 @@ func _set_screen(next_screen: String) -> void:
 
 
 func show_title() -> void:
+	arena_running = false
 	_set_screen(SCREEN_TITLE)
 	_play_music("res://assets/audio/title_theme.mp3")
 	var page := _new_screen()
@@ -365,7 +388,7 @@ func show_title() -> void:
 		if config.is_empty() or not ResourceLoader.exists(config.get("cutout", "")):
 			continue
 		var hero_image := TextureRect.new()
-		hero_image.texture = load(config.cutout)
+		hero_image.texture = load(str(config.cutout))
 		hero_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		hero_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		hero_image.custom_minimum_size = Vector2(120, 280)
@@ -384,6 +407,7 @@ func set_difficulty(id: String) -> void:
 
 
 func new_game() -> void:
+	arena_running = false
 	state = GameState.new(game_data)
 	state.save()
 	chapter_index = 0
@@ -393,6 +417,7 @@ func new_game() -> void:
 
 func continue_game() -> void:
 	if state.load_save():
+		arena_running = false
 		chapter_index = state.current_chapter
 		show_map()
 		_toast("旧卷已续。")
@@ -401,6 +426,7 @@ func continue_game() -> void:
 
 
 func show_map() -> void:
+	arena_running = false
 	_set_screen(SCREEN_MAP)
 	_play_music("res://assets/audio/jianghu_theme.mp3")
 	var page := _new_screen()
@@ -550,27 +576,24 @@ func show_choice() -> void:
 	var choice_data: Dictionary = chapter.get("choice", {})
 	box.add_child(_label(choice_data.get("prompt", ""), 22, PAPER_100))
 	var options: Array = choice_data.get("options", [])
+	var option_row := HBoxContainer.new()
+	option_row.add_theme_constant_override("separation", 10)
+	option_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(option_row)
 	for index in options.size():
 		var option: Dictionary = options[index]
 		var tactic: Dictionary = option.get("tactic", {})
-		var option_label := _label(
-			"%02d  %s\n%s" % [
-				index + 1,
-				option.get("text", ""),
-				tactic.get("name", ""),
-			],
-			16,
-			PAPER_200,
+		var choice := _button(
+			"%02d\n%s\n\n%s" % [index + 1, option.get("text", ""), tactic.get("name", "")],
+			func(): choose_option(index),
+			false,
+			250,
 		)
-		option_label.custom_minimum_size.y = 108
-		option_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		option_label.add_theme_stylebox_override("normal", _panel_style(Color("#152122"), INK_700, 1, 5))
-		var button := _button("选择这一路", func(): choose_option(index), false, 0)
-		box.add_child(button)
-		var option_copy := _label(option_label.text, 16, PAPER_200)
-		option_copy.custom_minimum_size.y = 106
-		option_copy.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		box.add_child(option_copy)
+		choice.custom_minimum_size.y = 258
+		choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		choice.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		choice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		option_row.add_child(choice)
 	box.add_child(_button("返回行军图", show_map, false, 200))
 
 
@@ -635,6 +658,15 @@ func show_battle() -> void:
 	hero_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	hero_row.add_theme_constant_override("separation", 12)
 	arena_box.add_child(hero_row)
+	var rule: Dictionary = battle.chapter_data.get("special_rule", {})
+	if not rule.is_empty():
+		var rule_label := _label("战法  %s  ·  %s" % [rule.get("name", ""), rule.get("desc", "")], 13, PAPER_300)
+		rule_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		arena_box.add_child(rule_label)
+	if arena_running and battle.chain_ready:
+		var chain_hint := _label("星路已合 · " + battle.chain_formation().get("name", "三星同辉"), 15, BRONZE)
+		chain_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		arena_box.add_child(chain_hint)
 	_hero_positions(hero_row)
 	var command := PanelContainer.new()
 	command.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.97), BRONZE_DARK, 1, 5))
@@ -653,9 +685,16 @@ func show_battle() -> void:
 	var actor: Dictionary = battle.current_hero()
 	box.add_child(_label("行棋 · %s  Lv.%d\n生命 %d / %d     义气 %d / 100" % [actor.get("name", ""), actor.get("level", 1), actor.hp, actor.max_hp, actor.yiqi], 16, PAPER_100))
 	var target_name := "无目标"
-	if not battle.living_enemies().is_empty():
-		target_name = battle.living_enemies()[clampi(battle_target, 0, battle.living_enemies().size() - 1)].get("name", "")
+	var targets := battle.valid_targets(battle.selected_skill())
+	if not targets.is_empty() and not battle.is_targeting_all():
+		battle_target = clampi(battle_target, 0, targets.size() - 1)
+		target_name = str(targets[battle_target].get("name", ""))
+	elif battle.is_ally_target(battle.selected_skill()):
+		target_name = "最需援手者"
 	box.add_child(_label("锁定 · " + target_name, 15, BRONZE))
+	if battle.chain_ready:
+		var chain_button := _button("合击 · " + battle.chain_formation().get("name", "三星同辉"), perform_chain, true, 288)
+		box.add_child(chain_button)
 	var skill_heading := _label("招式", 14, PAPER_500)
 	box.add_child(skill_heading)
 	for index in actor.skills.size():
@@ -683,7 +722,7 @@ func show_battle() -> void:
 	var attack := _button("施展「%s」" % battle.selected_skill().get("name", "招式"), perform_attack, true, 288)
 	attack.disabled = not battle.can_use_selected_skill()
 	box.add_child(attack)
-	box.add_child(_button("返回行军图", show_map, false, 288))
+	box.add_child(_button("撤退" if arena_running else "返回行军图", abandon_battle, false, 288))
 	var log_box := VBoxContainer.new()
 	log_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(_sep())
@@ -772,7 +811,7 @@ func _battle_sprite(unit: Dictionary, hero_side: bool, current: bool) -> PanelCo
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if ResourceLoader.exists(unit.get("portrait", "")):
-		image.texture = load(unit.portrait)
+		image.texture = load(str(unit.portrait))
 	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(image)
 	var locked := not hero_side and current
@@ -834,7 +873,7 @@ func _show_hero_detail(hero_id: String) -> void:
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if ResourceLoader.exists(config.get("keyart", "")):
-		image.texture = load(config.keyart)
+		image.texture = load(str(config.keyart))
 	box.add_child(image)
 	box.add_child(_label("%s · Lv.%d\n%s" % [config.get("name", ""), stats.level, config.get("role", "")], 25, PAPER_100))
 	box.add_child(_label("生命 %d   攻击 %d   护御 %d   身法 %d" % [stats.max_hp, stats.atk, stats.def, stats.spd], 16, BRONZE))
@@ -880,7 +919,7 @@ func _unit_card(unit: Dictionary, hero_side: bool) -> PanelContainer:
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if ResourceLoader.exists(unit.get("portrait", "")):
-		image.texture = load(unit.portrait)
+		image.texture = load(str(unit.portrait))
 	row.add_child(image)
 	var copy := VBoxContainer.new()
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -907,6 +946,8 @@ func _sep() -> HSeparator:
 func perform_attack() -> void:
 	if battle == null:
 		return
+	if str(battle.selected_skill().get("target", "")) in ["ally", "allAllies"]:
+		battle_target = battle.target_auto_index(battle.selected_skill())
 	var result := battle.hero_skill(battle_target)
 	if not result.ok:
 		_toast("义气不足，先使用其他招式。")
@@ -920,7 +961,33 @@ func perform_attack() -> void:
 	show_battle()
 
 
+func perform_chain() -> void:
+	if battle == null:
+		return
+	var result := battle.chain_attack()
+	if not result.ok:
+		_toast("三路星火尚未蓄势。")
+	if battle.battle_finished:
+		if battle.victory:
+			_finish_victory()
+		else:
+			show_battle()
+		return
+	show_battle()
+
+
+func abandon_battle() -> void:
+	if arena_running:
+		arena_running = false
+		show_arena()
+	else:
+		show_map()
+
+
 func _finish_victory() -> void:
+	if arena_running:
+		_finish_arena_victory()
+		return
 	var chapter: Dictionary = state.chapter()
 	var chapter_id := str(chapter.get("id", ""))
 	var battle_data: Dictionary = chapter.get("battle", {})
@@ -928,8 +995,17 @@ func _finish_victory() -> void:
 		var reward: Dictionary = battle_data.get("reward", {})
 		state.copper += int(round(float(reward.get("copper", 0)) * battle.difficulty_rewards))
 		state.recruit(battle_data.get("recruit", []))
+		for hero_id in state.active_team():
+			battle.level_ups += state.grant_experience(hero_id, int(round(float(reward.get("xp", 0)) * battle.difficulty_rewards)))
+		var item_id := str(reward.get("item", ""))
+		if not item_id.is_empty():
+			state.add_item(item_id)
 		state.rewards_granted[chapter_id] = true
 	state.complete_chapter(chapter_id)
+	state.record_battle_progress(battle)
+	for formation_id in battle.chain_formation_ids:
+		if not state.chain_archive.has(formation_id):
+			state.chain_archive.append(formation_id)
 	state.save()
 	show_reward()
 
@@ -957,7 +1033,13 @@ func show_reward() -> void:
 		int(reward.get("xp", 0)),
 		", ".join(battle_data.get("recruit", [])),
 	], 18, PAPER_200))
-	box.add_child(_button("继续", func():
+	if battle.level_ups > 0:
+		box.add_child(_label("战阵磨砺，好汉有所精进。", 16, BRONZE))
+	var settlement = chapter.get("battle", {}).get("settlement", "")
+	box.add_child(_button("继续" if settlement != "ending" else "收束星命", func():
+		if settlement == "ending":
+			show_ending()
+			return
 		story_stage = "outro"
 		story_line = 0
 		show_story()
@@ -965,68 +1047,373 @@ func show_reward() -> void:
 	box.add_child(_button("返回行军图", show_map, false, 330))
 
 
+func show_ending() -> void:
+	_set_screen(SCREEN_ENDING)
+	_play_music("res://assets/audio/ending_theme.mp3")
+	var ending_id := state.resolve_ending()
+	state.save()
+	var ending_data: Dictionary = game_data.get("endings", {}).get(ending_id, {})
+	var page := _new_screen()
+	_background_image(page, "res://assets/environments/liangshan_water_fort.png", 0.52)
+	_topbar(page, "map")
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.95), BRONZE_DARK, 1, 5))
+	panel.position = Vector2(170, 126)
+	panel.size = Vector2(1100, 690)
+	page.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 14)
+	panel.add_child(box)
+	box.add_child(_label("梁山终卷 · " + state.player_name, 16, BRONZE))
+	box.add_child(_label(ending_data.get("title", "江湖归舟"), 64, PAPER_100))
+	box.add_child(_label(ending_data.get("subtitle", ""), 24, BRONZE))
+	box.add_child(_label(ending_data.get("text", ""), 18, PAPER_200))
+	box.add_child(_sep())
+	box.add_child(_label(ending_data.get("epilogue", ""), 18, PAPER_300))
+	box.add_child(_label("已录结局  %d / 3     结义  %d / %d     营建  %d 座" % [
+		state.endings_unlocked.size(),
+		state.recruited.size(),
+		state.heroes().size(),
+		state.camp_built.size(),
+	], 16, BRONZE))
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	var camp_return := func():
+		if state.camp_built.has("hall"):
+			show_camp_building("hall")
+		else:
+			show_camp()
+	actions.add_child(_button("回到聚义厅", camp_return, true, 280))
+	actions.add_child(_button("重返标题", show_title, false, 200))
+	box.add_child(actions)
+
+
 func show_camp() -> void:
 	_set_screen(SCREEN_CAMP)
+	_play_music("res://assets/audio/qingfeng_theme.mp3")
 	var page := _new_screen()
 	_background_image(page, "res://assets/environments/liangshan_water_fort.png", 0.64)
 	_topbar(page, "camp")
-	var camp_shade := ColorRect.new()
-	camp_shade.color = Color(INK_950, 0.35)
-	camp_shade.position = Vector2(0, 70)
-	camp_shade.size = Vector2(1440, 830)
-	camp_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var overlay_index := page.get_child_count() - 2
-	page.add_child(camp_shade)
-	page.move_child(camp_shade, overlay_index)
 	var heading := _label("梁山营寨", 48, PAPER_100)
 	heading.position = Vector2(48, 104)
 	heading.size = Vector2(690, 68)
 	page.add_child(heading)
-	var description := _label("以战功开辟营区，经营水泊与工坊，让山寨真正成为众人的归处。", 16, PAPER_300)
-	description.position = Vector2(50, 173)
-	description.size = Vector2(870, 40)
-	page.add_child(description)
-	var stats := _label("铜钱  %d     好汉  %d / %d     建筑  %d" % [state.copper, state.recruited.size(), state.heroes().size(), 1 + state.completed_chapters.size()], 16, BRONZE)
+	var stats := _label("铜钱  %d 贯     存粮  %d份     胜阵  %d" % [state.copper, state.camp_stock.get("steamed_bun", 0), state.statistics.battles_won], 16, BRONZE)
 	stats.position = Vector2(900, 111)
 	stats.size = Vector2(490, 50)
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	page.add_child(stats)
-	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.position = Vector2(46, 245)
-	grid.size = Vector2(1348, 620)
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	page.add_child(grid)
+	var ground := Control.new()
+	ground.name = "CampGround"
+	ground.clip_contents = true
+	ground.position = Vector2(44, 184)
+	ground.size = Vector2(978, 680)
+	page.add_child(ground)
+	var ground_frame := PanelContainer.new()
+	ground_frame.add_theme_stylebox_override("panel", _panel_style(Color(INK_950, 0.42), Color(BRONZE_DARK, 0.65), 1, 4))
+	ground_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ground_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ground.add_child(ground_frame)
+	var markers := Control.new()
+	markers.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	markers.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ground.add_child(markers)
+	var path_line := ColorRect.new()
+	path_line.color = Color(BRONZE_DARK, 0.28)
+	path_line.position = Vector2(108, 340)
+	path_line.size = Vector2(755, 2)
+	path_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	markers.add_child(path_line)
 	for building_id in game_data.get("camp_buildings", {}):
 		var building: Dictionary = game_data.camp_buildings[building_id]
-		var unlocked := state.completed_chapters.size() >= int(building.get("unlock_victories", building.get("unlockVictories", 0)))
-		var built: bool = building_id == "hall"
-		var card := PanelContainer.new()
-		card.add_theme_stylebox_override("panel", _panel_style(
-			Color("#162422") if unlocked else Color(INK_900, 0.76),
-			BRONZE_DARK if built else (TEAL if unlocked else INK_700),
-			1,
-			5,
-		))
-		card.custom_minimum_size = Vector2(440, 206)
-		var card_box := VBoxContainer.new()
-		card_box.add_theme_constant_override("separation", 5)
-		card.add_child(card_box)
-		card_box.add_child(_label(building.get("name", ""), 25, PAPER_100 if unlocked else PAPER_500))
-		card_box.add_child(_label(building.get("desc", ""), 15, PAPER_300 if unlocked else PAPER_500))
-		var status := "已建成" if built else ("可建造" if unlocked else "累计 %d 胜开放" % int(building.get("unlock_victories", building.get("unlockVictories", 0))))
-		card_box.add_child(_label(status, 15, BRONZE if built else (TEAL if unlocked else PAPER_500)))
-		grid.add_child(card)
+		var unlocked: bool = state.statistics.battles_won >= int(building.get("unlockVictories", 0))
+		var built := state.camp_built.has(building_id)
+		var size_data: Array = building.get("size", [1, 1])
+		var marker_size := Vector2(126.0 * int(size_data[0]), 122.0 * int(size_data[1]))
+		marker_size.y = minf(marker_size.y, 136.0 - float(maxi(0, int(building.get("row", 1)) - 4)) * 16.0)
+		var open_building := func(): show_camp_building(building_id)
+		var marker := _button(
+			"%s\n%s" % [building.get("name", ""), ("Lv.%d" % state.building_level(building_id)) if built else ("新建" if unlocked else "%d胜" % int(building.get("unlockVictories", 0)))],
+			open_building,
+			false,
+			118,
+		)
+		marker.position = Vector2(48 + float(int(building.get("col", 1)) - 1) * 167.0, 75 + float(int(building.get("row", 1)) - 1) * 112.0)
+		marker.size = marker_size
+		marker.custom_minimum_size = marker_size
+		marker.clip_text = true
+		marker.mouse_filter = Control.MOUSE_FILTER_STOP
+		marker.add_theme_stylebox_override("normal", _panel_style(Color(0, 0, 0, 0), BRONZE_DARK if built else (TEAL if unlocked else INK_700), 1, 3))
+		ground.add_child(marker)
+		var building_label := _label("%s\n%s" % [
+			building.get("name", ""),
+			("Lv.%d" % state.building_level(building_id)) if built else ("新建" if unlocked else "%d胜" % int(building.get("unlockVictories", 0))),
+		], 16, PAPER_100 if unlocked else PAPER_500)
+		building_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		building_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		building_label.position = marker.position
+		building_label.size = marker_size
+		building_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ground.add_child(building_label)
+	var side := VBoxContainer.new()
+	side.position = Vector2(1054, 184)
+	side.size = Vector2(346, 680)
+	side.add_theme_constant_override("separation", 10)
+	page.add_child(side)
+	side.add_child(_label("营中日常", 17, BRONZE))
+	side.add_child(_label("休整让众人累积历练；产品可入厨成食，也可作为下一战的路粮。", 15, PAPER_300))
+	var rest_cost := state.camp_rest_cost()
+	side.add_child(_button("休整全营  ·  %d 贯" % rest_cost, camp_rest_action, false, 300))
+	side.add_child(_button("查看仓储与工坊", show_camp_store, false, 300))
+	side.add_child(_button("梁山演武", show_arena, true, 300))
+	side.add_child(_sep())
+	side.add_child(_label("结义羁绊  %d / %d" % [state.bond_archive.size(), game_data.get("bonds", {}).size()], 17, BRONZE))
+	var shown := 0
+	for bond in state.active_bonds():
+		side.add_child(_label("%s\n%s" % [bond.get("name", ""), str(bond.get("desc", "")).left(64)], 14, PAPER_200))
+		shown += 1
+		if shown >= 3:
+			break
+	if shown == 0:
+		side.add_child(_label("调整三路阵势，可让相熟好汉结下羁绊。", 14, PAPER_500))
+	side.add_child(_button("查看好汉列传", show_chronicles, false, 300))
 	var back_button := _button("返回行军图", show_map, false, 190)
 	back_button.position = Vector2(50, 842)
 	page.add_child(back_button)
 
 
+func camp_rest_action() -> void:
+	var cost := state.camp_rest_cost()
+	var xp := state.camp_rest()
+	if xp == 0:
+		_toast("铜钱不足，无法休整。")
+		return
+	state.save()
+	_toast("众人休整完毕，各得 %d 历练，共耗 %d 贯。每次历练会优先用一份馒头补益。" % [xp, cost])
+	show_camp()
+
+
+func show_chronicles() -> void:
+	menu_layer.visible = true
+	_clear_menu_layer()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.8)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(230, 98)
+	panel.size = Vector2(980, 704)
+	menu_layer.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 9)
+	panel.add_child(box)
+	box.add_child(_label("好汉列传", 36, PAPER_100))
+	box.add_child(_label("各人的旧事随战阵推进，列传开启后可结识新的好汉。", 15, PAPER_300))
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(900, 560)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(scroll)
+	var quest_list := VBoxContainer.new()
+	quest_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	quest_list.add_theme_constant_override("separation", 8)
+	scroll.add_child(quest_list)
+	var shown := 0
+	for hero_id in state.recruited:
+		for quest in game_data.get("hero_quests", {}).get(hero_id, []):
+			var quest_id := str(quest.get("id", ""))
+			var objective: Dictionary = quest.get("objective", {})
+			var metric := str(objective.get("metric", "wins"))
+			var progress := int(state.quest_progress.get(hero_id, {}).get(metric, 0))
+			var target := int(objective.get("target", 1))
+			var status := "已领" if state.quest_claimed.has(quest_id) else "%d / %d" % [mini(progress, target), target]
+			var line := _button("%s · Lv.%d\n%s     %s\n%s" % [
+				state.hero(hero_id).get("name", ""),
+				int(state.derive_hero_stats(hero_id).level),
+				quest.get("title", ""),
+				objective.get("label", ""),
+				status,
+			], func(): claim_quest(hero_id, quest_id), false, 885)
+			line.custom_minimum_size.y = 78
+			line.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			line.disabled = state.quest_claimed.has(quest_id) or progress < target or state.current_chapter + 1 < int(quest.get("requiredChapter", 1))
+			quest_list.add_child(line)
+			shown += 1
+	if shown == 0:
+		quest_list.add_child(_label("尚无列传。先携好汉取得战阵胜利。", 16, PAPER_500))
+	box.add_child(_button("回到营寨", func(): menu_layer.visible = false; show_camp(), false, 260))
+
+
+func claim_quest(hero_id: String, quest_id: String) -> void:
+	var result := state.claim_hero_quest(hero_id, quest_id)
+	if not result.ok:
+		_toast("列传尚未完成。")
+		return
+	state.save()
+	_toast("%s列传已领，铜钱与历练已入账。" % state.hero(hero_id).get("name", ""))
+	show_chronicles()
+
+
+func show_camp_building(building_id: String) -> void:
+	var building: Dictionary = game_data.get("camp_buildings", {}).get(building_id, {})
+	if building.is_empty():
+		return
+	var built := state.camp_built.has(building_id)
+	var unlocked: bool = state.statistics.battles_won >= int(building.get("unlockVictories", 0))
+	var facility: Dictionary = game_data.get("facilities", {}).get(building_id, {})
+	menu_layer.visible = true
+	_clear_menu_layer()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.75)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(430, 184)
+	panel.size = Vector2(580, 534)
+	menu_layer.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 11)
+	panel.add_child(box)
+	box.add_child(_label(building.get("name", ""), 38, PAPER_100))
+	box.add_child(_label(str(building.get("desc", "")) + "\n" + str(facility.get("desc", "")), 16, PAPER_300))
+	var status := "尚未建成" if not built else "营建等级  Lv.%d / %d" % [state.building_level(building_id), int(facility.get("maxLevel", 1))]
+	box.add_child(_label(status, 16, BRONZE if built else (TEAL if unlocked else PAPER_500)))
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	box.add_child(actions)
+	if not built:
+		var build := _button("破土动工  %d 贯" % int(building.get("cost", 0)), func(): build_from_detail(building_id), true, 240)
+		build.disabled = not unlocked or state.copper < int(building.get("cost", 0))
+		actions.add_child(build)
+	else:
+		var cost := state.upgrade_cost(building_id)
+		if cost >= 0:
+			var upgrade := _button("升营  %d 贯" % cost, func(): upgrade_from_detail(building_id), true, 240)
+			upgrade.disabled = state.copper < cost
+			actions.add_child(upgrade)
+		if not str(building.get("resource", "")).is_empty():
+			actions.add_child(_button("收成", func(): collect_from_detail(building_id), false, 120))
+		if building_id == "arena":
+			actions.add_child(_button("演武", show_arena, false, 120))
+	for recipe in game_data.get("camp_recipes", []):
+		if recipe.get("buildingId", "") != building_id:
+			continue
+		var product: Dictionary = game_data.get("camp_products", {}).get(recipe.get("output", {}).get("item", ""), {})
+		var input_data: Dictionary = recipe.get("input", {})
+		var input_name := str(game_data.get("camp_products", {}).get(input_data.get("item", ""), {}).get("name", input_data.get("item", "")))
+		var craft := _button("%s  ·  %d %s  ->  %d %s" % [
+			recipe.get("name", ""), int(input_data.get("amount", 0)), input_name,
+			int(recipe.get("output", {}).get("amount", 0)), product.get("name", ""),
+		], func(): craft_from_detail(str(recipe.get("id", ""))), false, 390)
+		craft.disabled = int(state.camp_stock.get(input_data.get("item", ""), 0)) < int(input_data.get("amount", 0))
+		box.add_child(craft)
+	box.add_child(_label("库存  " + _stock_summary(), 15, PAPER_300))
+	box.add_child(_button("回到营寨", func(): menu_layer.visible = false; show_camp(), false, 280))
+
+
+func _stock_summary() -> String:
+	if state.camp_stock.is_empty():
+		return "仓中尚无收成"
+	var entries: Array[String] = []
+	for product_id in state.camp_stock:
+		var product: Dictionary = game_data.get("camp_products", {}).get(product_id, {})
+		entries.append("%s %d" % [product.get("name", product_id), int(state.camp_stock[product_id])])
+	return "   ".join(entries)
+
+
+func build_from_detail(building_id: String) -> void:
+	if state.build_camp_building(building_id):
+		state.save()
+		_toast("营区已经落成。")
+		show_camp_building(building_id)
+	else:
+		_toast("战功或铜钱不足，暂时无法营建。")
+
+
+func upgrade_from_detail(building_id: String) -> void:
+	if state.upgrade_facility(building_id):
+		state.save()
+		_toast("营建等级提升。")
+		show_camp_building(building_id)
+	else:
+		_toast("铜钱不足或已经升至上限。")
+
+
+func collect_from_detail(building_id: String) -> void:
+	var amount := state.collect_camp_resource(building_id)
+	if amount <= 0:
+		_toast("此处尚无可收取的资源。")
+		return
+	state.save()
+	_toast("已收取 %d 份资源。" % amount)
+	show_camp_building(building_id)
+
+
+func craft_from_detail(recipe_id: String) -> void:
+	if state.craft_camp_recipe(recipe_id):
+		state.save()
+		_toast("工坊已成一份。")
+		var recipe: Dictionary = {}
+		for entry in game_data.get("camp_recipes", []):
+			if entry.get("id", "") == recipe_id:
+				recipe = entry
+		if not recipe.is_empty():
+			show_camp_building(str(recipe.buildingId))
+	else:
+		_toast("原料不足，暂不能开炉。")
+
+
+func _clear_menu_layer() -> void:
+	for child in menu_layer.get_children():
+		menu_layer.remove_child(child)
+		child.queue_free()
+
+
+func show_camp_store() -> void:
+	menu_layer.visible = true
+	_clear_menu_layer()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.78)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(368, 142)
+	panel.size = Vector2(704, 620)
+	menu_layer.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	box.add_child(_label("水泊仓房", 35, PAPER_100))
+	for product_id in game_data.get("camp_products", {}):
+		var product: Dictionary = game_data.camp_products[product_id]
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		row.add_child(_label(product.get("name", product_id), 17, PAPER_200))
+		var gap := Control.new()
+		gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(gap)
+		row.add_child(_label("%d 份" % int(state.camp_stock.get(product_id, 0)), 16, BRONZE))
+		box.add_child(row)
+	box.add_child(_sep())
+	box.add_child(_label("兵器与行装", 25, BRONZE))
+	var weapons := 0
+	for item_id in state.inventory:
+		var item := state.equipment(item_id)
+		if item.is_empty() or int(state.inventory.get(item_id, 0)) <= 0:
+			continue
+		box.add_child(_label("%s  × %d     %s" % [item.get("name", item_id), int(state.inventory[item_id]), item.get("slot", "")], 15, PAPER_300))
+		weapons += 1
+	if weapons == 0:
+		box.add_child(_label("仓中的备用兵器已分配完毕。", 15, PAPER_500))
+	box.add_child(_button("回到营寨", func(): menu_layer.visible = false; show_camp(), false, 250))
+
+
 func show_roster() -> void:
 	_set_screen(SCREEN_ROSTER)
 	var page := _new_screen()
-	_background_image(page, "res://assets/environments/boar_forest.png", 0.82)
+	_background_image(page, "res://assets/environments/liangshan_water_fort.png", 0.62)
 	_topbar(page, "roster")
 	var heading := _label("梁山好汉", 48, PAPER_100)
 	heading.position = Vector2(46, 102)
@@ -1034,45 +1421,63 @@ func show_roster() -> void:
 	page.add_child(heading)
 	var collection := _label("聚义簿 · %d / %d" % [state.recruited.size(), state.heroes().size()], 16, BRONZE)
 	collection.position = Vector2(48, 180)
+	collection.size = Vector2(310, 28)
+	collection.autowrap_mode = TextServer.AUTOWRAP_OFF
 	page.add_child(collection)
-	var scroll := ScrollContainer.new()
-	scroll.position = Vector2(44, 226)
-	scroll.size = Vector2(826, 635)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	page.add_child(scroll)
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid.custom_minimum_size = Vector2(806, 0)
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
-	scroll.add_child(grid)
-	for hero_id in state.heroes():
+	var formation := PanelContainer.new()
+	formation.add_theme_stylebox_override("panel", _panel_style(Color(INK_950, 0.47), Color(BRONZE_DARK, 0.65), 1, 4))
+	formation.position = Vector2(44, 222)
+	formation.size = Vector2(816, 486)
+	formation.custom_minimum_size = Vector2(816, 486)
+	formation.clip_contents = true
+	page.add_child(formation)
+	var lanes := HBoxContainer.new()
+	lanes.add_theme_constant_override("separation", 12)
+	formation.add_child(lanes)
+	for row in 3:
+		var lane := VBoxContainer.new()
+		lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lane.custom_minimum_size = Vector2(258, 476)
+		lane.add_theme_constant_override("separation", 9)
+		lane.clip_contents = true
+		lanes.add_child(lane)
+		lane.add_child(_label(["前阵", "中军", "后阵"][row] + "  ·  " + ["护势", "接应", "奇袭"][row], 17, BRONZE))
+		var hero_id: String = state.team[row]
+		var selected := selected_team_slot == row
 		var hero: Dictionary = state.hero(hero_id)
-		var recruited := state.recruited.has(hero_id)
-		var card := PanelContainer.new()
-		card.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.96), BRONZE_DARK if recruited else INK_700, 1, 5))
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.custom_minimum_size = Vector2(386, 350)
-		card.clip_contents = true
 		var image := TextureRect.new()
-		image.custom_minimum_size = Vector2(402, 348)
-		image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		image.custom_minimum_size = Vector2(250, 285)
+		image.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		var card_box := VBoxContainer.new()
-		card_box.add_theme_constant_override("separation", 4)
-		card.add_child(card_box)
-		if recruited and ResourceLoader.exists(hero.get("cutout", "")):
-			image.texture = load(hero.cutout)
-		else:
-			card.modulate = Color(0.46, 0.5, 0.48, 0.85)
-		card_box.add_child(image)
-		var copy := VBoxContainer.new()
-		copy.add_child(_label(hero.get("name", "") if recruited else "尚未结识", 21, PAPER_100))
-		copy.add_child(_label("%s · %s" % [hero.get("star", ""), hero.get("nickname", "")] if recruited else "继续行军与聚义", 14, PAPER_300))
-		card_box.add_child(copy)
-		grid.add_child(card)
+		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		if not hero.is_empty() and ResourceLoader.exists(hero.get("cutout", "")):
+			image.texture = load(str(hero.cutout))
+		var slot := _button(
+			("%s\n%s" % [hero.get("name", ""), "Lv.%d" % state.derive_hero_stats(hero_id).level]) if not hero.is_empty() else "空阵\n点此安排",
+			func(): select_formation_slot(row),
+			selected,
+			250,
+		)
+		slot.custom_minimum_size.y = 58
+		slot.size_flags_vertical = Control.SIZE_SHRINK_END
+		lane.add_child(slot)
+		if image.texture:
+			lane.add_child(image)
+	var scroll := ScrollContainer.new()
+	scroll.position = Vector2(44, 724)
+	scroll.size = Vector2(816, 122)
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	page.add_child(scroll)
+	var bench := HBoxContainer.new()
+	bench.add_theme_constant_override("separation", 7)
+	scroll.add_child(bench)
+	for hero_id in state.recruited:
+		var hero: Dictionary = state.hero(hero_id)
+		var portrait := _button(hero.get("name", "") + "\n" + ("入阵" if state.team.has(hero_id) else "待命"), func(): select_hero(hero_id), selected_hero_id == hero_id, 112)
+		portrait.custom_minimum_size.y = 124
+		bench.add_child(portrait)
 	var detail := PanelContainer.new()
 	detail.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.96), BRONZE_DARK, 1, 5))
 	detail.position = Vector2(892, 102)
@@ -1081,33 +1486,361 @@ func show_roster() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 7)
 	detail.add_child(box)
+	var selected_hero: Dictionary = state.hero(selected_hero_id)
+	if not state.recruited.has(selected_hero_id):
+		selected_hero = state.hero("linchong")
 	var portrait := TextureRect.new()
-	portrait.custom_minimum_size = Vector2(500, 400)
+	portrait.custom_minimum_size = Vector2(500, 348)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	var linchong: Dictionary = state.hero("linchong")
-	if ResourceLoader.exists(linchong.get("keyart", "")):
-		portrait.texture = load(linchong.keyart)
+	portrait.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	if ResourceLoader.exists(selected_hero.get("keyart", "")):
+		portrait.texture = load(str(selected_hero.keyart))
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	box.add_child(portrait)
-	box.add_child(_label("天雄星 · 豹子头", 15, BRONZE))
-	box.add_child(_label("林冲", 34, PAPER_100))
-	box.add_child(_label(linchong.get("bio", ""), 15, PAPER_300))
-	var passive: Dictionary = linchong.get("passive", {})
+	var hero_stats := state.derive_hero_stats(str(selected_hero.get("id", "linchong")))
+	box.add_child(_label("%s · %s · %s" % [selected_hero.get("star", ""), selected_hero.get("nickname", ""), selected_hero.get("role", "")], 15, BRONZE))
+	var hero_heading := _label("%s   Lv.%d" % [selected_hero.get("name", ""), int(hero_stats.level)], 34, PAPER_100)
+	hero_heading.autowrap_mode = TextServer.AUTOWRAP_OFF
+	hero_heading.custom_minimum_size.y = 54
+	box.add_child(hero_heading)
+	box.add_child(_label("生命 %d   攻击 %d   护御 %d   身法 %d" % [hero_stats.max_hp, hero_stats.atk, hero_stats.def, hero_stats.spd], 15, PAPER_200))
+	var passive: Dictionary = selected_hero.get("passive", {})
 	box.add_child(_label("星命被动 · %s\n%s" % [passive.get("name", ""), passive.get("desc", "")], 15, PAPER_200))
+	var team_action := _button(
+		"撤出三路阵势" if state.team.has(selected_hero_id) else "编入%s" % ["前阵", "中军", "后阵"][selected_team_slot],
+		func(): toggle_team_member(selected_hero_id),
+		true,
+		280,
+	)
+	box.add_child(team_action)
+	box.add_child(_button("查看武备", func(): show_equipment(selected_hero_id), false, 280))
+	box.add_child(_button("返回行军图", show_map, false, 280))
 
 
 func assign_hero_to_team(hero_id: String) -> void:
 	if state.team.has(hero_id):
-		_toast("这名好汉已在队伍中。")
+		for index in state.team.size():
+			if state.team[index] == hero_id:
+				selected_team_slot = index
+		show_roster()
 		return
 	for index in state.team.size():
 		if state.team[index].is_empty() or not state.recruited.has(state.team[index]):
 			state.team[index] = hero_id
+			selected_team_slot = index
 			state.save()
 			_toast("已安排入队。")
 			show_roster()
 			return
-	_toast("队伍已满，请替换一名好汉。")
+	state.set_team_slot(selected_team_slot, hero_id)
+	state.save()
+	_toast("三路阵势已经调整。")
+	show_roster()
+
+
+func select_formation_slot(row: int) -> void:
+	selected_team_slot = clampi(row, 0, 2)
+	show_roster()
+
+
+func select_hero(hero_id: String) -> void:
+	selected_hero_id = hero_id
+	show_roster()
+
+
+func toggle_team_member(hero_id: String) -> void:
+	if state.team.has(hero_id):
+		for row in state.team.size():
+			if state.team[row] == hero_id:
+				state.team[row] = ""
+		state.save()
+		show_roster()
+		return
+	assign_hero_to_team(hero_id)
+
+
+func show_equipment(hero_id: String) -> void:
+	var config := state.hero(hero_id)
+	if config.is_empty() or not state.recruited.has(hero_id):
+		return
+	menu_layer.visible = true
+	_clear_menu_layer()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.78)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(330, 108)
+	panel.size = Vector2(780, 708)
+	menu_layer.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	panel.add_child(box)
+	var stats := state.derive_hero_stats(hero_id)
+	box.add_child(_label("武备 · %s  Lv.%d" % [config.get("name", ""), stats.level], 28, PAPER_100))
+	box.add_child(_label("生命 %d   攻击 %d   护御 %d   身法 %d" % [stats.max_hp, stats.atk, stats.def, stats.spd], 16, BRONZE))
+	var gear: Dictionary = state.roster_entry(hero_id).get("equipment", {})
+	for slot in ["weapon", "armor", "token"]:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var item_id := str(gear.get(slot, ""))
+		var item := state.equipment(item_id)
+		var label := _label("%s   %s" % [{"weapon": "兵器", "armor": "衣甲", "token": "随身"}[slot], item.get("name", "未装备")], 16, PAPER_200)
+		label.custom_minimum_size = Vector2(240, 28)
+		label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		row.add_child(label)
+		if not item.is_empty():
+			var stats_text := _item_stats(item)
+			var stats_label := _label(stats_text, 14, PAPER_300)
+			stats_label.custom_minimum_size.y = 28
+			stats_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+			row.add_child(stats_label)
+		var spacer := Control.new()
+		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(spacer)
+		if not item_id.is_empty():
+			row.add_child(_button("卸下", func(): unequip_from_detail(hero_id, slot), false, 90))
+		box.add_child(row)
+	box.add_child(_sep())
+	box.add_child(_label("仓中可换武备", 18, BRONZE))
+	var slider := ScrollContainer.new()
+	slider.custom_minimum_size = Vector2(700, 280)
+	slider.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(slider)
+	var choices := VBoxContainer.new()
+	choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	choices.add_theme_constant_override("separation", 6)
+	slider.add_child(choices)
+	var available := 0
+	for candidate_id in state.inventory:
+		if int(state.inventory.get(candidate_id, 0)) <= 0:
+			continue
+		var candidate := state.equipment(candidate_id)
+		if candidate.is_empty():
+			continue
+		var equip_button := _button("%s   × %d\n%s" % [
+			candidate.get("name", candidate_id), int(state.inventory[candidate_id]), _item_stats(candidate),
+		], func(): equip_from_detail(hero_id, str(candidate_id)), false, 660)
+		equip_button.custom_minimum_size.y = 64
+		equip_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		choices.add_child(equip_button)
+		available += 1
+	if available == 0:
+		choices.add_child(_label("暂无备用兵器，继续行军可缴获更多。", 15, PAPER_500))
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	actions.add_child(_button("全部推荐", auto_equip_from_detail.bind(hero_id), true, 220))
+	actions.add_child(_button("返回阵势", show_roster, false, 220))
+	box.add_child(actions)
+
+
+func _item_stats(item: Dictionary) -> String:
+	var stats: Dictionary = item.get("stats", {})
+	return "生命 +%d  攻击 +%d  护御 +%d  身法 +%d" % [
+		int(stats.get("hp", 0)), int(stats.get("atk", 0)),
+		int(stats.get("def", 0)), int(stats.get("spd", 0)),
+	]
+
+
+func equip_from_detail(hero_id: String, item_id: String) -> void:
+	if state.equip_item(hero_id, item_id):
+		state.save()
+		show_equipment(hero_id)
+	else:
+		_toast("这件武备当前无法装备。")
+
+
+func unequip_from_detail(hero_id: String, slot: String) -> void:
+	if state.unequip_item(hero_id, slot):
+		state.save()
+		show_equipment(hero_id)
+
+
+func auto_equip_from_detail(hero_id: String) -> void:
+	var recommendations := state.recommended_equipment(hero_id)
+	var equipped := 0
+	for slot in recommendations:
+		if state.equip_item(hero_id, str(recommendations[slot].item_id)):
+			equipped += 1
+	state.save()
+	_toast("已为%s换装 %d 件。" % [state.hero(hero_id).get("name", ""), equipped])
+	show_equipment(hero_id)
+
+
+func show_arena() -> void:
+	if not state.camp_built.has("arena"):
+		if not state.build_camp_building("arena"):
+			_toast("演武场尚未落成：需累计两场胜阵并备足铜钱。")
+			return
+		state.save()
+	arena_running = false
+	_set_screen(SCREEN_ARENA)
+	_play_music("res://assets/audio/battle_theme.mp3")
+	var page := _new_screen()
+	_background_image(page, "res://assets/environments/liangshan_water_fort.png", 0.63)
+	_topbar(page, "camp")
+	arena_wave = maxi(arena_wave, 1)
+	if arena_offer.is_empty():
+		_roll_arena_offer()
+	var heading := _label("梁山演武", 50, PAPER_100)
+	heading.position = Vector2(48, 94)
+	heading.size = Vector2(620, 70)
+	page.add_child(heading)
+	var arena_subtitle := _label("第 %d 阵  ·  最佳 %d 阵     连阵不会消耗行军机会" % [arena_wave, state.best_arena_wave], 17, BRONZE)
+	arena_subtitle.position = Vector2(50, 160)
+	arena_subtitle.size = Vector2(980, 30)
+	arena_subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
+	page.add_child(arena_subtitle)
+	var board := PanelContainer.new()
+	board.add_theme_stylebox_override("panel", _panel_style(Color(INK_950, 0.58), Color(BRONZE_DARK, 0.65), 1, 4))
+	board.position = Vector2(44, 198)
+	board.size = Vector2(999, 650)
+	page.add_child(board)
+	var board_box := VBoxContainer.new()
+	board_box.add_theme_constant_override("separation", 12)
+	board_box.offset_left = 16
+	board_box.offset_right = -16
+	board_box.offset_top = 14
+	board_box.offset_bottom = -14
+	board.add_child(board_box)
+	board_box.add_child(_label("三路战帖", 19, PAPER_100))
+	board_box.add_child(_label("破阵所得可带走；败退则保留已取得的令与经验。", 15, PAPER_300))
+	var encounter: Dictionary = game_data.get("arena_encounters", {}).get(arena_encounter_id, {})
+	var encounter_copy := _label("今日敌阵 · " + encounter.get("name", "") + "\n" + encounter.get("desc", ""), 17, PAPER_200)
+	encounter_copy.custom_minimum_size.y = 72
+	encounter_copy.autowrap_mode = TextServer.AUTOWRAP_OFF
+	board_box.add_child(encounter_copy)
+	var offer_row := HBoxContainer.new()
+	offer_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	offer_row.add_theme_constant_override("separation", 10)
+	offer_row.custom_minimum_size.y = 450
+	board_box.add_child(offer_row)
+	for boon_id in arena_offer:
+		var boon: Dictionary = game_data.get("arena_boons", {}).get(boon_id, {})
+		var choose := Button.new()
+		choose.text = "选此令"
+		choose.custom_minimum_size = Vector2(300, 450)
+		choose.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		choose.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		choose.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		choose.pressed.connect(func(): begin_arena_battle(boon_id))
+		choose.add_theme_stylebox_override("normal", _panel_style(Color(INK_900, 0.95), INK_700, 1, 4))
+		choose.add_theme_stylebox_override("hover", _panel_style(Color("#1c2a2b"), BRONZE, 1, 4))
+		var card_copy := VBoxContainer.new()
+		card_copy.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		card_copy.offset_left = 16
+		card_copy.offset_right = -16
+		card_copy.offset_top = 16
+		card_copy.offset_bottom = -16
+		card_copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card_copy.add_theme_constant_override("separation", 10)
+		card_copy.add_child(_label(boon.get("name", ""), 23, PAPER_100))
+		var boon_copy := _label(boon.get("desc", ""), 16, PAPER_300)
+		boon_copy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		boon_copy.custom_minimum_size = Vector2(260, 84)
+		card_copy.add_child(boon_copy)
+		var room := Control.new()
+		room.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		card_copy.add_child(room)
+		card_copy.add_child(_label("选此令", 16, BRONZE))
+		choose.add_child(card_copy)
+		offer_row.add_child(choose)
+	var rail := VBoxContainer.new()
+	rail.position = Vector2(1060, 198)
+	rail.size = Vector2(336, 650)
+	rail.custom_minimum_size = Vector2(336, 650)
+	rail.add_theme_constant_override("separation", 10)
+	page.add_child(rail)
+	rail.add_child(_label("演武录", 18, BRONZE))
+	rail.add_child(_label("已结阵形  %d / %d\n已录羁绊  %d / %d\n最佳波次  %d" % [
+		state.chain_archive.size(), game_data.get("chain_formations", {}).size(),
+		state.bond_archive.size(), game_data.get("bonds", {}).size(), state.best_arena_wave,
+	], 16, PAPER_200))
+	rail.add_child(_sep())
+	rail.add_child(_button("重新抽取战帖", _reroll_arena_offer, false, 300))
+	rail.add_child(_button("先回营整备", show_roster, false, 300))
+	rail.add_child(_button("返回营寨", show_camp, false, 300))
+
+
+func _roll_arena_offer() -> void:
+	var candidates := []
+	for boon_id in game_data.get("arena_boons", {}):
+		candidates.append(boon_id)
+	candidates.shuffle()
+	arena_offer.clear()
+	for index in mini(3, candidates.size()):
+		arena_offer.append(str(candidates[index]))
+	var encounters: Array[String] = []
+	for encounter_id in game_data.get("arena_encounters", {}):
+		var encounter: Dictionary = game_data.arena_encounters[encounter_id]
+		if int(encounter.get("minWave", 1)) <= arena_wave:
+			encounters.append(str(encounter_id))
+	arena_encounter_id = encounters.pick_random() if not encounters.is_empty() else "iron_phalanx"
+
+
+func _reroll_arena_offer() -> void:
+	arena_offer.clear()
+	show_arena()
+
+
+func begin_arena_battle(boon_id: String) -> void:
+	var boon: Dictionary = game_data.get("arena_boons", {}).get(boon_id, {})
+	var encounter: Dictionary = game_data.get("arena_encounters", {}).get(arena_encounter_id, {})
+	var battle_data := {
+		"id": "arena_%d" % arena_wave,
+		"title": "梁山演武 · 第 %d 阵" % arena_wave,
+		"bg": "res://assets/environments/liangshan_water_fort.png",
+		"battle": {
+			"enemies": [
+				{"id": "runner", "level": 2 + arena_wave, "row": 0},
+				{"id": "archer", "level": 2 + arena_wave, "row": 2},
+				{"id": "captain" if arena_wave % 3 == 0 else "instructor", "level": 3 + arena_wave, "row": 1},
+			],
+		},
+	}
+	var effects: Dictionary = encounter.get("effects", {})
+	var team_modifiers: Dictionary = boon.get("effects", {}).duplicate(true)
+	for key in effects.get("teamModifiers", {}):
+		team_modifiers[key] = float(team_modifiers.get(key, 0.0)) + float(effects.teamModifiers[key])
+	var enemy_modifiers: Dictionary = encounter.get("enemyModifiers", {}).duplicate(true)
+	arena_running = true
+	battle = BattleModel.new(state, battle_data, team_modifiers, enemy_modifiers)
+	battle.arena_encounter = encounter
+	battle_target = 0
+	show_battle()
+
+
+func _finish_arena_victory() -> void:
+	var copper_reward := 60 + arena_wave * 14
+	var xp_reward := 34 + arena_wave * 7
+	state.copper += copper_reward
+	for hero_id in state.active_team():
+		state.grant_experience(hero_id, xp_reward)
+	state.best_arena_wave = maxi(state.best_arena_wave, arena_wave)
+	state.save()
+	_set_screen(SCREEN_ARENA_REWARD)
+	var page := _new_screen()
+	_background_image(page, "res://assets/environments/liangshan_water_fort.png", 0.55)
+	_topbar(page, "camp")
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_900, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(410, 210)
+	panel.size = Vector2(620, 470)
+	page.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	box.offset_left = 18
+	box.offset_right = -18
+	box.offset_top = 18
+	box.offset_bottom = -18
+	panel.add_child(box)
+	box.add_child(_label("演武 · 第 %d 阵破" % arena_wave, 34, PAPER_100))
+	box.add_child(_label("铜钱 +%d     全队历练 +%d\n铜钱 %d" % [copper_reward, xp_reward, state.copper], 18, PAPER_200))
+	box.add_child(_button("再下一阵", func(): arena_wave += 1; arena_offer.clear(); arena_running = false; show_arena(), true, 380))
+	box.add_child(_button("回营整备", func(): arena_running = false; show_camp(), false, 380))
+	box.add_child(_button("回行军图", func(): arena_running = false; show_map(), false, 380))
 
 
 func show_settings() -> void:
@@ -1216,11 +1949,11 @@ func show_settings() -> void:
 	box.add_child(_volume_row("配乐音量", "music_volume"))
 	box.add_child(_volume_row("音效音量", "sfx_volume"))
 	var auto := CheckButton.new()
-	auto.text = "自动战斗"
-	auto.button_pressed = bool(state.settings.get("auto_battle", true))
+	auto.text = "合击时显示阵形提示"
+	auto.button_pressed = bool(state.settings.get("battle_hints", true))
 	auto.add_theme_font_override("font", SANS_FONT)
 	auto.add_theme_font_size_override("font_size", 16)
-	auto.toggled.connect(func(value): state.settings.auto_battle = value; state.save())
+	auto.toggled.connect(func(value): state.settings.battle_hints = value; state.save())
 	box.add_child(auto)
 	var reduce := CheckButton.new()
 	reduce.text = "减少动态"
