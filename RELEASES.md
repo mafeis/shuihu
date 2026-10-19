@@ -4,9 +4,9 @@
 
 | 平台 | 文件 | 系统要求 |
 | --- | --- | --- |
-| macOS Apple 芯片 | `XingmingShuihu-1.0.0-mac-arm64.dmg` | macOS 13.0+，Apple M 系列 |
-| Windows x64 | `XingmingShuihu-1.0.0-win-x64.exe` | Windows 10/11 x64 |
-| 通用本地分享 | `XingmingShuihu-local-1.0.0.zip` | Node.js 20+ |
+| macOS Apple 芯片 | `XingmingShuihu-1.0.1-mac-arm64.dmg` | macOS 13.0+，Apple M 系列 |
+| Windows x64 | `XingmingShuihu-1.0.1-win-x64.exe` | Windows 10/11 x64 |
+| 通用本地分享 | `XingmingShuihu-local-1.0.1.zip` | Node.js 20+ |
 
 macOS 本地测试包使用 ad-hoc 签名，没有 Apple Developer ID 签名和公证。首次打开时请右键应用并选择“打开”，或参考发行页中的说明。
 

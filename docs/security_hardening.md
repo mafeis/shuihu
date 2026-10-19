@@ -60,7 +60,7 @@ npx electron-builder --win --x64
 
 ```powershell
 Get-AuthenticodeSignature -LiteralPath "release\win-unpacked\星命水浒.exe"
-Get-AuthenticodeSignature -LiteralPath "release\XingmingShuihu-1.0.0-win-x64.exe"
+Get-AuthenticodeSignature -LiteralPath "release\XingmingShuihu-1.0.1-win-x64.exe"
 ```
 
 两项状态都必须是 `Valid`。当前仓库不包含证书、密码或 Apple/Valve 账号资料，不得把占位配置用于正式上传。
