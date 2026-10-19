@@ -67,6 +67,7 @@ func _run() -> void:
 	main._finish_legend_victory()
 	_check(main.state.legend_claimed.has(str(legend.id)), "legend victories should be persisted")
 	_check(main.state.copper > copper_before, "legend victories should award their own loot")
+	_check(main.screen == "reward", "legend victories should open their native reward page")
 	main.state.roster.linchong.level = 2
 	_check(not main.state.hero_legend_ready("linchong"), "hero legends should respect the level gate")
 	main.state.delete_save()

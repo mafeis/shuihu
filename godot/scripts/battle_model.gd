@@ -23,6 +23,7 @@ var difficulty_rewards := 1.0
 var player_won_last_battle := false
 var damage_dealt := 0
 var enemies_defeated := 0
+var final_enemy_count := 0
 var modifiers: Dictionary = {}
 var enemy_modifiers: Dictionary = {}
 var selected_target_index := 0
@@ -40,6 +41,7 @@ var ultimate_uses: Dictionary = {}
 var damage_by_hero: Dictionary = {}
 var action_events: Array[Dictionary] = []
 var enemy_score := 0
+var poise_breaks := 0
 
 
 func _init(game_state: GameState, chapter: Dictionary, battle_modifiers: Dictionary = {}, battle_enemy_modifiers: Dictionary = {}) -> void:
@@ -185,6 +187,7 @@ func _build_enemies() -> void:
 	var rule_copy: Dictionary = chapter_data.get("special_rule", {})
 	if not rule_copy.is_empty():
 		log_lines.push_front("阵势·%s：%s" % [rule_copy.get("name", ""), rule_copy.get("desc", "")])
+	final_enemy_count = enemies.size()
 
 
 func _opening_statuses(key: String) -> Array:
@@ -438,6 +441,7 @@ func _apply_skill(actor: Dictionary, skill: Dictionary, target_index: int) -> vo
 				if int(target.poise) >= int(target.poise_max):
 					target.poise = 0
 					target.broken = 2
+					poise_breaks += 1
 					log_lines.push_front("%s护势崩解，露出破绽。" % target.name)
 			if target.hp <= 0:
 				enemies_defeated += 1

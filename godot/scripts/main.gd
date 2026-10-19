@@ -1742,10 +1742,13 @@ func _finish_victory() -> void:
 		if not state.chain_archive.has(formation_id):
 			state.chain_archive.append(formation_id)
 	state.save()
-	show_reward()
+	show_reward("chapter")
 
 
-func show_reward() -> void:
+func show_reward(reward_context := "chapter") -> void:
+	if reward_context == "legend":
+		_show_legend_reward()
+		return
 	_set_screen(SCREEN_REWARD)
 	var page := _new_screen()
 	_background_image(page, state.chapter().get("bg", ""), 0.48)
@@ -1763,11 +1766,17 @@ func show_reward() -> void:
 	var chapter: Dictionary = state.chapter()
 	var battle_data: Dictionary = chapter.get("battle", {})
 	var reward: Dictionary = battle_data.get("reward", {})
+	var recruit_names: Array[String] = []
+	for hero_id in battle_data.get("recruit", []):
+		recruit_names.append(str(state.hero(str(hero_id)).get("name", hero_id)))
 	box.add_child(_label("铜钱 +%d     历练 +%d\n新结义：%s" % [
 		int(round(float(reward.get("copper", 0)) * (1.15 if state.difficulty_id == "hard" else 1.0))),
 		int(reward.get("xp", 0)),
-		", ".join(battle_data.get("recruit", [])),
+		"、".join(recruit_names) if not recruit_names.is_empty() else "暂无",
 	], 18, PAPER_200))
+	var settlement_stats := _battle_settlement_stats()
+	if not settlement_stats.is_empty():
+		box.add_child(_label(settlement_stats, 15, PAPER_300))
 	if battle.level_ups > 0:
 		box.add_child(_label("战阵磨砺，好汉有所精进。", 16, BRONZE))
 	var settlement = chapter.get("battle", {}).get("settlement", "")
@@ -1780,6 +1789,68 @@ func show_reward() -> void:
 		show_story()
 	, true, 330))
 	box.add_child(_button("返回行军图", show_map, false, 330))
+
+
+func _battle_settlement_stats() -> String:
+	if battle == null:
+		return ""
+	return "累计伤害 %d     击破护势 %d\n敌阵倒下 %d     发动合击 %d" % [
+		battle.damage_dealt,
+		battle.poise_breaks,
+		battle.final_enemy_count,
+		battle.chain_attacks,
+	]
+
+
+func _show_legend_reward() -> void:
+	_set_screen(SCREEN_REWARD)
+	var legend := state.hero_legend(chronicle_hero_id)
+	var reward: Dictionary = legend.get("reward", {})
+	var item: Dictionary = state.equipment(str(reward.get("item", "")))
+	var legend_bg := str(legend.get("bg", ""))
+	if legend_bg.begins_with("/"):
+		legend_bg = legend_bg.trim_prefix("/")
+		if not legend_bg.begins_with("res://"):
+			legend_bg = "res://" + legend_bg
+	var page := _new_screen()
+	_background_image(page, legend_bg if not legend_bg.is_empty() else str(state.chapter().get("bg", "")), 0.46)
+	_topbar(page, "camp")
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.97), BRONZE_DARK, 2, 6))
+	panel.position = Vector2(350, 176)
+	panel.size = Vector2(740, 578)
+	page.add_child(panel)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 22)
+	margin.add_theme_constant_override("margin_right", 22)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	panel.add_child(margin)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	margin.add_child(box)
+	box.add_child(_label("好汉列传 · 终章已录", 16, BRONZE))
+	box.add_child(_label(str(legend.get("title", "终章")), 38, PAPER_100))
+	box.add_child(_label("%s列传终章在%s落笔，旧日因果已有了回响。" % [state.hero(chronicle_hero_id).get("name", ""), legend.get("location", "")], 17, PAPER_200))
+	box.add_child(_sep())
+	box.add_child(_label("入账铜钱  %d 贯\n列传历练  %d\n随身物  %s" % [int(reward.get("copper", 0)), int(reward.get("xp", 0)), item.get("name", reward.get("item", ""))], 18, PAPER_100))
+	var settlement_stats := _battle_settlement_stats()
+	if not settlement_stats.is_empty():
+		box.add_child(_label(settlement_stats, 15, PAPER_300))
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	box.add_child(actions)
+	actions.add_child(_button("回到列传", func():
+		legend_running = false
+		battle = null
+		show_camp()
+		show_chronicles()
+	, true, 300))
+	actions.add_child(_button("返回营寨", func():
+		legend_running = false
+		battle = null
+		show_camp()
+	, false, 240))
 
 
 func show_ending() -> void:
@@ -2096,9 +2167,7 @@ func _finish_legend_victory() -> void:
 			state.record_battle_progress(battle)
 			state.save()
 	legend_running = false
-	show_camp()
-	show_chronicles()
-	_toast("%s列传终章已录，铜钱、历练与随身物已入账。" % state.hero(chronicle_hero_id).get("name", ""))
+	show_reward("legend")
 
 
 func show_camp_building(building_id: String) -> void:

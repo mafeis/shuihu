@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/visual_legend_runner.gd" id="1_visual"]
+
+[node name="VisualLegendRunner" type="Node"]
+script = ExtResource("1_visual")
