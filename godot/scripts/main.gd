@@ -44,6 +44,11 @@ var last_save_error := ""
 var music_player: AudioStreamPlayer
 var music_track := ""
 var music_target_db := -3.7
+var transition_tween: Tween
+var native_name_input: NativeTextInput
+var native_name_field: Control
+var native_name_preview: Label
+var player_name_input: LineEdit
 
 
 func _ready() -> void:
@@ -108,6 +113,7 @@ func _build_shell() -> void:
 	add_child(toast_timer)
 	menu_layer = _overlay_root("MenuLayer")
 	settings_layer = _overlay_root("SettingsLayer")
+	native_name_input = NativeTextInput.new()
 	music_player = AudioStreamPlayer.new()
 	music_player.name = "MusicPlayer"
 	music_player.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -131,6 +137,11 @@ func _notification(what: int) -> void:
 		if state:
 			state.save()
 		get_tree().quit()
+
+
+func _native_text_input_action(payload: Variant) -> void:
+	var text = str(payload)
+	native_name_input.apply_native_event(text)
 
 
 func _make_theme() -> Theme:
@@ -210,12 +221,19 @@ func _clear_screen() -> void:
 
 
 func _new_screen() -> Control:
+	if transition_tween:
+		transition_tween.kill()
 	for child in screen_root.get_children():
 		screen_root.remove_child(child)
 		child.queue_free()
 	var page := Control.new()
+	page.name = "Page"
 	page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen_root.add_child(page)
+	if not bool(state.settings.get("reduced_motion", false)):
+		page.modulate = Color(1, 1, 1, 0.2)
+		transition_tween = create_tween()
+		transition_tween.tween_property(page, "modulate:a", 1.0, 0.18)
 	return page
 
 
@@ -587,44 +605,44 @@ func show_battle() -> void:
 	var page := _new_screen()
 	_background_image(page, state.chapter().get("bg", ""), 0.48)
 	_topbar(page, "map")
-	var title := _label("第 %d 回 · %s      回合 %d" % [chapter_index + 1, state.chapter().get("title", ""), battle.round_number], 17, PAPER_200)
-	title.position = Vector2(32, 88)
-	title.size = Vector2(1370, 46)
+	var round_badge := "第 %d 回 · %s · 回合 %d" % [chapter_index + 1, state.chapter().get("title", ""), battle.round_number]
+	var title := _label(round_badge, 17, PAPER_200)
+	title.position = Vector2(36, 86)
+	title.size = Vector2(996, 46)
 	page.add_child(title)
-	var enemy_column := VBoxContainer.new()
-	enemy_column.position = Vector2(82, 154)
-	enemy_column.size = Vector2(550, 640)
-	enemy_column.add_theme_constant_override("separation", 11)
-	page.add_child(enemy_column)
-	for index in battle.enemies.size():
-		var enemy := battle.enemies[index]
-		if enemy.hp <= 0:
-			continue
-		var card := _unit_card(enemy, false)
-		var enemy_id := str(enemy.get("enemy_id", ""))
-		var clicked := _button("已锁定" if _selected_enemy_id() == enemy_id else "锁定目标", func():
-			battle_target = _living_enemy_position(index)
-			show_battle()
-		, false, 130)
-		clicked.custom_minimum_size.y = 38
-		card.add_child(clicked)
-		enemy_column.add_child(card)
-	var hero_column := VBoxContainer.new()
-	hero_column.position = Vector2(660, 154)
-	hero_column.size = Vector2(350, 640)
-	hero_column.add_theme_constant_override("separation", 11)
-	page.add_child(hero_column)
-	for hero in battle.heroes:
-		var card := _unit_card(hero, true)
-		card.mouse_filter = Control.MOUSE_FILTER_PASS
-		hero_column.add_child(card)
+	var arena := PanelContainer.new()
+	arena.add_theme_stylebox_override("panel", _panel_style(Color(INK_950, 0.14), Color(BRONZE_DARK, 0.5), 1, 5))
+	arena.position = Vector2(32, 137)
+	arena.size = Vector2(996, 724)
+	page.add_child(arena)
+	var arena_box := VBoxContainer.new()
+	arena_box.add_theme_constant_override("separation", 12)
+	arena.add_child(arena_box)
+	var enemy_row := HBoxContainer.new()
+	enemy_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	enemy_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	enemy_row.add_theme_constant_override("separation", 16)
+	arena_box.add_child(enemy_row)
+	_enemy_positions(enemy_row)
+	var field_note := _separator_row()
+	var note := _label("敌阵 · 点选人物更换招式目标", 14, PAPER_300)
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	field_note.add_child(note)
+	center_on_row(field_note, 460)
+	arena_box.add_child(field_note)
+	var hero_row := HBoxContainer.new()
+	hero_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	hero_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hero_row.add_theme_constant_override("separation", 12)
+	arena_box.add_child(hero_row)
+	_hero_positions(hero_row)
 	var command := PanelContainer.new()
 	command.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.97), BRONZE_DARK, 1, 5))
-	command.position = Vector2(1032, 86)
-	command.size = Vector2(380, 784)
+	command.position = Vector2(1048, 86)
+	command.size = Vector2(364, 784)
 	page.add_child(command)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 7)
+	box.add_theme_constant_override("separation", 8)
 	command.add_child(box)
 	if battle.battle_finished:
 		box.add_child(_label("战阵已结", 30, BRONZE))
@@ -633,39 +651,202 @@ func show_battle() -> void:
 		box.add_child(_button("返回行军图", show_map, false, 280))
 		return
 	var actor: Dictionary = battle.current_hero()
-	box.add_child(_label("当前行动\n%s · %s\n生命 %d / %d    义气 %d" % [actor.get("name", ""), actor.get("nickname", ""), actor.hp, actor.max_hp, actor.yiqi], 16, PAPER_100))
-	var skill := battle.selected_skill()
-	for index in actor.skills.size():
-		var skill_data: Dictionary = actor.skills[index]
-		var skill_button := _button(
-			"%s    义气 +%d\n%s" % [
-				skill_data.get("name", ""),
-				int(skill_data.get("yiqi", 0)) - int(skill_data.get("yiqiCost", 0)),
-				skill_data.get("desc", ""),
-			],
-			func():
-				battle.select_skill(index)
-				show_battle(),
-			false,
-			282,
-		)
-		skill_button.custom_minimum_size.y = 65
-		if index == battle.selected_skill_index:
-			skill_button.add_theme_stylebox_override("normal", _panel_style(Color("#253433"), BRONZE_DARK, 2, 5))
-		box.add_child(skill_button)
+	box.add_child(_label("行棋 · %s  Lv.%d\n生命 %d / %d     义气 %d / 100" % [actor.get("name", ""), actor.get("level", 1), actor.hp, actor.max_hp, actor.yiqi], 16, PAPER_100))
 	var target_name := "无目标"
 	if not battle.living_enemies().is_empty():
 		target_name = battle.living_enemies()[clampi(battle_target, 0, battle.living_enemies().size() - 1)].get("name", "")
-	var attack := _button("出招 · 目标 %s" % target_name, perform_attack, true, 282)
+	box.add_child(_label("锁定 · " + target_name, 15, BRONZE))
+	var skill_heading := _label("招式", 14, PAPER_500)
+	box.add_child(skill_heading)
+	for index in actor.skills.size():
+		var skill_data: Dictionary = actor.skills[index]
+		var select_skill := func():
+			battle.select_skill(index)
+			show_battle()
+		var skill_button := _button(
+			"%d    %s\n%s" % [
+				index + 1,
+				skill_data.get("name", ""),
+				str(skill_data.get("desc", "")).left(54),
+			],
+			select_skill,
+			false,
+			288
+		)
+		skill_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		skill_button.custom_minimum_size.y = 68
+		if index == battle.selected_skill_index:
+			skill_button.add_theme_stylebox_override("normal", _panel_style(Color("#253433"), BRONZE_DARK, 2, 4))
+		if not battle.can_use_skill(skill_data):
+			skill_button.modulate = Color(0.58, 0.63, 0.61, 0.82)
+		box.add_child(skill_button)
+	var attack := _button("施展「%s」" % battle.selected_skill().get("name", "招式"), perform_attack, true, 288)
 	attack.disabled = not battle.can_use_selected_skill()
 	box.add_child(attack)
-	box.add_child(_button("返回行军图", show_map, false, 282))
+	box.add_child(_button("返回行军图", show_map, false, 288))
 	var log_box := VBoxContainer.new()
 	log_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(_sep())
 	for line in battle.log_lines.slice(0, 7):
 		log_box.add_child(_label(line, 14, PAPER_300))
 	box.add_child(log_box)
+
+
+func _enemy_positions(enemy_row: HBoxContainer) -> void:
+	for row in 3:
+		var lane := VBoxContainer.new()
+		lane.custom_minimum_size = Vector2(310, 0)
+		lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lane.alignment = BoxContainer.ALIGNMENT_CENTER
+		lane.add_theme_constant_override("separation", 5)
+		enemy_row.add_child(lane)
+		var lane_units: Array[Dictionary] = battle.enemies.filter(func(unit): return int(unit.hp) > 0 and int(unit.row) == row)
+		if lane_units.is_empty():
+			var empty := _label("空", 15, PAPER_500)
+			empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			lane.add_child(empty)
+			continue
+		for enemy in lane_units:
+			var enemy_id := str(enemy.get("enemy_id", ""))
+			var card := _battle_sprite(enemy, false, _selected_enemy_id() == enemy_id)
+			card.tooltip_text = "点选%s作为当前招式目标" % enemy.get("name", "敌人")
+			card.gui_input.connect(func(event: InputEvent):
+				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+					battle_target = _living_enemy_position(battle.enemies.find(enemy))
+					show_battle()
+			)
+			lane.add_child(card)
+
+
+func _hero_positions(hero_row: HBoxContainer) -> void:
+	for row in 3:
+		var lane := VBoxContainer.new()
+		lane.custom_minimum_size = Vector2(310, 0)
+		lane.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lane.alignment = BoxContainer.ALIGNMENT_CENTER
+		lane.add_theme_constant_override("separation", 5)
+		hero_row.add_child(lane)
+		var lane_units: Array[Dictionary] = battle.heroes.filter(func(unit): return int(unit.row) == row)
+		if lane_units.is_empty():
+			var empty := _label("空阵", 15, PAPER_500)
+			empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			lane.add_child(empty)
+			continue
+		for hero_unit in lane_units:
+			var card := _battle_sprite(hero_unit, true, hero_unit == battle.current_hero())
+			card.tooltip_text = "查看%s的武备与状态" % hero_unit.get("name", "好汉")
+			card.gui_input.connect(func(event: InputEvent):
+				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+					_show_hero_detail(str(hero_unit.get("hero_id", "")))
+			)
+			lane.add_child(card)
+
+
+func _separator_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.custom_minimum_size.y = 20
+	return row
+
+
+func center_on_row(control: Control, width: float) -> void:
+	control.custom_minimum_size.x = width
+	control.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+
+func _battle_sprite(unit: Dictionary, hero_side: bool, current: bool) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(292, 284) if hero_side else Vector2(292, 248)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _panel_style(Color(INK_900, 0.7), BRONZE if current else INK_700, 2 if current else 1, 5))
+	card.mouse_filter = Control.MOUSE_FILTER_STOP
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var box := VBoxContainer.new()
+	card.add_child(box)
+	var image := TextureRect.new()
+	image.custom_minimum_size.y = 150 if hero_side else 122
+	image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	image.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	image.size_flags_stretch_ratio = 1.2 if hero_side else 1.0
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if ResourceLoader.exists(unit.get("portrait", "")):
+		image.texture = load(unit.portrait)
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(image)
+	var locked := not hero_side and current
+	var heading := _label("%s%s\nLv.%d · %s" % [
+		"目标  " if locked else "",
+		unit.get("name", ""),
+		unit.get("level", 1),
+		"前阵" if int(unit.row) == 0 else ("中军" if int(unit.row) == 1 else "后阵"),
+	], 16, BRONZE if locked else PAPER_100)
+	box.add_child(heading)
+	var hp := ProgressBar.new()
+	hp.max_value = unit.max_hp
+	hp.value = unit.hp
+	hp.size_flags_vertical = Control.SIZE_SHRINK_END
+	hp.show_percentage = false
+	hp.custom_minimum_size.y = 9
+	hp.add_theme_stylebox_override("background", _panel_style(INK_700, INK_700, 0, 2))
+	hp.add_theme_stylebox_override("fill", _panel_style(TEAL if hero_side else CINNABAR, Color(0, 0, 0, 0), 0, 2))
+	box.add_child(hp)
+	var statuses := _unit_statuses(unit)
+	box.add_child(_label("生命 %d / %d   %s" % [unit.hp, unit.max_hp, statuses], 13, PAPER_300))
+	return card
+
+
+func _unit_statuses(unit: Dictionary) -> String:
+	var active: Array[String] = []
+	for status in unit.get("statuses", {}):
+		var duration := int(unit.statuses[status])
+		if duration > 0:
+			active.append("%s %d" % [_status_label(status), duration])
+	return "  ".join(active) if not active.is_empty() else "无异常"
+
+
+func _status_label(status: String) -> String:
+	return {"guard": "护御", "armorBreak": "破甲", "bleeding": "流血", "stun": "眩晕", "sealed": "封穴", "inspiration": "鼓舞"}.get(status, status)
+
+
+func _show_hero_detail(hero_id: String) -> void:
+	var config := state.hero(hero_id)
+	var stats := state.derive_hero_stats(hero_id)
+	menu_layer.visible = true
+	for child in menu_layer.get_children():
+		menu_layer.remove_child(child)
+		child.queue_free()
+	var dim := ColorRect.new()
+	dim.color = Color(INK_950, 0.76)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(dim)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
+	panel.position = Vector2(418, 135)
+	panel.size = Vector2(604, 630)
+	menu_layer.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 9)
+	panel.add_child(box)
+	var image := TextureRect.new()
+	image.custom_minimum_size = Vector2(0, 310)
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if ResourceLoader.exists(config.get("keyart", "")):
+		image.texture = load(config.keyart)
+	box.add_child(image)
+	box.add_child(_label("%s · Lv.%d\n%s" % [config.get("name", ""), stats.level, config.get("role", "")], 25, PAPER_100))
+	box.add_child(_label("生命 %d   攻击 %d   护御 %d   身法 %d" % [stats.max_hp, stats.atk, stats.def, stats.spd], 16, BRONZE))
+	var gear: Dictionary = state.roster_entry(hero_id).get("equipment", {})
+	var gear_lines: Array[String] = []
+	for slot in ["weapon", "armor", "token"]:
+		var item_id := str(gear.get(slot, ""))
+		gear_lines.append(state.equipment(item_id).get("name", "未装备"))
+	box.add_child(_label("兵器  %s\n衣甲  %s\n随身  %s" % gear_lines, 16, PAPER_200))
+	var close_detail := _button("回到战阵", func(): menu_layer.visible = false, false, 240)
+	box.add_child(close_detail)
+	close_detail.grab_focus()
 
 
 func _selected_enemy_id() -> String:
@@ -705,7 +886,7 @@ func _unit_card(unit: Dictionary, hero_side: bool) -> PanelContainer:
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(copy)
 	copy.add_child(_label("%s\n%s" % [unit.get("name", ""), unit.get("nickname", "")], 19, PAPER_100))
-	copy.add_child(_label("生命 %d / %d     护御 %d" % [unit.hp, unit.max_hp, unit.guard], 14, PAPER_300))
+	copy.add_child(_label("生命 %d / %d     护御 %d" % [unit.hp, unit.max_hp, int(unit.get("statuses", {}).get("guard", 0))], 14, PAPER_300))
 	var bar := ProgressBar.new()
 	bar.max_value = unit.max_hp
 	bar.value = unit.hp
@@ -945,41 +1126,92 @@ func show_settings() -> void:
 	settings_layer.add_child(dim)
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _panel_style(INK_850, BRONZE_DARK, 1, 5))
-	panel.position = Vector2(375, 165)
-	panel.size = Vector2(690, 570)
+	panel.position = Vector2(390, 118)
+	panel.size = Vector2(660, 720)
 	settings_layer.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 9)
+	box.add_theme_constant_override("separation", 6)
 	panel.add_child(box)
-	box.add_child(_label("游戏设置", 36, PAPER_100))
-	box.add_child(_label("称号", 20, BRONZE))
+	box.add_child(_label("游戏设置", 34, PAPER_100))
+	box.add_child(_label("江湖称号", 17, BRONZE))
+	native_name_field = Control.new()
+	native_name_field.name = "NativeNameField"
+	native_name_field.custom_minimum_size = Vector2(0, 46)
+	native_name_field.mouse_filter = Control.MOUSE_FILTER_STOP
+	native_name_field.mouse_default_cursor_shape = Control.CURSOR_IBEAM
+	box.add_child(native_name_field)
+	native_name_preview = _label(state.player_name, 18, PAPER_100)
+	native_name_preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	native_name_preview.offset_left = 12
+	native_name_preview.offset_right = -12
+	native_name_preview.add_theme_stylebox_override("normal", _panel_style(INK_900, BRONZE, 2, 4))
+	native_name_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	native_name_field.add_child(native_name_preview)
 	var player_name := LineEdit.new()
 	player_name.name = "PlayerName"
 	player_name.text = state.player_name
 	player_name.placeholder_text = "输入称号"
 	player_name.max_length = 24
-	player_name.custom_minimum_size = Vector2(0, 42)
+	player_name.custom_minimum_size = Vector2(0, 46)
+	player_name.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	player_name.add_theme_stylebox_override("normal", _panel_style(INK_900, INK_700, 1, 4))
 	player_name.add_theme_stylebox_override("focus", _panel_style(INK_900, BRONZE, 2, 4))
+	var composition := _label("", 12, BRONZE)
+	composition.position = Vector2(0, 48)
+	composition.size = Vector2(398, 20)
+	composition.visible = false
+	native_name_field.add_child(composition)
 	player_name.text_changed.connect(func(value: String):
 		var trimmed: String = value.strip_edges()
 		state.player_name = trimmed if not trimmed.is_empty() else "无名星客"
 	)
-	box.add_child(player_name)
-	var tests := HBoxContainer.new()
-	tests.add_theme_constant_override("separation", 8)
-	tests.add_child(_label("输入测试", 14, PAPER_300))
-	tests.add_child(_button("复制称号", func():
+	var copy_name := _button("复制中文", func():
 		DisplayServer.clipboard_set(player_name.text)
-		_toast("称号已复制，可按 %s + V 粘贴。" % ("Command" if OS.get_name() == "macOS" else "Ctrl"))
-	, false, 160))
-	tests.add_child(_button("直接粘贴", func():
-		player_name.text = DisplayServer.clipboard_get()
+		_toast("称号已复制，可在输入框直接粘贴。")
+	, false, 192)
+	var paste_name := _button("粘贴中文", func():
+		player_name.text = DisplayServer.clipboard_get().left(24)
 		player_name.caret_column = player_name.text.length()
-		player_name.text_changed.emit(player_name.text)
-		player_name.grab_focus()
-	, false, 160))
-	box.add_child(tests)
+		_on_native_name_preedit(player_name.text, "")
+		_on_native_name_commit(player_name.text)
+		_toast("已从剪贴板粘贴。")
+	, false, 192)
+	var clipboard_actions := HBoxContainer.new()
+	clipboard_actions.add_theme_constant_override("separation", 6)
+	clipboard_actions.add_child(copy_name)
+	clipboard_actions.add_child(paste_name)
+	box.add_child(clipboard_actions)
+	native_name_field.set_meta("composition", composition)
+	native_name_field.add_child(player_name)
+	player_name.focus_entered.connect(func():
+		if native_name_input.available:
+			screen_root.mouse_filter = Control.MOUSE_FILTER_STOP
+			player_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			player_name.release_focus()
+	)
+	player_name.focus_exited.connect(func():
+		if native_name_input.available and settings_layer.visible:
+			player_name.call_deferred("grab_focus")
+	)
+	native_name_input.text = state.player_name
+	_on_native_name_preedit(state.player_name, "")
+	native_name_input.attach(self, _on_native_name_commit, _on_native_name_preedit, _on_native_name_dismiss)
+	if native_name_input.available:
+		player_name.visible = false
+		native_name_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		native_name_preview.mouse_default_cursor_shape = Control.CURSOR_ARROW
+		native_name_preview.gui_input.connect(func(event: InputEvent):
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				_toast("输入法未转入游戏时，点击此处重新聚焦。")
+				focus_player_name()
+		)
+		native_name_field.call_deferred(
+			"set_meta",
+			"native_text_input",
+			native_name_input,
+		)
+		var apply_button := _button("保存称号", func(): state.save(); _toast("称号已保存。"), true, 300)
+		box.add_child(apply_button)
 	box.add_child(_label("音频", 20, BRONZE))
 	box.add_child(_volume_row("配乐音量", "music_volume"))
 	box.add_child(_volume_row("音效音量", "sfx_volume"))
@@ -999,13 +1231,50 @@ func show_settings() -> void:
 	box.add_child(reduce)
 	box.add_child(_sep())
 	box.add_child(_label("存档", 20, BRONZE))
-	box.add_child(_button("立即保存", func(): state.save(); _toast("战卷已保存。"), true, 280))
-	box.add_child(_button("删除存档", confirm_delete_save, false, 280))
+	var save_actions := HBoxContainer.new()
+	save_actions.add_theme_constant_override("separation", 6)
+	save_actions.add_child(_button("立即保存", func(): state.save(); _toast("战卷已保存。"), true, 196))
+	save_actions.add_child(_button("删除存档", confirm_delete_save, false, 196))
+	box.add_child(save_actions)
 	box.add_child(_button("返回游戏", func():
 		state.save()
 		close_settings()
-	, false, 280))
+	, false, 398))
+	player_name_input = player_name
 	player_name.grab_focus()
+
+
+func focus_player_name() -> void:
+	if player_name_input == null:
+		return
+	player_name_input.grab_focus()
+	if native_name_input.available and native_name_field:
+		native_name_input.attach_to_parent(native_name_field)
+
+
+func _on_native_name_commit(value: String) -> void:
+	if player_name_input == null:
+		return
+	player_name_input.text = value.left(24)
+	player_name_input.caret_column = player_name_input.text.length()
+	state.player_name = player_name_input.text.strip_edges()
+	if state.player_name.is_empty():
+		state.player_name = "无名星客"
+	player_name_input.text_changed.emit(player_name_input.text)
+
+
+func _on_native_name_preedit(value: String, marked: String) -> void:
+	if native_name_preview:
+		native_name_preview.text = value if not value.is_empty() else state.player_name
+	if native_name_field:
+		var composition := native_name_field.get_meta("composition", null) as Label
+		if composition:
+			composition.text = "候选  " + marked.strip_edges()
+			composition.visible = not marked.is_empty()
+
+
+func _on_native_name_dismiss() -> void:
+	close_settings()
 
 
 func _volume_row(text: String, key: String) -> HBoxContainer:

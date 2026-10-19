@@ -41,12 +41,36 @@ func _run() -> void:
 	_check(main.settings_layer.visible, "Enter while typing should not close settings")
 	_check(input.text == "星命测试", "Enter while typing should preserve text")
 	_check(main.screen_root.mouse_filter == Control.MOUSE_FILTER_STOP, "settings overlay should block background clicks")
+	_check(main.state.player_name == "星命测试", "Chinese names should be accepted and stored")
+	var paste_button: Button = null
+	var copy_button: Button = null
+	for button in main.settings_layer.find_children("*", "Button", true, false):
+		if button is Button and button.text == "粘贴中文":
+			paste_button = button
+		elif button is Button and button.text == "复制中文":
+			copy_button = button
+	_check(paste_button != null, "settings should provide explicit Chinese clipboard paste")
+	_check(copy_button != null, "settings should provide explicit Chinese clipboard copy")
+	if copy_button and DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+		copy_button.pressed.emit()
+		await get_tree().process_frame
+		_check(DisplayServer.clipboard_get() == "星命测试", "copy should preserve Chinese text through the system clipboard")
+	if paste_button and DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+		DisplayServer.clipboard_set("江湖客")
+		paste_button.pressed.emit()
+		await get_tree().process_frame
+		_check(input.text == "江湖客", "paste should insert Chinese text without relying on keyboard focus")
+		_check(main.state.player_name == "江湖客", "pasted Chinese names should update game state")
+	else:
+		input.text = "江湖客"
+		input.text_changed.emit(input.text)
+		await get_tree().process_frame
 	main.close_settings()
 	await get_tree().process_frame
 	_check(not main.settings_layer.visible, "settings should close after leaving text input")
 	_check(main.screen_root.mouse_filter == Control.MOUSE_FILTER_PASS, "closing settings should restore game input")
 	main.state.load_save()
-	_check(main.state.player_name.strip_edges() == "星命测试", "player name should persist in native save")
+	_check(main.state.player_name.strip_edges() == "江湖客", "player name should persist in native save")
 	main.state.delete_save()
 	main.queue_free()
 	await get_tree().process_frame

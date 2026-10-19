@@ -7,7 +7,12 @@ node tools/build_godot_data.mjs
 /Applications/Godot.app/Contents/MacOS/Godot --path godot --editor
 ```
 
-推荐窗口为 `1440 × 900`。设置页的“称号”是原生中文输入框，打开时自动聚焦；若系统输入法未自动切到中文，可用 `Control + Space` 切换输入源。复制与粘贴也可在输入框内使用。
+推荐窗口为 `1440 × 900`。设置页的“江湖称号”提供原生中文输入、输入法候选显示、复制中文、直接粘贴和保存；若 macOS 输入法候选未跟随到游戏，可点击输入框重新聚焦或使用“粘贴中文”。原生桥接源码使用 Swift，可在 macOS 上重新构建：
+
+```bash
+./godot/native_text_input/build.sh
+/Applications/Godot.app/Contents/MacOS/Godot --path godot res://scenes/native_ime_runner.tscn
+```
 
 界面使用 Godot 原生 Control 节点和场景切换，不加载 Web 页面。运行所需图片和音频复制到 `godot/assets/`，再由上面的数据命令同步。
 Godot 素材与源素材分开管理，两者都通过 Git LFS 提交。

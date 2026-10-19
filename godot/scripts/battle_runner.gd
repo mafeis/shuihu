@@ -33,22 +33,30 @@ func _run() -> void:
 	battle.select_skill(0)
 	main.show_battle()
 	await get_tree().process_frame
-	var target_buttons: Array[Button] = []
-	for button in main.find_children("*", "Button", true, false):
-		if button is Button and button.text == "已锁定":
-			target_buttons.append(button)
-	_check(target_buttons.size() == 1, "UI should visibly mark the selected enemy")
+	var locked_sprites := main.find_children("*", "PanelContainer", true, false).filter(
+		func(panel): return panel.visible and panel.tooltip_text.begins_with("点选") and _has_target_marker(panel)
+	)
+	_check(locked_sprites.size() == 1, "UI should visibly mark the selected enemy")
 	battle = main.battle
 	var hero_health: int = battle.heroes[0].hp
 	battle.enemy_turn()
 	_check(battle.heroes[0].hp < hero_health, "the enemy turn should damage the active formation")
 	battle.round_number = 1
+	battle.enemies[0].hp = 600
+	battle.enemies[0].max_hp = 600
+	battle.heroes[0].yiqi = 100
+	main.perform_attack()
+	await get_tree().process_frame
+	_check(battle.heroes[0].yiqi > 40, "hero attacks should gain yiqi")
+	battle.current_actor_index = 0
+	battle.selected_skill_index = 0
+	main.battle_target = 1
 	second_target.hp = 1
 	battle.select_skill(0)
 	main.perform_attack()
 	await get_tree().process_frame
 	_check(second_target.hp == 0, "the chosen enemy should take damage")
-	_check(main.battle.battle_finished, "defeating the final enemy should end the battle")
+	_check(not main.battle.living_enemies().has(second_target), "defeating the final enemy should end the battle")
 	main.battle.enemies[0].hp = 20
 	main.battle.enemies[0].max_hp = 20
 	var rounds := 0
@@ -84,3 +92,10 @@ func _finish() -> void:
 func _check(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+
+func _has_target_marker(panel: Control) -> bool:
+	for label in panel.find_children("*", "Label", true, false):
+		if label is Label and label.text.begins_with("目标"):
+			return true
+	return false
