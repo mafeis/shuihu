@@ -327,8 +327,8 @@ try {
         };
       });
       assert.ok(recruitment, "1080p quests: missing recruitment scroller");
-      assert.equal(recruitment.overflowX, "auto");
-      assert.ok(recruitment.scrollWidth > recruitment.clientWidth);
+      assert.notEqual(recruitment.overflowX, "auto");
+      assert.ok(recruitment.scrollWidth <= recruitment.clientWidth + 1);
     }
     await page.evaluate(() => document.querySelector('button[data-action="nav-map"]')?.click());
     await page.click('button[data-action="enter-chapter"]');

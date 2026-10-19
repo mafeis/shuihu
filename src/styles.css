@@ -3789,14 +3789,6 @@ button[aria-pressed="true"] {
 
 .recruitment-scroll {
   min-width: 0;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-color: var(--ink-600) transparent;
-  scrollbar-width: thin;
-}
-
-.recruitment-scroll .recruitment-grid {
-  grid-template-columns: repeat(8, minmax(168px, 1fr));
 }
 
 .recruitment-card {
@@ -12754,10 +12746,6 @@ html[data-motion="reduced"] *::after {
     grid-template-columns: 1fr;
   }
 
-  .recruitment-scroll .recruitment-grid {
-    grid-template-columns: repeat(8, minmax(220px, 1fr));
-  }
-
   .camp-layout {
     display: flex;
     min-height: 0;
@@ -15597,10 +15585,6 @@ html[data-motion="reduced"] *::after {
 }
 
 @media (max-width: 920px) {
-  .recruitment-scroll .recruitment-grid {
-    grid-template-columns: repeat(8, 220px);
-  }
-
   .bond-grid,
   .bond-archive-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
