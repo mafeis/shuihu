@@ -473,6 +473,27 @@ export function startNextTurn(battle) {
 
 function triggerBossPhase(battle, actor) {
   actor.bossPhaseTriggered = true;
+  const rule = ENEMIES[actor.refId]?.bossPhase;
+  if (rule) {
+    let heal = 0;
+    if (rule.healPct) {
+      heal = Math.round(actor.maxHp * rule.healPct);
+      actor.hp = Math.min(actor.maxHp, actor.hp + heal);
+    }
+    if (rule.yiqi) {
+      actor.yiqi = Math.max(actor.yiqi || 0, rule.yiqi);
+    }
+    for (const [status, stacks] of Object.entries(rule.selfStatuses || {})) {
+      actor.statuses[status] = Math.max(actor.statuses[status] || 0, stacks);
+    }
+    for (const hero of livingSide(battle, "hero")) {
+      for (const [status, stacks] of Object.entries(rule.heroStatuses || {})) {
+        hero.statuses[status] = Math.max(hero.statuses[status] || 0, stacks);
+      }
+    }
+    pushLog(battle, "boss", rule.text.replace("{heal}", String(heal)));
+    return;
+  }
   if (actor.refId === "executioner") {
     actor.statuses.inspiration = Math.max(actor.statuses.inspiration || 0, 3);
     actor.yiqi = 100;

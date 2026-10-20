@@ -80,7 +80,7 @@ function legendBattle(state, heroId, enemyLevel = 10) {
 }
 
 test("captain boss phase heals and gains guard", () => {
-  const { battle, boss, hpBefore } = triggerBoss("liangshan", "captain");
+  const { battle, boss, hpBefore } = triggerBoss("liangshan", "gen_lianren");
   assert.equal(boss.bossPhaseTriggered, true);
   assert.ok(boss.hp > hpBefore);
   assert.equal(boss.statuses.guard, 2);
@@ -92,7 +92,7 @@ test("captain boss phase heals and gains guard", () => {
 });
 
 test("executioner boss phase applies bleeding and armor break", () => {
-  const { battle, boss } = triggerBoss("jiangzhou", "executioner");
+  const { battle, boss } = triggerBoss("jiangzhou", "gen_xingxing");
   assert.equal(boss.bossPhaseTriggered, true);
   assert.equal(boss.yiqi, 100);
   assert.equal(boss.statuses.inspiration, 3);

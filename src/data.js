@@ -6,6 +6,7 @@ import {
   WATER_MARGIN_MEMORIES,
 } from "./lore/waterMarginChapters.js";
 import { extraHeroStoryArc } from "./lore/heroStoryArcs.js";
+import { ENEMY_GENERALS } from "./lore/enemyGenerals.js";
 
 export const PATHS = {
   gang: {
@@ -12454,7 +12455,7 @@ const CORE_HERO_DOCTRINES = {
   },
 };
 
-export const ENEMIES = {
+const CORE_ENEMIES = {
   runner: {
     id: "runner",
     name: "县衙差役",
@@ -12786,6 +12787,15 @@ export const ENEMIES = {
       },
     ],
   },
+};
+
+/**
+ * 敌方单位总表：7 种基础兵种 + src/lore/enemyGenerals.js 的 24 名敌将。
+ * 战斗配置按 id 取用，新增敌将只需扩展名册，不必改这里。
+ */
+export const ENEMIES = {
+  ...CORE_ENEMIES,
+  ...ENEMY_GENERALS,
 };
 
 const CORE_HERO_CHRONICLES = Object.fromEntries(
@@ -13446,9 +13456,9 @@ const CORE_CHAPTERS = [
     },
     battle: {
       enemies: [
-        { id: "archer", level: 3, row: 2 },
-        { id: "runner", level: 3, row: 0 },
+        { id: "gen_yaban", level: 3, row: 0 },
         { id: "runner", level: 3, row: 1 },
+        { id: "gen_shichang", level: 3, row: 2 },
       ],
       reward: {
         copper: 230,
@@ -13529,9 +13539,9 @@ const CORE_CHAPTERS = [
     },
     battle: {
       enemies: [
-        { id: "instructor", level: 5, row: 0 },
-        { id: "archer", level: 5, row: 2 },
+        { id: "gen_paijun", level: 5, row: 0 },
         { id: "runner", level: 5, row: 1 },
+        { id: "archer", level: 5, row: 2 },
       ],
       reward: {
         copper: 330,
@@ -13608,9 +13618,9 @@ const CORE_CHAPTERS = [
     },
     battle: {
       enemies: [
-        { id: "instructor", level: 6, row: 0 },
+        { id: "gen_jieji", level: 6, row: 0 },
+        { id: "gen_butou", level: 6, row: 1 },
         { id: "archer", level: 6, row: 2 },
-        { id: "runner", level: 6, row: 1 },
       ],
       reward: {
         copper: 460,
@@ -13692,9 +13702,9 @@ const CORE_CHAPTERS = [
     },
     battle: {
       enemies: [
-        { id: "instructor", level: 7, row: 0 },
+        { id: "gen_jiaoshi", level: 7, row: 0 },
+        { id: "gen_majun", level: 7, row: 1 },
         { id: "archer", level: 7, row: 2 },
-        { id: "runner", level: 7, row: 1 },
       ],
       reward: {
         copper: 560,
@@ -13781,9 +13791,9 @@ const CORE_CHAPTERS = [
     },
     battle: {
       enemies: [
-        { id: "executioner", level: 8, row: 0 },
-        { id: "instructor", level: 8, row: 1 },
-        { id: "archer", level: 8, row: 2 },
+        { id: "gen_xingxing", level: 8, row: 0 },
+        { id: "gen_douji", level: 8, row: 1 },
+        { id: "gen_tuanlian", level: 8, row: 2 },
       ],
       boss: true,
       reward: {
@@ -13871,9 +13881,9 @@ const CORE_CHAPTERS = [
     },
     battle: {
       enemies: [
-        { id: "zhu_guard", level: 9, row: 0 },
-        { id: "instructor", level: 9, row: 1 },
-        { id: "archer", level: 9, row: 2 },
+        { id: "gen_zhujiaoshi", level: 9, row: 0 },
+        { id: "gen_guanjia", level: 9, row: 1 },
+        { id: "gen_panjun", level: 9, row: 2 },
       ],
       reward: {
         copper: 650,
@@ -13955,9 +13965,9 @@ const CORE_CHAPTERS = [
     },
     battle: {
       enemies: [
-        { id: "daming_captain", level: 11, row: 0 },
+        { id: "gen_dutong", level: 11, row: 0 },
         { id: "instructor", level: 11, row: 1 },
-        { id: "archer", level: 11, row: 2 },
+        { id: "gen_zhihui", level: 11, row: 2 },
       ],
       boss: true,
       reward: {
@@ -14045,9 +14055,9 @@ const CORE_CHAPTERS = [
     },
     battle: {
       enemies: [
-        { id: "captain", level: 12, row: 0 },
-        { id: "instructor", level: 11, row: 1 },
-        { id: "archer", level: 11, row: 2 },
+        { id: "gen_lianren", level: 12, row: 0 },
+        { id: "gen_tongzhi", level: 12, row: 1 },
+        { id: "archer", level: 12, row: 2 },
       ],
       boss: true,
       reward: {
