@@ -1196,7 +1196,7 @@ button[aria-pressed="true"] {
   overflow: hidden;
   background:
     linear-gradient(110deg, rgba(7, 13, 14, 0.98), rgba(13, 19, 18, 0.9)),
-    url("/assets/environments/liangshan_water_fort.png") center / cover fixed;
+    url("/assets/environments/liangshan_water_fort.webp") center / cover fixed;
 }
 
 .story-hub-reading-progress {
@@ -2124,7 +2124,7 @@ button[aria-pressed="true"] {
   border-radius: 7px;
   background:
     linear-gradient(90deg, rgba(7, 12, 13, 0.94), rgba(7, 12, 13, 0.67)),
-    url("/assets/environments/liangshan_water_fort.png") center 62% / cover;
+    url("/assets/environments/liangshan_water_fort.webp") center 62% / cover;
 }
 
 .camp-heading > div:first-child {
@@ -2295,7 +2295,7 @@ button[aria-pressed="true"] {
   border-radius: 5px;
   background:
     linear-gradient(rgba(7, 16, 15, 0.8), rgba(7, 16, 15, 0.9)),
-    url("/assets/environments/liangshan_water_fort.png") center 62% / cover;
+    url("/assets/environments/liangshan_water_fort.webp") center 62% / cover;
 }
 
 .camp-building {
@@ -6873,7 +6873,7 @@ button[aria-pressed="true"] {
 .arena-hero-art {
   background:
     linear-gradient(90deg, rgba(7, 12, 13, 0.96) 8%, rgba(7, 12, 13, 0.62) 50%, rgba(7, 12, 13, 0.2)),
-    url("/assets/environments/liangshan_water_fort.png") center 44% / cover;
+    url("/assets/environments/liangshan_water_fort.webp") center 44% / cover;
   filter: saturate(0.74) contrast(1.08);
   transform: scale(1.02);
 }
@@ -8224,7 +8224,7 @@ button[aria-pressed="true"] {
   border-top: 2px solid var(--bronze-400);
   background:
     linear-gradient(0deg, rgba(13, 20, 21, 0.98), rgba(13, 20, 21, 0.79)),
-    url("/assets/environments/liangshan_water_fort.png") center / cover;
+    url("/assets/environments/liangshan_water_fort.webp") center / cover;
 }
 
 .arena-victory-copy h1 {

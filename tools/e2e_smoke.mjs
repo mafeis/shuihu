@@ -914,7 +914,7 @@ try {
         );
       }).length,
       thumbnailRequests: resources.filter((resource) => resource.name.includes("/thumb.webp")).length,
-      cutoutRequests: resources.filter((resource) => resource.name.includes("/cutout.png")).length,
+      cutoutRequests: resources.filter((resource) => resource.name.includes("/cutout.webp")).length,
       posterRequests: new Set(
         resources
           .filter((resource) => resource.name.includes("bianjing_snow_night_poster"))

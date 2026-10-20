@@ -11,7 +11,9 @@ let current = 0;
 
 for (const entry of readdirSync(characterRoot, { withFileTypes: true })) {
   if (!entry.isDirectory()) continue;
-  const source = path.join(characterRoot, entry.name, "cutout.png");
+  const webpSource = path.join(characterRoot, entry.name, "cutout.webp");
+  const pngSource = path.join(characterRoot, entry.name, "cutout.png");
+  const source = existsSync(webpSource) ? webpSource : pngSource;
   const target = path.join(characterRoot, entry.name, "thumb.webp");
   if (!existsSync(source)) continue;
   if (

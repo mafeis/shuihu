@@ -65,7 +65,7 @@ test("each ending has a distinct three-beat cinematic with valid production asse
       seenAssets.add(frame.asset);
       if (frame.portrait) {
         assert.ok(
-          existsSync(assetPath(`assets/characters/${frame.portrait}/cutout.png`)),
+          existsSync(assetPath(`assets/characters/${frame.portrait}/cutout.webp`)),
           `missing ending portrait ${frame.portrait}`,
         );
       }

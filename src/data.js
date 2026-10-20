@@ -1137,8 +1137,8 @@ const CORE_HEROES = {
     role: "守御反击先锋",
     path: "gang",
     preferredRow: 0,
-    cutout: "/assets/characters/linchong/cutout.png",
-    keyart: "/assets/characters/linchong/keyart.png",
+    cutout: "/assets/characters/linchong/cutout.webp",
+    keyart: "/assets/characters/linchong/keyart.webp",
     palette: "#405f67",
     base: { hp: 455, atk: 55, def: 43, spd: 34 },
     passive: {
@@ -1232,8 +1232,8 @@ const CORE_HEROES = {
     role: "前阵群体破甲",
     path: "gang",
     preferredRow: 0,
-    cutout: "/assets/characters/luzhishen/cutout.png",
-    keyart: "/assets/characters/luzhishen/keyart.png",
+    cutout: "/assets/characters/luzhishen/cutout.webp",
+    keyart: "/assets/characters/luzhishen/keyart.webp",
     palette: "#7c6842",
     base: { hp: 530, atk: 58, def: 45, spd: 27 },
     passive: {
@@ -1313,8 +1313,8 @@ const CORE_HEROES = {
     role: "单体爆发与处决",
     path: "ling",
     preferredRow: 1,
-    cutout: "/assets/characters/wusong/cutout.png",
-    keyart: "/assets/characters/wusong/keyart.png",
+    cutout: "/assets/characters/wusong/cutout.webp",
+    keyart: "/assets/characters/wusong/keyart.webp",
     palette: "#365a75",
     base: { hp: 400, atk: 62, def: 29, spd: 45 },
     passive: {
@@ -1391,8 +1391,8 @@ const CORE_HEROES = {
     role: "行动调度与全队机动",
     path: "tao",
     preferredRow: 2,
-    cutout: "/assets/characters/daizong/cutout.png",
-    keyart: "/assets/characters/daizong/keyart.png",
+    cutout: "/assets/characters/daizong/cutout.webp",
+    keyart: "/assets/characters/daizong/keyart.webp",
     palette: "#817044",
     base: { hp: 360, atk: 43, def: 28, spd: 53 },
     passive: {
@@ -1480,8 +1480,8 @@ const CORE_HEROES = {
     role: "治疗与状态净化",
     path: "shou",
     preferredRow: 2,
-    cutout: "/assets/characters/andaoquan/cutout.png",
-    keyart: "/assets/characters/andaoquan/keyart.png",
+    cutout: "/assets/characters/andaoquan/cutout.webp",
+    keyart: "/assets/characters/andaoquan/keyart.webp",
     palette: "#3f604b",
     base: { hp: 372, atk: 37, def: 35, spd: 32 },
     passive: {
@@ -1564,8 +1564,8 @@ const CORE_HEROES = {
     role: "偷袭、偷取与后排干扰",
     path: "ling",
     preferredRow: 1,
-    cutout: "/assets/characters/shiqian/cutout.png",
-    keyart: "/assets/characters/shiqian/keyart.png",
+    cutout: "/assets/characters/shiqian/cutout.webp",
+    keyart: "/assets/characters/shiqian/keyart.webp",
     palette: "#66554c",
     base: { hp: 338, atk: 51, def: 25, spd: 56 },
     passive: {
@@ -1658,8 +1658,8 @@ const CORE_HEROES = {
     role: "残血增伤与群体压制",
     path: "gang",
     preferredRow: 0,
-    cutout: "/assets/characters/likui/cutout.png",
-    keyart: "/assets/characters/likui/keyart.png",
+    cutout: "/assets/characters/likui/cutout.webp",
+    keyart: "/assets/characters/likui/keyart.webp",
     palette: "#49322d",
     base: { hp: 505, atk: 66, def: 31, spd: 34 },
     passive: {
@@ -1738,8 +1738,8 @@ const CORE_HEROES = {
     role: "后排狙杀与多段射击",
     path: "ling",
     preferredRow: 2,
-    cutout: "/assets/characters/huarong/cutout.png",
-    keyart: "/assets/characters/huarong/keyart.png",
+    cutout: "/assets/characters/huarong/cutout.webp",
+    keyart: "/assets/characters/huarong/keyart.webp",
     palette: "#435f70",
     base: { hp: 355, atk: 59, def: 27, spd: 53 },
     passive: {
@@ -1817,8 +1817,8 @@ const CORE_HEROES = {
     role: "全队调度与危急救援",
     path: "shou",
     preferredRow: 1,
-    cutout: "/assets/characters/songjiang/cutout.png",
-    keyart: "/assets/characters/songjiang/keyart.png",
+    cutout: "/assets/characters/songjiang/cutout.webp",
+    keyart: "/assets/characters/songjiang/keyart.webp",
     palette: "#536a5a",
     base: { hp: 430, atk: 47, def: 42, spd: 35 },
     passive: {
@@ -1900,8 +1900,8 @@ const CORE_HEROES = {
     role: "破甲控制与双刀追击",
     path: "ling",
     preferredRow: 1,
-    cutout: "/assets/characters/husanniang/cutout.png",
-    keyart: "/assets/characters/husanniang/keyart.png",
+    cutout: "/assets/characters/husanniang/cutout.webp",
+    keyart: "/assets/characters/husanniang/keyart.webp",
     palette: "#6e4d50",
     base: { hp: 388, atk: 61, def: 30, spd: 49 },
     passive: {
@@ -1984,8 +1984,8 @@ const CORE_HEROES = {
     role: "开局蓄势与谋略控场",
     path: "tao",
     preferredRow: 2,
-    cutout: "/assets/characters/wuyong/cutout.png",
-    keyart: "/assets/characters/wuyong/keyart.png",
+    cutout: "/assets/characters/wuyong/cutout.webp",
+    keyart: "/assets/characters/wuyong/keyart.webp",
     palette: "#53614a",
     base: { hp: 352, atk: 51, def: 29, spd: 46 },
     passive: {
@@ -2071,8 +2071,8 @@ const CORE_HEROES = {
     role: "高速暴击与后排处决",
     path: "ling",
     preferredRow: 2,
-    cutout: "/assets/characters/yanqing/cutout.png",
-    keyart: "/assets/characters/yanqing/keyart.png",
+    cutout: "/assets/characters/yanqing/cutout.webp",
+    keyart: "/assets/characters/yanqing/keyart.webp",
     palette: "#4c6072",
     base: { hp: 362, atk: 63, def: 27, spd: 58 },
     passive: {
@@ -2152,8 +2152,8 @@ const CORE_HEROES = {
     role: "押阵反击与破甲先锋",
     path: "shou",
     preferredRow: 0,
-    cutout: "/assets/characters/yangzhi/cutout.png",
-    keyart: "/assets/characters/yangzhi/keyart.png",
+    cutout: "/assets/characters/yangzhi/cutout.webp",
+    keyart: "/assets/characters/yangzhi/keyart.webp",
     palette: "#50645f",
     base: { hp: 468, atk: 54, def: 46, spd: 35 },
     passive: {
@@ -2239,8 +2239,8 @@ const CORE_HEROES = {
     role: "护阵、净化与封穴控场",
     path: "tao",
     preferredRow: 2,
-    cutout: "/assets/characters/gongsunsheng/cutout.png",
-    keyart: "/assets/characters/gongsunsheng/keyart.png",
+    cutout: "/assets/characters/gongsunsheng/cutout.webp",
+    keyart: "/assets/characters/gongsunsheng/keyart.webp",
     palette: "#4d6354",
     base: { hp: 366, atk: 52, def: 34, spd: 47 },
     passive: {
@@ -2328,8 +2328,8 @@ const CORE_HEROES = {
     role: "全能决斗与正面破阵",
     path: "gang",
     preferredRow: 1,
-    cutout: "/assets/characters/lujunyi/cutout.png",
-    keyart: "/assets/characters/lujunyi/keyart.png",
+    cutout: "/assets/characters/lujunyi/cutout.webp",
+    keyart: "/assets/characters/lujunyi/keyart.webp",
     palette: "#58665a",
     base: { hp: 505, atk: 67, def: 40, spd: 42 },
     passive: {
@@ -2405,8 +2405,8 @@ const CORE_HEROES = {
     role: "水战闪避与后排追击",
     path: "ling",
     preferredRow: 1,
-    cutout: "/assets/characters/zhangshun/cutout.png",
-    keyart: "/assets/characters/zhangshun/keyart.png",
+    cutout: "/assets/characters/zhangshun/cutout.webp",
+    keyart: "/assets/characters/zhangshun/keyart.webp",
     palette: "#42677a",
     base: { hp: 378, atk: 61, def: 27, spd: 59 },
     passive: {
@@ -2484,8 +2484,8 @@ const CORE_HEROES = {
     role: "连击破甲与追枪先锋",
     path: "ling",
     preferredRow: 1,
-    cutout: "/assets/characters/shijin/cutout.png",
-    keyart: "/assets/characters/shijin/keyart.png",
+    cutout: "/assets/characters/shijin/cutout.webp",
+    keyart: "/assets/characters/shijin/keyart.webp",
     palette: "#8a5d49",
     base: { hp: 402, atk: 60, def: 31, spd: 54 },
     passive: {
@@ -2571,8 +2571,8 @@ const CORE_HEROES = {
     role: "群体破势与重锤爆发",
     path: "gang",
     preferredRow: 0,
-    cutout: "/assets/characters/qinming/cutout.png",
-    keyart: "/assets/characters/qinming/keyart.png",
+    cutout: "/assets/characters/qinming/cutout.webp",
+    keyart: "/assets/characters/qinming/keyart.webp",
     palette: "#8f4b3f",
     base: { hp: 510, atk: 64, def: 35, spd: 32 },
     passive: {
@@ -2652,8 +2652,8 @@ const CORE_HEROES = {
     role: "义气补给与净化辅助",
     path: "tao",
     preferredRow: 2,
-    cutout: "/assets/characters/chaiin/cutout.png",
-    keyart: "/assets/characters/chaiin/keyart.png",
+    cutout: "/assets/characters/chaiin/cutout.webp",
+    keyart: "/assets/characters/chaiin/keyart.webp",
     palette: "#5d6f57",
     base: { hp: 390, atk: 48, def: 34, spd: 43 },
     passive: {
@@ -2742,8 +2742,8 @@ const CORE_HEROES = {
     role: "守阵反击与正面破军",
     path: "shou",
     preferredRow: 0,
-    cutout: "/assets/characters/guansheng/cutout.png",
-    keyart: "/assets/characters/guansheng/keyart.png",
+    cutout: "/assets/characters/guansheng/cutout.webp",
+    keyart: "/assets/characters/guansheng/keyart.webp",
     palette: "#59665a",
     base: { hp: 500, atk: 58, def: 49, spd: 34 },
     passive: {
@@ -2830,8 +2830,8 @@ const CORE_HEROES = {
     role: "后排飞石连击与破势控场",
     path: "ling",
     preferredRow: 2,
-    cutout: "/assets/characters/zhangqing/cutout.png",
-    keyart: "/assets/characters/zhangqing/keyart.png",
+    cutout: "/assets/characters/zhangqing/cutout.webp",
+    keyart: "/assets/characters/zhangqing/keyart.webp",
     palette: "#3e6e73",
     base: { hp: 382, atk: 64, def: 29, spd: 57 },
     passive: {
@@ -2930,8 +2930,8 @@ const CORE_HEROES = {
     role: "前排钩镰破甲与阵线控制",
     path: "gang",
     preferredRow: 0,
-    cutout: "/assets/characters/xuning/cutout.png",
-    keyart: "/assets/characters/xuning/keyart.png",
+    cutout: "/assets/characters/xuning/cutout.webp",
+    keyart: "/assets/characters/xuning/keyart.webp",
     palette: "#8b743c",
     base: { hp: 462, atk: 58, def: 40, spd: 38 },
     passive: {
@@ -3024,8 +3024,8 @@ const CORE_HEROES = {
     role: "水战调度与群体护御",
     path: "tao",
     preferredRow: 1,
-    cutout: "/assets/characters/lijun/cutout.png",
-    keyart: "/assets/characters/lijun/keyart.png",
+    cutout: "/assets/characters/lijun/cutout.webp",
+    keyart: "/assets/characters/lijun/keyart.webp",
     palette: "#345f6f",
     base: { hp: 438, atk: 57, def: 38, spd: 49 },
     passive: {
@@ -3117,8 +3117,8 @@ const CORE_HEROES = {
     role: "残血爆发与多段流血",
     path: "ling",
     preferredRow: 1,
-    cutout: "/assets/characters/ruanxiaoqi/cutout.png",
-    keyart: "/assets/characters/ruanxiaoqi/keyart.png",
+    cutout: "/assets/characters/ruanxiaoqi/cutout.webp",
+    keyart: "/assets/characters/ruanxiaoqi/keyart.webp",
     palette: "#477567",
     base: { hp: 392, atk: 63, def: 27, spd: 58 },
     passive: {
@@ -3209,8 +3209,8 @@ const CORE_HEROES = {
     role: "药控封锁与义气夺取",
     path: "tao",
     preferredRow: 2,
-    cutout: "/assets/characters/sunerniang/cutout.png",
-    keyart: "/assets/characters/sunerniang/keyart.png",
+    cutout: "/assets/characters/sunerniang/cutout.webp",
+    keyart: "/assets/characters/sunerniang/keyart.webp",
     palette: "#764b50",
     base: { hp: 404, atk: 55, def: 32, spd: 51 },
     passive: {
@@ -3299,8 +3299,8 @@ const CORE_HEROES = {
     role: "前阵反击与全队守门",
     path: "shou",
     preferredRow: 0,
-    cutout: "/assets/characters/gudashao/cutout.png",
-    keyart: "/assets/characters/gudashao/keyart.png",
+    cutout: "/assets/characters/gudashao/cutout.webp",
+    keyart: "/assets/characters/gudashao/keyart.webp",
     palette: "#5e6843",
     base: { hp: 548, atk: 54, def: 49, spd: 31 },
     passive: {
@@ -3389,8 +3389,8 @@ const CORE_HEROES = {
     role: "后排炮火与群体震晕",
     path: "gang",
     preferredRow: 2,
-    cutout: "/assets/characters/lingzhen/cutout.png",
-    keyart: "/assets/characters/lingzhen/keyart.png",
+    cutout: "/assets/characters/lingzhen/cutout.webp",
+    keyart: "/assets/characters/lingzhen/keyart.webp",
     palette: "#71604b",
     base: { hp: 358, atk: 72, def: 29, spd: 37 },
     passive: {
@@ -3480,8 +3480,8 @@ const CORE_HEROES = {
     role: "重甲连环与正面破阵",
     path: "gang",
     preferredRow: 0,
-    cutout: "/assets/characters/huyanzhuo/cutout.png",
-    keyart: "/assets/characters/huyanzhuo/keyart.png",
+    cutout: "/assets/characters/huyanzhuo/cutout.webp",
+    keyart: "/assets/characters/huyanzhuo/keyart.webp",
     palette: "#5c5966",
     base: { hp: 528, atk: 64, def: 47, spd: 34 },
     passive: {
@@ -3569,8 +3569,8 @@ const CORE_HEROES = {
     role: "残血爆发与流血追击",
     path: "gang",
     preferredRow: 0,
-    cutout: "/assets/characters/liutang/cutout.png",
-    keyart: "/assets/characters/liutang/keyart.png",
+    cutout: "/assets/characters/liutang/cutout.webp",
+    keyart: "/assets/characters/liutang/keyart.webp",
     palette: "#8b4937",
     base: { hp: 424, atk: 66, def: 31, spd: 45 },
     passive: {
@@ -3659,8 +3659,8 @@ const CORE_HEROES = {
     role: "守囚援护与全队回护",
     path: "shou",
     preferredRow: 0,
-    cutout: "/assets/characters/zhutong/cutout.png",
-    keyart: "/assets/characters/zhutong/keyart.png",
+    cutout: "/assets/characters/zhutong/cutout.webp",
+    keyart: "/assets/characters/zhutong/keyart.webp",
     palette: "#496b80",
     base: { hp: 516, atk: 54, def: 46, spd: 37 },
     passive: {
@@ -3748,8 +3748,8 @@ const CORE_HEROES = {
     role: "控制追击与破甲反击",
     path: "gang",
     preferredRow: 1,
-    cutout: "/assets/characters/leiheng/cutout.png",
-    keyart: "/assets/characters/leiheng/keyart.png",
+    cutout: "/assets/characters/leiheng/cutout.webp",
+    keyart: "/assets/characters/leiheng/keyart.webp",
     palette: "#66624f",
     base: { hp: 472, atk: 61, def: 39, spd: 40 },
     passive: {
@@ -3842,8 +3842,8 @@ const CORE_HEROES = {
     role: "后排飞刃与庄园调度",
     path: "ling",
     preferredRow: 2,
-    cutout: "/assets/characters/liying/cutout.png",
-    keyart: "/assets/characters/liying/keyart.png",
+    cutout: "/assets/characters/liying/cutout.webp",
+    keyart: "/assets/characters/liying/keyart.webp",
     palette: "#4f705d",
     base: { hp: 392, atk: 66, def: 30, spd: 54 },
     passive: {
@@ -3933,8 +3933,8 @@ const CORE_HEROES = {
     role: "后排猎杀与破甲穿透",
     path: "ling",
     preferredRow: 1,
-    cutout: "/assets/characters/jiezhen/cutout.png",
-    keyart: "/assets/characters/jiezhen/keyart.png",
+    cutout: "/assets/characters/jiezhen/cutout.webp",
+    keyart: "/assets/characters/jiezhen/keyart.webp",
     palette: "#4d7159",
     base: { hp: 408, atk: 62, def: 30, spd: 55 },
     passive: {
@@ -4027,8 +4027,8 @@ const CORE_HEROES = {
     role: "前阵夹击与反击破甲",
     path: "gang",
     preferredRow: 0,
-    cutout: "/assets/characters/jiebao/cutout.png",
-    keyart: "/assets/characters/jiebao/keyart.png",
+    cutout: "/assets/characters/jiebao/cutout.webp",
+    keyart: "/assets/characters/jiebao/keyart.webp",
     palette: "#6c6640",
     base: { hp: 452, atk: 64, def: 34, spd: 42 },
     passive: {
@@ -4114,8 +4114,8 @@ const CORE_HEROES = {
     role: "前阵法刀与反击破甲",
     path: "shou",
     preferredRow: 0,
-    cutout: "/assets/characters/yangxiong/cutout.png",
-    keyart: "/assets/characters/yangxiong/keyart.png",
+    cutout: "/assets/characters/yangxiong/cutout.webp",
+    keyart: "/assets/characters/yangxiong/keyart.webp",
     palette: "#725047",
     base: { hp: 468, atk: 59, def: 42, spd: 38 },
     passive: {
@@ -4207,8 +4207,8 @@ const CORE_HEROES = {
     role: "越阵追击与残血处决",
     path: "ling",
     preferredRow: 1,
-    cutout: "/assets/characters/shixiu/cutout.png",
-    keyart: "/assets/characters/shixiu/keyart.png",
+    cutout: "/assets/characters/shixiu/cutout.webp",
+    keyart: "/assets/characters/shixiu/keyart.webp",
     palette: "#3e6271",
     base: { hp: 392, atk: 66, def: 27, spd: 56 },
     passive: {
@@ -4295,8 +4295,8 @@ const CORE_HEROES = {
     role: "前阵铁壁与反击控场",
     path: "shou",
     preferredRow: 0,
-    cutout: "/assets/characters/sunli/cutout.png",
-    keyart: "/assets/characters/sunli/keyart.png",
+    cutout: "/assets/characters/sunli/cutout.webp",
+    keyart: "/assets/characters/sunli/keyart.webp",
     palette: "#50677b",
     base: { hp: 492, atk: 60, def: 47, spd: 35 },
     passive: {
@@ -4387,8 +4387,8 @@ const CORE_HEROES = {
     role: "后排号令与全队回气",
     path: "tao",
     preferredRow: 2,
-    cutout: "/assets/characters/yuehe/cutout.png",
-    keyart: "/assets/characters/yuehe/keyart.png",
+    cutout: "/assets/characters/yuehe/cutout.webp",
+    keyart: "/assets/characters/yuehe/keyart.webp",
     palette: "#4d7667",
     base: { hp: 354, atk: 44, def: 28, spd: 54 },
     passive: {
@@ -4477,8 +4477,8 @@ const CORE_HEROES = {
     role: "后排控阵与状态延展",
     path: "tao",
     preferredRow: 2,
-    cutout: "/assets/characters/xiaorang/cutout.png",
-    keyart: "/assets/characters/xiaorang/keyart.png",
+    cutout: "/assets/characters/xiaorang/cutout.webp",
+    keyart: "/assets/characters/xiaorang/keyart.webp",
     palette: "#56625f",
     base: { hp: 348, atk: 45, def: 29, spd: 45 },
     passive: {
@@ -4566,8 +4566,8 @@ const CORE_HEROES = {
     role: "后排破势与军需调度",
     path: "tao",
     preferredRow: 2,
-    cutout: "/assets/characters/jiangjing/cutout.png",
-    keyart: "/assets/characters/jiangjing/keyart.png",
+    cutout: "/assets/characters/jiangjing/cutout.webp",
+    keyart: "/assets/characters/jiangjing/keyart.webp",
     palette: "#6b7353",
     base: { hp: 382, atk: 47, def: 35, spd: 40 },
     passive: {
@@ -7052,7 +7052,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 1,
     title: "雪夜残旗",
     location: "东京城外旧营",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     objective: "夺回被篡改的禁军名册，让旧部看清高俅的伪令。",
     readyText:
       "林冲把旧枪横在门前。营中仍有被蒙蔽的禁军，他要先夺回名册，再让这些人自己决定跟谁走。",
@@ -7111,7 +7111,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 1,
     title: "古寺钟声",
     location: "野猪林废寺",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     objective: "护住逃入废寺的流民，击退假借佛门之名敛财的恶徒。",
     readyText:
       "寺门破得挡不住风，却挡得住一群无家可归的人。鲁智深把禅杖插在门槛上，谁来赶人，就先过他这一关。",
@@ -7173,7 +7173,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "冈下残酒",
     location: "景阳冈酒家",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     objective: "查出借虎患勒索乡民的差役，并守住冈下酒家。",
     readyText:
       "店家说冈上有虎，官差说交钱便能保命。武松却看见虎皮挂在差役马后，真正吃人的另有其人。",
@@ -7238,7 +7238,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "驿路火牌",
     location: "汴京驿道",
-    bg: "/assets/environments/bianjing_snow_night.png",
+    bg: "/assets/environments/bianjing_snow_night.webp",
     objective: "截下送往沧州的加急密令，为梁山争取一夜时间。",
     readyText:
       "一封密令能让三座城门同时落锁。戴宗只有一条驿路和一双快腿，今夜要把时间从官府手里抢回来。",
@@ -7296,7 +7296,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "疫营青囊",
     location: "沧州流民营",
-    bg: "/assets/environments/yellow_river_ferry.png",
+    bg: "/assets/environments/yellow_river_ferry.webp",
     objective: "守住疫营药棚，阻止官差焚烧病患与药材。",
     readyText:
       "药棚里还有能救人的方子，营外却已经堆好柴薪。安道全必须让官差明白，病不是罪名。",
@@ -7358,7 +7358,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "百锁夜行",
     location: "东京军械库",
-    bg: "/assets/environments/bianjing_snow_night.png",
+    bg: "/assets/environments/bianjing_snow_night.webp",
     objective: "潜入军械库取走百姓被抄的冬衣，并让守军误以为盗匪在东门。",
     readyText:
       "库门有九道锁，墙上却没有一道裂缝。时迁说这正好，锁越多，守军越相信没人进得去。",
@@ -7421,7 +7421,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "月下三矢",
     location: "清风寨箭楼",
-    bg: "/assets/environments/qingfeng_fort.png",
+    bg: "/assets/environments/qingfeng_fort.webp",
     objective: "在官军合围前射断三处号旗，为寨中百姓打开生路。",
     readyText:
       "月色太亮，箭楼上的花荣反倒成了最清楚的目标。他只有三支箭，要替整座清风寨改一次战局。",
@@ -7479,7 +7479,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "黑风断后",
     location: "清风寨山道",
-    bg: "/assets/environments/qingfeng_fort.png",
+    bg: "/assets/environments/qingfeng_fort.webp",
     objective: "守住山道石桥，让撤出的百姓和伤者先过河。",
     readyText:
       "桥只能过两个人，追兵却有整队。李逵把双斧往桥心一插，说今天谁也别想从这儿过去。",
@@ -7538,7 +7538,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "江州夜雨",
     location: "江州城南",
-    bg: "/assets/environments/jiangzhou_execution.png",
+    bg: "/assets/environments/jiangzhou_execution.webp",
     objective: "护住刑场外受牵连的百姓，让梁山名号成为一条退路。",
     readyText:
       "法场已破，追捕未停。宋江要在雨里拦住官军，也要拦住那些把梁山当成另一座官府的人。",
@@ -7599,7 +7599,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "红锦夺路",
     location: "祝家庄盘陀路",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     objective: "活捉盘陀路向导，为梁山拆穿假路与伏兵。",
     readyText:
       "雪盖住了岔路，祝家庄的向导却故意留下三串脚印。扈三娘看出其中两串相同，决定先拿人，再问路。",
@@ -7664,7 +7664,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "空城灯影",
     location: "大名府外仓",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     objective: "以假灯阵拖住守军，掩护梁山车队运走赈粮。",
     readyText:
       "仓里只有一百盏旧灯，没有一百个人。吴用要让每一盏灯看起来都像一名守军。",
@@ -7723,7 +7723,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "擂台不争名",
     location: "大名府河埠",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     objective: "在官军合围前击败守擂教头，带出被扣作诱饵的百姓。",
     readyText:
       "擂台上挂着彩头，河埠四周却藏着弓手。燕青要赢，但不能赢得太早，也不能让百姓先受惊。",
@@ -7782,7 +7782,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "最后一纲",
     location: "黄泥冈旧道",
-    bg: "/assets/environments/yellow_river_ferry.png",
+    bg: "/assets/environments/yellow_river_ferry.webp",
     objective: "护送流民粮车穿过黄泥冈，让旧日失纲之地成为新的守约之处。",
     readyText:
       "黄泥冈的旧路又落了一场雨。杨志把新军令插在车头，这一趟押的不是官府的寿礼，而是三座村子的过冬粮。",
@@ -7843,7 +7843,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "五雷止兵",
     location: "大名府城外祭坛",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     objective: "破去借天象煽动百姓互斗的伪坛，让两营流民放下兵器。",
     readyText:
       "祭坛上供的不是神，而是军械。公孙胜必须让被煽动的人先看清火光背后的官印，再谈天意。",
@@ -7903,7 +7903,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "麒麟换旗",
     location: "大名府旧校场",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     objective: "击退拥立卢俊义为寨主的旧部与官军，让梁山帅旗由众义共同署名。",
     readyText:
       "旧部把玉麒麟帅旗送到校场，只等他点一次头。卢俊义却要先让所有人明白，名望不能高过聚义。",
@@ -7962,7 +7962,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "白浪断索",
     location: "梁山泊水门",
-    bg: "/assets/environments/liangshan_water_fort.png",
+    bg: "/assets/environments/liangshan_water_fort.webp",
     objective: "潜入封锁水门，换掉绊索，救出被困在湖心的渔船与伤者。",
     readyText:
       "官军在水下布了三道铁索，只等梁山战船自己撞上来。张顺要在没有灯的黑水里，把整条生路换出来。",
@@ -8022,7 +8022,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 1,
     title: "少华旧誓",
     location: "少华山断墙",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     objective: "夺回被官军挟持的少华名册，让旧部按自己的意愿决定去留。",
     readyText:
       "少华山的断墙后关着不愿降官的旧部。史进把枪立在门前，这一次他不替任何人决定前程，只先把锁劈开。",
@@ -8080,7 +8080,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "青州雷火",
     location: "青州军械库",
-    bg: "/assets/environments/qingfeng_fort.png",
+    bg: "/assets/environments/qingfeng_fort.webp",
     objective: "拦下准备焚毁军粮的乱军，救出被军令胁迫的民夫与降卒。",
     readyText:
       "军械库外堆满火油，官军要把粮仓和民夫一起烧掉。秦明提棒站在门前，雷火应当落在持令纵火的人身上。",
@@ -8146,7 +8146,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "义仓风起",
     location: "沧州义仓",
-    bg: "/assets/environments/yellow_river_ferry.png",
+    bg: "/assets/environments/yellow_river_ferry.webp",
     objective: "守住准备分给流民的义仓，阻止豪强与官差合谋夺粮。",
     readyText:
       "义仓前挤满等粮的人，仓里却混进了官差安排的打手。柴进翻开账册，今日要守住的不只是粮袋，还有分粮的规矩。",
@@ -8208,7 +8208,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "大名刀盟",
     location: "大名府南门",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     objective: "在官军闭城前护百姓撤离，并迫使守将放下借人头邀功的军令。",
     readyText:
       "大名府四门将闭，守军要以一队百姓换梁山退兵。关胜横刀立于门下，先让百姓过门，再与军令当面分个高低。",
@@ -8267,7 +8267,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "东昌飞石",
     location: "东昌府城下",
-    bg: "/assets/environments/qingfeng_fort.png",
+    bg: "/assets/environments/qingfeng_fort.webp",
     objective: "击断城头四面传令旗，让被裹挟的民壮放下兵器。",
     readyText:
       "东昌府把百姓推上城头，又把梁山好汉的姓名挂成箭靶。张清摸了摸囊中石子，只挑传令兵与旗索下手。",
@@ -8326,7 +8326,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "雁翎锁军",
     location: "东京禁军旧校场",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     objective: "拆开官军以民夫充作前阵的连环枪阵，并夺回被篡改的教令。",
     readyText:
       "旧校场竖起一排新枪，枪后却绑着征来的民夫。徐宁提钩镰枪走入雪地，先要拆阵，也要让每一杆枪重新知道该护谁。",
@@ -8386,7 +8386,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 1,
     title: "十字坡最后一席",
     location: "十字坡旧店",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     objective: "夺回被官差扣押的解毒药方，让十字坡不再靠害人守住生意。",
     readyText:
       "旧店门前坐满被药倒的官差，后厨却还熬着一锅真正的解药。孙二娘把账本压在刀下，等梁山替这一桌人定一条新规矩。",
@@ -8445,7 +8445,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 1,
     title: "山门不倒",
     location: "登州山道",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     objective: "守住被官军围攻的过路山店，接走伤员与不愿再从军的降卒。",
     readyText:
       "顾大嫂把山店门板卸下来挡在路中央，背后是伤员、妇孺与一锅还没盛完的热粥。官军要从这里过，就只能先撞开她。",
@@ -8505,7 +8505,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "雷不入城",
     location: "青州炮作",
-    bg: "/assets/environments/qingfeng_fort.png",
+    bg: "/assets/environments/qingfeng_fort.webp",
     objective: "夺取官军炮作的药量簿，拆掉对准民村的炮位，并救出被强征的工匠。",
     readyText:
       "炮作院里三门火炮已经装药，城下却是民村。凌振提着一枚哑火雷走进院门，先把药线从官军手里夺回来。",
@@ -8565,7 +8565,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "芦荡阎罗",
     location: "石碣村芦荡",
-    bg: "/assets/environments/yellow_river_ferry.png",
+    bg: "/assets/environments/yellow_river_ferry.webp",
     objective: "炸开税船铁索，护送渔户撤离，并夺回被扣作人质的孩童。",
     readyText:
       "芦荡里每一道水汊都藏着渔舟。阮小七把最后一根火绳系在腰上，身后是被税船撞翻的网架与等不到父母的孩子。",
@@ -8625,7 +8625,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "三江开闸",
     location: "浔阳江水门",
-    bg: "/assets/environments/liangshan_water_fort.png",
+    bg: "/assets/environments/liangshan_water_fort.webp",
     objective: "打开私税水门，接出被扣船户，在水战中击退官军楼船。",
     readyText:
       "三江水门的铁闸已经落下，官军楼船挤在闸外。李俊站在最窄的一只小舟上，等潮水漫过最后一道暗礁。",
@@ -8686,7 +8686,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "连环改阵",
     location: "梁山雪原",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     objective: "截住被督军驱使的旧部连环马，先破甲阵，再救出被锁在骑阵中的民夫。",
     readyText:
       "雪原上铁链拖过冻土，呼延灼的旧部被督军串成连环马阵。双鞭若落在马腿上，阵会散；若落在铁链上，人还能回来。",
@@ -8745,7 +8745,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "旧火归岸",
     location: "郓城河仓",
-    bg: "/assets/environments/yellow_river_ferry.png",
+    bg: "/assets/environments/yellow_river_ferry.webp",
     objective: "夺回生辰纲旧案的真实账簿，救出被当作替罪羊的纤夫。",
     readyText:
       "河仓里堆满新的寿礼，旧案却被塞进最底层。刘唐要在火起之前找到真账，让当年第一把火不烧向无辜的人。",
@@ -8805,7 +8805,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "牢门向义",
     location: "沧州旧牢",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     objective: "守住被官军反锁的牢院，救出百姓并保住能够洗清旧案的案卷。",
     readyText:
       "旧牢门上锁着三道官印，门外却已经堆起柴薪。朱仝站在门内，这一次要决定先救活人，还是先保住那道早已不义的门。",
@@ -8863,7 +8863,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "跃城归众",
     location: "郓城侧门",
-    bg: "/assets/environments/bianjing_snow_night.png",
+    bg: "/assets/environments/bianjing_snow_night.webp",
     objective: "越过封城拒马，打开侧门，让被强征的青壮与百姓一同撤出。",
     readyText:
       "城门从内封死，城外百姓被官军当作前阵。雷横只有一根铁棍和一段可以借力的城墙，要在鼓声落下前越过整座郓城。",
@@ -8922,7 +8922,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "飞刃对账",
     location: "独龙冈义仓",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     objective: "截住被豪强转运的义仓粮车，逐户核对账册并送回存粮。",
     readyText:
       "义仓粮车正要连夜运走，账册被撕成三份藏在三名管事身上。李应必须在雪地上同时盯住粮、账和人。",
@@ -8981,7 +8981,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "蛇岭接索",
     location: "登州断崖",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     objective: "在被官军封死的山岭上重搭索桥，接出猎户与被困乡民。",
     readyText:
       "断崖两岸都有官军火把，桥索却被提前割断。解珍必须借崖壁与夜色摸过去，把第一条绳送到对岸。",
@@ -9039,7 +9039,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "一索两命",
     location: "登州火崖",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     objective: "守住被火势截断的崖口，接回解珍并让最后一批乡民撤出。",
     readyText:
       "火从林底烧上山脊，索桥只剩一根主绳。解宝这一头必须顶住官军，另一头还要替兄长留住可以落脚的结。",
@@ -9098,7 +9098,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "朱笔无姓",
     location: "蓟州牢城",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     objective: "夺回未改完的死囚名册，护住仍被锁在牢中的证人。",
     readyText:
       "牢城最后一盏灯还亮着，师爷正在把活人的名字改成死囚。杨雄握刀站在门外，这一次要审的是写判词的人。",
@@ -9158,7 +9158,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "屋脊孤灯",
     location: "祝家庄盘陀巷",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     objective: "从屋脊潜入盘陀巷，救出被当作诱饵的乡民与传信老人。",
     readyText:
       "整条巷子只留一盏灯，灯下却没有一个人。石秀知道那不是空门，而是祝家军等他跳下去的伏口。",
@@ -9218,7 +9218,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "雪门不退",
     location: "登州北军门",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     objective: "守住登州北军门，让解家兄弟与山中百姓全部撤出。",
     readyText:
       "北门只能容两人并行，追兵却有整营。孙立把长枪横在门槛上，身后每一盏灯都还照着正在撤离的人。",
@@ -9278,7 +9278,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 2,
     title: "一笛开江",
     location: "登州水门",
-    bg: "/assets/environments/liangshan_water_fort.png",
+    bg: "/assets/environments/liangshan_water_fort.webp",
     objective: "以旧曲传令，打开水门并掩护船户撤离。",
     readyText:
       "水门守军只认鼓点，船户只认旧曲。乐和必须在一首曲子里同时告诉两边：什么时候开闸，什么时候停桨。",
@@ -9338,7 +9338,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "墨海换名",
     location: "大名府文书库",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     objective: "夺回被篡改的百姓名册，把替梁山开过门的人从死籍中改回活名。",
     readyText:
       "文书库里堆着三箱名册，最上面一本已经写满死字。萧让要在守军合围前找出原始底册，让每一个名字重新有来处。",
@@ -9397,7 +9397,7 @@ const CORE_HERO_LEGENDS = {
     levelOffset: 3,
     title: "总账开门",
     location: "梁山泊义仓",
-    bg: "/assets/environments/liangshan_water_fort.png",
+    bg: "/assets/environments/liangshan_water_fort.webp",
     objective: "守住义仓与总账，阻止官军细作把赈粮伪造成梁山私产。",
     readyText:
       "义仓门外全是赶来领粮的百姓，门内却混进了持假令的官军细作。蒋敬必须在账册、粮袋和人命之间守住同一杆秤。",
@@ -9456,7 +9456,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 3,
     title: "黄泥旧约",
     location: "黄泥冈",
-    bg: "/assets/environments/yellow_river_ferry.png",
+    bg: "/assets/environments/yellow_river_ferry.webp",
     teaser: "失纲之人重新押起一车百姓的冬粮，杨家枪要为自己的名字再立一次约。",
     choice: {
       prompt: "官军封锁黄泥冈，杨志仍想先把粮车送过岭。你如何接应？",
@@ -9529,7 +9529,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "yangzhi",
     title: "入云问阵",
     location: "蓟州古观",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     teaser: "官军借雷火伪符逼百姓献粮，公孙胜要在破坛救人之后决定是否入世。",
     choice: {
       prompt: "伪坛已破，官军却仍在村外。公孙胜应如何处置祭坛与粮仓？",
@@ -9603,7 +9603,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "gongsunsheng",
     title: "玉麟出府",
     location: "大名府旧宅",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     teaser: "官府借卢俊义之名诱捕梁山信使，他必须在门第、旧部与百姓之间作出决断。",
     choice: {
       prompt: "卢府已被包围，旧部请卢俊义独自出城保全名望。他应当如何反击？",
@@ -9674,7 +9674,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "lujunyi",
     title: "白条入江",
     location: "浔阳江水门",
-    bg: "/assets/environments/liangshan_water_fort.png",
+    bg: "/assets/environments/liangshan_water_fort.webp",
     teaser: "浔阳江船户被私税逼反，张顺要在水下拆掉铁索，也要决定这条江由谁做主。",
     choice: {
       prompt: "水门铁索已断，私税官船仍在江心。如何处置俘虏与税银？",
@@ -9745,7 +9745,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 2,
     title: "少华借路",
     location: "少华山道",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     teaser: "少华山少年枪客挡住官军粮道，却坚持先问清每一车粮究竟要送去哪里。",
     choice: {
       prompt: "官军粮车被截在少华山道，史进要求先验粮簿。你如何回应？",
@@ -9816,7 +9816,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 3,
     title: "青州霹雳",
     location: "青州军营",
-    bg: "/assets/environments/qingfeng_fort.png",
+    bg: "/assets/environments/qingfeng_fort.webp",
     teaser: "青州统制奉命清剿山寨，却先撞见官军借战功屠戮降卒。狼牙棒该向谁落下？",
     choice: {
       prompt: "秦明愿开营门，但要求先安置被裹挟的降卒。梁山如何接应？",
@@ -9889,7 +9889,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 5,
     title: "柴门夜客",
     location: "沧州柴府",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     teaser: "柴进府中收留梁山信使，官差却以窝藏罪名围门。富贵与义气，今夜只能留下一个。",
     choice: {
       prompt: "柴府被围，门客主张交出信使保全全府。柴进应当如何决断？",
@@ -9964,7 +9964,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 6,
     title: "蒲东刀约",
     location: "蒲东巡检营",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     teaser: "关胜奉命堵截梁山粮道，却发现官军已先一步烧毁沿途村落。军令还值得守吗？",
     choice: {
       prompt: "巡检营愿意开寨，但守将要求梁山先退三十里。你如何回应？",
@@ -10036,7 +10036,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "guansheng",
     title: "没羽入阵",
     location: "东昌府驿道",
-    bg: "/assets/environments/qingfeng_fort.png",
+    bg: "/assets/environments/qingfeng_fort.webp",
     teaser: "东昌骑将张清以飞石连打梁山来将，却在官军驱民守城时第一次不肯再替军令出手。",
     choice: {
       prompt: "张清愿停手，但守将仍逼民壮堵住城门。梁山如何接应？",
@@ -10106,7 +10106,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 6,
     title: "雁翎归阵",
     location: "东京禁军旧校场",
-    bg: "/assets/environments/bianjing_snow_night.png",
+    bg: "/assets/environments/bianjing_snow_night.webp",
     teaser: "徐宁奉命以连环枪阵截杀梁山旧部，却在阵后看见被强征来的民夫与冻饿新军。",
     choice: {
       prompt: "旧校场四面落锁，徐宁愿意交出兵符，但必须先让阵中民夫离开。梁山如何接应？",
@@ -10177,7 +10177,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "shijin",
     title: "十字坡解药",
     location: "十字坡旧店",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     teaser: "官差把蒙汗药掺进水井，孙二娘要先救整村人，再决定旧店该不该继续开下去。",
     choice: {
       prompt: "药井已被封住，孙二娘愿意交出名册，但要求先救村民。你如何接应？",
@@ -10250,7 +10250,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "sunerniang",
     title: "登州劫牢",
     location: "登州山店",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     teaser: "登州官差锁住山店与牢门，顾大嫂要救出被扣为盗的欠粮农户。",
     choice: {
       prompt: "牢门与山店同时被围，顾大嫂只剩一串钥匙。先开哪一道门？",
@@ -10322,7 +10322,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "qinming",
     title: "炮作夺线",
     location: "青州官办炮作",
-    bg: "/assets/environments/qingfeng_fort.png",
+    bg: "/assets/environments/qingfeng_fort.webp",
     teaser: "官军强征工匠赶制攻城炮，凌振必须让火炮哑掉，却不能让任何一名匠人陪葬。",
     choice: {
       prompt: "炮位已装药，三门炮口同时对着民村。先夺药线，还是先夺炮架？",
@@ -10394,7 +10394,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "shijin",
     title: "芦荡活阎罗",
     location: "石碣村芦荡",
-    bg: "/assets/environments/yellow_river_ferry.png",
+    bg: "/assets/environments/yellow_river_ferry.webp",
     teaser: "税船封住芦荡水口，阮小七要用一张破网和三根火绳，把被抓的渔户带回家。",
     choice: {
       prompt: "税船铁索连着人质，阮小七只有一次割索机会。如何出手？",
@@ -10466,7 +10466,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "zhangshun",
     title: "三江潮信",
     location: "浔阳江水门",
-    bg: "/assets/environments/liangshan_water_fort.png",
+    bg: "/assets/environments/liangshan_water_fort.webp",
     teaser: "浔阳江水门被官军锁死，李俊要在潮落前接出船户，并让三路水军听同一道灯号。",
     choice: {
       prompt: "潮水只剩半个时辰，水门内还有三路船队互不相认。李俊如何开阵？",
@@ -10539,7 +10539,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "xuning",
     title: "连环退军鼓",
     location: "梁山雪原",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     teaser: "呼延灼旧部被督军锁成连环马，他必须用三通退军鼓把旧阵从百姓身上拆开。",
     choice: {
       prompt: "旧部已被铁索连成骑阵，民夫绑在阵中。呼延灼如何破阵？",
@@ -10609,7 +10609,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 3,
     title: "赤发夜信",
     location: "郓城酒肆",
-    bg: "/assets/environments/yellow_river_ferry.png",
+    bg: "/assets/environments/yellow_river_ferry.webp",
     teaser: "生辰纲旧信牵出一桩新押运，刘唐要在酒肆里分辨复仇与证据，替被冒名勒索的商旅讨回清白。",
     choice: {
       prompt: "官军封住酒肆，刘唐握刀要杀进去。你如何接下这封旧信？",
@@ -10680,7 +10680,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "liutang",
     title: "插翅越狱",
     location: "郓城牢城",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     teaser: "雷横因一桩错案被同僚锁进牢城，他必须带着被诬的囚徒一起越过官差布下的三道门。",
     choice: {
       prompt: "牢门已开，追兵将至。先带案卷，还是先带伤囚？",
@@ -10754,7 +10754,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "leiheng",
     title: "长髯开门",
     location: "沧州牢院",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     teaser: "朱仝奉命押送囚车，却认出车中全是抗粮农户。他要在一纸军令与一车活人之间亲手打开牢门。",
     choice: {
       prompt: "押送队伍停在岔路，官差催促立刻入城。朱仝该如何处置囚车？",
@@ -10825,7 +10825,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "zhutong",
     title: "独龙对账",
     location: "独龙冈庄园",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     teaser: "官军扣下李家庄粮车，逼李应交出梁山信使。庄园账册与满庄性命，都被摆在同一张谈判桌上。",
     choice: {
       prompt: "官军愿以粮车换信使。李应该如何回应？",
@@ -10896,7 +10896,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "liying",
     title: "双蛇入山",
     location: "登州猎道",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     teaser: "解珍因虎皮冤案被官军追进深山，他必须在封山火把合围前，把被扣作人质的猎户带出旧猎道。",
     choice: {
       prompt: "官军堵住山口，猎户仍困在崖后。解珍该如何接应？",
@@ -10968,7 +10968,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "jiezhen",
     title: "双尾归山",
     location: "登州牢底",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     teaser: "解宝被豪绅押进牢底，兄长在外接应。他必须从石缝与铁锁之间，为所有被诬猎户撬开一条生路。",
     choice: {
       prompt: "牢底已裂开一道石缝，追兵正在下楼。先送谁出去？",
@@ -11038,7 +11038,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 6,
     title: "法刀问判",
     location: "蓟州牢城",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     teaser: "蓟州牢城用一张无名判词处决证人，杨雄决定先审执笔的人，再决定这把法刀该落向何处。",
     choice: {
       prompt: "牢城师爷挟持证人家眷，逼杨雄烧掉原始口供。梁山应如何接应？",
@@ -11111,7 +11111,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "yangxiong",
     title: "屋脊三更",
     location: "祝家庄屋脊",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     teaser: "祝家庄把乡民藏在盘陀巷作诱饵，石秀要在三更前从屋脊找到真正的伏口。",
     choice: {
       prompt: "石秀已经摸进盘陀巷，孤灯下却看不出敌军人影。下一步怎样行动？",
@@ -11183,7 +11183,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 7,
     title: "登州铁门",
     location: "登州北军门",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     teaser: "登州军门奉假令封山，孙立必须让整队守军亲眼看清军令背后的私印。",
     choice: {
       prompt: "守军已经列阵，解家兄弟却还带着百姓在山内。孙立如何破局？",
@@ -11256,7 +11256,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "sunli",
     title: "铁笛开江",
     location: "登州水门",
-    bg: "/assets/environments/liangshan_water_fort.png",
+    bg: "/assets/environments/liangshan_water_fort.webp",
     teaser: "登州水门只听鼓不听人，乐和要把开闸与停桨藏进同一首旧曲里。",
     choice: {
       prompt: "守军临时改了换岗鼓点，原定曲谱已经失效。乐和应当如何传令？",
@@ -11326,7 +11326,7 @@ const CORE_HERO_RECRUITMENTS = {
     requiredChapter: 7,
     title: "笔改灯市",
     location: "大名府灯市",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     teaser: "大名府用一纸换防令封锁灯市，萧让要在满城灯火里仿出一份只差半步的生路。",
     choice: {
       prompt: "真换防令已送出城，梁山只来得及改一份副本。应当优先改动哪一处？",
@@ -11398,7 +11398,7 @@ const CORE_HERO_RECRUITMENTS = {
     prerequisite: "xiaorang",
     title: "一册济军",
     location: "梁山泊义仓",
-    bg: "/assets/environments/liangshan_water_fort.png",
+    bg: "/assets/environments/liangshan_water_fort.webp",
     teaser: "梁山粮仓看似足够，蒋敬却在三本账里算出同一批粮被记了两次。",
     choice: {
       prompt: "官军压境，义仓却少了一成粮。蒋敬应当先查账还是先分粮？",
@@ -12458,7 +12458,7 @@ export const ENEMIES = {
   runner: {
     id: "runner",
     name: "县衙差役",
-    sprite: "/assets/enemies/runner.png",
+    sprite: "/assets/enemies/runner.webp",
     path: "tao",
     portraitPosition: "0% 50%",
     base: { hp: 255, atk: 38, def: 19, spd: 31 },
@@ -12499,7 +12499,7 @@ export const ENEMIES = {
   archer: {
     id: "archer",
     name: "官府弓手",
-    sprite: "/assets/enemies/archer.png",
+    sprite: "/assets/enemies/archer.webp",
     path: "ling",
     portraitPosition: "33.333% 50%",
     base: { hp: 228, atk: 45, def: 16, spd: 39 },
@@ -12540,7 +12540,7 @@ export const ENEMIES = {
   instructor: {
     id: "instructor",
     name: "禁军教头",
-    sprite: "/assets/enemies/instructor.png",
+    sprite: "/assets/enemies/instructor.webp",
     path: "gang",
     portraitPosition: "66.667% 50%",
     base: { hp: 520, atk: 50, def: 39, spd: 36 },
@@ -12584,7 +12584,7 @@ export const ENEMIES = {
   captain: {
     id: "captain",
     name: "沧州押差",
-    sprite: "/assets/enemies/captain.png",
+    sprite: "/assets/enemies/captain.webp",
     path: "shou",
     portraitPosition: "100% 50%",
     base: { hp: 1080, atk: 59, def: 47, spd: 33 },
@@ -12649,7 +12649,7 @@ export const ENEMIES = {
   executioner: {
     id: "executioner",
     name: "江州行刑官",
-    sprite: "/assets/enemies/executioner.png",
+    sprite: "/assets/enemies/executioner.webp",
     path: "shou",
     portraitPosition: "100% 50%",
     base: { hp: 930, atk: 56, def: 43, spd: 35 },
@@ -12692,7 +12692,7 @@ export const ENEMIES = {
   zhu_guard: {
     id: "zhu_guard",
     name: "祝家庄教师",
-    sprite: "/assets/enemies/zhu_guard.png",
+    sprite: "/assets/enemies/zhu_guard.webp",
     path: "gang",
     portraitPosition: "50% 50%",
     base: { hp: 790, atk: 58, def: 44, spd: 38 },
@@ -12734,7 +12734,7 @@ export const ENEMIES = {
   daming_captain: {
     id: "daming_captain",
     name: "大名府都监",
-    sprite: "/assets/enemies/daming_captain.png",
+    sprite: "/assets/enemies/daming_captain.webp",
     path: "shou",
     portraitPosition: "50% 50%",
     base: { hp: 1540, atk: 66, def: 52, spd: 39 },
@@ -12833,9 +12833,9 @@ const CORE_HERO_CHRONICLES = Object.fromEntries(
 );
 
 const FULL_HERO_CUTOUT =
-  "/assets/characters/linchong/cutout.png";
+  "/assets/characters/linchong/cutout.webp";
 const FULL_HERO_KEYART =
-  "/assets/characters/linchong/keyart.png";
+  "/assets/characters/linchong/keyart.webp";
 const FULL_HERO_STATS = {
   gang: { hp: 425, atk: 54, def: 37, spd: 35 },
   ling: { hp: 365, atk: 50, def: 29, spd: 47 },
@@ -12995,8 +12995,8 @@ const FULL_HEROES = Object.fromEntries(
       role,
       path,
       preferredRow: row,
-      cutout: `/assets/characters/${id}/cutout.png`,
-      keyart: `/assets/characters/${id}/keyart.png`,
+      cutout: `/assets/characters/${id}/cutout.webp`,
+      keyart: `/assets/characters/${id}/keyart.webp`,
       palette,
       base: {
         hp: base.hp + (rank % 5) * 7,
@@ -13119,9 +13119,9 @@ const STORY_SCENE_ALIASES = {
 
 function normalizeStoryScenePath(assetPath) {
   if (typeof assetPath !== "string") return assetPath;
-  const match = assetPath.match(/^\/assets\/environments\/([^/]+)\.png$/);
+  const match = assetPath.match(/^\/assets\/environments\/([^/]+)\.(?:png|webp)$/);
   if (!match || !STORY_SCENE_ALIASES[match[1]]) return assetPath;
-  return `/assets/environments/${STORY_SCENE_ALIASES[match[1]]}.png`;
+  return `/assets/environments/${STORY_SCENE_ALIASES[match[1]]}.webp`;
 }
 
 export const HERO_LEGENDS = Object.fromEntries(
@@ -13143,7 +13143,7 @@ export const HERO_LEGENDS = Object.fromEntries(
       levelOffset: 1,
       title: `${nickname}·梁山终章`,
       location: `水浒异闻 · ${STORY_SCENE_LABELS[scene] || "梁山泊"}`,
-      bg: normalizeStoryScenePath(`/assets/environments/${scene}.png`),
+      bg: normalizeStoryScenePath(`/assets/environments/${scene}.webp`),
       objective: `让${name}在梁山旧事中守住自己认下的义，并击败截断归路的人马。`,
       readyText: `${legendLine}梁山众人把这段旧事重新摆到${name}面前。${name}在${STORY_SCENE_LABELS[scene] || "梁山泊"}旧路前立下军令：先护百姓，再当面守住自己的名号。`,
       rule: {
@@ -13210,7 +13210,7 @@ const GENERATED_HERO_RECRUITMENTS = Object.fromEntries(
       requiredChapter: 1 + ((rank - 1) % 8),
       title: `${nickname}${['赴约', '归义', '守渡'][rank % 3]}`,
       location: `水浒群英 · ${STORY_SCENE_LABELS[scene] || scene}`,
-      bg: `/assets/environments/${scene}.png`,
+      bg: `/assets/environments/${scene}.webp`,
       teaser: `${identity}${line}梁山若要接应此人，须先走完这段旧路。`,
       choice: {
         prompt: storyArc.choice.prompt,
@@ -13318,7 +13318,7 @@ const CORE_CHAPTERS = [
     label: "第一回",
     title: "黄河夜渡",
     location: "黄河渡口",
-    bg: "/assets/environments/yellow_river_ferry.png",
+    bg: "/assets/environments/yellow_river_ferry.webp",
     summary:
       "风雪压住河面，官差已封了渡口。林冲必须在天亮前过河，而一群流民正被挡在船外。",
     objective: "突破河岸封锁，结识鲁智深",
@@ -13401,7 +13401,7 @@ const CORE_CHAPTERS = [
     label: "第二回",
     title: "东京雪夜",
     location: "东京汴梁",
-    bg: "/assets/environments/bianjing_snow_night.png",
+    bg: "/assets/environments/bianjing_snow_night.webp",
     summary:
       "林冲要洗清冤屈，必须找到高俅陷害他的原始文书。戴宗送来了消息，时迁则带回了更危险的东西。",
     objective: "夺取诬告文书，结识戴宗与时迁",
@@ -13480,7 +13480,7 @@ const CORE_CHAPTERS = [
     label: "第三回",
     title: "野猪林伏杀",
     location: "野猪林",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     summary:
       "高俅派出的禁军教头在野猪林设伏。林中雪深路窄，退一步便是断崖。",
     objective: "击败禁军伏兵，结识武松",
@@ -13563,7 +13563,7 @@ const CORE_CHAPTERS = [
     label: "第四回",
     title: "沧州药火",
     location: "沧州牢城",
-    bg: "/assets/environments/boar_forest.png",
+    bg: "/assets/environments/boar_forest.webp",
     summary:
       "安道全被押差扣在牢城，以神医之术替权贵续命。梁山众人必须在药火熄灭前救出他。",
     objective: "攻入牢城药铺，结识安道全",
@@ -13642,7 +13642,7 @@ const CORE_CHAPTERS = [
     label: "第五回",
     title: "清风寨月箭",
     location: "青州清风寨",
-    bg: "/assets/environments/qingfeng_fort.png",
+    bg: "/assets/environments/qingfeng_fort.webp",
     summary:
       "宋江的书信被青州官府截获，花荣因此被诬为私通山贼。官军围住清风寨，只等天亮拿人。",
     objective: "击退青州官军，结识花荣",
@@ -13726,7 +13726,7 @@ const CORE_CHAPTERS = [
     label: "第六回",
     title: "江州劫法场",
     location: "江州法场",
-    bg: "/assets/environments/jiangzhou_execution.png",
+    bg: "/assets/environments/jiangzhou_execution.webp",
     summary:
       "宋江被判斩刑，江州法场三步一岗。李逵已经藏进人群，梁山众人只有一次出手机会。",
     objective: "劫下法场，结识宋江与李逵",
@@ -13821,7 +13821,7 @@ const CORE_CHAPTERS = [
     label: "第七回",
     title: "祝家庄雪夜",
     location: "祝家庄盘陀路",
-    bg: "/assets/environments/zhujiazhuang_snow_night.png",
+    bg: "/assets/environments/zhujiazhuang_snow_night.webp",
     summary:
       "祝家庄封路自守，却把庄外流民当作逼梁山退兵的筹码。扈三娘不愿再做任何人的婚约与人质，提双刀守住雪夜中的庄门。",
     objective: "破开盘陀路，结识扈三娘",
@@ -13905,7 +13905,7 @@ const CORE_CHAPTERS = [
     label: "第八回",
     title: "大名府灯夜",
     location: "北京大名府",
-    bg: "/assets/environments/damingfu_lantern_night.png",
+    bg: "/assets/environments/damingfu_lantern_night.webp",
     summary:
       "大名府借上元灯会清洗曾接济梁山的百姓。吴用布下灯市疑阵，燕青潜入都监府，而梁山必须在满城灯火里救出名单上的人。",
     objective: "潜入灯市，结识吴用与燕青",
@@ -13990,7 +13990,7 @@ const CORE_CHAPTERS = [
     label: "终回",
     title: "水泊聚义",
     location: "梁山泊水寨",
-    bg: "/assets/environments/liangshan_water_fort.png",
+    bg: "/assets/environments/liangshan_water_fort.webp",
     summary:
       "沧州押差率军逼近水泊，高俅的招安文书也同时送到。梁山必须决定自己为何而战。",
     objective: "击败沧州押差，决定梁山去向",

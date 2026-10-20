@@ -686,7 +686,7 @@ function heroPortrait(heroId, className = "") {
 function heroThumb(heroId, className = "") {
   const hero = HEROES[heroId];
   if (!hero) return "";
-  const thumb = hero.cutout.replace(/\/cutout\.png$/, "/thumb.webp");
+  const thumb = hero.cutout.replace(/\/cutout\.webp$/, "/thumb.webp");
   return `<img class="${className}" src="${thumb}" alt="${hero.name}" draggable="false" decoding="async" />`;
 }
 
@@ -4440,13 +4440,13 @@ function getStoryPortrait(line, response) {
   if (line?.speaker?.includes("教头")) {
     return {
       kind: "enemy",
-      html: `<img class="story-enemy-portrait" src="/assets/enemies/instructor.png" alt="" />`,
+      html: `<img class="story-enemy-portrait" src="/assets/enemies/instructor.webp" alt="" />`,
     };
   }
   if (line?.speaker?.includes("押差")) {
     return {
       kind: "enemy",
-      html: `<img class="story-enemy-portrait" src="/assets/enemies/captain.png" alt="" />`,
+      html: `<img class="story-enemy-portrait" src="/assets/enemies/captain.webp" alt="" />`,
     };
   }
   return {
@@ -5628,7 +5628,7 @@ function renderFinalChoice() {
     freedom: state.alignment.freedom,
   };
   return `
-    <main class="final-choice-screen" style="--final-bg:url('/assets/environments/liangshan_water_fort.png')">
+    <main class="final-choice-screen" style="--final-bg:url('/assets/environments/liangshan_water_fort.webp')">
       <div class="final-background"></div>
       <div class="final-shade"></div>
       <section class="final-copy">
@@ -6554,10 +6554,10 @@ function createArenaChapter(wave) {
     : patterns[(wave - 1) % patterns.length];
   const level = Math.max(1, Math.round(averageLevel + Math.ceil(wave / 2)));
   const backdrops = [
-    "/assets/environments/liangshan_water_fort.png",
-    "/assets/environments/boar_forest.png",
-    "/assets/environments/yellow_river_ferry.png",
-    "/assets/environments/bianjing_snow_night.png",
+    "/assets/environments/liangshan_water_fort.webp",
+    "/assets/environments/boar_forest.webp",
+    "/assets/environments/yellow_river_ferry.webp",
+    "/assets/environments/bianjing_snow_night.webp",
   ];
   return {
     id: `arena-${wave}`,
@@ -6568,9 +6568,9 @@ function createArenaChapter(wave) {
       : "梁山围剿",
     location: "演武场",
     bg: bossWave && bossId === "executioner"
-      ? "/assets/environments/jiangzhou_execution.png"
+      ? "/assets/environments/jiangzhou_execution.webp"
       : bossWave
-        ? "/assets/environments/liangshan_water_fort.png"
+        ? "/assets/environments/liangshan_water_fort.webp"
         : backdrops[(wave - 1) % backdrops.length],
     battle: {
       enemies: pattern.map((enemy) => ({ ...enemy, level })),

@@ -167,7 +167,7 @@ async function assertTitleArtwork(page, engineName, posterRequests) {
           objectPosition: style.objectPosition,
         };
       }),
-      cutoutRequests: resources.filter((url) => url.includes("/cutout.png")),
+      cutoutRequests: resources.filter((url) => url.includes("/cutout.webp")),
       posterRequests: resources.filter((url) =>
         url.includes("bianjing_snow_night_poster"),
       ),
