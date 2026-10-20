@@ -44,4 +44,13 @@
 
 ## 发行包
 
-GitHub `v1.0.4` 提供 macOS ARM64 的 DMG、ZIP，Windows x64 的 NSIS 安装包、ZIP，以及浏览器和本地分享 ZIP。安装包会重新打包当前 UI、开源音效、108 人素材与长卷，不复用 1.0.3 构建。下载后的 SHA-256 校验结果会在发布说明中补齐。
+GitHub `v1.0.4` 提供 macOS ARM64 的 DMG、ZIP，Windows x64 的 NSIS 安装包、ZIP，以及浏览器和本地分享 ZIP。安装包会重新打包当前 UI、开源音效、108 人素材与长卷，不复用 1.0.3 构建。
+
+| 平台 | 文件 | 大小（字节） | SHA-256 |
+| --- | --- | ---: | --- |
+| macOS ARM64 | `XingmingShuihu-1.0.4-mac-arm64.dmg` | 423478061 | `1ede07b9adc2a0158715e72712b28ac043027c16068cbaab5fee048044e155b9` |
+| macOS ARM64 | `XingmingShuihu-1.0.4-mac-arm64.zip` | 433640812 | `0861dd9098f1c1bf7f0f36102d4b431fb6acf685e8d83ade516a7dba944eea75` |
+| Windows x64 | `XingmingShuihu-1.0.4-win-x64.exe` | 417168774 | `a39c90259d2fb69420de7770a85674928169d7bca36456d54d8c3e66cc6c4c58` |
+| Windows x64 | `XingmingShuihu-1.0.4-win-x64.zip` | 459492613 | `598c0e64281cf909eca208f8e55cd1411ae6339411d0899e3f617e70f5a8393d` |
+| 浏览器 | `XingmingShuihu-web-1.0.4.zip` | 301965953 | `5647dddc41515ce2f492818db0e22fe7ef7d3bf1d218aebb2d9ceb27deca9eb4` |
+| 本地分享 | `XingmingShuihu-local-1.0.4.zip` | 301975712 | `d9c2edb1c1dfcba25d8872928e25c905fda30fc770f8c3ec09686672a642f37c` |
