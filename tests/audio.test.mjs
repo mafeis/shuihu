@@ -4,6 +4,8 @@ import test from "node:test";
 import {
   COMBAT_SFX_ASSETS,
   COMBAT_SFX_CUES,
+  UI_SFX_ASSETS,
+  UI_SFX_CUES,
   combatSfxAsset,
   combatSfxCue,
   sceneMusicTrack,
@@ -28,6 +30,22 @@ test("combat audio exposes every battle and result cue", () => {
   );
   assert.equal(combatSfxAsset("unknown"), null);
   assert.equal(Object.keys(COMBAT_SFX_ASSETS).length, COMBAT_SFX_CUES.length);
+});
+
+test("open-source interface sounds are available to the shared audio bus", () => {
+  assert.deepEqual(UI_SFX_CUES, [
+    "click",
+    "confirm",
+    "open",
+    "back",
+    "error",
+    "select",
+  ]);
+  assert.equal(
+    combatSfxAsset("open"),
+    "/assets/audio/ui/kenney/open.wav",
+  );
+  assert.equal(Object.keys(UI_SFX_ASSETS).length, UI_SFX_CUES.length);
 });
 
 test("scene music follows the campaign chapter and switches to the boss theme", () => {

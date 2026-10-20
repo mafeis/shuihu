@@ -3,6 +3,9 @@ import "./styles.css";
 import { ICON_COMPONENTS } from "./icons.js";
 import titleVideoUrl from "../assets/video/bianjing_snow_night_5s.mp4";
 import titlePosterUrl from "../assets/video/bianjing_snow_night_poster.webp";
+import uiWindowFrameUrl from "../assets/ui/open-source/kenney/window-frame.png";
+import uiSparkGoldUrl from "../assets/ui/open-source/kenney/spark-gold.png";
+import uiSparkWhiteUrl from "../assets/ui/open-source/kenney/spark-white.png";
 
 import {
   ACHIEVEMENTS,
@@ -199,6 +202,9 @@ const diagnosticsBridge = window.gameDiagnostics || null;
 
 let state = null;
 let screen = "title";
+let moreNavOpen = false;
+let questRosterExpanded = false;
+let battleLogExpanded = false;
 let selectedDifficulty = "normal";
 let focusedChapterId = CHAPTERS[0].id;
 let activeChapter = null;
@@ -443,8 +449,12 @@ function battleVfxStyles(vfx, primary) {
 
 function renderBattleSkillImpact(vfx, primary = true) {
   if (!vfx) return "";
+  const vfxSprite =
+    ["ultimate", "impact"].includes(vfx.kind)
+      ? uiSparkGoldUrl
+      : uiSparkWhiteUrl;
   return `
-    <span class="skill-impact is-${vfx.kind} tone-${vfx.tone} is-from-${vfx.actorSide || "hero"} ${vfx.heavy ? "is-heavy" : ""} ${vfx.ultimate ? "is-ultimate" : ""} ${vfx.multiTarget ? "is-multi-target" : ""} ${primary ? "is-primary" : "is-secondary"} is-variant-${vfx.variant || 0} ${reducedMotionFor(state) ? "is-reduced-motion" : ""}" style="${battleVfxStyles(vfx, primary)}" data-vfx-template="${vfx.template}" aria-hidden="true">
+    <span class="skill-impact is-${vfx.kind} tone-${vfx.tone} is-from-${vfx.actorSide || "hero"} ${vfx.heavy ? "is-heavy" : ""} ${vfx.ultimate ? "is-ultimate" : ""} ${vfx.multiTarget ? "is-multi-target" : ""} ${primary ? "is-primary" : "is-secondary"} is-variant-${vfx.variant || 0} ${reducedMotionFor(state) ? "is-reduced-motion" : ""}" style="${battleVfxStyles(vfx, primary)};--vfx-sprite:url('${vfxSprite}')" data-vfx-template="${vfx.template}" aria-hidden="true">
       <span class="vfx-wash"></span>
       <span class="vfx-arcs">
         ${Array.from({ length: 3 }, (_, index) => `<i style="--vfx-index:${index}"></i>`).join("")}
@@ -877,7 +887,7 @@ function renderGame() {
   app.innerHTML = `
     <div class="game-frame screen-${screen}" style="--screen-bg:url('${
       activeChapter?.bg || currentChapterBg()
-    }')">
+    }');--ui-window-frame:url('${uiWindowFrameUrl}');--ui-spark-gold:url('${uiSparkGoldUrl}');--ui-spark-white:url('${uiSparkWhiteUrl}')">
       ${content}
       <div class="toast-layer" id="toast-layer" aria-live="polite"></div>
       ${renderModal()}
@@ -902,6 +912,13 @@ function renderGame() {
   restoreInputFocus();
   if (screen === "title") bindTitleVideo();
   if (screen === "battle") {
+    createIcons({
+      icons: ICON_COMPONENTS,
+      attrs: {
+        "stroke-width": 1.7,
+        "aria-hidden": "true",
+      },
+    });
     runBattleAutomation();
   }
   if (screen === "arena-reward") queueArenaAutoContinue();
@@ -1040,6 +1057,7 @@ function battleVfxTransitionDelay(defaultDelay) {
 
 function setScreen(nextScreen) {
   const previousScreen = screen;
+  moreNavOpen = false;
   if (screen === "battle" || screen === "story") {
     if (battleTimer) window.clearTimeout(battleTimer);
     battleTimer = null;
@@ -1326,6 +1344,7 @@ function persist() {
 function toast(message, tone = "default") {
   const layer = document.querySelector("#toast-layer");
   if (!layer) return;
+  sound.playUiCue(tone === "danger" ? "error" : tone === "success" ? "confirm" : "select");
   if (toastTimer) window.clearTimeout(toastTimer);
   layer.innerHTML = `
     <div class="toast toast-${tone}">
@@ -1380,11 +1399,13 @@ function showCurrencyFeedback(previous, current) {
 }
 
 function openModal({ title, body, actions = [], kind = "" }) {
+  sound.playUiCue("open");
   modal = { title, body, actions, kind };
   render();
 }
 
 function closeModal() {
+  sound.playUiCue("back");
   modal = null;
   render();
 }
@@ -1420,17 +1441,21 @@ function topbar(active = "", backAction = "") {
   const progress = completionPercent(state);
   const chapter = currentChapter(state);
   const navItems = [
-    { id: "map", label: "江湖", icon: "map" },
-    { id: "story-hub", label: "长卷", icon: "book-open" },
-    { id: "camp", label: "营寨", icon: "landmark" },
-    { id: "arena", label: "演武", icon: "swords" },
+    { id: "map", label: "行军", icon: "map" },
     { id: "roster", label: "好汉", icon: "users" },
-    { id: "quests", label: "异闻", icon: "scroll-text" },
+    { id: "quests", label: "任务", icon: "scroll-text" },
+    { id: "camp", label: "营寨", icon: "landmark" },
+    { id: "more", label: "更多", icon: "menu" },
+  ];
+  const moreItems = [
+    { id: "story-hub", label: "长卷", icon: "book-open" },
+    { id: "arena", label: "演武", icon: "swords" },
     { id: "codex", label: "星图", icon: "sparkles" },
     { id: "settings", label: "设置", icon: "settings" },
   ];
+  const moreActive = moreItems.some((item) => item.id === active);
   return `
-    <header class="topbar">
+    <header class="topbar${moreNavOpen ? " has-open-menu" : ""}">
       <div class="topbar-leading">
         ${
           backAction
@@ -1454,7 +1479,7 @@ function topbar(active = "", backAction = "") {
         ${navItems
           .map(
             (item) => `
-              <button class="nav-button ${active === item.id ? "is-active" : ""}" data-action="nav-${item.id}" aria-label="${item.label}">
+              <button class="nav-button ${active === item.id || (item.id === "more" && moreActive) ? "is-active" : ""}" data-action="${item.id === "more" ? "toggle-more-nav" : `nav-${item.id}`}" aria-label="${item.label}" title="${item.label}" aria-expanded="${item.id === "more" ? moreNavOpen : "false"}">
                 ${icon(item.icon, 18)}
                 <span>${item.label}</span>
               </button>
@@ -1467,6 +1492,19 @@ function topbar(active = "", backAction = "") {
         <b>${progress}%</b>
       </div>
     </header>
+    ${moreNavOpen ? `
+      <nav class="more-nav" aria-label="更多功能">
+        ${moreItems
+          .map(
+            (item) => `
+              <button data-action="nav-${item.id}" ${active === item.id ? 'aria-current="page"' : ""}>
+                ${icon(item.icon, 19)}<span>${item.label}</span>
+              </button>
+            `,
+          )
+          .join("")}
+      </nav>
+    ` : ""}
   `;
 }
 
@@ -1501,9 +1539,6 @@ function renderTitle() {
   const routeLead = saved
     ? buildRoutePlan(saved, { limit: 1 })[0]
     : null;
-  const arenaResume = saved?.arena?.activeRun
-    ? ` · ${saved.arena.activeRun.mode === "weekly" ? "本周军令" : "演武"}第 ${saved.arena.activeRun.wave} 阵待续`
-    : "";
   const preload = document.querySelector("#title-poster-preload");
   if (preload) preload.href = titlePosterUrl;
   return `
@@ -1518,16 +1553,14 @@ function renderTitle() {
       <div class="title-shade"></div>
       <div class="title-rule"></div>
       <section class="title-content">
-        <p class="title-kicker"><span></span>北宋末年 · 梁山群像回合 RPG</p>
         <h1><span>星命</span>水浒</h1>
         <p class="title-subtitle">风雪山神庙</p>
-        <p class="title-copy">一百单八星，${CHAPTERS.length}卷梁山旧事，${STRATEGY_CHAPTERS.length}段可征战的群像。<br />从伏魔殿到六和寺，走完整部水浒。</p>
+        <p class="title-copy">一百单八星，一场梁山旧梦。</p>
         <div class="title-actions">
           ${
             saved
               ? `<button class="button primary large" data-action="continue-game">
                   ${icon("play", 20)}<span>续上旧卷</span>
-                  <small>${saved.completedChapters.length}/${CHAPTERS.length} 回</small>
                 </button>`
               : ""
           }
@@ -1540,19 +1573,19 @@ function renderTitle() {
         </div>
         ${
           saved
-            ? `<p class="continue-note">上次行至：${escapeHtml(saved.ending ? "全篇终" : currentChapter(saved).title)} · 完成度 ${completionPercent(saved)}%${escapeHtml(arenaResume)}${
-                routeLead
-                  ? `<span class="title-next-goal">${icon("compass", 14)}<b>${escapeHtml(routeLead.eyebrow)}</b>${escapeHtml(routeLead.title)}</span>`
-                  : ""
-              }</p>`
+            ? `<button class="title-resume" data-action="${["route-chapter", "route-quest", "route-codex", "route-arena"].includes(routeLead?.action) ? routeLead.action : "continue-game"}" ${
+                routeLead?.chapterId ? `data-chapter="${escapeHtml(routeLead.chapterId)}"` : ""
+              } ${routeLead?.heroId ? `data-hero="${escapeHtml(routeLead.heroId)}"` : ""}>
+                ${icon("compass", 17)}
+                <span><small>${escapeHtml(routeLead?.eyebrow || "续上旧卷")}</small><b>${escapeHtml(routeLead?.title || currentChapter(saved).title)}</b></span>
+                ${icon("arrow-up-right", 17)}
+              </button>`
             : `<div class="difficulty-picker title-difficulty">
-                <span>选择难度</span>
                 ${Object.values(DIFFICULTIES)
                   .map(
                     (difficulty) => `
                       <button class="${selectedDifficulty === difficulty.id ? "is-selected" : ""}" data-action="difficulty" data-difficulty="${difficulty.id}">
                         <b>${difficulty.name}</b>
-                        <small>${difficulty.desc}</small>
                       </button>
                     `,
                   )
@@ -1576,9 +1609,7 @@ function renderTitle() {
         </div>
       </aside>
       <footer class="title-footer">
-        <span>单机战役 · 自动存档</span>
-        <span>手柄 / 键盘 / 鼠标 / 触屏</span>
-        <button data-action="title-settings">${icon("volume-2", 15)} ${saved?.settings?.sound === false ? "声音关闭" : "声音开启"}</button>
+        <button data-action="title-settings" aria-label="设置">${icon(saved?.settings?.sound === false ? "volume-x" : "volume-2", 17)}</button>
       </footer>
     </main>
   `;
@@ -1674,6 +1705,13 @@ function renderStoryHub() {
   const readCount = STORY_ARCHIVE_CHAPTERS.filter((chapter) =>
     storyArchive.has(chapter.id),
   ).length;
+  const nextReadIndex = STORY_ARCHIVE_CHAPTERS.findIndex(
+    (chapter) => !storyArchive.has(chapter.id),
+  );
+  const nextReadCount =
+    nextReadIndex >= 0
+      ? nextReadIndex
+      : STORY_ARCHIVE_CHAPTERS.length - 1;
   return `
     <div class="app-screen story-hub-screen">
       ${topbar("story-hub")}
@@ -1682,24 +1720,18 @@ function renderStoryHub() {
       </div>
       <main class="story-hub-layout">
         <section class="story-hub-intro">
-          <p class="eyebrow">全篇回目 · 梁山群像</p>
           <h1>水浒长卷</h1>
-          <p>从龙虎山星落、史进结义，到一百单八将聚义，再到征辽、征田虎、征王庆、征方腊与六和寺终章。每一段都可单独推进，每一战也会留在本地战卷。</p>
-          <div class="story-hub-stats">
-            <span><small>长卷回目</small><b>${STORY_ARCHIVE_CHAPTERS.length}</b></span>
-            <span><small>好汉</small><b>${HERO_ORDER.length}</b></span>
-            <span><small>列传</small><b>${HERO_ORDER.length}</b></span>
-            <span><small>已阅长卷</small><b>${readCount}/${STORY_ARCHIVE_CHAPTERS.length}</b></span>
-          </div>
+          <p class="story-hub-progress"><b>${readCount}</b> / ${STORY_ARCHIVE_CHAPTERS.length} 回已阅</p>
+          <button class="button primary large" data-action="enter-story-memory" data-chapter="${STORY_ARCHIVE_CHAPTERS[nextReadCount].id}">
+            ${icon("book-open", 19)}<span>${readCount ? "续读长卷" : "开卷"}</span>
+          </button>
         </section>
         <section class="story-hub-list" aria-label="水浒完整回目">
           ${STORY_ARCHIVE_CHAPTERS.map((chapter, index) => `
             <button class="story-hub-card${storyArchive.has(chapter.id) ? " is-read" : ""}" data-action="enter-story-memory" data-chapter="${chapter.id}" aria-label="${escapeHtml(`${chapter.label} ${chapter.title}`)}">
               <span class="story-hub-index">${String(index + 1).padStart(2, "0")}</span>
               <span class="story-hub-copy">
-                <small>${chapter.label} · ${chapter.location}</small>
                 <b>${chapter.title}</b>
-                <em>${chapter.summary}</em>
               </span>
               <span class="story-hub-status">${storyArchive.has(chapter.id) ? "已阅" : chapter.label}</span>
               ${icon("chevron-right", 18)}
@@ -3201,7 +3233,7 @@ function renderEquipment() {
       ${topbar("roster", "nav-roster")}
       <main class="equipment-layout">
         <section class="equipment-heading">
-          <div><p class="eyebrow">甲兵武备</p><h1>整理行装</h1><p>武器、护甲、随身物各装备一件。从行囊换装时，旧装备会自动收回。</p></div>
+          <div><h1>整理行装</h1></div>
           <div class="equipment-heading-actions">
             <button class="button ${recommendation.changes.length ? "secondary" : "ghost"}" data-action="recommend-equipment" title="按好汉路数、站位与属性综合推荐">
               ${icon("wand-sparkles", 17)}
@@ -3357,6 +3389,11 @@ function renderQuestBoard() {
         recruitmentIsPrerequisiteReady(state, recruitment.heroId),
     )
     .slice(0, 108);
+  const openRecruitmentEntries = visibleRecruitmentEntries
+    .filter((recruitment) =>
+      heroRecruitmentUnlocked(state, recruitment.heroId),
+    )
+    .slice(0, 8);
 
   return `
     <div class="app-screen quests-screen">
@@ -3364,9 +3401,7 @@ function renderQuestBoard() {
       <main class="quests-layout">
         <section class="quests-heading">
           <div>
-            <p class="eyebrow">群像列传 · ${allQuests.length} 段异闻 · ${legendEntries.length} 场列传战 · ${recruitmentEntries.length} 帖招贤令</p>
             <h1>江湖异闻</h1>
-            <p>先在聚义帖中完成招贤战，再与好汉共写三段异闻。每位兄弟的旧债、故人与归处，最终都会汇入一场属于自己的群英列传终战。</p>
           </div>
           <div class="quest-overview">
             <span><small>异闻已录</small><b>${totalClaimed}</b><em>/${allQuests.length}</em></span>
@@ -3379,11 +3414,37 @@ function renderQuestBoard() {
           </div>
         </section>
 
-        <section class="recruitment-board" aria-label="聚义招贤">
+        ${
+          openRecruitmentEntries.length
+            ? `<section class="recruitment-board is-primary" aria-label="当前可接聚义帖">
+                <div class="recruitment-board-heading">
+                  <div><h2>现在可接</h2></div>
+                  <span>${openRecruitmentEntries.length} 帖</span>
+                </div>
+                <div class="recruitment-grid">
+                  ${openRecruitmentEntries.map((recruitment) => {
+                    const hero = HEROES[recruitment.heroId];
+                    return `
+                      <article class="recruitment-ready-card" style="--recruit-color:${hero.palette};--recruit-bg:url('${recruitment.bg}')">
+                        ${heroKeyart(recruitment.heroId, "")}
+                        <div>
+                          <small>${hero.star} · ${hero.nickname}</small>
+                          <h3>${hero.name}</h3>
+                          <button class="button primary" data-action="start-hero-recruitment" data-hero="${recruitment.heroId}">
+                            ${icon("swords", 15)}<span>接帖</span>
+                          </button>
+                        </div>
+                      </article>
+                    `;
+                  }).join("")}
+                </div>
+              </section>`
+            : ""
+        }
+        <section class="recruitment-board is-secondary" aria-label="聚义招贤">
           <div class="recruitment-board-heading">
             <div>
-              <p class="eyebrow">${icon("user-round-plus", 14)} 聚义帖 · 群雄来投</p>
-              <h2>先并肩，再问旧事</h2>
+              <h2>聚义帖</h2>
             </div>
             <span>${availableRecruitments ? `${availableRecruitments} 帖可接` : "推进回目或完成前帖"}</span>
           </div>
@@ -3469,10 +3530,10 @@ function renderQuestBoard() {
         <aside class="quest-hero-list" aria-label="好汉异闻">
           <div class="quest-list-heading">
             <span>结义好汉</span>
-            <b>${state.recruited.length}/${HERO_ORDER.length}</b>
+            <button data-action="toggle-quest-roster" aria-expanded="${questRosterExpanded}">${questRosterExpanded ? "收起" : "名册"} ${icon(questRosterExpanded ? "chevron-up" : "chevron-down", 14)}</button>
           </div>
-          <div class="quest-hero-track">
-            ${HERO_ORDER.map((heroId) => {
+          <div class="quest-hero-track" ${questRosterExpanded ? "" : "hidden"}>
+            ${HERO_ORDER.filter((heroId) => state.recruited.includes(heroId) || state.recruited.length < 3).map((heroId) => {
               const itemHero = HEROES[heroId];
               const itemQuests = HERO_QUESTS[heroId] || [];
               const unlocked = state.recruited.includes(heroId);
@@ -3525,7 +3586,10 @@ function renderQuestBoard() {
                 <span>${icon("scroll-text", 15)} 已录 ${selectedClaimed}/3 段</span>
                 <span>${icon("trending-up", 15)} 全属性 +${((selectedScale - 1) * 100).toFixed(1)}%</span>
               </div>
-              <p>${latestClaimed ? `新称号：${latestClaimed.epithet}` : hero.bio}</p>
+              <details class="quest-bio">
+                <summary>${latestClaimed ? `称号：${latestClaimed.epithet}` : "本传"}</summary>
+                <p>${hero.bio}</p>
+              </details>
               ${statLine(deriveHeroStats(state, selectedId), "quest-stat-line")}
             </div>
           </header>
@@ -3574,7 +3638,10 @@ function renderQuestBoard() {
                     <span>${icon(claimed ? "badge-check" : unlocked ? "scroll-text" : "lock-keyhole", 18)}</span>
                     <div><small>${quest.requiredChapter ? `第 ${quest.requiredChapter} 回后` : "即刻开启"} · ${quest.epithet}</small><h3>${quest.title}</h3></div>
                   </div>
-                  <p class="quest-premise">${quest.premise}</p>
+                  <details class="quest-premise">
+                    <summary>异闻</summary>
+                    <p>${quest.premise}</p>
+                  </details>
                   <div class="quest-objective">
                     <div><span>${quest.objective.label}</span><b>${claimed ? "已完成" : `${current}/${quest.objective.target}`}</b></div>
                     <i><span style="width:${claimed ? 100 : pct(current, quest.objective.target)}%"></span></i>
@@ -4833,6 +4900,13 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
     return `<aside class="battle-command"><div class="command-waiting">${icon("hourglass", 22)}<b>整理战阵</b></div></aside>`;
   }
   if (actor.side === "enemy") {
+    if (battle.mode === "campaign" && !state.flags.tutorialSeen) {
+      return `
+        <aside class="battle-command has-tutorial">
+          ${renderFirstBattleTutorial()}
+        </aside>
+      `;
+    }
     return `
       <aside class="battle-command enemy-command">
         <p class="eyebrow">敌方行动</p>
@@ -4857,30 +4931,7 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
       </div>
       ${
         tutorialPending
-          ? `<section class="battle-tutorial" aria-labelledby="battle-tutorial-title">
-              <header>
-                <span>${icon("compass", 20)}</span>
-                <div><p class="eyebrow">军师点拨</p><h3 id="battle-tutorial-title">先看路数，再定招式</h3></div>
-                <small>首战</small>
-              </header>
-              <div class="battle-tutorial-lessons">
-                <div>
-                  <span>${icon("route", 17)}</span>
-                  <p><b>路数相克</b>刚猛克守御，守御克灵巧，灵巧克韬略，韬略克刚猛。克制时伤害与破势更高。</p>
-                </div>
-                <div>
-                  <span>${icon("crosshair", 17)}</span>
-                  <p><b>选择目标</b>点选招式后，如有多名可选目标，再点敌阵中发亮的人物。</p>
-                </div>
-                <div>
-                  <span>${icon("sparkles", 17)}</span>
-                  <p><b>星命合击</b>同场依次使用三种不同路数，下一次我方行动即可发动合击。右上角可开自动、轮换战法与倍速；键盘用 A / T，手柄用 X / LB。</p>
-                </div>
-              </div>
-              <button class="button primary battle-tutorial-start" data-action="dismiss-battle-tutorial">
-                ${icon("swords", 18)}<span>记住阵要，开始迎敌</span>
-              </button>
-            </section>`
+          ? renderFirstBattleTutorial()
           : ""
       }
       ${
@@ -4901,7 +4952,7 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
               ? `<div class="target-prompt">${icon("crosshair", 17)}<span>为「${selectedSkill.name}」选择${
                   selectedSkill.target === "ally" ? "一名好汉" : "一个目标"
                 }</span><button data-action="cancel-target">取消</button></div>`
-              : `<div class="skill-prompt"><span>选择招式</span><small>${battle.phase === "select" ? "路数克制会造成额外伤害" : "等待行动结算"}</small></div>`
+              : `<div class="skill-prompt"><span>选择招式</span></div>`
           : ""
       }
       ${
@@ -4911,7 +4962,10 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
           .map((skill) => renderSkillButton(skill, actor))
           .join("")}
       </div>
-      <div class="battle-log">
+      <button class="battle-log-toggle" type="button" data-action="toggle-battle-log" aria-expanded="${battleLogExpanded}">
+        ${icon("scroll-text", 14)}<span>战况</span>${icon(battleLogExpanded ? "chevron-up" : "chevron-down", 13)}
+      </button>
+      <div class="battle-log" ${battleLogExpanded ? "" : "hidden"}>
         <div class="log-heading"><span>战况</span><small>${battle.log.length ? "实时" : ""}</small></div>
         <div class="log-lines">
           ${[...battle.log]
@@ -4924,6 +4978,34 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
           : ""
       }
     </aside>
+  `;
+}
+
+function renderFirstBattleTutorial() {
+  return `
+    <section class="battle-tutorial" aria-labelledby="battle-tutorial-title">
+      <header>
+        <span>${icon("compass", 20)}</span>
+        <div><h3 id="battle-tutorial-title">先看路数，再定招式</h3></div>
+      </header>
+      <div class="battle-tutorial-lessons">
+        <div>
+          <span>${icon("route", 17)}</span>
+          <p><b>刚猛克守御</b><small>守御克灵巧 · 灵巧克韬略 · 韬略克刚猛</small></p>
+        </div>
+        <div>
+          <span>${icon("swords", 17)}</span>
+          <p><b>点招式</b><small>再点发亮的敌人</small></p>
+        </div>
+        <div>
+          <span>${icon("sparkles", 17)}</span>
+          <p><b>三路合击</b><small>三种路数各出一次</small></p>
+        </div>
+      </div>
+      <button class="button primary battle-tutorial-start" data-action="dismiss-battle-tutorial">
+        ${icon("swords", 18)}<span>开战</span>
+      </button>
+    </section>
   `;
 }
 
@@ -7104,6 +7186,21 @@ function cycleAutoTactic() {
 function handleAction(action, element) {
   if (!action) return;
   switch (action) {
+    case "toggle-battle-log":
+      battleLogExpanded = !battleLogExpanded;
+      sound.click();
+      render();
+      return;
+    case "toggle-quest-roster":
+      questRosterExpanded = !questRosterExpanded;
+      sound.click();
+      render();
+      return;
+    case "toggle-more-nav":
+      moreNavOpen = !moreNavOpen;
+      sound.click();
+      render();
+      return;
     case "new-game":
       if (hasSavedGame()) {
         openModal({
@@ -8026,10 +8123,29 @@ app.addEventListener("click", (event) => {
     }
     return;
   }
+  const soundAction = target.dataset.action;
+  if (
+    !["story-next", "story-skip", "close-modal", "nav-map"].includes(
+      soundAction,
+    )
+  ) {
+    sound.playUiCue(soundAction === "toggle-more-nav" ? "open" : "select");
+  }
   event.stopPropagation();
   showClickFeedback(target, event);
+  const closingMoreNav =
+    moreNavOpen && target.dataset.action !== "toggle-more-nav";
+  if (closingMoreNav) moreNavOpen = false;
   const previousCopper = state?.inventory?.copper;
   handleAction(target.dataset.action, target);
+  if (
+    closingMoreNav &&
+    ["nav-map", "nav-roster", "nav-quests", "nav-camp"].includes(
+      target.dataset.action,
+    )
+  ) {
+    render();
+  }
   showCurrencyFeedback(previousCopper, state?.inventory?.copper);
 });
 
@@ -8162,8 +8278,21 @@ function handleGamepadButtonPress(index, pad) {
   }
   if (index === 7) {
     const journal = document.querySelector("button[data-action='nav-codex']");
-    if (journal && !modal) journal.click();
-    else activateGamepadFocus();
+    if (journal && !modal) {
+      journal.click();
+      return;
+    }
+    const more = document.querySelector('button[data-action="toggle-more-nav"]');
+    if (more && !modal) {
+      more.click();
+      window.setTimeout(() => {
+        const codex = document.querySelector('.more-nav button[data-action="nav-codex"]');
+        if (codex) codex.click();
+        else activateGamepadFocus();
+      }, 180);
+      return;
+    }
+    activateGamepadFocus();
   }
   if (index === 16) {
     const active = document.activeElement;

@@ -91,6 +91,17 @@ async function waitForScreen(page, screenName) {
   });
 }
 
+async function openMoreNavigation(page) {
+  if (!(await page.locator('button[data-action="toggle-more-nav"]').count())) {
+    return false;
+  }
+  if (!(await page.locator(".more-nav").count())) {
+    await page.locator('button[data-action="toggle-more-nav"]').click();
+  }
+  await page.locator(".more-nav").waitFor({ state: "visible" });
+  return true;
+}
+
 async function screenshot(page, name) {
   await mkdir(visualQaDir, { recursive: true });
   await page.screenshot({
@@ -449,7 +460,8 @@ async function runMobileEngine(browser, engineName, origin) {
     await assertNoHorizontalOverflow(page, `${engineName} mobile title`);
     await page.locator('button[data-action="new-game"]').click();
     await waitForScreen(page, "map");
-    await page.locator('button[data-action="nav-settings"]').click();
+    await openMoreNavigation(page);
+    await page.locator('.more-nav button[data-action="nav-settings"]').click();
     await waitForScreen(page, "settings");
     await assertNoHorizontalOverflow(page, `${engineName} mobile settings`);
 

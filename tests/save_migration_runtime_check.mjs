@@ -73,6 +73,7 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   await page.click('button[data-action="continue-game"]');
   await page.waitForSelector(".screen-map");
+  await page.click('button[data-action="toggle-more-nav"]');
   await page.click('button[data-action="nav-story-hub"]');
   await page.waitForSelector(".screen-story-hub");
   const migrated = await page.evaluate((key) => {

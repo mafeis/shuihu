@@ -38,13 +38,15 @@ async function measureActiveNav(page) {
   });
 }
 
-function assertInsetBackground(report, label) {
+function assertInsetBackground(report, label, compact = false) {
   assert.ok(report, `${label}: missing active nav item`);
   assert.equal(report.count, 1, `${label}: exactly one nav item should be active`);
   assert.equal(report.outlineStyle, "none", `${label}: active nav has a box outline`);
   assert.ok(
-    report.backgroundTop >= 8 && report.backgroundBottom >= 8,
-    `${label}: active background fills the full button height`,
+    compact
+      ? Math.abs(report.backgroundTop) <= 6 && Math.abs(report.backgroundBottom) <= 6
+      : report.backgroundTop === 0 && report.backgroundBottom === 0,
+    `${label}: active background fills the ${compact ? "tap target" : "full button height"}`,
   );
   assert.notEqual(
     report.backgroundColor,
@@ -74,29 +76,34 @@ try {
   assertInsetBackground(mapSelection, "map");
   assert.equal(mapSelection.action, "nav-map");
 
-  await page.click('.topbar button[data-action="nav-arena"]');
+  await page.click('.topbar button[data-action="toggle-more-nav"]');
+  await page.click('.more-nav button[data-action="nav-arena"]');
   await page.waitForSelector(".screen-arena");
   const arenaSelection = await measureActiveNav(page);
   assertInsetBackground(arenaSelection, "arena");
-  assert.equal(arenaSelection.action, "nav-arena");
+  assert.equal(arenaSelection.action, "toggle-more-nav");
 
-  await page.click('.topbar button[data-action="nav-story-hub"]');
+  await page.click('.topbar button[data-action="toggle-more-nav"]');
+  await page.click('.more-nav button[data-action="nav-story-hub"]');
   await page.waitForSelector(".screen-story-hub");
   const storySelection = await measureActiveNav(page);
   assertInsetBackground(storySelection, "story-hub");
-  assert.equal(storySelection.action, "nav-story-hub");
+  assert.equal(storySelection.action, "toggle-more-nav");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(120);
   const mobileStorySelection = await measureActiveNav(page);
-  assertInsetBackground(mobileStorySelection, "mobile-story-hub");
-  assert.equal(mobileStorySelection.action, "nav-story-hub");
+  assertInsetBackground(mobileStorySelection, "mobile-story-hub", true);
+  assert.equal(mobileStorySelection.action, "toggle-more-nav");
   const mobileNav = await page.evaluate(() => {
     const nav = document.querySelector(".topbar-nav");
     const rect = nav.getBoundingClientRect();
     return {
       buttons: nav.querySelectorAll(".nav-button").length,
       columns: getComputedStyle(nav).gridTemplateColumns.split(" ").length,
+      orientation: getComputedStyle(nav).display,
+      navBottom: rect.bottom,
+      navHeight: rect.height,
       overflow: Math.max(0, nav.scrollWidth - nav.clientWidth),
       contained:
         rect.left >= 0 &&
@@ -104,8 +111,11 @@ try {
         rect.bottom <= innerHeight,
     };
   });
-  assert.equal(mobileNav.buttons, 8);
-  assert.equal(mobileNav.columns, 8);
+  assert.equal(mobileNav.buttons, 5);
+  assert.equal(mobileNav.columns, 5);
+  assert.equal(mobileNav.orientation, "grid");
+  assert.ok(mobileNav.navBottom <= 844 + 1, "mobile navigation should remain in view");
+  assert.ok(mobileNav.navHeight >= 56, "mobile navigation should stay easy to tap");
   assert.equal(mobileNav.overflow, 0);
   assert.equal(mobileNav.contained, true);
   assert.deepEqual(runtimeErrors, [], "nav interaction should not throw");

@@ -16,8 +16,8 @@
 
 ## 已完成验收
 
-- `npm run verify`：JavaScript、Python、Swift 静态检查、桌面发行安全加固、393 项运行时资产、10 首配乐与 10 枚战斗音效、Steamworks 配置、生成式 AI 披露、143 项单元测试与 Vite 生产构建通过。
-- 1.0.3 长卷、故事入口、存档迁移、108 人推荐、角色布局和浏览器运行态回归通过；完整自动战回归仍应作为发行前独立复跑项。
+- `npm run verify`：JavaScript、Python、Swift 静态检查、桌面发行安全加固、393 项运行时资产、10 首配乐与 10 枚战斗音效、Steamworks 配置、生成式 AI 披露、144 项单元测试与 Vite 生产构建通过。
+- 1.0.4 长卷、故事入口、存档迁移、108 人推荐、五栏主菜单、精简首战引导、开源界面音效、角色布局和浏览器运行态回归通过；完整自动战回归继续由 `npm run test:e2e` 独立复跑。
 - 星劫浏览器回归覆盖六道风险规则展示、按最高波次解锁、三道同时启用上限、出阵确认、战斗 HUD、军功与资源倍率、永久纪录、奖励页保留和跨重启续局。
 - `npm run test:web`：生产构建中的 Web App Manifest、192px/512px 安装图标、Service Worker 激活与断网刷新进入标题界面通过；开发态不会注册 Service Worker。
 - `npm run release:browser`：生成可部署浏览器站点与 ZIP；角色制作转身图与内部生成提示词清单不进入玩家包。
@@ -48,7 +48,7 @@
 - `npm run steamworks:verify`：19 项成就、38 张 64x64 成就图标、6 项统计、3 个原生模块目标与 15 个手柄动作映射通过。
 - `npm run steam:ai:verify`：615 项生成式资产披露清单通过，运行时文件确认不含 ComfyUI、生成节点或模型端点。
 - `npm run security:verify`：93 项 CSP、PWA 安装边界、离线 Worker、权限拒绝、Electron 沙箱、macOS 显式 ad-hoc 身份、Hardened Runtime、主程序与辅助进程权限、Windows SHA-256 时间戳和第三方许可检查通过。
-- 设置页可读取 `THIRD_PARTY_NOTICES.txt`，其中包含 Electron、Chromium、steamworks.js、Valve Steamworks SDK 与 Lucide 许可说明。
+- 设置页可读取 `THIRD_PARTY_NOTICES.txt`，其中包含 Electron、Chromium、steamworks.js、Valve Steamworks SDK、Lucide 与 Kenney CC0 素材许可说明。
 - Steam Achievements、Stats、Cloud、Rich Presence 与 Overlay 的桥接层已实现，无 Steam 环境自动降级为本地存档。
 - 本地诊断日志、渲染故障页、资源加载错误与存档写入失败提示已实现。
 
@@ -116,7 +116,7 @@ npm run steam:preflight
 - [x] 浏览器标准 Gamepad 虚拟回归：方向导航、确认、返回、自动战斗、战法轮换、倍速、暂停与战功入口。
 - [x] 浏览器 PWA 安装清单、根作用域、独立窗口模式、安装图标与生产 Service Worker 校验。
 - [x] 浏览器版在生产构建中完成 Service Worker 接管后的断网刷新。
-- [x] 十首配乐与十枚战斗音效的编码、时长、响度、真峰值、解码峰值、循环边界、切歌、静音与音量持久化回归。
+- [x] 十首配乐、十枚战斗音效与六枚可用性开源界面音效的加载和播放回归；配乐与战斗音效完成响度、真峰值、解码峰值、循环边界、切歌、静音与音量持久化回归。
 - [x] 本地诊断日志、白屏恢复页、资源加载错误与存档写入失败提示。
 - [ ] 在真实 Steam 运行环境验证诊断日志与崩溃恢复。
 - [ ] 为浏览器版配置正式 HTTPS 域名、CDN 缓存策略与版本更新通道。

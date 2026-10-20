@@ -51,10 +51,14 @@ try {
       "victory",
       "defeat",
     ];
+    const uiCues = ["click", "confirm", "open", "back", "error", "select"];
     const loadedBuffers = await sound.preloadCombatSfx();
     for (const cue of cues) {
       sound.playCombatCue(cue);
       sfx.push({ cue, lastCue: sound.lastCue });
+    }
+    for (const cue of uiCues) {
+      sound.playUiCue(cue);
     }
     await new Promise((resolve) => setTimeout(resolve, 80));
     const sfxStatus = globalThis.__shuihuCombatSfxStatus?.();
@@ -62,6 +66,11 @@ try {
     for (const cue of cues) {
       const sfxResponse = await fetch(`/assets/audio/sfx/${cue}.mp3`);
       sfxBytes[cue] = (await sfxResponse.arrayBuffer()).byteLength;
+    }
+    const uiBytes = {};
+    for (const cue of uiCues) {
+      const uiResponse = await fetch(`/assets/audio/ui/kenney/${cue}.wav`);
+      uiBytes[cue] = (await uiResponse.arrayBuffer()).byteLength;
     }
     const media = [
       ...performance.getEntriesByType("resource")
@@ -78,6 +87,7 @@ try {
       sfxStatus,
       loadedBufferCount: loadedBuffers.filter(Boolean).length,
       sfxBytes,
+      uiBytes,
     };
   });
 
@@ -98,8 +108,8 @@ try {
   );
   assert.equal(
     report.sfxStatus.loaded.length,
-    10,
-    "the runtime should cache every generated combat one-shot",
+    16,
+    "the runtime should cache combat and interface one-shots",
   );
   assert.equal(
     report.sfxStatus.failures.length,
@@ -107,8 +117,8 @@ try {
     "generated combat one-shots should not fail to load",
   );
   assert.ok(
-    report.sfxStatus.generatedPlays >= 10,
-    "combat cues should play from generated buffers after preload",
+    report.sfxStatus.generatedPlays >= 16,
+    "combat and interface cues should play from generated buffers after preload",
   );
   assert.equal(
     Object.values(report.sfxBytes).every((bytes) => bytes > 8_000),
@@ -118,6 +128,11 @@ try {
   assert.ok(
     report.media.some((entry) => entry.src.includes("/assets/audio/sfx/")),
     "the browser should request generated combat one-shots",
+  );
+  assert.equal(
+    Object.values(report.uiBytes).every((bytes) => bytes > 500),
+    true,
+    "every open-source interface one-shot should contain audio data",
   );
   console.log(JSON.stringify(report, null, 2));
 } finally {

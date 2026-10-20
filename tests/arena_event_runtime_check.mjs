@@ -58,6 +58,7 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   await page.click('button[data-action="continue-game"]');
   await page.waitForSelector(".screen-map");
+  await page.click('button[data-action="toggle-more-nav"]');
   await page.click('button[data-action="nav-arena"]');
   await page.waitForSelector(".screen-arena");
   await page.click('button[data-action="resume-arena"]');

@@ -449,7 +449,8 @@ try {
   await starterPage.reload({ waitUntil: "networkidle" });
   await starterPage.click('button[data-action="continue-game"]');
   await starterPage.waitForSelector(".screen-map");
-  await starterPage.click('.topbar button[data-action="nav-arena"]');
+  await starterPage.click('.topbar button[data-action="toggle-more-nav"]');
+  await starterPage.click('.more-nav button[data-action="nav-arena"]');
   await starterPage.waitForSelector(".screen-arena");
   await starterPage.waitForTimeout(200);
   const arenaLocked = await measureScreen(starterPage, "arena-locked");
@@ -495,8 +496,14 @@ try {
     ["codex", 'button[data-action="nav-codex"]', ".screen-codex"],
     ["settings", 'button[data-action="nav-settings"]', ".screen-settings"],
   ];
-  for (const [name, selector, screenSelector] of screens) {
-    await page.click(`.topbar ${selector}`);
+  for (const [name, initialSelector, screenSelector] of screens) {
+    let selector = initialSelector;
+    let scope = ".topbar";
+    if (["story-hub", "arena", "codex", "settings"].includes(name)) {
+      await page.click('.topbar button[data-action="toggle-more-nav"]');
+      scope = ".more-nav";
+    }
+    await page.click(`${scope} ${selector}`);
     await page.waitForSelector(screenSelector);
     await page.waitForTimeout(160);
     await page.evaluate(() =>
@@ -524,7 +531,8 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => {
-    document.querySelector('button[data-action="nav-story-hub"]')?.click();
+    document.querySelector('button[data-action="toggle-more-nav"]')?.click();
+    document.querySelector('.more-nav button[data-action="nav-story-hub"]')?.click();
   });
   await page.waitForSelector(".screen-story-hub");
   await page.waitForTimeout(160);
@@ -710,7 +718,8 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   await page.click('button[data-action="continue-game"]');
   await page.waitForSelector(".screen-map");
-  await page.click('.topbar button[data-action="nav-arena"]');
+  await page.click('.topbar button[data-action="toggle-more-nav"]');
+  await page.click('.more-nav button[data-action="nav-arena"]');
   await page.waitForSelector(".screen-arena");
   await page.click('button[data-action="resume-arena"]');
   await page.waitForSelector(".screen-arena-reward");

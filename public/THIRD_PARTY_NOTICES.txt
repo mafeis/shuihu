@@ -88,6 +88,34 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ================================================================================
+Kenney Interface Sounds and Fantasy UI Borders
+================================================================================
+
+Interface sounds and UI/particle artwork from Kenney.
+Source: https://kenney.nl/assets
+Interface sound redistribution: https://github.com/Calinou/kenney-interface-sounds
+UI artwork redistribution: https://github.com/shorepine/kenney
+
+Copyright (c) Kenney
+
+License: Creative Commons Zero (CC0 1.0 Universal)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Included files:
+assets/audio/ui/kenney/click.wav
+assets/audio/ui/kenney/confirm.wav
+assets/audio/ui/kenney/open.wav
+assets/audio/ui/kenney/back.wav
+assets/audio/ui/kenney/error.wav
+assets/audio/ui/kenney/select.wav
+assets/ui/open-source/kenney/window-frame.png
+assets/ui/open-source/kenney/spark-gold.png
+assets/ui/open-source/kenney/spark-white.png
+
+The source license texts are retained in assets/audio/ui/kenney/LICENSE.txt
+and assets/ui/open-source/kenney/LICENSE.txt.
+
+================================================================================
 Project-generated creative assets
 ================================================================================
 

@@ -316,6 +316,36 @@ async function clickText(text) {
   await new Promise((resolve) => setTimeout(resolve, 180));
 }
 
+async function clickMoreAction(action) {
+  if (
+    await evaluate(
+      `Boolean(document.querySelector('button[data-action="${action}"]'))`,
+    )
+  ) {
+    await click(`button[data-action="${action}"]`);
+    return;
+  }
+  const hasMenu = await evaluate(
+    'Boolean(document.querySelector(".more-nav"))',
+  );
+  if (hasMenu) {
+    await click(`.more-nav button[data-action="${action}"]`);
+    return;
+  }
+  await click('button[data-action="toggle-more-nav"]');
+  await waitFor(
+    `Boolean(document.querySelector('.more-nav button[data-action="${action}"]'))`,
+  );
+  await click(`.more-nav button[data-action="${action}"]`);
+}
+
+async function openNavScreen(action) {
+  await clickMoreAction(action);
+  await waitFor(
+    `document.querySelector(".game-frame")?.classList.contains("screen-${action.slice(4)}")`,
+  );
+}
+
 async function useFirstAvailableBattleSkill() {
   await waitFor(
     `document.querySelector(".battle-command .skill-list .skill-button:not(:disabled)") !== null ||
@@ -1409,7 +1439,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-codex")');
   assertEqual(
     await evaluate(
-      `document.activeElement?.matches("button[data-action='nav-codex']") || document.querySelector(".game-frame")?.classList.contains("screen-codex")`,
+      `document.querySelector(".game-frame")?.classList.contains("screen-codex")`,
     ),
     true,
     "gamepad journal button should open the achievement and star-map screen",
@@ -1781,7 +1811,9 @@ try {
     "roster should advance through later pages",
   );
   await click('button[data-action="filter-roster-path"][data-path="all"]');
+  await waitFor('Boolean(document.querySelector(".hero-card button[data-action=\\"open-hero\\"]"))');
   await click('.hero-card button[data-action="open-hero"]');
+  await waitFor('document.querySelector(".hero-dossier")?.classList.contains("is-open")');
   await evaluate(`(() => {
     const action = [...document.querySelectorAll(
       '.hero-dossier button[data-action="equipment-hero"]',
@@ -2069,7 +2101,7 @@ try {
 
   await click('button[data-action="nav-map"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await click('button[data-action="nav-codex"]');
+  await clickMoreAction("nav-codex");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-codex")');
   const chainArchiveLayout = await evaluate(`(() => {
     const archive = document.querySelector(".chain-archive");
@@ -2215,7 +2247,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await click("button[data-action=nav-codex]");
+  await clickMoreAction("nav-codex");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-codex")');
   await captureSteamScreenshot("05_star_codex.png");
   await click('button[data-action="codex-hero"][data-hero="linchong"]');
@@ -2313,6 +2345,10 @@ try {
     const legendArt = document.querySelector(".hero-legend-mission-art");
     return {
       navItems: document.querySelectorAll(".topbar-nav .nav-button").length,
+      moreActions: [...document.querySelectorAll(".more-nav button")]
+        .map((button) => button.dataset.action),
+      moreExpanded: document.querySelector('button[data-action="toggle-more-nav"]')
+        ?.getAttribute("aria-expanded") || "false",
       heroButtons: document.querySelectorAll("button[data-action=quest-hero], button[data-action=locked-hero]").length,
       cards: cards.length,
       recruitmentCards: recruitmentCards.length,
@@ -2348,7 +2384,23 @@ try {
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
-  assertEqual(questBoardBefore.navItems, 8, "main navigation should expose the full saga");
+  assertEqual(questBoardBefore.navItems, 5, "main navigation should keep five primary actions");
+  await click('button[data-action="toggle-more-nav"]');
+  await waitFor('document.querySelector(".more-nav")');
+  const moreNavigation = await evaluate(`(() => ({
+    actions: [...document.querySelectorAll(".more-nav button")]
+      .map((button) => button.dataset.action),
+    expanded: document.querySelector('button[data-action="toggle-more-nav"]')
+      ?.getAttribute("aria-expanded"),
+  }))()`);
+  assertEqual(
+    moreNavigation.actions.join(","),
+    "nav-story-hub,nav-arena,nav-codex,nav-settings",
+    "more menu should expose the full saga, arena, codex, and settings",
+  );
+  assertEqual(moreNavigation.expanded, "true", "more menu should expose its expanded state");
+  await click('button[data-action="toggle-more-nav"]');
+  await waitFor('!document.querySelector(".more-nav")');
   assertEqual(questBoardBefore.heroButtons, HERO_ORDER.length, "quest journal should list every hero");
   assertEqual(questBoardBefore.cards, 3, "each hero should show a three-stage quest chain");
   assertEqual(
@@ -2680,8 +2732,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await clickText("演武");
-  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena")');
+  await openNavScreen("nav-arena");
   assertEqual(
     await evaluate('document.querySelectorAll("button[data-action=select-arena-boon]").length'),
     3,
@@ -2788,6 +2839,7 @@ try {
           hud.getBoundingClientRect().right <= innerWidth + 0.5
         : false,
       overflow: hud ? hud.scrollWidth - hud.clientWidth : 0,
+      unreplacedIcons: document.querySelectorAll("i[data-lucide]").length,
     };
   })()`);
   assertEqual(
@@ -2811,6 +2863,7 @@ try {
     0,
     "the battle encounter HUD should not clip horizontally",
   );
+  assertEqual(arenaBattleEncounter.unreplacedIcons, 0, "the opening arena battle should resolve every icon");
   const persistedArenaRun = await evaluate(
     'JSON.parse(localStorage.getItem("xingming-shuihu-save-v1")).arena.activeRun',
   );
@@ -2879,6 +2932,9 @@ try {
     "the arena regression should be able to pause auto battle for layout inspection",
   );
   await setViewport(390, 844, true);
+  await waitFor(
+    'document.querySelectorAll(".arena-encounter-hud i[data-lucide]").length === 0',
+  );
   const mobileArenaEncounter = await evaluate(`(() => {
     const hud = document.querySelector(".arena-encounter-hud");
     const field = document.querySelector(".battle-field");
@@ -3182,7 +3238,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await clickText("演武");
+  await openNavScreen("nav-arena");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena")');
   assertEqual(
     await evaluate('document.body.innerText.includes("本周军令")'),
@@ -3206,7 +3262,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await clickText("演武");
+  await openNavScreen("nav-arena");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena")');
   await click('button[data-action="resume-arena"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena-reward")');
@@ -3280,7 +3336,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await clickText("演武");
+  await openNavScreen("nav-arena");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena")');
   await click('button[data-action="resume-arena"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena-reward")');
@@ -3308,7 +3364,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await clickText("演武");
+  await openNavScreen("nav-arena");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena")');
   await click('button[data-action="resume-arena"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena-reward")');
@@ -3338,7 +3394,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await clickText("演武");
+  await openNavScreen("nav-arena");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena")');
   await click('button[data-action="resume-arena"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena-reward")');
@@ -3460,7 +3516,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await click('button[data-action="nav-settings"]');
+  await clickMoreAction("nav-settings");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-settings")');
   await click('button[data-action="ui-scale"][data-scale="largest"]');
   await click('button[data-action="toggle-contrast"]');
@@ -3547,7 +3603,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await click('button[data-action="nav-settings"]');
+  await clickMoreAction("nav-settings");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-settings")');
   const restoredAudio = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem("xingming-shuihu-save-v1"));
@@ -3780,8 +3836,9 @@ try {
   }
 
   await setViewport(1440, 900, false);
-  await click('button[data-action="nav-story-hub"]');
-  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story-hub")');
+  if (!(await evaluate('document.querySelector(".game-frame")?.classList.contains("screen-story-hub")'))) {
+    await openNavScreen("nav-story-hub");
+  }
   await click('button[data-action="enter-story-memory"][data-chapter="stone_tablet"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
   const archiveStoryControls = await evaluate(`(() => ({
@@ -3796,8 +3853,9 @@ try {
   await waitFor('document.querySelector("[data-modal-panel]")');
   await click('button[data-action="story-exit-map"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story-hub") || document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await click('button[data-action="nav-story-hub"]');
-  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story-hub")');
+  if (!(await evaluate('document.querySelector(".game-frame")?.classList.contains("screen-story-hub")'))) {
+    await openNavScreen("nav-story-hub");
+  }
   for (const [name, width, height, mobile] of releaseViewports) {
     await setViewport(width, height, mobile);
     const layout = await evaluate(`(() => {
@@ -3852,7 +3910,7 @@ try {
     assertEqual(layout.topbarOutside, false, `${name} story top bar should stay inside the viewport`);
     assertEqual(layout.navOutside, false, `${name} story hub navigation should stay inside the viewport`);
     assertEqual(layout.navOverflow, 0, `${name} story hub navigation should fit all items`);
-    assertEqual(layout.navButtons, 8, `${name} story hub should show all navigation items`);
+    assertEqual(layout.navButtons, 5, `${name} story hub should keep primary navigation compact`);
     assertEqual(layout.cards, STORY_ARCHIVE_CHAPTERS.length, `${name} story hub should expose every saga chapter`);
     assertEqual(layout.cardOverflow, 0, `${name} story hub cards should stay contained`);
     assertEqual(layout.clippedText, 0, `${name} story hub labels should stay readable`);
@@ -3954,7 +4012,7 @@ try {
   }
 
   await setViewport(1440, 900, false);
-  await click('button[data-action="nav-settings"]');
+  await clickMoreAction("nav-settings");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-settings")');
   await click('button[data-action="show-third-party-notices"]');
   await waitFor('document.querySelector(".legal-notice-text")?.textContent.includes("steamworks.js")');
@@ -3968,6 +4026,7 @@ try {
       steamworks: text.includes("steamworks.js"),
       valve: text.includes("Valve Steamworks SDK"),
       lucide: text.includes("Lucide icons"),
+      kenney: text.includes("Kenney Interface Sounds"),
       insideViewport: Boolean(rect && rect.left >= 0 && rect.right <= innerWidth),
       readable: Boolean(
         document.querySelector(".legal-notice-text")?.scrollHeight > 0
@@ -3979,6 +4038,7 @@ try {
   assertEqual(legalNotice.steamworks, true, "third-party notices should credit steamworks.js");
   assertEqual(legalNotice.valve, true, "third-party notices should identify Valve SDK terms");
   assertEqual(legalNotice.lucide, true, "third-party notices should credit Lucide");
+  assertEqual(legalNotice.kenney, true, "third-party notices should credit Kenney open-source UI and sound assets");
   assertEqual(legalNotice.insideViewport, true, "third-party notices should stay inside the viewport");
   assertEqual(legalNotice.readable, true, "third-party notices should render readable text");
   await click('[data-modal-panel] button[data-action="close-modal"]');
@@ -4070,7 +4130,7 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  await click('button[data-action="nav-codex"]');
+  await clickMoreAction("nav-codex");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-codex")');
   const mobileCodex = await evaluate(`(() => {
     const rects = [...document.querySelectorAll(".star-node")].map((node) => {
@@ -4098,7 +4158,7 @@ try {
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
-  await click('button[data-action="nav-arena"]');
+  await clickMoreAction("nav-arena");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena")');
   await click('button[data-action="select-arena-mode"][data-mode="weekly"]');
   await waitFor('Boolean(document.querySelector(".arena-week-card"))');

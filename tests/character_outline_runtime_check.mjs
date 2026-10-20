@@ -94,6 +94,7 @@ try {
     assertOutlined(filters, `${scope} portraits`);
   }
 
+  await page.click('button[data-action="toggle-more-nav"]');
   await page.click('button[data-action="nav-arena"]');
   await page.waitForSelector(".screen-arena");
   const arenaFilters = await pageFilters(page, ".arena-team img");

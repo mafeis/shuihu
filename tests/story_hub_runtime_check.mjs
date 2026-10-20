@@ -44,6 +44,7 @@ async function openStoryHub(page, save) {
   await page.reload({ waitUntil: "networkidle" });
   await page.click('button[data-action="continue-game"]');
   await page.waitForSelector(".screen-map");
+  await page.click('button[data-action="toggle-more-nav"]');
   await page.click('button[data-action="nav-story-hub"]');
   await page.waitForSelector(".screen-story-hub");
   await page.waitForTimeout(180);
@@ -130,7 +131,7 @@ try {
     const metrics = await measure(page);
     assert.equal(metrics.cards, STORY_ARCHIVE_CHAPTERS.length);
     assert.equal(metrics.read, 1);
-    assert.equal(metrics.navButtons, 8);
+    assert.equal(metrics.navButtons, 5);
     assert.ok(metrics.navOverflow <= 1, `${name}: nav content overflows`);
     assert.ok(metrics.pageOverflowX <= 1, `${name}: page overflows horizontally`);
     assert.equal(metrics.cardOverflow, 0, `${name}: story cards overflow`);

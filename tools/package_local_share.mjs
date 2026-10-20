@@ -103,6 +103,7 @@ const types = {
   ".mp4": "video/mp4",
   ".png": "image/png",
   ".txt": "text/plain; charset=utf-8",
+  ".wav": "audio/wav",
   ".webmanifest": "application/manifest+json; charset=utf-8",
   ".webp": "image/webp",
 };
