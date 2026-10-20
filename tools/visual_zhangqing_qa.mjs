@@ -429,7 +429,8 @@ async function captureFullRoster() {
   await setViewport(1920, 1080, false);
   await setSave(fullRosterFixture());
   await openMap();
-  await click('button[data-action="nav-codex"]');
+  await click('button[data-action="toggle-more-nav"]');
+  await click(".more-nav button[data-action='nav-codex']");
   await waitFor(
     'document.querySelector(".game-frame")?.classList.contains("screen-codex")',
   );

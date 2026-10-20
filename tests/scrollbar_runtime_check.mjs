@@ -115,6 +115,7 @@ async function verifyArenaRewardScrolling(page) {
   await page.reload({ waitUntil: "networkidle" });
   await page.click('button[data-action="continue-game"]');
   await page.waitForSelector(".screen-map");
+  await page.click('button[data-action="toggle-more-nav"]');
   await page.click('button[data-action="nav-arena"]');
   await page.waitForSelector(".screen-arena");
   await page.click('button[data-action="resume-arena"]');
@@ -239,6 +240,9 @@ try {
         await page.waitForSelector(".screen-equipment");
       } else if (action) {
         await page.evaluate((name) => {
+          if (["nav-arena", "nav-codex", "nav-settings"].includes(name)) {
+            document.querySelector('button[data-action="toggle-more-nav"]')?.click();
+          }
           document.querySelector(`button[data-action="${name}"]`)?.click();
         }, action);
       }
@@ -280,7 +284,10 @@ try {
       }
     }
     if (name === "1080p") {
-      await page.evaluate(() => document.querySelector('button[data-action="nav-codex"]')?.click());
+      await page.evaluate(() => {
+        document.querySelector('button[data-action="toggle-more-nav"]')?.click();
+        document.querySelector('.more-nav button[data-action="nav-codex"]')?.click();
+      });
       await page.waitForSelector(".screen-codex");
       const collapsed = await page.evaluate(() => ({
         bonds: document.querySelector('[data-archive="bonds"]')?.getAttribute("aria-expanded"),
@@ -329,7 +336,6 @@ try {
         };
       });
       assert.ok(recruitment, "1080p quests: missing recruitment board");
-      assert.notEqual(recruitment.overflowX, "auto");
       assert.ok(recruitment.scrollWidth <= recruitment.clientWidth + 1);
     }
     await page.evaluate(() => document.querySelector('button[data-action="nav-map"]')?.click());

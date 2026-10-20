@@ -44,15 +44,15 @@ Playwright WebKit 是 Safari 引擎级自动化，不等同于真实 Safari 人�
 
 `npm run release:browser` 会先重建生产站点，再生成：
 
-- `release/browser/XingmingShuihu-web-1.0.3/site/`：可直接上传到站点根目录的完整游戏。
-- `release/browser/XingmingShuihu-web-1.0.3/XingmingShuihu-web-1.0.3.zip`：浏览器发行压缩包，大小与 SHA-256 记录在包内清单。
-- `release/browser/XingmingShuihu-web-1.0.3/release-manifest.json`：版本、作用域、构建哈希及全部站点文件的大小与 SHA-256。
+- `release/browser/XingmingShuihu-web-1.0.4/site/`：可直接上传到站点根目录的完整游戏。
+- `release/browser/XingmingShuihu-web-1.0.4/XingmingShuihu-web-1.0.4.zip`：浏览器发行压缩包，大小与 SHA-256 记录在包内清单。
+- `release/browser/XingmingShuihu-web-1.0.4/release-manifest.json`：版本、作用域、构建哈希及全部站点文件的大小与 SHA-256。
 - `SHA256SUMS.txt`：发行 ZIP 校验和。
 - `deploy/_headers`：Netlify、Cloudflare Pages 等平台使用的 CSP、缓存与 MIME 响应头。
 - `deploy/nginx.conf.sample`：Nginx HTTPS 配置样例，部署前需替换域名、证书与站点根目录。
 - `DEPLOYMENT.md`：上传与发布后检查清单。
 
-生产站点包含 108 位好汉的运行时立绘、关键原画、缩略图、完整长卷场景、敌人、UI、视频、10 首音乐与 10 枚战斗音效。角色转身设定图属于制作参考，不进入浏览器包；内部 `assets/manifest.json` 含生成记录与提示词，也不进入玩家站点。
+生产站点包含 108 位好汉的运行时立绘、关键原画、缩略图、完整长卷场景、敌人、UI、视频、10 首音乐、10 枚战斗音效与 6 枚开源界面音效。标题、五栏主菜单、更多菜单、异闻和首战引导会加载 Kenney CC0 轻量界面粒子。角色转身设定图属于制作参考，不进入浏览器包；内部 `assets/manifest.json` 含生成记录与提示词，也不进入玩家站点。
 
 `npm run release:browser:verify` 会逐文件复核大小和 SHA-256、ZIP 校验和、PWA 入口、四份发行文档、108 位好汉的 `cutout/keyart/thumb` 三套运行时资产、Service Worker 版本，并拒绝转身设定图、源图、Source Map、开发服务器地址和内部生产资产清单进入发行包。
 

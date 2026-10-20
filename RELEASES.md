@@ -4,10 +4,10 @@
 
 | 平台 | 文件 | 系统要求 |
 | --- | --- | --- |
-| macOS Apple 芯片 | `XingmingShuihu-1.0.3-mac-arm64.dmg` | macOS 13.0+，Apple M 系列 |
-| Windows x64 | `XingmingShuihu-1.0.3-win-x64.exe` | Windows 10/11 x64 |
-| 浏览器 / PWA | `XingmingShuihu-web-1.0.3.zip` | 支持 Web App Manifest 的现代浏览器 |
-| 通用本地分享 | `XingmingShuihu-local-1.0.3.zip` | Node.js 20+ |
+| macOS Apple 芯片 | `XingmingShuihu-1.0.4-mac-arm64.dmg` | macOS 13.0+，Apple M 系列 |
+| Windows x64 | `XingmingShuihu-1.0.4-win-x64.exe` | Windows 10/11 x64 |
+| 浏览器 / PWA | `XingmingShuihu-web-1.0.4.zip` | 支持 Web App Manifest 的现代浏览器 |
+| 通用本地分享 | `XingmingShuihu-local-1.0.4.zip` | Node.js 20+ |
 
 macOS 与 Windows 同时提供 ZIP 免安装包。Apple M 系列使用 macOS ARM64，Intel Mac 当前没有对应桌面包；Windows 版仅提供 x64 安装包与免安装包，不再发布 Windows ARM64 产物。
 
@@ -15,7 +15,7 @@ macOS 本地测试包使用 ad-hoc 签名，没有 Apple Developer ID 签名和�
 
 Windows 本地测试包没有 Authenticode 证书，系统可能显示未知发布者提示。
 
-详细变更见 [1.0.3 发行说明](docs/release_notes_v1.0.3.md)。
+详细变更见 [1.0.4 发行说明](docs/release_notes_v1.0.4.md)。
 
 ## 构建安装包
 

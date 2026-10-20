@@ -7,7 +7,8 @@ import { ICON_COMPONENTS } from "../src/icons.js";
 
 const iconNames = `
 accessibility arrow-left arrow-right arrow-up arrow-up-right badge-check
-book-open book-open-check bot calendar-days castle check chevron-right
+book-open book-open-check bot calendar-days castle check chevron-down
+chevron-right chevron-up
 chevrons-right chevrons-up circle circle-alert circle-check cloud coins compass
 crosshair crown download eye file-text flag flame gauge gavel gem hammer hand hand-fist
 heart heart-pulse history home hourglass info landmark layout-grid list-checks

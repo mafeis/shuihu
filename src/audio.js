@@ -39,6 +39,26 @@ export const COMBAT_SFX_CUES = [
   "defeat",
 ];
 
+export const UI_SFX_CUES = [
+  "click",
+  "confirm",
+  "open",
+  "back",
+  "error",
+  "select",
+];
+
+export const UI_SFX_ASSETS = Object.freeze(
+  Object.fromEntries(
+    UI_SFX_CUES.map((cue) => [
+      cue,
+      `/assets/audio/ui/kenney/${cue}.wav`,
+    ]),
+  ),
+);
+
+const COMBAT_SFX_SET = new Set(COMBAT_SFX_CUES);
+
 export const COMBAT_SFX_ASSETS = Object.freeze(
   Object.fromEntries(
     COMBAT_SFX_CUES.map((cue) => [cue, `/assets/audio/sfx/${cue}.mp3`]),
@@ -46,7 +66,7 @@ export const COMBAT_SFX_ASSETS = Object.freeze(
 );
 
 export function combatSfxAsset(cue) {
-  return COMBAT_SFX_ASSETS[cue] || null;
+  return COMBAT_SFX_ASSETS[cue] || UI_SFX_ASSETS[cue] || null;
 }
 
 export function sceneMusicTrack(scene, context = {}) {
@@ -318,7 +338,14 @@ class SoundEngine {
 
   preloadCombatSfx() {
     if (!this.enabled) return Promise.resolve([]);
-    return Promise.all(COMBAT_SFX_CUES.map((cue) => this.loadCombatSfx(cue)));
+    const combatSfx = COMBAT_SFX_CUES.map((cue) =>
+      this.loadCombatSfx(cue),
+    );
+    const uiSfx = this.uiSfxPreloaded
+      ? []
+      : UI_SFX_CUES.map((cue) => this.loadCombatSfx(cue));
+    this.uiSfxPreloaded = true;
+    return Promise.all([...combatSfx, ...uiSfx]);
   }
 
   playGeneratedCombatSfx(cue) {
@@ -328,7 +355,11 @@ class SoundEngine {
     const source = context.createBufferSource();
     const gain = context.createGain();
     source.buffer = buffer;
-    gain.gain.value = cue === "battle-start" ? 0.92 : 0.8;
+    gain.gain.value = COMBAT_SFX_SET.has(cue)
+      ? cue === "battle-start"
+        ? 0.92
+        : 0.8
+      : 0.56;
     source.connect(gain);
     gain.connect(this.sfxCompressor || this.masterGain);
     source.start();
@@ -407,15 +438,18 @@ class SoundEngine {
   }
 
   click() {
-    this.tone(420, 0.06, { type: "triangle", volume: 0.018 });
+    return this.playUiCue("click");
   }
 
   confirm() {
-    this.tone(310, 0.12, {
-      type: "triangle",
-      endFrequency: 520,
-      volume: 0.025,
-    });
+    return this.playUiCue("confirm");
+  }
+
+  playUiCue(cue) {
+    if (!UI_SFX_CUES.includes(cue)) return false;
+    this.ensureContext();
+    this.loadCombatSfx(cue);
+    return this.playGeneratedCombatSfx(cue);
   }
 
   hit(heavy = false) {
