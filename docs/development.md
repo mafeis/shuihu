@@ -13,7 +13,9 @@ npm ci
 npm run dev
 ```
 
-开发服务器默认使用 Vite 的 `http://localhost:5173/`。本地生产预览使用 `npm run preview`。
+开发服务器和生产预览统一固定使用 `http://localhost:5173/`，端口被占用时会直接停止，不会自动切换到其他端口。
+
+Canvas 页面架构、页面构图、输入、响应式与无障碍标准见[引擎与 UI/UE 实践指南](engine_ui_ux_guide.md)。
 
 ## 快速门禁
 

@@ -1,0 +1,31 @@
+KENNEY GAME ASSETS
+
+VFX and combat sound effects used by this project are adapted from Kenney:
+
+- Particle Pack: https://kenney.nl/assets/particle-pack
+- Impact Sounds: https://kenney.nl/assets/impact-sounds
+- RPG Audio: https://kenney.nl/assets/rpg-audio
+- UI Audio: https://kenney.nl/assets/ui-audio
+
+Author: Kenney (www.kenney.nl)
+License: Creative Commons Zero 1.0 Universal (CC0)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The assets may be used, modified, and distributed in personal and commercial
+projects. Credit is not required. Kenney does not endorse this game.
+
+Battle VFX derivatives:
+slash_01 -> blade_arc.webp
+slash_02 -> blade_cut.webp
+spark_03 -> impact_spark.webp
+spark_05 -> hit_spark.webp
+smoke_03 -> heavy_dust.webp
+trace_03 -> volley_trace.webp
+star_05 -> ultimate_star.webp
+light_02 -> restore_glow.webp
+
+SFX derivatives use the original cue names in assets/audio/sfx. Source cue
+files are kept in assets/audio/sfx/source for reproducible mastering. The
+UI click is stored in assets/audio/ui/click.mp3. Source cue names and their
+license-link mapping are recorded in
+docs/kenney_assets.md and THIRD_PARTY_NOTICES.txt.

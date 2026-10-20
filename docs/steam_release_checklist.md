@@ -16,7 +16,7 @@
 
 ## 已完成验收
 
-- `npm run verify`：JavaScript、Python、Swift 静态检查、桌面发行安全加固、189 项运行时资产、10 首配乐与 10 枚战斗音效、Steamworks 配置、生成式 AI 披露、136 项单元测试与 Vite 生产构建通过。
+- `npm run verify`：JavaScript、Python、Swift 静态检查、桌面发行安全加固、187 项运行时资产、10 首配乐与 10 枚 Kenney CC0 战斗音效、Steamworks 配置、生成式 AI 披露、147 项单元测试与 Vite 生产构建通过。
 - 1.0.2 发布前的完整战役 E2E 已执行到战斗特效与移动端布局断言，但后续在“玉麟出府”和“连环退军鼓”出现随机自动战败超时，因此不把该次运行记作完整 E2E 通过；相关目标选择、辅助循环、推荐阵型与残局规则由单元测试和运行态检查覆盖。
 - 星劫浏览器回归覆盖六道风险规则展示、按最高波次解锁、三道同时启用上限、出阵确认、战斗 HUD、军功与资源倍率、永久纪录、奖励页保留和跨重启续局。
 - `npm run test:web`：生产构建中的 Web App Manifest、192px/512px 安装图标、Service Worker 激活与断网刷新进入标题界面通过；开发态不会注册 Service Worker。
@@ -31,7 +31,7 @@
 - 最新 macOS 原生包在隔离配置下使用不可用代理断网启动成功，首战教学与自动战斗正常推进。
 - 当前源码存档版本为 27；1.0.2 的 macOS 与 Windows x64 桌面包均已用当前源码重新打包。
 - 最新 macOS 原生包在隔离存档中破坏主存档后，可从备份恢复到“黄河夜渡”进度。
-- `assets/manifest.json` 中 189 项运行时资产均可读取，共 212,718,159 字节。
+- `assets/manifest.json` 中 187 项运行时资产均可读取，共 212,718,159 字节。
 - 最终战 17 张可见图片无损坏；敌我与好汉立绘均保持等比缩放。
 - 星图 40 个节点与 9 章评鉴总览对齐，可见图片无损坏、无 `fill` 拉伸。
 - 390px 视口下星图 40 个节点无重叠、9 章评鉴标签无截断、无横向溢出。
@@ -46,7 +46,7 @@
 - 标题视频暂停、加载失败或后台播放受阻时，静态汴京原画保持可见。
 - 22 项 Steam 商店素材通过尺寸、透明通道和视频编码校验。
 - `npm run steamworks:verify`：19 项成就、38 张 64x64 成就图标、6 项统计、3 个原生模块目标与 15 个手柄动作映射通过。
-- `npm run steam:ai:verify`：189 项运行时资产中的 177 项生成式资产披露清单通过，22 个运行时文件确认不含 ComfyUI、生成节点或模型端点。
+- `npm run steam:ai:verify`：187 项运行时资产中的 167 项生成式资产与 20 项 Kenney CC0 战斗表现资产披露通过，22 个运行时文件确认不含 ComfyUI、生成节点或模型端点。
 - `npm run security:verify`：93 项 CSP、PWA 安装边界、离线 Worker、权限拒绝、Electron 沙箱、macOS 显式 ad-hoc 身份、Hardened Runtime、主程序与辅助进程权限、Windows SHA-256 时间戳和第三方许可检查通过。
 - 设置页可读取 `THIRD_PARTY_NOTICES.txt`，其中包含 Electron、Chromium、steamworks.js、Valve Steamworks SDK 与 Lucide 许可说明。
 - Steam Achievements、Stats、Cloud、Rich Presence 与 Overlay 的桥接层已实现，无 Steam 环境自动降级为本地存档。

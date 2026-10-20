@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble selected generated files into a normalized asset package."""
+"""Assemble generated and open-source files into a normalized asset package."""
 
 from __future__ import annotations
 
@@ -7,10 +7,11 @@ import hashlib
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +23,21 @@ CHARACTER_ALPHA_THRESHOLD = 8
 
 
 ASSETS = [
+    # UI atmosphere
+    {
+        "id": "ui_song_cloud_pattern",
+        "type": "ui_texture",
+        "source": "assets/raw/shuihu_ui_song_cloud_pattern_v1_00001_.png",
+        "final": "assets/ui/ornaments/song_cloud_pattern.webp",
+        "workflow": "workflows/api/qwen_ui_song_cloud_pattern_v1.json",
+    },
+    {
+        "id": "ui_bronze_cloud_corner",
+        "type": "ui_ornament",
+        "source": "assets/raw/shuihu_ui_bronze_cloud_corner_v1_00001_.png",
+        "final": "assets/ui/ornaments/bronze_cloud_corner.png",
+        "workflow": "workflows/api/qwen_ui_bronze_cloud_corner_v1.json",
+    },
     # Characters
     {
         "id": "linchong_keyart",
@@ -1229,98 +1245,45 @@ VIDEO_ASSETS = [
     },
 ]
 
-VFX_ASSETS = [
+OPEN_SOURCE_VFX_ASSETS = [
     {
-        "id": "vfx_gang",
-        "type": "skill_vfx_video",
-        "source": "assets/vfx/gang.mp4",
-        "source_raw": "assets/raw/vfx/shuihu_vfx_gang_raw_00001_.mp4",
-        "final": "assets/vfx/gang.mp4",
-        "workflow": "workflows/api/minimax_vfx_gang_v1.json",
+        "id": f"kenney_vfx_{name}",
+        "type": "open_source_vfx",
+        "file": f"assets/vfx/kenney/{name}.webp",
+        "author": "Kenney",
+        "license": "CC0-1.0",
+        "source_url": "https://kenney.nl/assets/particle-pack",
+    }
+    for name in (
+        "blade_arc",
+        "blade_cut",
+        "impact_spark",
+        "hit_spark",
+        "heavy_dust",
+        "volley_trace",
+        "ultimate_star",
+        "restore_glow",
+    )
+]
+
+OPEN_SOURCE_AUDIO_ASSETS = [
+    {
+        "id": "kenney_ui_click",
+        "type": "open_source_ui_sfx",
+        "file": "assets/audio/ui/click.mp3",
+        "author": "Kenney",
+        "license": "CC0-1.0",
+        "source_url": "https://kenney.nl/assets/ui-audio",
+        "usage": "UI click and focus confirmation",
     },
     {
-        "id": "vfx_gang_alpha",
-        "type": "skill_vfx_alpha_video",
-        "source": "assets/vfx/gang-alpha.webm",
-        "source_raw": "assets/raw/vfx/shuihu_vfx_gang_raw_00001_.mp4",
-        "final": "assets/vfx/gang-alpha.webm",
-        "workflow": "workflows/api/minimax_vfx_gang_v1.json",
-    },
-    {
-        "id": "vfx_ling",
-        "type": "skill_vfx_video",
-        "source": "assets/vfx/ling.mp4",
-        "source_raw": "assets/raw/vfx/shuihu_vfx_ling_raw_00001_.mp4",
-        "final": "assets/vfx/ling.mp4",
-        "workflow": "workflows/api/minimax_vfx_ling_v1.json",
-    },
-    {
-        "id": "vfx_ling_alpha",
-        "type": "skill_vfx_alpha_video",
-        "source": "assets/vfx/ling-alpha.webm",
-        "source_raw": "assets/raw/vfx/shuihu_vfx_ling_raw_00001_.mp4",
-        "final": "assets/vfx/ling-alpha.webm",
-        "workflow": "workflows/api/minimax_vfx_ling_v1.json",
-    },
-    {
-        "id": "vfx_tao",
-        "type": "skill_vfx_video",
-        "source": "assets/vfx/tao.mp4",
-        "source_raw": "assets/raw/vfx/shuihu_vfx_tao_raw_00001_.mp4",
-        "final": "assets/vfx/tao.mp4",
-        "workflow": "workflows/api/minimax_vfx_tao_v1.json",
-    },
-    {
-        "id": "vfx_tao_alpha",
-        "type": "skill_vfx_alpha_video",
-        "source": "assets/vfx/tao-alpha.webm",
-        "source_raw": "assets/raw/vfx/shuihu_vfx_tao_raw_00001_.mp4",
-        "final": "assets/vfx/tao-alpha.webm",
-        "workflow": "workflows/api/minimax_vfx_tao_v1.json",
-    },
-    {
-        "id": "vfx_shou",
-        "type": "skill_vfx_video",
-        "source": "assets/vfx/shou.mp4",
-        "source_raw": "assets/raw/vfx/shuihu_vfx_shou_raw_00001_.mp4",
-        "final": "assets/vfx/shou.mp4",
-        "workflow": "workflows/api/minimax_vfx_shou_v1.json",
-    },
-    {
-        "id": "vfx_shou_alpha",
-        "type": "skill_vfx_alpha_video",
-        "source": "assets/vfx/shou-alpha.webm",
-        "source_raw": "assets/raw/vfx/shuihu_vfx_shou_raw_00001_.mp4",
-        "final": "assets/vfx/shou-alpha.webm",
-        "workflow": "workflows/api/minimax_vfx_shou_v1.json",
-    },
-    {
-        "id": "vfx_gang_poster",
-        "type": "skill_vfx_poster",
-        "source": "assets/vfx/gang-poster.png",
-        "final": "assets/vfx/gang-poster.png",
-        "workflow": "workflows/api/minimax_vfx_gang_v1.json",
-    },
-    {
-        "id": "vfx_ling_poster",
-        "type": "skill_vfx_poster",
-        "source": "assets/vfx/ling-poster.png",
-        "final": "assets/vfx/ling-poster.png",
-        "workflow": "workflows/api/minimax_vfx_ling_v1.json",
-    },
-    {
-        "id": "vfx_tao_poster",
-        "type": "skill_vfx_poster",
-        "source": "assets/vfx/tao-poster.png",
-        "final": "assets/vfx/tao-poster.png",
-        "workflow": "workflows/api/minimax_vfx_tao_v1.json",
-    },
-    {
-        "id": "vfx_shou_poster",
-        "type": "skill_vfx_poster",
-        "source": "assets/vfx/shou-poster.png",
-        "final": "assets/vfx/shou-poster.png",
-        "workflow": "workflows/api/minimax_vfx_shou_v1.json",
+        "id": "kenney_battle_open",
+        "type": "open_source_ui_sfx",
+        "file": "assets/audio/sfx/actions/battle-open-01.mp3",
+        "author": "Kenney",
+        "license": "CC0-1.0",
+        "source_url": "https://kenney.nl/assets/rpg-audio",
+        "usage": "Primary menu confirmation",
     },
 ]
 
@@ -1456,24 +1419,25 @@ SFX_ASSETS = [
         "id": cue,
         "type": "combat_sfx",
         "file": f"assets/audio/sfx/{cue}.mp3",
-        "pipeline": "ComfyUI YuE2 texture + deterministic transient mastering",
-        "model": "yue2_3b_int8_convrot.safetensors",
-        "workflow": "tools/comfy_sfx_pipeline.py",
-        "seed": seed,
-        "target_duration": duration,
+        "source": f"assets/audio/sfx/source/{cue}.wav",
+        "pipeline": "Kenney CC0 source derivative + deterministic mastering",
+        "author": "Kenney",
+        "license": "CC0-1.0",
+        "source_url": "https://kenney.nl/assets/impact-sounds",
+        "additional_source_urls": ["https://kenney.nl/assets/rpg-audio"],
         "usage": usage,
     }
-    for cue, seed, duration, usage in (
-        ("battle-start", 281001, 1.55, "battle opening hit"),
-        ("blade", 281013, 0.72, "single-target slash and stab"),
-        ("impact", 281031, 0.95, "heavy weapon and area impact"),
-        ("volley", 281047, 0.82, "arrows, darts and thrown weapons"),
-        ("guard", 281063, 0.88, "block, counter and defensive support"),
-        ("evade", 281081, 0.58, "miss and evasion"),
-        ("restore", 281099, 1.35, "healing and restorative support"),
-        ("ultimate", 281117, 1.6, "offensive ultimate and chain attack"),
-        ("victory", 281133, 1.9, "victory sting"),
-        ("defeat", 281151, 2.0, "defeat sting"),
+    for cue, usage in (
+        ("battle-start", "battle opening hit"),
+        ("blade", "single-target slash and stab"),
+        ("impact", "heavy weapon and area impact"),
+        ("volley", "arrows, darts and thrown weapons"),
+        ("guard", "block, counter and defensive support"),
+        ("evade", "miss and evasion"),
+        ("restore", "healing and restorative support"),
+        ("ultimate", "offensive ultimate and chain attack"),
+        ("victory", "victory sting"),
+        ("defeat", "defeat sting"),
     )
 ]
 
@@ -1580,6 +1544,31 @@ def normalize_character_cutout(path: Path) -> None:
     canvas.save(path, optimize=True)
 
 
+def normalize_ui_ornament(source: Path, target: Path) -> None:
+    with Image.open(source) as image:
+        rgb = image.convert("RGB")
+        alpha = ImageOps.grayscale(rgb).point(
+            lambda value: (
+                0
+                if value < 5
+                else min(255, int((value - 4) * 4.1))
+            )
+        )
+        rgba = rgb.convert("RGBA")
+        rgba.putalpha(alpha)
+        bounds = alpha.point(lambda value: 255 if value > 8 else 0).getbbox()
+        if not bounds:
+            raise SystemExit(f"UI ornament has no visible pixels: {source}")
+        ornament = rgba.crop(bounds)
+        side = max(ornament.width, ornament.height) + 16
+        canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+        canvas.alpha_composite(ornament, (8, 8))
+        if side > 512:
+            canvas.thumbnail((512, 512), Image.Resampling.LANCZOS)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        canvas.save(target, optimize=True)
+
+
 def audio_metadata(path: Path) -> dict[str, Any]:
     probe = subprocess.check_output(
         [
@@ -1610,26 +1599,42 @@ def audio_metadata(path: Path) -> dict[str, Any]:
     }
 
 
-def build_entry(asset: dict[str, str]) -> dict[str, Any]:
+def build_entry(asset: dict[str, str], materialize: bool = True) -> dict[str, Any]:
     source = ROOT / asset["source"]
     final = ROOT / asset["final"]
     workflow_path = ROOT / asset["workflow"]
-    if not source.exists():
-        raise FileNotFoundError(source)
-    if source != final:
-        final.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, final)
-    if asset["type"] == "character_cutout":
-        normalize_character_cutout(final)
-    if final.suffix.lower() == ".png" and asset["type"] not in {
-        "character_cutout",
-        "enemy_sprite",
-        "skill_vfx_poster",
-        "ui_icon_sheet",
-    }:
-        with Image.open(final) as image:
-            if image.mode != "RGB":
-                image.convert("RGB").save(final)
+    if materialize:
+        if not source.exists():
+            raise FileNotFoundError(source)
+        if asset["type"] == "ui_texture":
+            final.parent.mkdir(parents=True, exist_ok=True)
+            with Image.open(source) as image:
+                image.convert("RGB").save(
+                    final,
+                    format="WEBP",
+                    quality=91,
+                    method=6,
+                )
+        elif asset["type"] == "ui_ornament":
+            normalize_ui_ornament(source, final)
+        elif source != final:
+            final.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, final)
+        if asset["type"] == "character_cutout":
+            normalize_character_cutout(final)
+        if final.suffix.lower() == ".png" and asset["type"] not in {
+            "character_cutout",
+            "enemy_sprite",
+            "ui_icon_sheet",
+            "ui_ornament",
+        }:
+            with Image.open(final) as image:
+                if image.mode != "RGB":
+                    image.convert("RGB").save(final)
+    elif not final.exists():
+        raise FileNotFoundError(final)
+    if not workflow_path.exists():
+        raise FileNotFoundError(workflow_path)
     workflow = json.loads(workflow_path.read_text(encoding="utf-8"))
     entry: dict[str, Any] = {
         "id": asset["id"],
@@ -1671,21 +1676,38 @@ def build_audio_entry(asset: dict[str, Any]) -> dict[str, Any]:
     return entry
 
 
-def main() -> int:
+def build_open_source_vfx_entry(asset: dict[str, Any]) -> dict[str, Any]:
+    path = ROOT / asset["file"]
+    if not path.exists():
+        raise FileNotFoundError(path)
+    entry = {
+        **asset,
+        "sha256": sha256(path),
+        "bytes": path.stat().st_size,
+    }
+    entry.update(image_metadata(path))
+    return entry
+
+
+def main(materialize: bool = True) -> int:
     entries: list[dict[str, Any]] = []
     for asset in ASSETS:
-        entries.append(build_entry(asset))
+        entries.append(build_entry(asset, materialize=materialize))
     for asset in VIDEO_ASSETS:
         source = ROOT / asset["source"]
-        if source.exists():
-            entries.append(build_entry(asset))
+        if materialize and source.exists():
+            entries.append(build_entry(asset, materialize=True))
+        elif not materialize and (ROOT / asset["final"]).exists():
+            entries.append(build_entry(asset, materialize=False))
         else:
             print(f"Skipping missing video: {asset['source']}")
-    for asset in VFX_ASSETS:
-        entries.append(build_entry(asset))
+    for asset in OPEN_SOURCE_VFX_ASSETS:
+        entries.append(build_open_source_vfx_entry(asset))
     for asset in AUDIO_ASSETS:
         entries.append(build_audio_entry(asset))
     for asset in SFX_ASSETS:
+        entries.append(build_audio_entry(asset))
+    for asset in OPEN_SOURCE_AUDIO_ASSETS:
         entries.append(build_audio_entry(asset))
 
     icon_dir = ROOT / "assets/ui/icons"
@@ -1709,7 +1731,8 @@ def main() -> int:
             "image": "ComfyUI + Qwen Image 2.1",
             "video": "ComfyUI + MiniMax H3",
             "music": "ComfyUI + YuE2 3B",
-            "combat_sfx": "ComfyUI YuE2 texture + deterministic transient mastering",
+            "combat_sfx": "Kenney CC0 source derivative + deterministic mastering",
+            "battle_vfx": "Kenney CC0 Particle Pack derivatives rendered by Phaser 3",
             "upscale": "SeedVR2 7B (available for final engine textures)",
         },
         "asset_count": len(entries),
@@ -1725,4 +1748,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(materialize="--manifest-only" not in sys.argv))

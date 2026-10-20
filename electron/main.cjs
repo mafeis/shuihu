@@ -14,7 +14,7 @@ const { pathToFileURL } = require("node:url");
 const steam = require("./steam.cjs");
 
 const GAME_SCHEME = "game";
-const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:4173";
+const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
 const APP_USER_MODEL_ID = "com.xingmingshuihu.game";
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",

@@ -45,6 +45,24 @@ export const COMBAT_SFX_ASSETS = Object.freeze(
   ),
 );
 
+const UI_SFX_ASSETS = Object.freeze({
+  click: "/assets/audio/ui/click.mp3",
+  confirm: "/assets/audio/sfx/actions/battle-open-01.mp3",
+});
+
+const COMBAT_SFX_GAINS = Object.freeze({
+  "battle-start": 0.86,
+  blade: 0.72,
+  impact: 0.82,
+  volley: 0.7,
+  guard: 0.7,
+  evade: 0.54,
+  restore: 0.62,
+  ultimate: 0.84,
+  victory: 0.74,
+  defeat: 0.68,
+});
+
 export function combatSfxAsset(cue) {
   return COMBAT_SFX_ASSETS[cue] || null;
 }
@@ -105,7 +123,8 @@ class SoundEngine {
     this.sfxBuffers = new Map();
     this.sfxLoads = new Map();
     this.sfxLoadFailures = new Map();
-    this.generatedSfxPlays = 0;
+    this.openSourceSfxPlays = 0;
+    this.uiAudio = this.createUiAudio();
     this.lastCue = null;
     if (globalThis.window && globalThis.document) {
       globalThis.__shuihuAudioElements = () =>
@@ -119,7 +138,7 @@ class SoundEngine {
         loaded: [...this.sfxBuffers.keys()],
         loading: [...this.sfxLoads.keys()],
         failures: [...this.sfxLoadFailures.keys()],
-        generatedPlays: this.generatedSfxPlays,
+        openSourcePlays: this.openSourceSfxPlays,
       });
       globalThis.__shuihuCombatSfxPreload = () => this.preloadCombatSfx();
       globalThis.__shuihuSound = this;
@@ -195,6 +214,30 @@ class SoundEngine {
     layer.volume = 0;
     layer.dataset.track = "";
     return layer;
+  }
+
+  createUiAudio() {
+    const AudioElement = globalThis.Audio || globalThis.window?.Audio;
+    if (!AudioElement) return new Map();
+    return new Map(
+      Object.entries(UI_SFX_ASSETS).map(([cue, source]) => {
+        const audio = new AudioElement(source);
+        audio.preload = "auto";
+        audio.volume = cue === "click" ? 0.28 : 0.34;
+        return [cue, audio];
+      }),
+    );
+  }
+
+  playUiAudio(cue) {
+    if (!this.enabled || this.sfxVolume <= 0) return false;
+    const audio = this.uiAudio.get(cue);
+    if (!audio) return false;
+    audio.volume = (cue === "click" ? 0.28 : 0.34) * this.sfxVolume;
+    audio.currentTime = 0;
+    const attempt = audio.play?.();
+    attempt?.catch?.(() => {});
+    return true;
   }
 
   unlock() {
@@ -283,14 +326,13 @@ class SoundEngine {
     return this.context;
   }
 
-  loadCombatSfx(cue) {
-    const source = combatSfxAsset(cue);
+  loadSfxAsset(key, source) {
     const context = this.ensureContext();
     if (!source || !context) return Promise.resolve(null);
-    if (this.sfxBuffers.has(cue)) {
-      return Promise.resolve(this.sfxBuffers.get(cue));
+    if (this.sfxBuffers.has(key)) {
+      return Promise.resolve(this.sfxBuffers.get(key));
     }
-    if (this.sfxLoads.has(cue)) return this.sfxLoads.get(cue);
+    if (this.sfxLoads.has(key)) return this.sfxLoads.get(key);
     const load = globalThis
       .fetch(source, { cache: "force-cache" })
       .then((response) => {
@@ -301,19 +343,23 @@ class SoundEngine {
       })
       .then((payload) => context.decodeAudioData(payload))
       .then((buffer) => {
-        this.sfxBuffers.set(cue, buffer);
-        this.sfxLoadFailures.delete(cue);
+        this.sfxBuffers.set(key, buffer);
+        this.sfxLoadFailures.delete(key);
         return buffer;
       })
       .catch((error) => {
-        this.sfxLoadFailures.set(cue, String(error?.message || error));
+        this.sfxLoadFailures.set(key, String(error?.message || error));
         return null;
       })
       .finally(() => {
-        this.sfxLoads.delete(cue);
+        this.sfxLoads.delete(key);
       });
-    this.sfxLoads.set(cue, load);
+    this.sfxLoads.set(key, load);
     return load;
+  }
+
+  loadCombatSfx(cue) {
+    return this.loadSfxAsset(cue, combatSfxAsset(cue));
   }
 
   preloadCombatSfx() {
@@ -321,244 +367,45 @@ class SoundEngine {
     return Promise.all(COMBAT_SFX_CUES.map((cue) => this.loadCombatSfx(cue)));
   }
 
-  playGeneratedCombatSfx(cue) {
+  playCombatSample(cue) {
     const context = this.ensureContext();
     const buffer = this.sfxBuffers.get(cue);
     if (!context || !buffer || this.sfxVolume <= 0) return false;
     const source = context.createBufferSource();
     const gain = context.createGain();
     source.buffer = buffer;
-    gain.gain.value = cue === "battle-start" ? 0.92 : 0.8;
+    gain.gain.value = COMBAT_SFX_GAINS[cue] || 0.72;
     source.connect(gain);
     gain.connect(this.sfxCompressor || this.masterGain);
     source.start();
-    this.generatedSfxPlays += 1;
+    this.openSourceSfxPlays += 1;
     return true;
   }
 
-  noise(duration, options = {}) {
-    const context = this.ensureContext();
-    if (!context || this.sfxVolume <= 0) return;
-    const start = Math.max(0, options.delay || 0);
-    const source = context.createBufferSource();
-    const filter = context.createBiquadFilter();
-    const gain = context.createGain();
-    const frameCount = Math.max(1, Math.ceil(context.sampleRate * (duration + start)));
-    const buffer = context.createBuffer(1, frameCount, context.sampleRate);
-    const samples = buffer.getChannelData(0);
-    let noise = 0;
-    for (let index = 0; index < frameCount; index += 1) {
-      noise = noise * 0.72 + (Math.random() * 2 - 1) * 0.28;
-      samples[index] = noise;
-    }
-    source.buffer = buffer;
-    filter.type = options.filter || "bandpass";
-    filter.frequency.setValueAtTime(options.frequency || 1600, context.currentTime);
-    if (options.endFrequency) {
-      filter.frequency.exponentialRampToValueAtTime(
-        options.endFrequency,
-        context.currentTime + start + duration,
-      );
-    }
-    filter.Q.value = options.q || 0.8;
-    gain.gain.setValueAtTime(0.0001, context.currentTime);
-    gain.gain.linearRampToValueAtTime(
-      options.volume || 0.1,
-      context.currentTime + start + (options.attack || 0.008),
-    );
-    gain.gain.exponentialRampToValueAtTime(
-      0.0001,
-      context.currentTime + start + duration,
-    );
-    source.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.sfxCompressor || this.masterGain);
-    source.start(context.currentTime + start);
-    source.stop(context.currentTime + start + duration + 0.03);
-  }
-
-  tone(frequency, duration, options = {}) {
-    const context = this.ensureContext();
-    if (!context || this.sfxVolume <= 0) return;
-    const start = Math.max(0, options.delay || 0);
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.type = options.type || "sine";
-    oscillator.frequency.setValueAtTime(frequency, context.currentTime + start);
-    if (options.endFrequency) {
-      oscillator.frequency.exponentialRampToValueAtTime(
-        Math.max(20, options.endFrequency),
-        context.currentTime + start + duration,
-      );
-    }
-    gain.gain.setValueAtTime(0.0001, context.currentTime + start);
-    gain.gain.exponentialRampToValueAtTime(
-      options.volume || 0.025,
-      context.currentTime + start + 0.012,
-    );
-    gain.gain.exponentialRampToValueAtTime(
-      0.0001,
-      context.currentTime + start + duration,
-    );
-    oscillator.connect(gain);
-    gain.connect(this.sfxCompressor || this.masterGain);
-    oscillator.start(context.currentTime + start);
-    oscillator.stop(context.currentTime + start + duration + 0.02);
-  }
-
   click() {
-    this.tone(420, 0.06, { type: "triangle", volume: 0.018 });
+    return this.playUiAudio("click");
   }
 
   confirm() {
-    this.tone(310, 0.12, {
-      type: "triangle",
-      endFrequency: 520,
-      volume: 0.025,
-    });
-  }
-
-  hit(heavy = false) {
-    this.noise(heavy ? 0.24 : 0.12, {
-      frequency: heavy ? 650 : 1600,
-      endFrequency: heavy ? 120 : 650,
-      volume: heavy ? 0.16 : 0.07,
-    });
-    this.tone(heavy ? 86 : 150, heavy ? 0.2 : 0.1, {
-      type: "sine",
-      endFrequency: heavy ? 38 : 72,
-      volume: heavy ? 0.16 : 0.06,
-    });
-  }
-
-  blade() {
-    this.noise(0.16, {
-      filter: "highpass",
-      frequency: 2200,
-      volume: 0.075,
-    });
-    this.noise(0.16, {
-      frequency: 4500,
-      endFrequency: 1400,
-      volume: 0.1,
-      delay: 0.04,
-    });
-  }
-
-  volley() {
-    this.noise(0.2, {
-      filter: "highpass",
-      frequency: 1100,
-      endFrequency: 3200,
-      volume: 0.045,
-    });
-    this.tone(950, 0.08, {
-      type: "triangle",
-      endFrequency: 250,
-      volume: 0.02,
-    });
-    this.hit(false);
-  }
-
-  guard() {
-    this.hit(false);
-    this.tone(340, 0.16, {
-      type: "square",
-      endFrequency: 270,
-      volume: 0.04,
-    });
-    this.tone(680, 0.12, { type: "sine", volume: 0.03 });
-  }
-
-  evade() {
-    this.noise(0.16, {
-      filter: "highpass",
-      frequency: 2500,
-      volume: 0.035,
-    });
-    this.tone(820, 0.1, {
-      type: "sine",
-      endFrequency: 1350,
-      volume: 0.02,
-    });
-  }
-
-  restore() {
-    [520, 654, 784].forEach((frequency, index) => {
-      this.tone(frequency, 0.3, {
-        type: "sine",
-        delay: index * 0.07,
-        volume: 0.025,
-      });
-    });
-  }
-
-  ultimate() {
-    this.noise(0.32, {
-      filter: "highpass",
-      frequency: 1800,
-      volume: 0.08,
-    });
-    [196, 294, 392, 587].forEach((frequency, index) => {
-      this.tone(frequency, 0.25, {
-        type: "triangle",
-        delay: index * 0.055,
-        volume: 0.03,
-      });
-    });
-    this.hit(true);
-  }
-
-  battleStart() {
-    this.hit(true);
-    this.tone(98, 0.45, {
-      type: "triangle",
-      endFrequency: 62,
-      delay: 0.04,
-      volume: 0.06,
-    });
+    return this.playUiAudio("confirm");
   }
 
   victory() {
-    [262, 330, 392, 523].forEach((frequency, index) => {
-      this.tone(frequency, 0.28, {
-        type: "triangle",
-        delay: index * 0.095,
-        volume: 0.035,
-      });
-    });
+    return this.playCombatCue("victory");
   }
 
   defeat() {
-    [220, 174, 130].forEach((frequency, index) => {
-      this.tone(frequency, 0.42, {
-        type: "sine",
-        endFrequency: frequency * 0.76,
-        delay: index * 0.13,
-        volume: 0.032,
-      });
-    });
+    return this.playCombatCue("defeat");
   }
 
   playCombatCue(cue) {
     if (!COMBAT_SFX_CUES.includes(cue)) return false;
     this.lastCue = cue;
     this.ensureContext();
-    this.loadCombatSfx(cue);
-    if (this.playGeneratedCombatSfx(cue)) return true;
-    const actions = {
-      "battle-start": () => this.battleStart(),
-      blade: () => this.blade(),
-      impact: () => this.hit(true),
-      volley: () => this.volley(),
-      guard: () => this.guard(),
-      evade: () => this.evade(),
-      restore: () => this.restore(),
-      ultimate: () => this.ultimate(),
-      victory: () => this.victory(),
-      defeat: () => this.defeat(),
-    };
-    actions[cue]();
+    if (this.playCombatSample(cue)) return true;
+    this.loadCombatSfx(cue).then((buffer) => {
+      if (buffer) this.playCombatSample(cue);
+    });
     return true;
   }
 }

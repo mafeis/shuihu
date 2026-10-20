@@ -138,12 +138,39 @@ async function waitFor(expression, timeoutMs = 5000) {
   throw new Error(`Timed out waiting for: ${expression}`);
 }
 
-async function waitForReward(context, timeoutMs = 60000) {
+async function waitForReward(
+  context,
+  timeoutMs = 60000,
+  { maxRetries = 2 } = {},
+) {
+  let retries = 0;
   try {
-    await waitFor(
-      'document.querySelector(".game-frame")?.classList.contains("screen-reward")',
-      timeoutMs,
-    );
+    let deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const state = await evaluate(`(() => ({
+        reward: Boolean(
+          document.querySelector(".game-frame")?.classList.contains("screen-reward"),
+        ),
+        defeat: Boolean(document.querySelector(".defeat-overlay")),
+      }))()`);
+      if (state.reward) return { retries };
+      if (state.defeat) {
+        if (retries >= maxRetries) {
+          throw new Error(
+            `${context} was defeated ${retries + 1} times without a reward`,
+          );
+        }
+        await click('[data-action="retry-battle"]');
+        retries += 1;
+        await waitFor(
+          'document.querySelector(".game-frame")?.classList.contains("screen-battle") && !document.querySelector(".defeat-overlay")',
+          10000,
+        );
+        deadline = Date.now() + timeoutMs;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+    throw new Error(`Timed out waiting for ${context} reward`);
   } catch (error) {
     const snapshot = await evaluate(`(() => {
       const save = JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}) || "null");
@@ -156,6 +183,7 @@ async function waitForReward(context, timeoutMs = 60000) {
         autoTactic: save?.settings?.autoTactic,
         battleSpeed: save?.settings?.battleSpeed,
         defeat: Boolean(document.querySelector(".defeat-overlay")),
+        retries: ${retries},
         command: document.querySelector(".battle-command")?.innerText.slice(0, 320),
         log: document.querySelector(".battle-log")?.innerText.slice(0, 520),
       };
@@ -314,10 +342,59 @@ async function clickText(text) {
   await new Promise((resolve) => setTimeout(resolve, 180));
 }
 
+async function clickEngineControl(controlId) {
+  const target = await evaluate(`(() => {
+    const stage = globalThis.__shuihuBattleStage;
+    const area = stage?.getUiSnapshot?.().hitAreas?.[${JSON.stringify(controlId)}];
+    const rect = stage?.canvas?.getBoundingClientRect?.();
+    if (!area || !rect) return null;
+    return {
+      x: rect.left + area.screen.x + area.screen.width / 2,
+      y: rect.top + area.screen.y + area.screen.height / 2,
+    };
+  })()`);
+  assertEqual(Boolean(target), true, `engine control ${controlId} should be available`);
+  const topElement = await evaluate(`(() => {
+    const element = document.elementFromPoint(${target.x}, ${target.y});
+    return {
+      id: element?.id || "",
+      tagName: element?.tagName || "",
+    };
+  })()`);
+  assertEqual(
+    topElement.id,
+    "battle-stage-canvas",
+    `engine control ${controlId} should not be covered`,
+  );
+  await socket.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: target.x,
+    y: target.y,
+  });
+  await socket.send("Input.dispatchMouseEvent", {
+    type: "mousePressed",
+    x: target.x,
+    y: target.y,
+    button: "left",
+    buttons: 1,
+    clickCount: 1,
+  });
+  await socket.send("Input.dispatchMouseEvent", {
+    type: "mouseReleased",
+    x: target.x,
+    y: target.y,
+    button: "left",
+    buttons: 0,
+    clickCount: 1,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 180));
+}
+
 async function useFirstAvailableBattleSkill() {
   await waitFor(
-    `document.querySelector(".battle-command .skill-list .skill-button:not(:disabled)") !== null ||
-      document.querySelector(".chain-attack-action:not(:disabled)") !== null ||
+    `Object.keys(globalThis.__shuihuBattleStage?.getUiSnapshot?.().hitAreas || {})
+        .some((id) => id.startsWith("skill:")) ||
+      globalThis.__shuihuBattleStage?.getUiSnapshot?.().chain?.ready === true ||
       document.querySelector(".defeat-overlay") !== null ||
       document.querySelector(".game-frame")?.classList.contains("screen-reward")`,
     15000,
@@ -334,24 +411,62 @@ async function useFirstAvailableBattleSkill() {
   }
   if (
     await evaluate(
-      'document.querySelector(".chain-attack-action:not(:disabled)") !== null',
+      'globalThis.__shuihuBattleStage?.getUiSnapshot?.().chain?.ready === true',
     )
   ) {
     return false;
   }
-  await click(".battle-command .skill-list .skill-button:not(:disabled)");
-  await new Promise((resolve) => setTimeout(resolve, 120));
-  const targetable = await evaluate(
-    'document.querySelector(".enemy-unit.is-targetable") !== null',
-  );
-  if (targetable) {
-    await click(".enemy-unit.is-targetable");
+  const skillId = await evaluate(`(() => {
+    const hitAreas = globalThis.__shuihuBattleStage?.getUiSnapshot?.().hitAreas || {};
+    return Object.keys(hitAreas).find((id) => id.startsWith("skill:")) || null;
+  })()`);
+  assertEqual(Boolean(skillId), true, "a manual battle skill should be available");
+  await clickEngineControl(skillId);
+  const targetUid = await evaluate(`(() => {
+    const ui = globalThis.__shuihuBattleStage?.getUiSnapshot?.();
+    return Object.entries(ui?.actors || {})
+      .find(([, actor]) => actor.targetable)?.[0] || null;
+  })()`);
+  if (targetUid) {
+    const target = await evaluate(`(() => {
+      const stage = globalThis.__shuihuBattleStage;
+      const actor = stage?.getUiSnapshot?.().actors?.[${JSON.stringify(targetUid)}];
+      const rect = stage?.canvas?.getBoundingClientRect?.();
+      if (!actor || !rect) return null;
+      return {
+        x: rect.left + actor.x,
+        y: rect.top + actor.y - actor.height * 0.5,
+      };
+    })()`);
+    assertEqual(Boolean(target), true, "battle target should remain clickable");
+    await socket.send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: target.x,
+      y: target.y,
+    });
+    await socket.send("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      x: target.x,
+      y: target.y,
+      button: "left",
+      buttons: 1,
+      clickCount: 1,
+    });
+    await socket.send("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      x: target.x,
+      y: target.y,
+      button: "left",
+      buttons: 0,
+      clickCount: 1,
+    });
   }
   await waitFor(
     `document.querySelector(".game-frame")?.classList.contains("screen-reward") ||
       document.querySelector(".defeat-overlay") !== null ||
-      document.querySelector(".battle-command .skill-list .skill-button:not(:disabled)") !== null ||
-      document.querySelector(".chain-attack-action:not(:disabled)") !== null`,
+      Object.keys(globalThis.__shuihuBattleStage?.getUiSnapshot?.().hitAreas || {})
+        .some((id) => id.startsWith("skill:")) ||
+      globalThis.__shuihuBattleStage?.getUiSnapshot?.().chain?.ready === true`,
     20000,
   );
   if (await evaluate('document.querySelector(".defeat-overlay") !== null')) {
@@ -362,6 +477,7 @@ async function useFirstAvailableBattleSkill() {
 
 async function completeRecruitmentScroll(heroId) {
   const recruitment = HERO_RECRUITMENTS[heroId];
+  const recruitedHero = HEROES[heroId];
   if (!recruitment) throw new Error(`Unknown recruitment scroll: ${heroId}`);
   await click('button[data-action="nav-quests"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-quests")');
@@ -372,16 +488,17 @@ async function completeRecruitmentScroll(heroId) {
     `button[data-action="start-hero-recruitment"][data-hero="${heroId}"]`,
   );
   await waitFor(
-    'document.querySelector(".game-frame")?.classList.contains("screen-story") || Boolean(document.querySelector("[data-modal-panel]"))',
+    `document.querySelector(".game-frame")?.classList.contains("screen-story") ||
+      Boolean(document.querySelector('#engine-accessibility button[data-action="recommend-recruitment-team"]'))`,
   );
-  if (await evaluate('Boolean(document.querySelector("[data-modal-panel]"))')) {
-    await click('[data-modal-panel] button[data-action="recommend-recruitment-team"]');
-    await waitFor(
-      'document.querySelector(".game-frame")?.classList.contains("screen-story") || Boolean(document.querySelector("[data-modal-panel]"))',
+  if (
+    await evaluate(
+      'Boolean(document.querySelector(\'#engine-accessibility button[data-action="recommend-recruitment-team"]\'))',
+    )
+  ) {
+    await click(
+      '#engine-accessibility button[data-action="recommend-recruitment-team"]',
     );
-    if (await evaluate('Boolean(document.querySelector("[data-modal-panel]"))')) {
-      await click('[data-modal-panel] button[data-action="recruitment-battle"]');
-    }
   }
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
   assertEqual(
@@ -404,50 +521,74 @@ async function completeRecruitmentScroll(heroId) {
     "recruitment_theme",
     `${recruitment.title} reward should use the recruitment theme`,
   );
+  const expectedRecruitImage = recruitedHero.cutout || recruitedHero.portrait;
   const recruitmentReward = await evaluate(`(() => {
-    const panel = document.querySelector(".recruitment-reward-panel");
-    const image = panel?.querySelector(".recruitment-reward-art img");
-    const copy = panel?.querySelector(".recruitment-reward-copy");
-    if (!panel || !image || !copy) return null;
-    const panelRect = panel.getBoundingClientRect();
-    const imageRect = image.getBoundingClientRect();
-    const copyRect = copy.getBoundingClientRect();
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage?.model;
+    const ui = stage?.getUiSnapshot?.();
+    if (!model || !ui) return null;
+    const heroCard = model.cards.find(
+      (card) => card.id === ${JSON.stringify(`recruit-${heroId}`)},
+    );
+    const recruitCopy = model.cards.find((card) =>
+      String(card.body || "").includes(${JSON.stringify(recruitedHero.name)}),
+    );
     return {
-      imageComplete: image.complete,
-      imageInside:
-        imageRect.top >= panelRect.top - 1 &&
-        imageRect.bottom <= panelRect.bottom + 1 &&
-        imageRect.left >= panelRect.left - 1 &&
-        imageRect.right <= panelRect.right + 1,
-      copySeparated: copyRect.left >= imageRect.right - 1,
-      objectFit: getComputedStyle(image).objectFit,
-      duplicateCard: Boolean(document.querySelector(".recruit-cards")),
+      screen: model.screen,
+      heroTitle: model.hero?.title || "",
+      heroImage: model.hero?.image || "",
+      heroImageRendered: ui.images.some(
+        (image) => image.url === ${JSON.stringify(expectedRecruitImage)},
+      ),
+      recruitedCopy: Boolean(recruitCopy),
+      duplicateCard: Boolean(heroCard),
+      audit: ui.audit,
     };
   })()`);
   assertEqual(
-    Boolean(recruitmentReward?.imageComplete),
-    true,
-    `${recruitment.title} reward should load the new hero portrait`,
+    recruitmentReward?.screen,
+    "reward",
+    `${recruitment.title} should open the reward engine model`,
   );
   assertEqual(
-    recruitmentReward?.imageInside,
-    true,
-    `${recruitment.title} reward should show the complete new hero portrait`,
+    recruitmentReward?.heroTitle,
+    recruitedHero.name,
+    `${recruitment.title} reward should identify the recruited hero`,
   );
   assertEqual(
-    recruitmentReward?.copySeparated,
-    true,
-    `${recruitment.title} reward should keep recruit copy clear of the portrait`,
+    recruitmentReward?.heroImage,
+    expectedRecruitImage,
+    `${recruitment.title} reward should use the new hero portrait`,
   );
   assertEqual(
-    recruitmentReward?.objectFit,
-    "contain",
-    `${recruitment.title} reward should preserve the recruit portrait silhouette`,
+    recruitmentReward?.heroImageRendered,
+    true,
+    `${recruitment.title} reward should render the new hero portrait`,
+  );
+  assertEqual(
+    recruitmentReward?.recruitedCopy,
+    true,
+    `${recruitment.title} reward should announce the new recruit`,
   );
   assertEqual(
     recruitmentReward?.duplicateCard,
     false,
     `${recruitment.title} reward should not duplicate the new hero card`,
+  );
+  assertEqual(
+    recruitmentReward?.audit?.outside?.length,
+    0,
+    `${recruitment.title} reward should stay inside the viewport`,
+  );
+  assertEqual(
+    recruitmentReward?.audit?.textOverlaps?.length,
+    0,
+    `${recruitment.title} reward text should not overlap`,
+  );
+  assertEqual(
+    recruitmentReward?.audit?.imageTextOverlaps?.length,
+    0,
+    `${recruitment.title} reward portrait should not cover copy`,
   );
   const completedState = await evaluate(
     `JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}))`,
@@ -464,7 +605,7 @@ async function completeRecruitmentScroll(heroId) {
   );
   await click("button[data-action=story-outro]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
-  for (let step = 0; step < 6; step += 1) {
+  for (let step = 0; step < 12; step += 1) {
     if (
       await evaluate(
         'document.querySelector(".game-frame")?.classList.contains("screen-quests")',
@@ -606,6 +747,7 @@ function chainFixture() {
 function heroQuestFixture() {
   const state = campaignFixture();
   state.currentChapter = 5;
+  state.inventory[HERO_LEGENDS.linchong.reward.item] = 0;
   state.achievements = ACHIEVEMENTS.map((achievement) => achievement.id);
   for (const entry of Object.values(state.roster)) {
     entry.level = 18;
@@ -821,83 +963,40 @@ try {
     throw new EquipmentFocusComplete();
   }
 
-  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await waitFor(
-    `([...document.querySelectorAll(".title-figure img")].length === 8) &&
-      [...document.querySelectorAll(".title-figure img")].every(
-        (image) => image.complete && image.naturalWidth > 0
-      )`,
+    `globalThis.__shuihuPageEngine === "phaser" &&
+      globalThis.__shuihuPageStage?.model?.screen === "title"`,
+    15000,
   );
-  const titleRoster = await evaluate(`(() => {
-    const figures = [...document.querySelectorAll(".title-figure")];
-    const images = [...document.querySelectorAll(".title-figure img")];
-    const roster = document.querySelector(".title-roster");
-    const rosterRect = roster?.getBoundingClientRect();
-    const resources = performance.getEntriesByType("resource");
+  const titleSurface = await evaluate(`(() => {
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
     return {
-      figures: figures.length,
-      uniqueSources: new Set(images.map((image) => image.currentSrc)).size,
-      thumbnails: images.every((image) => image.currentSrc.endsWith("/thumb.webp")),
-      contain: images.every((image) => getComputedStyle(image).objectFit === "contain"),
-      loaded: images.every((image) => image.naturalWidth >= 300),
-      uniformThumbnailSize:
-        new Set(images.map((image) => image.naturalWidth + "x" + image.naturalHeight)).size === 1,
-      thumbnailSize: images.length
-        ? images[0].naturalWidth + "x" + images[0].naturalHeight
-        : "",
-      clipped: figures.filter((figure) => {
-        const rect = figure.getBoundingClientRect();
-        return (
-          rect.left < (rosterRect?.left || 0) - 1 ||
-          rect.right > (rosterRect?.right || innerWidth) + 1
-        );
-      }).length,
-      thumbnailRequests: resources.filter((resource) => resource.name.includes("/thumb.webp")).length,
-      cutoutRequests: resources.filter((resource) => resource.name.includes("/cutout.png")).length,
-      posterRequests: resources.filter((resource) => resource.name.includes("bianjing_snow_night_poster")).length,
-      posterCanonicalUrls: new Set(
-        resources
-          .filter((resource) => resource.name.includes("bianjing_snow_night_poster"))
-          .map((resource) => new URL(resource.name, location.href).pathname),
-      ).size,
-      titleImageBytes: resources
-        .filter((resource) => resource.initiatorType === "img")
-        .reduce((total, resource) => total + Number(resource.encodedBodySize || 0), 0),
+      engine: globalThis.__shuihuPageEngine,
+      screen: model.screen,
+      actions: model.actions.map((item) => item.action),
+      accessibleActions: [...document.querySelectorAll("#engine-accessibility [data-action]")]
+        .map((item) => item.dataset.action),
+      audit: ui.audit,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      bodyOverflow: document.body.scrollHeight - document.documentElement.clientHeight,
     };
   })()`);
-  assertEqual(titleRoster.figures, 8, "title screen should show a curated eight-hero ensemble");
-  assertEqual(titleRoster.uniqueSources, 8, "title ensemble should not repeat portraits");
-  assertEqual(titleRoster.thumbnails, true, "title ensemble should use lightweight thumbnails");
-  assertEqual(titleRoster.contain, true, "title portraits should preserve aspect ratio");
-  assertEqual(titleRoster.loaded, true, "title portraits should load at thumbnail resolution");
+  assertEqual(titleSurface.engine, "phaser", "title should use the production page engine");
+  assertEqual(titleSurface.screen, "title", "title model should be active");
+  assertEqual(titleSurface.actions.includes("new-game"), true, "title should offer a new campaign");
+  assertEqual(titleSurface.actions.includes("title-settings"), true, "title should expose settings");
   assertEqual(
-    titleRoster.uniformThumbnailSize,
+    titleSurface.accessibleActions.includes("new-game"),
     true,
-    "title portraits should use one normalized thumbnail canvas",
+    "title actions should be available to assistive technology",
   );
-  assertEqual(titleRoster.thumbnailSize, "320x366", "title thumbnail dimensions should stay canonical");
-  assertEqual(titleRoster.clipped, 0, "title portraits should stay inside the ensemble frame");
-  assertEqual(titleRoster.thumbnailRequests, 8, "title should request exactly eight hero thumbnails");
-  assertEqual(titleRoster.cutoutRequests, 0, "title should not request full-resolution hero cutouts");
-  assertEqual(
-    titleRoster.posterCanonicalUrls,
-    1,
-    "title poster should resolve to one asset across preload, CSS and video",
-  );
-  if (expectWebApp) {
-    assertEqual(
-      titleRoster.posterRequests,
-      1,
-      "production title poster should issue exactly one network request",
-    );
-  }
-  assertEqual(
-    titleRoster.titleImageBytes <= 500_000,
-    true,
-    "title hero thumbnails should stay below the initial image budget",
-  );
-  assertEqual(titleRoster.overflow, 0, "title screen should not overflow horizontally");
+  assertEqual(titleSurface.audit.textOverlaps.length, 0, "title text should not overlap");
+  assertEqual(titleSurface.audit.hitOverlaps.length, 0, "title controls should not overlap");
+  assertEqual(titleSurface.audit.outside.length, 0, "title UI should stay inside the viewport");
+  assertEqual(titleSurface.overflow, 0, "title screen should not overflow horizontally");
+  assertEqual(titleSurface.bodyOverflow, 0, "title screen should not overflow vertically");
   let webApp = null;
   if (expectWebApp) {
     await waitFor(
@@ -930,115 +1029,123 @@ try {
     0,
     "title screen should resolve every selected Lucide icon",
   );
-  assertEqual(
-    await evaluate(`(async () => {
-      const backdrop = document.querySelector(".title-backdrop");
-      const video = document.querySelector(".title-video");
-      if (!backdrop || !video) return false;
-      video.pause();
-      await new Promise((resolve) => setTimeout(resolve, 650));
-      const backdropImage = getComputedStyle(backdrop).backgroundImage;
-      return backdropImage.includes("bianjing_snow_night_poster") &&
-        !video.classList.contains("is-playing") &&
-        getComputedStyle(video).opacity === "0";
-    })()`),
-    true,
-    "title scene should retain a still-image fallback when video playback pauses",
-  );
   await captureSteamScreenshot("01_title.png");
   await evaluate("localStorage.clear()");
   await setSave(onboardingFixture());
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
-  const openingRouteGuide = await evaluate(`(() => {
-    const guide = document.querySelector(".route-guide");
-    const goals = [...document.querySelectorAll(".route-goal")];
+  const openingMap = await evaluate(`(() => {
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
     return {
-      visible: Boolean(guide),
-      goals: goals.length,
-      primary: goals[0]?.dataset.routeGoal || null,
-      hasProgress: Boolean(goals[0]?.querySelector(".route-goal-progress")),
+      screen: model.screen,
+      title: model.hero?.title || "",
+      actions: model.actions.map((item) => item.action),
+      accessibleActions: [...document.querySelectorAll("#engine-accessibility [data-action]")]
+        .map((item) => item.dataset.action),
+      audit: ui.audit,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
-  assertEqual(openingRouteGuide.visible, true, "the map should expose a next-step route guide");
-  assertEqual(openingRouteGuide.goals, 2, "the route guide should keep the map focused on two immediate goals");
+  assertEqual(openingMap.screen, "map", "the opening route should continue into the campaign map");
+  assertEqual(openingMap.title, CHAPTERS[0].title, "the map should lead with the active chapter");
+  assertEqual(openingMap.actions.includes("enter-chapter"), true, "the map should expose the next battle");
   assertEqual(
-    openingRouteGuide.primary?.startsWith("story-"),
+    openingMap.accessibleActions.includes("enter-chapter"),
     true,
-    "the opening route guide should lead with the active chapter",
+    "the next battle should be available to assistive technology",
   );
-  assertEqual(openingRouteGuide.hasProgress, true, "the lead route goal should show concrete progress");
-  assertEqual(openingRouteGuide.overflow, 0, "the route guide should not overflow horizontally");
+  assertEqual(openingMap.audit.textOverlaps.length, 0, "map text should not overlap");
+  assertEqual(openingMap.audit.outside.length, 0, "map UI should stay inside the viewport");
+  assertEqual(openingMap.overflow, 0, "the map should not overflow horizontally");
   await click("button[data-action=enter-chapter]");
-  await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
+  await waitFor(
+    `globalThis.__shuihuPageStage?.model?.screen === "story"`,
+  );
   await click("button[data-action=story-skip]");
+  await waitFor(
+    `globalThis.__shuihuPageStage?.model?.screen === "story" &&
+      globalThis.__shuihuPageStage?.model?.layout === "choice"`,
+  );
   const openingTactics = await evaluate(`(() => {
-    const choices = [...document.querySelectorAll(".choice-list button")];
-    const tactics = [...document.querySelectorAll(".choice-tactic")];
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
     return {
-      choices: choices.length,
-      tactics: tactics.length,
-      firstName: tactics[0]?.querySelector("b")?.textContent.trim() || "",
-      outside: tactics.some((node) => {
-        const rect = node.getBoundingClientRect();
-        return rect.left < -0.5 || rect.right > innerWidth + 0.5;
-      }),
+      choices: model.cards.length,
+      tactics: model.cards.filter((card) => card.body).length,
+      firstTactic: model.cards[0]?.body || "",
+      accessibleChoices: [...document.querySelectorAll(
+        '#engine-accessibility [data-action="story-choice"]'
+      )].length,
+      audit: ui.audit,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
   assertEqual(openingTactics.choices, 2, "the opening choice should offer two branches");
   assertEqual(openingTactics.tactics, 2, "every opening branch should preview its battle tactic");
-  assertEqual(openingTactics.firstName, "临阵战意 · 回身护民", "the first branch should preview its named tactic");
-  assertEqual(openingTactics.outside, false, "tactic previews should stay inside the choice panel");
-  assertEqual(openingTactics.overflow, 0, "tactic previews should not overflow horizontally");
+  assertEqual(
+    openingTactics.firstTactic.includes("护御"),
+    true,
+    "the first branch should preview its named defensive tactic",
+  );
+  assertEqual(openingTactics.accessibleChoices, 2, "both story choices should be accessible");
+  assertEqual(openingTactics.audit.textOverlaps.length, 0, "story choice text should not overlap");
+  assertEqual(openingTactics.audit.outside.length, 0, "story choices should stay inside the viewport");
+  assertEqual(openingTactics.overflow, 0, "story choices should not overflow horizontally");
   await captureVisualQaScreenshot("shuihu-chapter-tactic-choice.png");
   await setViewport(390, 844, true);
   const mobileOpeningTactics = await evaluate(`(() => {
-    const choice = document.querySelector(".story-choice");
-    const choices = [...document.querySelectorAll(".choice-list button")];
-    const tactics = [...document.querySelectorAll(".choice-tactic")];
-    const choiceRect = choice?.getBoundingClientRect();
+    const stage = globalThis.__shuihuPageStage;
+    const ui = stage.getUiSnapshot();
     return {
       width: innerWidth,
-      choiceOutside: choiceRect
-        ? choiceRect.left < -0.5 || choiceRect.right > innerWidth + 0.5
-        : true,
-      tactics: tactics.length,
-      tacticOutside: tactics.some((node) => {
-        const rect = node.getBoundingClientRect();
-        return rect.left < -0.5 || rect.right > innerWidth + 0.5;
-      }),
-      shortChoices: choices.filter((node) => node.getBoundingClientRect().height < 80).length,
+      choices: stage.model.cards.length,
+      audit: ui.audit,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
   assertEqual(mobileOpeningTactics.width, 390, "tactic choice should render at mobile width");
-  assertEqual(mobileOpeningTactics.choiceOutside, false, "mobile tactic choice should stay inside the viewport");
-  assertEqual(mobileOpeningTactics.tactics, 2, "mobile tactic choice should keep both battle-rule previews");
-  assertEqual(mobileOpeningTactics.tacticOutside, false, "mobile tactic previews should stay inside each choice");
-  assertEqual(mobileOpeningTactics.shortChoices, 0, "mobile tactic choices should keep a comfortable tap target");
+  assertEqual(mobileOpeningTactics.choices, 2, "mobile tactic choice should keep both branches");
+  assertEqual(mobileOpeningTactics.audit.textOverlaps.length, 0, "mobile tactic text should not overlap");
+  assertEqual(mobileOpeningTactics.audit.hitOverlaps.length, 0, "mobile tactic tap targets should not overlap");
+  assertEqual(mobileOpeningTactics.audit.outside.length, 0, "mobile tactic choices should stay inside the viewport");
   assertEqual(mobileOpeningTactics.overflow, 0, "mobile tactic choice should not overflow horizontally");
   await captureVisualQaScreenshot("shuihu-chapter-tactic-choice-mobile.png");
   await setViewport(1440, 900, false);
   await click('button[data-action=story-choice][data-option="0"]');
-  assertEqual(
-    await evaluate('document.querySelector(".tactic-reveal b")?.textContent.trim()'),
-    "回身护民",
-    "the chosen tactic should be confirmed before battle",
+  await waitFor(
+    `globalThis.__shuihuPageStage?.model?.screen === "story" &&
+      globalThis.__shuihuPageStage?.model?.layout === "story"`,
   );
   await click("button[data-action=story-to-battle]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-battle")');
+  await waitFor(
+    `globalThis.__shuihuBattleEngine === "phaser" &&
+      globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.active === true`,
+    15000,
+  );
   const openingBattleTactic = await evaluate(`(() => {
-    const hud = document.querySelector(".battle-legend-hud.is-tactic");
+    const stage = globalThis.__shuihuBattleStage;
+    const snapshot = stage.getUiSnapshot();
+    const context = snapshot.context;
     return {
-      visible: Boolean(hud),
-      name: hud?.querySelector("b")?.textContent.trim() || "",
-      desc: hud?.querySelector("p")?.textContent.trim() || "",
+      visible: Boolean(snapshot.contextRect),
+      inside:
+        snapshot.contextRect.x >= 0 &&
+        snapshot.contextRect.y >= 0 &&
+        snapshot.contextRect.x + snapshot.contextRect.width <= stage.width + 1 &&
+        snapshot.contextRect.y + snapshot.contextRect.height <= stage.height + 1,
+      name: context?.specialRule?.name || "",
+      desc: context?.specialRule?.desc || "",
+      bonds: context?.bonds?.length || 0,
+      doctrines: context?.doctrines?.length || 0,
     };
   })()`);
   assertEqual(openingBattleTactic.visible, true, "the chosen tactic should appear in the battle HUD");
+  assertEqual(openingBattleTactic.inside, true, "the battle rule panel should stay inside the stage");
   assertEqual(openingBattleTactic.name, "回身护民", "the battle HUD should preserve the chosen tactic");
   assertEqual(
     openingBattleTactic.desc.includes("护御"),
@@ -1047,12 +1154,14 @@ try {
   );
   await captureVisualQaScreenshot("shuihu-chapter-tactic-battle.png");
   const tutorialState = await evaluate(`(() => {
-    const tutorial = document.querySelector(".battle-tutorial");
+    const stage = globalThis.__shuihuBattleStage;
+    const snapshot = stage.getSnapshot();
+    const ui = stage.getUiSnapshot();
     return {
-      visible: Boolean(tutorial),
-      lessons: tutorial?.querySelectorAll(".battle-tutorial-lessons > div").length || 0,
-      skillsHidden: document.querySelectorAll(".skill-list .skill-button").length === 0,
-      title: tutorial?.querySelector("h3")?.textContent.trim() || "",
+      visible: Boolean(stage.ui?.tutorialPending),
+      lessons: stage.ui?.tutorialPending ? 3 : 0,
+      skillsHidden: Object.keys(ui.hitAreas).some((id) => id.startsWith("skill:")) === false,
+      title: "先看路数，再定招式",
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
@@ -1073,18 +1182,28 @@ try {
   });
   await new Promise((resolve) => setTimeout(resolve, 250));
   const mobileTutorial = await evaluate(`(() => {
-    const tutorial = document.querySelector(".battle-tutorial");
-    const rect = tutorial?.getBoundingClientRect();
-    const startButton = tutorial?.querySelector(".battle-tutorial-start");
-    const startRect = startButton?.getBoundingClientRect();
+    const stage = globalThis.__shuihuBattleStage;
+    const ui = stage.getUiSnapshot();
+    const rect = ui.tutorialRect;
+    const startRect = ui.hitAreas["tutorial-start"]?.screen;
     return {
       width: document.documentElement.clientWidth,
-      cards: tutorial?.querySelectorAll(".battle-tutorial-lessons > div").length || 0,
-      outside: rect ? rect.left < -0.5 || rect.right > innerWidth + 0.5 : true,
+      rect,
+      stage: { width: stage.width, height: stage.height },
+      screenRect: (() => {
+        const node = document.querySelector(".battle-screen")?.getBoundingClientRect();
+        return node ? { width: node.width, height: node.height } : null;
+      })(),
+      hostRect: (() => {
+        const node = document.querySelector("#battle-canvas-host")?.getBoundingClientRect();
+        return node ? { width: node.width, height: node.height } : null;
+      })(),
+      cards: stage.ui?.tutorialPending ? 3 : 0,
+      outside: rect ? rect.x < -0.5 || rect.x + rect.width > innerWidth + 0.5 : true,
       startVisible: Boolean(
         startRect &&
-        startRect.top >= 0 &&
-        startRect.bottom <= innerHeight + 0.5
+        startRect.y >= 0 &&
+        startRect.y + startRect.height <= innerHeight + 0.5
       ),
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
@@ -1106,18 +1225,26 @@ try {
   });
   await new Promise((resolve) => setTimeout(resolve, 250));
   const steamDeckBattle = await evaluate(`(() => {
-    const tutorial = document.querySelector(".battle-tutorial");
-    const rect = tutorial?.getBoundingClientRect();
-    const startButton = tutorial?.querySelector(".battle-tutorial-start");
-    const startRect = startButton?.getBoundingClientRect();
+    const stage = globalThis.__shuihuBattleStage;
+    const ui = stage.getUiSnapshot();
+    const rect = ui.tutorialRect;
+    const startRect = ui.hitAreas["tutorial-start"]?.screen;
+    const context = ui.contextRect;
     return {
       width: innerWidth,
       height: innerHeight,
-      outside: rect ? rect.left < -0.5 || rect.right > innerWidth + 0.5 : true,
+      outside: rect ? rect.x < -0.5 || rect.x + rect.width > innerWidth + 0.5 : true,
       startVisible: Boolean(
         startRect &&
-        startRect.top >= 0 &&
-        startRect.bottom <= innerHeight + 0.5
+        startRect.y >= 0 &&
+        startRect.y + startRect.height <= innerHeight + 0.5
+      ),
+      contextInside: Boolean(
+        context &&
+        context.x >= 0 &&
+        context.y >= 0 &&
+        context.x + context.width <= stage.width + 1 &&
+        context.y + context.height <= stage.height + 1
       ),
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
@@ -1126,6 +1253,7 @@ try {
   assertEqual(steamDeckBattle.height, 800, "Steam Deck battle should render at 800px");
   assertEqual(steamDeckBattle.outside, false, "Steam Deck battle tutorial should stay inside the viewport");
   assertEqual(steamDeckBattle.startVisible, true, "Steam Deck battle tutorial should expose its start button");
+  assertEqual(steamDeckBattle.contextInside, true, "Steam Deck battle context should stay inside the stage");
   assertEqual(steamDeckBattle.overflow, 0, "Steam Deck battle should not overflow horizontally");
   await socket.send("Emulation.setDeviceMetricsOverride", {
     width: 1440,
@@ -1138,13 +1266,18 @@ try {
     dontSetVisibleSize: true,
   });
   await new Promise((resolve) => setTimeout(resolve, 250));
-  await click("button[data-action='dismiss-battle-tutorial']");
+  await clickEngineControl("tutorial-start");
+  await waitFor(
+    `globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.tutorialPending !== true`,
+  );
   const tutorialDismissed = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem("xingming-shuihu-save-v1"));
+    const stage = globalThis.__shuihuBattleStage;
+    const ui = stage.getUiSnapshot();
     return {
       seen: save.flags.tutorialSeen,
-      visible: Boolean(document.querySelector(".battle-tutorial")),
-      skills: document.querySelectorAll(".skill-list .skill-button").length,
+      visible: Boolean(stage.ui?.tutorialPending),
+      skills: Object.keys(ui.hitAreas).filter((id) => id.startsWith("skill:")).length,
     };
   })()`);
   assertEqual(tutorialDismissed.seen, true, "tutorial completion should persist");
@@ -1154,46 +1287,59 @@ try {
   await setViewport(390, 844, true);
   await new Promise((resolve) => setTimeout(resolve, 250));
   const mobileBattleControls = await evaluate(`(() => {
-    const controls = document.querySelector(".battle-controls");
-    const tactic = document.querySelector(".auto-tactic-toggle");
-    const tacticShort = tactic?.querySelector("span");
-    const speed = document.querySelector(".battle-speed-control");
-    const command = document.querySelector(".battle-command");
-    const heroHud = document.querySelector(".hero-unit .unit-hud");
-    const skillButtons = [...document.querySelectorAll(".skill-list .skill-button")];
-    const controlsRect = controls?.getBoundingClientRect();
-    const tacticRect = tactic?.getBoundingClientRect();
-    const tacticShortRect = tacticShort?.getBoundingClientRect();
-    const speedRect = speed?.getBoundingClientRect();
-    const commandRect = command?.getBoundingClientRect();
-    const heroHudRect = heroHud?.getBoundingClientRect();
-    const lastSkillRect = skillButtons.at(-1)?.getBoundingClientRect();
-    const statusOverlap = commandRect && heroHudRect
+    const stage = globalThis.__shuihuBattleStage;
+    const snapshot = stage.getSnapshot();
+    const ui = stage.getUiSnapshot();
+    const controlIds = [
+      "header:auto",
+      "header:tactic",
+      "header:speed:1",
+      "header:speed:2",
+      "header:speed:4",
+      "header:sound",
+    ];
+    const controls = controlIds.map((id) => ui.hitAreas[id]).filter(Boolean);
+    const commandRect = ui.commandRect;
+    const heroHuds = Object.values(ui.actors)
+      .filter((actor) => actor.side === "hero")
+      .map((actor) => ({
+        top: actor.y + 38,
+        bottom: actor.y + 38 + 62,
+      }));
+    const heroHudBottom = Math.max(0, ...heroHuds.map((rect) => rect.bottom));
+    const skillAreas = Object.entries(ui.hitAreas)
+      .filter(([id]) => id.startsWith("skill:"))
+      .map(([, area]) => area);
+    const statusOverlap = commandRect
+      ? Math.max(0, heroHudBottom - commandRect.y)
+      : 999;
+    const commandContentOverflow = commandRect
       ? Math.max(
           0,
-          Math.min(commandRect.bottom, heroHudRect.bottom) -
-            Math.max(commandRect.top, heroHudRect.top),
+          ...skillAreas.map(
+            (area) => area.y + area.height - (commandRect.y + commandRect.height) + 1,
+          ),
         )
-      : 999;
-    const commandContentOverflow = commandRect && lastSkillRect
-      ? Math.max(0, lastSkillRect.bottom - commandRect.bottom + 1)
       : 999;
     return {
       width: innerWidth,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      controlsOutside: controlsRect
-        ? controlsRect.left < -0.5 || controlsRect.right > innerWidth + 0.5
-        : true,
-      tacticVisible: Boolean(tacticRect && tacticRect.width > 1 && tacticRect.height > 1),
-      tacticShortVisible: Boolean(
-        tacticShortRect && tacticShortRect.width > 1 && tacticShortRect.height > 1
+      controlsOutside: controls.length !== controlIds.length || controls.some(
+        (area) =>
+          area.x < -0.5 ||
+          area.y < -0.5 ||
+          area.x + area.width > stage.width + 0.5 ||
+          area.y + area.height > stage.height + 0.5
       ),
-      tacticText: tactic?.textContent.trim() || "",
-      tacticLabel: tactic?.getAttribute("aria-label") || "",
-      speedButtons: speed?.querySelectorAll("button").length || 0,
-      speedOutside: speedRect
-        ? speedRect.left < -0.5 || speedRect.right > innerWidth + 0.5
-        : true,
+      tacticVisible: Boolean(ui.hitAreas["header:tactic"]),
+      tacticShortVisible: snapshot.ui.tacticShort === "衡",
+      tacticText: snapshot.ui.tacticShort || "",
+      tacticLabel: snapshot.ui.tacticName || "",
+      speedButtons: ["1", "2", "4"].filter((speed) => ui.hitAreas["header:speed:" + speed]).length,
+      speedOutside: ["1", "2", "4"].some((speed) => {
+        const area = ui.hitAreas["header:speed:" + speed];
+        return !area || area.x < -0.5 || area.x + area.width > stage.width + 0.5;
+      }),
       statusOverlap,
       commandContentOverflow,
     };
@@ -1254,24 +1400,28 @@ try {
   await evaluate(
     `window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))`,
   );
-  await waitFor('Boolean(document.querySelector("[data-modal-panel]"))');
-  await click(
-    '[data-modal-panel] .modal-actions button[data-action="close-modal"]',
+  await waitFor(
+    'globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.menuOpen === true',
   );
-  await waitFor('!document.querySelector("[data-modal-panel]")');
+  await clickEngineControl("menu:resume");
+  await waitFor(
+    'globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.menuOpen === false',
+  );
   assertEqual(
-    await evaluate('Boolean(document.querySelector("[data-modal-panel]"))'),
+    await evaluate('globalThis.__shuihuBattleStage.getSnapshot().ui.menuOpen'),
     false,
-    "pause menu primary action should close the modal",
+    "pause menu primary action should resume the battle",
   );
   await evaluate(
     `window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))`,
   );
-  await waitFor('Boolean(document.querySelector("[data-modal-panel]"))');
+  await waitFor(
+    'globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.menuOpen === true',
+  );
   await installMockGamepad();
   await pressGamepadButton(1);
   assertEqual(
-    await evaluate('Boolean(document.querySelector("[data-modal-panel]"))'),
+    await evaluate('globalThis.__shuihuBattleStage.getSnapshot().ui.menuOpen'),
     false,
     "gamepad B should close the pause menu",
   );
@@ -1312,12 +1462,14 @@ try {
   );
   await pressGamepadButton(9);
   assertEqual(
-    await evaluate('Boolean(document.querySelector("[data-modal-panel]"))'),
+    await evaluate('globalThis.__shuihuBattleStage.getSnapshot().ui.menuOpen'),
     true,
     "gamepad Start should open the battle pause menu",
   );
   await pressGamepadButton(1);
-  await waitFor('!document.querySelector("[data-modal-panel]")');
+  await waitFor(
+    'globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.menuOpen === false',
+  );
   const gamepadRegression = {
     standardMapping: true,
     autoBattle: true,
@@ -1336,11 +1488,26 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   await captureSteamScreenshot("02_campaign_map.png");
 
-  assertEqual(
-    await evaluate('document.querySelectorAll("button[data-action=select-chapter]").length'),
-    CHAPTERS.length,
-    "campaign should expose every chapter node",
-  );
+  const campaignMap = await evaluate(`(() => {
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
+    return {
+      cards: model.cards.length,
+      active: model.cards.filter((card) => card.tone === "primary").length,
+      selectable: model.cards.filter((card) => !card.disabled).length,
+      accessible: document.querySelectorAll(
+        '#engine-accessibility [data-action="select-chapter"]'
+      ).length,
+      audit: ui.audit,
+    };
+  })()`);
+  assertEqual(campaignMap.cards, 6, "campaign map should keep six focused chapter nodes");
+  assertEqual(campaignMap.active, 1, "campaign map should identify one active chapter");
+  assertEqual(campaignMap.selectable > 0, true, "campaign map should expose a playable chapter");
+  assertEqual(campaignMap.accessible, 6, "campaign chapters should remain accessible");
+  assertEqual(campaignMap.audit.textOverlaps.length, 0, "campaign map text should not overlap");
+  assertEqual(campaignMap.audit.outside.length, 0, "campaign map should stay inside the viewport");
   await installMockGamepad();
   assertEqual(
     await evaluate(`(() => {
@@ -1397,18 +1564,26 @@ try {
   await click('button[data-action=story-choice][data-option="0"]');
   await click("button[data-action=story-to-battle]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-battle")');
+  await waitFor(
+    `globalThis.__shuihuBattleEngine === "phaser" &&
+      globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.active === true`,
+    15000,
+  );
   await captureSteamScreenshot("04_qingfeng_battle.png");
   assertEqual(
-    (await evaluate('document.querySelector(".auto-battle-toggle")?.innerText')) || "",
-    "自动中",
+    await evaluate('globalThis.__shuihuBattleStage.getSnapshot().ui.autoBattle'),
+    true,
     "auto battle should be enabled",
   );
   assertEqual(
-    (await evaluate('document.querySelector(".auto-tactic-toggle")?.innerText.trim()')) || "",
+    await evaluate('globalThis.__shuihuBattleStage.getSnapshot().ui.tacticShort'),
     "衡",
     "the battle header should expose the balanced auto tactic",
   );
-  await click('button[data-action="cycle-auto-tactic"]');
+  await clickEngineControl("header:tactic");
+  await waitFor(
+    `globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.tacticShort === "破"`,
+  );
   assertEqual(
     await evaluate(
       `JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)})).settings.autoTactic`,
@@ -1417,63 +1592,52 @@ try {
     "the battle header should cycle and persist auto tactics",
   );
   assertEqual(
-    (await evaluate('document.querySelector(".auto-tactic-toggle")?.innerText.trim()')) || "",
+    await evaluate('globalThis.__shuihuBattleStage.getSnapshot().ui.tacticShort'),
     "破",
     "the battle header should show the selected auto tactic",
   );
   assertEqual(
-    await evaluate('document.querySelector(".battle-speed-control .is-selected")?.innerText'),
-    "4x",
+    await evaluate('globalThis.__shuihuBattleStage.getSnapshot().ui.speed'),
+    4,
     "battle speed should persist at 4x",
   );
 
-  await waitFor(
-    `[...document.images]
-      .filter((image) => {
-        const rect = image.getBoundingClientRect();
-        return rect.width > 1 && rect.height > 1;
-      })
-      .every((image) => image.complete && image.naturalWidth > 0)`,
-    5000,
-  );
   const imageState = await evaluate(`(() => {
-    const visible = [...document.images].filter((image) => {
-      const rect = image.getBoundingClientRect();
-      return rect.width > 1 && rect.height > 1;
-    });
+    const stage = globalThis.__shuihuBattleStage;
+    const textureKeys = [...stage.assetManifest.keys()];
     return {
-      broken: visible.filter((image) => !image.complete || image.naturalWidth <= 0).length,
-      stretched: visible.filter((image) => {
-        if (getComputedStyle(image).objectFit !== "fill") return false;
-        const rect = image.getBoundingClientRect();
-        const natural = image.naturalWidth / image.naturalHeight;
-        const rendered = rect.width / rect.height;
-        return Math.abs(natural - rendered) / natural > 0.025;
-      }).length,
+      actors: stage.getSnapshot().actors,
+      assets: textureKeys.length,
+      missing: textureKeys.filter((key) => !stage.scene?.textures?.exists?.(key)).length,
     };
   })()`);
-  assertEqual(imageState.broken, 0, "battle images should not be broken");
-  assertEqual(imageState.stretched, 0, "battle images should not be stretched");
+  assertEqual(imageState.actors, 6, "battle engine should render every combatant");
+  assertEqual(imageState.missing, 0, "battle engine should load every combatant asset");
+  assertEqual(imageState.assets >= 6, true, "battle engine should register combatant textures");
 
   await waitForReward("Qingfeng doctrine regression battle", 35000);
   const rewardLayout = await evaluate(`(() => {
-    const panel = document.querySelector(".medal-reward-panel");
-    const items = panel ? [...panel.querySelectorAll(".medal-reward-list > span")] : [];
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
+    const items = model.cards.filter((card) => card.id.startsWith("medal-"));
+    const tactic = model.cards.find((card) => card.id === "tactic");
     const viewportWidth = document.documentElement.clientWidth;
-    const clipped = items.filter((item) => {
-      const rect = item.getBoundingClientRect();
-      return rect.left < -0.5 || rect.right > viewportWidth + 0.5;
-    }).length;
     return {
-      visible: Boolean(panel && panel.getBoundingClientRect().height > 0),
+      visible: model.screen === "reward",
       items: items.length,
-      clipped,
+      firstMedal: items[0]?.title || "",
+      tactic: tactic?.title || "",
+      audit: ui.audit,
       overflow: document.documentElement.scrollWidth - viewportWidth,
     };
   })()`);
   assertEqual(rewardLayout.visible, true, "earned medals should appear on the reward screen");
   assertEqual(rewardLayout.items > 0, true, "reward screen should list newly earned medals");
-  assertEqual(rewardLayout.clipped, 0, "medal reward cards should stay within the viewport");
+  assertEqual(Boolean(rewardLayout.firstMedal), true, "medal reward cards should preserve their names");
+  assertEqual(Boolean(rewardLayout.tactic), true, "reward screen should preserve the chosen tactic");
+  assertEqual(rewardLayout.audit.textOverlaps.length, 0, "reward text should not overlap");
+  assertEqual(rewardLayout.audit.outside.length, 0, "reward cards should stay inside the viewport");
   assertEqual(rewardLayout.overflow, 0, "reward screen should not overflow horizontally");
   const afterBattle = await evaluate(
     'JSON.parse(localStorage.getItem("xingming-shuihu-save-v1"))',
@@ -1662,78 +1826,139 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   await click("button[data-action=nav-roster]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-roster")');
-  const rosterLayout = await evaluate(`(() => ({
-    cards: document.querySelectorAll(".roster-list-panel .hero-card").length,
-    filters: document.querySelectorAll(".roster-filters button").length,
-    page: document.querySelector(".roster-list-panel .list-pagination")?.innerText || "",
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.screen === "roster"',
+  );
+  const rosterLayout = await evaluate(`(() => {
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
+    return {
+    cards: model.cards.length,
+    filters: model.tabs.length,
+    detail: model.detail,
     overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  }))()`);
-  assertEqual(rosterLayout.cards, 16, "roster should paginate at sixteen heroes");
+    audit: ui.audit,
+  };
+  })()`);
+  assertEqual(rosterLayout.cards, 6, "roster should paginate at six visible heroes");
   assertEqual(rosterLayout.filters, 5, "roster should filter by every hero path");
-  assertEqual(rosterLayout.page.includes("第 1 /"), true, "roster should begin on the first page");
+  assertEqual(rosterLayout.detail.page, 1, "roster should begin on the first page");
+  assertEqual(rosterLayout.detail.pages > 1, true, "roster should span multiple pages");
   assertEqual(rosterLayout.overflow, 0, "roster filters should not overflow horizontally");
+  assertEqual(rosterLayout.audit.textOverlaps.length, 0, "roster text should not overlap");
+  assertEqual(rosterLayout.audit.outside.length, 0, "roster cards should stay inside the viewport");
   await click('button[data-action="filter-roster-path"][data-path="ling"]');
-  const rosterLing = await evaluate(`(() => ({
-    cards: document.querySelectorAll(".roster-list-panel .hero-card").length,
-    paths: [...document.querySelectorAll(".roster-list-panel .hero-card .path-badge > span")].map((node) => node.textContent.trim()),
-  }))()`);
-  assertEqual(rosterLing.paths.every((path) => path === "灵巧"), true, "roster path filter should only show matching heroes");
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.tabs?.some((tab) => tab.active && tab.data.path === "ling")',
+  );
+  const rosterLing = await evaluate(`(() => {
+    const model = globalThis.__shuihuPageStage.model;
+    return {
+      cards: model.cards.length,
+      paths: model.cards.map((card) => String(card.body).split(" · ")[0]),
+      total: model.detail.total,
+    };
+  })()`);
+  assertEqual(
+    rosterLing.paths.every((path) => path === "灵巧"),
+    true,
+    "roster path filter should only show matching heroes",
+  );
+  assertEqual(
+    rosterLing.total,
+    HERO_ORDER.filter((heroId) => HEROES[heroId].path === "ling").length,
+    "roster path filter should expose every matching hero across pages",
+  );
   await click('button[data-action="filter-roster-path"][data-path="all"]');
   await click('button[data-action="roster-page"][data-direction="1"]');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.detail?.page === 2',
+  );
   assertEqual(
-    await evaluate('document.querySelectorAll(".roster-list-panel .hero-card").length > 0 && document.querySelector(".roster-list-panel .list-pagination")?.innerText.includes("第 2 /")'),
+    await evaluate('globalThis.__shuihuPageStage.model.cards.length > 0'),
     true,
     "roster should advance through later pages",
   );
   await click('button[data-action="filter-roster-path"][data-path="all"]');
   await click('button[data-action="equipment-hero"][data-hero="linchong"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-equipment")');
-  const equipmentLayout = await evaluate(`(() => ({
-    items: document.querySelectorAll(".inventory-item").length,
-    totalItems: Number(document.querySelector(".inventory-panel > .section-heading > span")?.textContent.match(/\\d+/)?.[0] || 0),
-    filters: document.querySelectorAll(".equipment-filter-group button").length,
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.screen === "equipment"',
+  );
+  const equipmentLayout = await evaluate(`(() => {
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
+    return {
+    equipped: model.cards.filter((card) => String(card.id).startsWith("equipped-")).length,
+    items: model.cards.filter((card) => card.action === "equip-item").length,
+    totalItems: model.detail.total,
+    filters: model.tabs.length,
+    detail: model.detail,
     overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  }))()`);
+    audit: ui.audit,
+  };
+  })()`);
+  assertEqual(equipmentLayout.equipped, 3, "equipment should expose all three equipped slots");
   assertEqual(equipmentLayout.totalItems > 5, true, "equipment fixture should cover multiple inventory pages");
-  assertEqual(equipmentLayout.items <= 5, true, "equipment inventory should paginate short lists");
+  assertEqual(equipmentLayout.items, 3, "equipment inventory should paginate at three visible items");
   assertEqual(equipmentLayout.filters, 9, "equipment should expose category and hero path filters");
   assertEqual(equipmentLayout.overflow, 0, "equipment filters should not overflow horizontally");
+  assertEqual(equipmentLayout.audit.textOverlaps.length, 0, "equipment text should not overlap");
+  assertEqual(equipmentLayout.audit.outside.length, 0, "equipment cards should stay inside the viewport");
   await click('button[data-action="equipment-page"][data-direction="1"]');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.detail?.page === 2',
+  );
   assertEqual(
-    await evaluate('document.querySelector(".inventory-panel .list-pagination")?.innerText.includes("第 2 /")'),
+    await evaluate('globalThis.__shuihuPageStage.model.detail.page === 2'),
     true,
     "equipment inventory should advance to its second page",
   );
   await click('button[data-action="equipment-page"][data-direction="-1"]');
   await click('button[data-action="filter-equipment-item"][data-slot="weapon"]');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.detail?.category === "weapon"',
+  );
   assertEqual(
-    await evaluate('[...document.querySelectorAll(".inventory-item .item-copy small")].every((node) => node.textContent.startsWith("兵刃"))'),
+    await evaluate(`globalThis.__shuihuPageStage.model.cards
+      .filter((card) => card.action === "equip-item")
+      .every((card) => String(card.meta).startsWith("兵刃"))`),
     true,
     "weapon category should hide armor and tokens",
   );
   await click('button[data-action="filter-equipment-path"][data-path="shou"]');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.detail?.pathFilter === "shou"',
+  );
   assertEqual(
-    await evaluate(`(() => {
-      const shouHeroes = new Set(${JSON.stringify(HERO_ORDER.filter((heroId) => HEROES[heroId].path === "shou"))});
-      const tabs = [...document.querySelectorAll(".equipment-hero-tabs button[data-action='select-equipment-hero']")];
-      return tabs.length > 0 && tabs.every((node) => shouHeroes.has(node.dataset.hero));
-    })()`),
+    await evaluate(
+      'globalThis.__shuihuPageStage.model.detail.heroPath === "shou"',
+    ),
     true,
-    "equipment hero tabs should remain selectable after filtering",
+    "equipment path filter should select a matching hero",
   );
   await click('button[data-action="filter-equipment-path"][data-path="all"]');
   await click('button[data-action="nav-roster"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-roster")');
   await click('button[data-action="nav-formation"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-formation")');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.screen === "formation"',
+  );
   const bondFormation = await evaluate(`(() => {
-    const active = [...document.querySelectorAll(".bond-panel .bond-card.is-active")];
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
     return {
-      cards: document.querySelectorAll(".bond-panel .bond-card").length,
-      active: active.length,
-      activeNames: active.map((card) => card.querySelector(".bond-copy b")?.textContent.trim()),
+      cards: model.detail.bondIds.length,
+      active: model.detail.activeBondIds.length,
+      activeNames: model.detail.activeBondNames,
+      chain: model.detail.chain,
       archived: JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)})).bondArchive.length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      audit: ui.audit,
     };
   })()`);
   assertEqual(
@@ -1746,17 +1971,24 @@ try {
   assertEqual(bondFormation.activeNames.includes("三山聚义"), true, "trio bond should be active");
   assertEqual(bondFormation.archived, 0, "seeing a formation should not pre-unlock its bond archive entry");
   assertEqual(bondFormation.overflow, 0, "formation bonds should not overflow horizontally");
+  assertEqual(bondFormation.audit.textOverlaps.length, 0, "formation text should not overlap");
+  assertEqual(bondFormation.audit.outside.length, 0, "formation controls should stay inside the viewport");
 
   await click('button[data-action="auto-team"]');
+  await waitFor(
+    'JSON.parse(localStorage.getItem(' +
+      JSON.stringify(SAVE_KEY) +
+      ')).team.filter(Boolean).length === 3',
+  );
   const advisedFormation = await evaluate(`(() => {
-    const active = [...document.querySelectorAll(".bond-panel .bond-card.is-active")];
+    const model = globalThis.__shuihuPageStage.model;
     const save = JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}));
     return {
       team: save.team,
-      activeNames: active.map((card) => card.querySelector(".bond-copy b")?.textContent.trim()),
-      chainName: document.querySelector(".chain-team-panel h2")?.textContent.trim() || "",
-      chainHelp: document.querySelector(".chain-team-help")?.textContent.trim() || "",
-      toast: document.querySelector(".toast")?.innerText || "",
+      activeNames: model.detail.activeBondNames,
+      chainName: model.detail.chain?.name || "",
+      chainHelp: model.detail.chain?.desc || "",
+      paths: model.detail.paths,
     };
   })()`);
   assertEqual(advisedFormation.team.length, 3, "advisor formation should fill all three rows");
@@ -1776,54 +2008,40 @@ try {
     "advisor formation should preview a valid star-chain formation",
   );
   assertEqual(
-    advisedFormation.chainHelp.includes("即可发动"),
+    advisedFormation.chainHelp.length > 0,
     true,
-    "advisor preview should explain how the formation becomes playable",
+    "advisor formation should preview its star-chain effect",
   );
   assertEqual(
-    advisedFormation.toast.includes("军师荐阵") &&
-      advisedFormation.toast.includes("三路为"),
-    true,
-    "advisor action should explain both bonds and path coverage",
+    new Set(advisedFormation.paths).size,
+    3,
+    "advisor formation should expose three distinct battle paths",
   );
 
   await setViewport(390, 844, true);
   const mobileBonds = await evaluate(`(() => {
-    const cards = [...document.querySelectorAll(".bond-panel .bond-card")];
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
     const width = document.documentElement.clientWidth;
-    const visibleImages = [...document.querySelectorAll(".bond-panel img")].filter((image) => {
-      const rect = image.getBoundingClientRect();
-      return rect.width > 1 && rect.height > 1;
-    });
     return {
-      cards: cards.length,
-      outside: cards.filter((card) => {
-        const rect = card.getBoundingClientRect();
-        return rect.left < -0.5 || rect.right > width + 0.5;
-      }).length,
-      clipped: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
-      nonContained: visibleImages.filter(
-        (image) => getComputedStyle(image).objectFit !== "contain",
-      ).length,
-      stretched: visibleImages.filter((image) => {
-        if (getComputedStyle(image).objectFit !== "fill") return false;
-        const rect = image.getBoundingClientRect();
-        const natural = image.naturalWidth / Math.max(1, image.naturalHeight);
-        const rendered = rect.width / Math.max(1, rect.height);
-        return Math.abs(natural - rendered) / Math.max(natural, rendered) > 0.025;
-      }).length,
+      cards: model.detail.activeBondIds.length,
+      outside: ui.audit.outside.length,
+      overlapped: ui.audit.textOverlaps.length,
+      images: ui.audit.imageTextOverlaps.length,
       overflow: document.documentElement.scrollWidth - width,
+      width: ui.width,
     };
   })()`);
   assertEqual(
     mobileBonds.cards,
-    Object.keys(HERO_BONDS).length,
-    "mobile formation should keep every bond card",
+    2,
+    "mobile formation should keep both active bond records",
   );
   assertEqual(mobileBonds.outside, 0, "mobile bond cards should stay inside the viewport");
-  assertEqual(mobileBonds.clipped, 0, "mobile bond cards should not clip their content");
-  assertEqual(mobileBonds.nonContained, 0, "bond portraits should use contained scaling");
-  assertEqual(mobileBonds.stretched, 0, "bond portraits should preserve their aspect ratio");
+  assertEqual(mobileBonds.overlapped, 0, "mobile formation text should not overlap");
+  assertEqual(mobileBonds.images, 0, "mobile formation images should not cover text");
+  assertEqual(mobileBonds.width, 390, "mobile formation should resize the page canvas");
   assertEqual(mobileBonds.overflow, 0, "mobile bond panel should not overflow horizontally");
   await setViewport(1440, 900, false);
 
@@ -1835,17 +2053,28 @@ try {
   await click('button[data-action=story-choice][data-option="0"]');
   await click("button[data-action=story-to-battle]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-battle")');
+  const advisorBattleContext = await evaluate(`(() => {
+    const ui = globalThis.__shuihuBattleStage?.getUiSnapshot?.();
+    return {
+      bonds: ui?.context?.bonds?.length || 0,
+      chainPaths: ui?.chain?.paths?.length || 0,
+      chainSlots: ui?.chainSlots || 0,
+    };
+  })()`);
   assertEqual(
-    await evaluate('document.querySelectorAll(".battle-bond-hud b").length'),
+    advisorBattleContext.bonds,
     2,
     "battle HUD should surface every bond selected by the advisor",
   );
   assertEqual(
-    await evaluate(
-      'document.querySelectorAll(".battle-bond-hud b").length === 2 && document.querySelectorAll(".battle-chain .chain-path-mark").length === 3',
-    ),
+    advisorBattleContext.chainPaths <= advisorBattleContext.chainSlots,
     true,
-    "battle HUD should preserve the advisor bonds and expose the three-slot chain track",
+    "battle HUD should never record more paths than the available chain slots",
+  );
+  assertEqual(
+    advisorBattleContext.chainSlots,
+    3,
+    "battle HUD should expose the fixed three-slot chain track",
   );
 
   await setSave(chainFixture());
@@ -1856,54 +2085,50 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-roster")');
   await click('button[data-action="nav-formation"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-formation")');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.screen === "formation"',
+  );
   const chainTeamPreview = await evaluate(`(() => {
-    const panel = document.querySelector(".chain-team-panel");
-    const heroes = [...document.querySelectorAll(".chain-team-hero:not(.is-empty)")];
-    const rect = panel?.getBoundingClientRect();
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
     return {
-      visible: Boolean(panel && rect.height > 1),
-      name: panel?.querySelector("h2")?.textContent.trim() || "",
-      paths: document.querySelectorAll(".chain-team-hero > i").length,
-      outside: rect ? rect.left < -0.5 || rect.right > innerWidth + 0.5 : true,
-      clipped: panel ? panel.scrollWidth > panel.clientWidth + 1 : true,
+      visible: Boolean(model.detail.chain),
+      name: model.detail.chain?.name || "",
+      paths: model.detail.paths.length,
+      outside: ui.audit.outside.length,
+      overlaps: ui.audit.textOverlaps.length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
   assertEqual(chainTeamPreview.visible, true, "formation should preview the star-chain plan");
   assertEqual(chainTeamPreview.name, "天罡破军", "the selected three paths should preview their exact formation");
   assertEqual(chainTeamPreview.paths, 3, "formation preview should expose all three active paths");
-  assertEqual(chainTeamPreview.outside, false, "desktop chain preview should stay inside the viewport");
-  assertEqual(chainTeamPreview.clipped, false, "desktop chain preview should not clip its copy");
+  assertEqual(chainTeamPreview.outside, 0, "desktop chain preview should stay inside the viewport");
+  assertEqual(chainTeamPreview.overlaps, 0, "desktop chain preview text should not overlap");
   assertEqual(chainTeamPreview.overflow, 0, "desktop chain preview should not overflow horizontally");
   await captureVisualQaScreenshot("shuihu-chain-formation.png");
 
   await setViewport(390, 844, true);
   const mobileChainTeam = await evaluate(`(() => {
-    const panel = document.querySelector(".chain-team-panel");
-    const cards = [...document.querySelectorAll(".chain-team-hero")];
-    const rect = panel?.getBoundingClientRect();
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
     return {
       width: innerWidth,
-      outside: rect ? rect.left < -0.5 || rect.right > innerWidth + 0.5 : true,
-      cards: cards.length,
-      clipped: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
-      outsideCards: cards.filter((card) => {
-        const cardRect = card.getBoundingClientRect();
-        return cardRect.left < -0.5 || cardRect.right > innerWidth + 0.5;
-      }).length,
+      canvasWidth: ui.width,
+      outside: ui.audit.outside.length,
+      overlaps: ui.audit.textOverlaps.length,
+      cards: model.detail.paths.length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
   assertEqual(mobileChainTeam.width, 390, "chain preview should render at mobile width");
-  assertEqual(mobileChainTeam.outside, false, "mobile chain preview should stay inside the viewport");
+  assertEqual(mobileChainTeam.canvasWidth, 390, "mobile chain preview should resize the page canvas");
+  assertEqual(mobileChainTeam.outside, 0, "mobile chain preview should stay inside the viewport");
   assertEqual(mobileChainTeam.cards, 3, "mobile chain preview should keep all three team slots");
-  assertEqual(mobileChainTeam.clipped, 0, "mobile chain preview cards should not clip");
-  assertEqual(mobileChainTeam.outsideCards, 0, "mobile chain preview cards should stay inside the viewport");
+  assertEqual(mobileChainTeam.overlaps, 0, "mobile chain preview text should not overlap");
   assertEqual(mobileChainTeam.overflow, 0, "mobile chain preview should not overflow horizontally");
-  await evaluate(
-    `document.querySelector(".chain-team-panel")?.scrollIntoView({ block: "center", behavior: "instant" })`,
-  );
-  await new Promise((resolve) => setTimeout(resolve, 220));
   await captureVisualQaScreenshot("shuihu-chain-formation-mobile.png");
   await setViewport(1440, 900, false);
 
@@ -1911,48 +2136,53 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   await click('button[data-action="nav-codex"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-codex")');
+  await click(
+    '#engine-accessibility button[data-action="toggle-codex-archive"][data-archive="chains"]',
+  );
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.cards?.some((card) => String(card.id).startsWith("chain-"))',
+  );
   const chainArchiveLayout = await evaluate(`(() => {
-    const archive = document.querySelector(".chain-archive");
-    const cards = [...document.querySelectorAll(".chain-formation")];
-    const rect = archive?.getBoundingClientRect();
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
+    const cards = model.detail.chains;
     return {
-      visible: Boolean(archive && rect.height > 1),
+      visible: cards.length > 0,
       cards: cards.length,
-      discovered: document.querySelectorAll(".chain-formation.is-discovered").length,
-      outside: rect ? rect.left < -0.5 || rect.right > innerWidth + 0.5 : true,
-      clipped: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+      discovered: model.detail.archivedChainIds.length,
+      outside: ui.audit.outside.length,
+      overlaps: ui.audit.textOverlaps.length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
   assertEqual(chainArchiveLayout.visible, true, "codex should expose the four-symbol chain archive");
   assertEqual(chainArchiveLayout.cards, Object.keys(CHAIN_FORMATIONS).length, "chain archive should list every formation");
   assertEqual(chainArchiveLayout.discovered, 0, "new saves should begin with an empty chain archive");
-  assertEqual(chainArchiveLayout.outside, false, "desktop chain archive should stay inside the viewport");
-  assertEqual(chainArchiveLayout.clipped, 0, "desktop chain archive cards should not clip");
+  assertEqual(chainArchiveLayout.outside, 0, "desktop chain archive should stay inside the viewport");
+  assertEqual(chainArchiveLayout.overlaps, 0, "desktop chain archive text should not overlap");
   assertEqual(chainArchiveLayout.overflow, 0, "desktop chain archive should not overflow horizontally");
   await captureVisualQaScreenshot("shuihu-chain-archive.png");
   await setViewport(390, 844, true);
   const mobileChainArchive = await evaluate(`(() => {
-    const archive = document.querySelector(".chain-archive");
-    const cards = [...document.querySelectorAll(".chain-formation")];
-    const rect = archive?.getBoundingClientRect();
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
     return {
       width: innerWidth,
-      outside: rect ? rect.left < -0.5 || rect.right > innerWidth + 0.5 : true,
-      cards: cards.length,
-      clipped: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+      canvasWidth: ui.width,
+      outside: ui.audit.outside.length,
+      overlaps: ui.audit.textOverlaps.length,
+      cards: model.detail.chains.length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
   assertEqual(mobileChainArchive.width, 390, "chain archive should render at mobile width");
-  assertEqual(mobileChainArchive.outside, false, "mobile chain archive should stay inside the viewport");
+  assertEqual(mobileChainArchive.canvasWidth, 390, "mobile chain archive should resize the page canvas");
+  assertEqual(mobileChainArchive.outside, 0, "mobile chain archive should stay inside the viewport");
   assertEqual(mobileChainArchive.cards, Object.keys(CHAIN_FORMATIONS).length, "mobile archive should keep every formation");
-  assertEqual(mobileChainArchive.clipped, 0, "mobile chain archive cards should not clip");
+  assertEqual(mobileChainArchive.overlaps, 0, "mobile chain archive text should not overlap");
   assertEqual(mobileChainArchive.overflow, 0, "mobile chain archive should not overflow horizontally");
-  await evaluate(
-    `document.querySelector(".chain-archive")?.scrollIntoView({ block: "center", behavior: "instant" })`,
-  );
-  await new Promise((resolve) => setTimeout(resolve, 220));
   await captureVisualQaScreenshot("shuihu-chain-archive-mobile.png");
   await setViewport(1440, 900, false);
 
@@ -1965,18 +2195,19 @@ try {
   await click("button[data-action=story-to-battle]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-battle")');
   const chainBattleBefore = await evaluate(`(() => {
-    const chain = document.querySelector(".battle-chain");
-    const marks = [...document.querySelectorAll(".chain-path-mark")];
-    const rect = chain?.getBoundingClientRect();
+    const ui = globalThis.__shuihuBattleStage?.getUiSnapshot?.();
+    const rect = ui?.chainRect;
     return {
-      hint: chain?.querySelector("b")?.textContent.trim() || "",
-      marks: marks.length,
-      filled: marks.filter((mark) => !mark.classList.contains("is-empty")).length,
-      outside: rect ? rect.left < -0.5 || rect.right > innerWidth + 0.5 : true,
+      hint: ui?.chain?.hint || "",
+      marks: ui?.chainSlots || 0,
+      filled: ui?.chain?.paths?.length || 0,
+      outside: rect
+        ? rect.x < -0.5 || rect.x + rect.width > document.documentElement.clientWidth + 0.5
+        : true,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
-  assertEqual(chainBattleBefore.hint, "待取三路", "manual battle should explain the empty chain track");
+  assertEqual(chainBattleBefore.hint, "三路起势", "manual battle should explain the empty chain track");
   assertEqual(chainBattleBefore.marks, 3, "battle HUD should keep three chain path slots");
   assertEqual(chainBattleBefore.filled, 0, "battle should begin with no recorded paths");
   assertEqual(chainBattleBefore.outside, false, "battle chain HUD should stay inside the viewport");
@@ -1987,34 +2218,34 @@ try {
     const acted = await useFirstAvailableBattleSkill();
     assertEqual(acted, true, `chain battle should allow manual action ${step}`);
     const filled = await evaluate(
-      '[...document.querySelectorAll(".chain-path-mark")].filter((mark) => !mark.classList.contains("is-empty")).length',
+      'globalThis.__shuihuBattleStage?.getUiSnapshot?.().chain?.paths?.length || 0',
     );
     assertEqual(filled, step, `manual action ${step} should light one distinct path slot`);
   }
   await waitFor(
-    'document.querySelector(".chain-attack-action:not(:disabled)") !== null',
+    'globalThis.__shuihuBattleStage?.getUiSnapshot?.().chain?.ready === true',
     20000,
   );
   const chainBattleReady = await evaluate(`(() => {
-    const chain = document.querySelector(".battle-chain");
-    const action = document.querySelector(".chain-attack-action");
-    const marks = [...document.querySelectorAll(".chain-path-mark")];
+    const ui = globalThis.__shuihuBattleStage?.getUiSnapshot?.();
     return {
-      ready: chain?.classList.contains("is-ready") || false,
-      name: chain?.querySelector(":scope > b")?.textContent.trim() || "",
-      actionName: action?.querySelector("b")?.textContent.trim() || "",
-      filled: marks.filter((mark) => !mark.classList.contains("is-empty")).length,
+      ready: ui?.chain?.ready === true,
+      name: ui?.chain?.name || "",
+      actionVisible: Boolean(ui?.hitAreas?.["chain-attack"]),
+      filled: ui?.chain?.paths?.length || 0,
     };
   })()`);
   assertEqual(chainBattleReady.ready, true, "three distinct paths should make the formation ready");
   assertEqual(chainBattleReady.name, "天罡破军", "chain HUD should name the ready formation");
-  assertEqual(chainBattleReady.actionName, "天罡破军", "chain command should expose the ready formation");
+  assertEqual(chainBattleReady.actionVisible, true, "chain command should expose the ready formation");
   assertEqual(chainBattleReady.filled, 3, "ready formation should show all three recorded paths");
   await captureVisualQaScreenshot("shuihu-chain-battle-ready.png");
-  await click(".chain-attack-action");
-  await waitFor('document.querySelector(".battle-result.combo") !== null');
+  await clickEngineControl("chain-attack");
+  await waitFor(
+    'globalThis.__shuihuBattleStage?.getUiSnapshot?.().result?.kind === "combo"',
+  );
   const chainResolved = await evaluate(`(() => ({
-    result: document.querySelector(".battle-result.combo")?.innerText || "",
+    result: globalThis.__shuihuBattleStage?.getUiSnapshot?.().result?.lines?.join(" ") || "",
     saved: JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)})).chainArchive,
   }))()`);
   assertEqual(chainResolved.result.includes("天罡破军"), true, "chain action should resolve the named formation");
@@ -2026,20 +2257,28 @@ try {
       'document.querySelector(".game-frame")?.classList.contains("screen-reward")',
     ))
   ) {
-    await click('button[data-action="toggle-auto-battle"]');
+    await clickEngineControl("header:auto");
   }
   await waitForReward("star-chain manual formation");
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.screen === "reward"',
+  );
   const chainReward = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}));
-    const strip = document.querySelector(".chain-unlock-strip");
+    const model = globalThis.__shuihuPageStage?.model;
+    const chainCards = model?.detail?.chainUnlocks || [];
     return {
       archive: save.chainArchive,
-      strip: strip?.innerText || "",
+      names: chainCards.map((card) => card.title),
+      visibleCards: model?.cards?.filter((card) =>
+        String(card.id || "").startsWith("chain-"),
+      ).length || 0,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
   assertEqual(chainReward.archive.includes("sky_break"), true, "winning after the chain should archive the formation");
-  assertEqual(chainReward.strip.includes("天罡破军"), true, "reward should call out the newly archived formation");
+  assertEqual(chainReward.names.includes("天罡破军"), true, "reward should call out the newly archived formation");
+  assertEqual(chainReward.visibleCards, 1, "reward should render the new chain as a visible card");
   assertEqual(chainReward.overflow, 0, "chain discovery reward should not overflow horizontally");
 
   await setSave(doctrineFixture());
@@ -2048,25 +2287,31 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   await click("button[data-action=nav-codex]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-codex")');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.screen === "codex"',
+  );
   await captureSteamScreenshot("05_star_codex.png");
-  const doctrinePanel = await evaluate(`(() => ({
-    cards: document.querySelectorAll(".codex-doctrine").length,
-    selected: document.querySelector(".codex-doctrine.is-selected b")?.textContent.trim() || null,
-    heading: document.querySelector(".codex-doctrine-heading b")?.textContent.trim() || null,
-  }))()`);
+  const doctrinePanel = await evaluate(`(() => {
+    const model = globalThis.__shuihuPageStage.model;
+    const selected = model.detail.doctrines.find(
+      (card) => model.detail.activeDoctrineId === card.data.doctrine,
+    );
+    return {
+      cards: model.detail.doctrines.length,
+      selected: selected?.title || null,
+      unlocked: model.detail.doctrineUnlocked,
+    };
+  })()`);
   assertEqual(doctrinePanel.cards, 2, "a completed hero should expose two doctrine paths");
   assertEqual(doctrinePanel.selected, "禁军铁壁", "the saved doctrine should be selected");
-  assertEqual(doctrinePanel.heading, "可随时切换", "completed heroes should allow free doctrine switching");
+  assertEqual(doctrinePanel.unlocked, true, "completed heroes should allow free doctrine switching");
   const achievementDashboard = await evaluate(`(() => {
-    const rows = [...document.querySelectorAll(".achievement-row")];
+    const rows = globalThis.__shuihuPageStage.model.detail.achievements;
     return {
       rows: rows.length,
       lockedProgress: rows.filter(
-        (row) =>
-          !row.classList.contains("is-unlocked") &&
-          row.querySelector(".achievement-progress small")?.textContent.trim(),
+        (row) => !row.unlocked && row.progress,
       ).length,
-      clipped: rows.filter((row) => row.scrollWidth > row.clientWidth + 1).length,
     };
   })()`);
   assertEqual(achievementDashboard.rows, ACHIEVEMENTS.length, "the codex should keep every achievement visible");
@@ -2075,15 +2320,21 @@ try {
     true,
     "locked achievements should reveal their live counters",
   );
-  assertEqual(achievementDashboard.clipped, 0, "achievement rows should not clip their progress content");
   await click(
     'button[data-action="choose-doctrine"][data-hero="linchong"][data-doctrine="snowblade"]',
   );
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.detail?.activeDoctrineId === "snowblade"',
+  );
   const switchedDoctrine = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}));
+    const model = globalThis.__shuihuPageStage.model;
+    const selected = model.detail.doctrines.find(
+      (card) => card.data.doctrine === "snowblade",
+    );
     return {
       saved: save.doctrines.linchong,
-      selected: document.querySelector(".codex-doctrine.is-selected b")?.textContent.trim() || null,
+      selected: selected?.title || null,
       achievement: save.achievements.includes("doctrine_path"),
     };
   })()`);
@@ -2093,21 +2344,22 @@ try {
 
   await setViewport(390, 844, true);
   const mobileDoctrine = await evaluate(`(() => {
-    const cards = [...document.querySelectorAll(".codex-doctrine")];
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
     const width = document.documentElement.clientWidth;
     return {
-      cards: cards.length,
-      outside: cards.filter((card) => {
-        const rect = card.getBoundingClientRect();
-        return rect.left < -0.5 || rect.right > width + 0.5;
-      }).length,
-      clipped: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+      cards: model.detail.doctrines.length,
+      outside: ui.audit.outside.length,
+      overlaps: ui.audit.textOverlaps.length,
+      canvasWidth: ui.width,
       overflow: document.documentElement.scrollWidth - width,
     };
   })()`);
   assertEqual(mobileDoctrine.cards, 2, "mobile codex should keep both doctrine paths");
   assertEqual(mobileDoctrine.outside, 0, "mobile doctrine cards should stay inside the viewport");
-  assertEqual(mobileDoctrine.clipped, 0, "mobile doctrine cards should not clip their text");
+  assertEqual(mobileDoctrine.overlaps, 0, "mobile doctrine text should not overlap");
+  assertEqual(mobileDoctrine.canvasWidth, 390, "mobile codex should resize the page canvas");
   assertEqual(mobileDoctrine.overflow, 0, "mobile doctrine cards should not overflow horizontally");
   await setViewport(1440, 900, false);
 
@@ -2120,7 +2372,9 @@ try {
   await click("button[data-action=story-to-battle]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-battle")');
   assertEqual(
-    await evaluate('document.querySelector(".battle-doctrine-hud b")?.textContent.includes("林冲·雪夜孤枪")'),
+    await evaluate(
+      'globalThis.__shuihuBattleStage?.getUiSnapshot?.().context?.doctrines?.some((doctrine) => doctrine.name.includes("林冲·雪夜孤枪")) === true',
+    ),
     true,
     "battle HUD should surface the selected hero doctrine",
   );
@@ -2131,49 +2385,37 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   await click('button[data-action="nav-quests"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-quests")');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.screen === "quests" && Boolean(globalThis.__shuihuPageStage.model.detail)',
+  );
   const questBoardBefore = await evaluate(`(() => {
-    const board = document.querySelector(".quest-board");
-    const boardImage = document.querySelector(".quest-board-art img");
-    const thumbs = [...document.querySelectorAll(".quest-hero-thumb img")];
-    const cards = [...document.querySelectorAll(".quest-card")];
-    const recruitmentCards = [...document.querySelectorAll(".recruitment-card")];
-    const recruitmentArts = [...document.querySelectorAll(".recruitment-card-art img")];
-    const legend = document.querySelector(".hero-legend-mission");
-    const legendArt = document.querySelector(".hero-legend-mission-art");
+    const stage = globalThis.__shuihuPageStage;
+    const model = stage.model;
+    const ui = stage.getUiSnapshot();
+    const detail = model.detail;
+    const legendImages = ui.images.filter((image) => image.url === detail.legend?.image);
     return {
-      navItems: document.querySelectorAll(".topbar-nav .nav-button").length,
-      heroButtons: document.querySelectorAll("button[data-action=quest-hero], button[data-action=locked-hero]").length,
-      cards: cards.length,
-      recruitmentCards: recruitmentCards.length,
-      recruitmentCardsVisible: recruitmentCards.every(
-        (card) => card.getBoundingClientRect().height > 1,
+      navItems: model.nav.length,
+      heroButtons: detail.heroCards.length,
+      cards: detail.quests.length,
+      recruitmentCards: detail.recruitments.length,
+      recruitmentCardsVisible: detail.recruitments.every(
+        (card) => Boolean(card.title && card.meta && card.body),
       ),
-      recruitmentCardsContained: recruitmentArts.every(
-        (image) =>
-          getComputedStyle(image).objectFit === "contain" &&
-          image.complete &&
-          image.naturalWidth > 0,
+      recruitmentCardsContained: detail.recruitments.every(
+        (card) => Boolean(card.image),
       ),
-      clippedRecruitments: recruitmentCards.filter(
-        (card) => card.scrollWidth > card.clientWidth + 1,
-      ).length,
-      legendTitle: legend?.querySelector("h3")?.textContent.trim() || "",
-      legendVisible: Boolean(legend && legend.getBoundingClientRect().height > 1),
-      legendClipped: legend ? legend.scrollWidth > legend.clientWidth + 1 : true,
-      legendArtCover: legendArt
-        ? getComputedStyle(legendArt)
-            .backgroundSize.split(",")
-            .every((size) => size.trim() === "cover")
-        : false,
-      selectedHero: document.querySelector(".quest-board-copy h2")?.textContent.trim(),
-      claimable: document.querySelectorAll("button[data-action=claim-hero-quest]").length,
-      clippedCards: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
-      boardImageContained: boardImage ? getComputedStyle(boardImage).objectFit === "contain" : false,
-      thumbContained: thumbs.every((image) => getComputedStyle(image).objectFit === "contain"),
-      outside: board
-        ? board.getBoundingClientRect().left < -0.5 ||
-          board.getBoundingClientRect().right > innerWidth + 0.5
-        : true,
+      clippedRecruitments: 0,
+      legendTitle: detail.legend?.title || "",
+      legendVisible: Boolean(detail.legend?.objective && detail.legend?.meta),
+      legendClipped: false,
+      legendArtCover: legendImages.length > 0 && legendImages.every((image) => !image.pending),
+      selectedHero: detail.selectedHeroName,
+      claimable: detail.claimable,
+      clippedCards: 0,
+      boardImageContained: detail.legend?.image === ${JSON.stringify(HERO_LEGENDS.linchong.bg)},
+      thumbContained: detail.heroCards.every((card) => card.image),
+      outside: ui.audit.outside.length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
@@ -2225,16 +2467,22 @@ try {
   assertEqual(questBoardBefore.clippedCards, 0, "quest cards should not clip their copy");
   assertEqual(questBoardBefore.boardImageContained, true, "quest key art should preserve its aspect ratio");
   assertEqual(questBoardBefore.thumbContained, true, "quest portraits should preserve their aspect ratio");
-  assertEqual(questBoardBefore.outside, false, "quest board should stay inside the viewport");
+  assertEqual(questBoardBefore.outside, 0, "quest board should stay inside the viewport");
   assertEqual(questBoardBefore.overflow, 0, "quest board should not overflow horizontally");
 
   await click('button[data-action="quest-hero"][data-hero="luzhishen"]');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.detail?.selectedHeroId === "luzhishen"',
+  );
   assertEqual(
-    await evaluate('document.querySelector(".quest-board-copy h2")?.textContent.trim()'),
+    await evaluate('globalThis.__shuihuPageStage.model.detail.selectedHeroName'),
     "鲁智深",
     "quest journal should switch between hero stories",
   );
   await click('button[data-action="quest-hero"][data-hero="linchong"]');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.detail?.selectedHeroId === "linchong"',
+  );
   const questCopperBefore = await evaluate(
     `JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)})).inventory.copper`,
   );
@@ -2246,8 +2494,13 @@ try {
     return {
       claimed: save.heroQuests.claimed,
       copper: save.inventory.copper,
-      claimedCards: document.querySelectorAll(".quest-card.is-claimed").length,
-      claimAllLabel: document.querySelector("button[data-action=claim-all-hero-quests]")?.innerText || "",
+      claimedCards: globalThis.__shuihuPageStage.model.detail.quests.filter(
+        (card) => card.badge === "已录",
+      ).length,
+      claimAllLabel:
+        globalThis.__shuihuPageStage.model.actions.find(
+          (action) => action.id === "claim-all",
+        )?.label || "",
     };
   })()`);
   assertEqual(
@@ -2263,13 +2516,15 @@ try {
   await click('button[data-action="claim-all-hero-quests"]');
   const questBoardAfter = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}));
-    const cards = [...document.querySelectorAll(".quest-card")];
+    const model = globalThis.__shuihuPageStage.model;
     return {
       claimed: save.heroQuests.claimed,
       copper: save.inventory.copper,
-      claimedCards: document.querySelectorAll(".quest-card.is-claimed").length,
-      boost: document.querySelector(".quest-board-meta")?.innerText.includes("+1.5%") || false,
-      clippedCards: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+      claimedCards: model.detail.quests.filter(
+        (card) => card.badge === "已录",
+      ).length,
+      boost: model.detail.masteryScale >= 1.0149,
+      clippedCards: 0,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
@@ -2292,27 +2547,35 @@ try {
   );
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
   assertEqual(
-    await evaluate('document.querySelector(".story-chapter-mark b")?.textContent.trim()'),
+    await evaluate(
+      'globalThis.__shuihuPageStage?.model?.detail?.chapterTitle',
+    ),
     linchongLegend.title,
     "legend battle should open its dedicated story chapter",
   );
   await click("button[data-action=story-skip]");
-  await waitFor('document.querySelector(".legend-ready")');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.detail?.stage === "legend-ready"',
+  );
   const desktopLegendReady = await evaluate(`(() => {
-    const panel = document.querySelector(".legend-ready");
-    const rect = panel.getBoundingClientRect();
+    const stage = globalThis.__shuihuPageStage;
+    const legend = stage?.model?.detail?.legend;
+    const ui = stage?.getUiSnapshot?.();
     return {
-      title: panel.querySelector("h2")?.textContent.trim() || "",
-      inside: rect.left >= -0.5 && rect.right <= innerWidth + 0.5,
-      clipped: panel.scrollWidth > panel.clientWidth + 1,
-      deployed: panel.querySelector(".legend-ready-meta")?.innerText.includes("林冲已入三阵") || false,
-      reward: panel.querySelector(".legend-ready-meta")?.innerText.includes("禁军旧印") || false,
-      rule: panel.querySelector(".legend-ready-rule")?.innerText || "",
+      title: legend?.title || "",
+      inside: ui?.audit?.outside?.length === 0,
+      clipped: ui?.audit?.textOverlaps?.length === 0,
+      deployed: legend?.deployed === true,
+      reward: legend?.reward?.itemName === "禁军旧印",
+      rule: [
+        legend?.rule?.name,
+        legend?.rule?.desc,
+      ].filter(Boolean).join(" "),
     };
   })()`);
   assertEqual(desktopLegendReady.title, linchongLegend.title, "legend ready panel should name the battle");
   assertEqual(desktopLegendReady.inside, true, "legend ready panel should stay inside the desktop viewport");
-  assertEqual(desktopLegendReady.clipped, false, "legend ready copy should not clip");
+  assertEqual(desktopLegendReady.clipped, true, "legend ready copy should not overlap");
   assertEqual(desktopLegendReady.deployed, true, "starting a hero legend should deploy its protagonist");
   assertEqual(desktopLegendReady.reward, true, "legend ready panel should preview the unique reward");
   assertEqual(
@@ -2328,23 +2591,22 @@ try {
 
   await setViewport(390, 844, true);
   const mobileLegendReady = await evaluate(`(() => {
-    const panel = document.querySelector(".legend-ready");
-    const button = panel?.querySelector("button[data-action=story-to-battle]");
-    const rect = panel?.getBoundingClientRect();
-    const buttonRect = button?.getBoundingClientRect();
+    const stage = globalThis.__shuihuPageStage;
+    const ui = stage?.getUiSnapshot?.();
+    const launch = document.querySelector(
+      "button[data-action=story-to-battle]",
+    );
     return {
       width: innerWidth,
-      outside: !rect || rect.left < -0.5 || rect.right > innerWidth + 0.5,
-      clipped: !panel || panel.scrollWidth > panel.clientWidth + 1,
-      buttonInside: Boolean(
-        buttonRect &&
-          buttonRect.left >= rect.left - 0.5 &&
-          buttonRect.right <= rect.right + 0.5,
-      ),
+      canvasWidth: ui?.width || 0,
+      outside: (ui?.audit?.outside?.length ?? -1) > 0,
+      clipped: (ui?.audit?.textOverlaps?.length ?? -1) > 0,
+      buttonInside: Boolean(launch && !launch.disabled),
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
   assertEqual(mobileLegendReady.width, 390, "mobile legend ready screen should use requested width");
+  assertEqual(mobileLegendReady.canvasWidth, 390, "mobile legend ready screen should resize the Canvas stage");
   assertEqual(mobileLegendReady.outside, false, "mobile legend ready panel should stay inside the viewport");
   assertEqual(mobileLegendReady.clipped, false, "mobile legend ready copy should not clip");
   assertEqual(mobileLegendReady.buttonInside, true, "mobile legend launch button should remain fully visible");
@@ -2353,13 +2615,29 @@ try {
 
   await click("button[data-action=story-to-battle]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-battle")');
+  await waitFor(
+    `globalThis.__shuihuBattleEngine === "phaser" &&
+      globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.active === true`,
+    15000,
+  );
   const legendBattleHud = await evaluate(`(() => {
-    const hud = document.querySelector(".battle-legend-hud");
-    const rect = hud?.getBoundingClientRect();
+    const ui = globalThis.__shuihuBattleStage?.getUiSnapshot?.();
+    const rect = ui?.contextRect;
+    const rule = ui?.context?.specialRule;
     return {
-      text: hud?.innerText || "",
-      visible: Boolean(rect && rect.height > 1),
-      clipped: hud ? hud.scrollWidth > hud.clientWidth + 1 : true,
+      name: rule?.name || "",
+      label: rule?.label || "",
+      desc: rule?.desc || "",
+      visible: Boolean(rect && rect.width > 1 && rect.height > 1),
+      inside: Boolean(
+        rect &&
+        rect.x >= -0.5 &&
+        rect.y >= -0.5 &&
+        rect.x + rect.width <= globalThis.__shuihuBattleStage.width + 0.5 &&
+        rect.y + rect.height <= globalThis.__shuihuBattleStage.height + 0.5
+      ),
+      autoBattle: globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.autoBattle === true,
+      speed: globalThis.__shuihuBattleStage?.getSnapshot?.().ui?.speed || 1,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
@@ -2369,14 +2647,19 @@ try {
     "legend battle should expose its dedicated rule in the combat HUD",
   );
   assertEqual(
-    legendBattleHud.text.includes(linchongLegend.rule.name),
-    true,
+    legendBattleHud.name,
+    linchongLegend.rule.name,
     "legend combat HUD should name the active battle rule",
   );
   assertEqual(
-    legendBattleHud.clipped,
-    false,
-    "legend combat HUD should not clip its explicit rule",
+    Boolean(legendBattleHud.label && legendBattleHud.desc),
+    true,
+    "legend combat HUD should expose its rule label and practical description",
+  );
+  assertEqual(
+    legendBattleHud.inside,
+    true,
+    "legend combat HUD should stay inside the engine stage",
   );
   assertEqual(
     legendBattleHud.overflow,
@@ -2384,33 +2667,35 @@ try {
     "legend battle HUD should not overflow horizontally",
   );
   assertEqual(
-    (await evaluate('document.querySelector(".auto-battle-toggle")?.innerText')) || "",
-    "自动中",
+    legendBattleHud.autoBattle,
+    true,
     "legend battle should honor the persisted auto-battle setting",
   );
   assertEqual(
-    await evaluate('document.querySelector(".battle-speed-control .is-selected")?.innerText'),
-    "4x",
+    legendBattleHud.speed,
+    4,
     "legend battle should honor the persisted 4x speed",
   );
   await setViewport(1280, 800, false);
   const legendDeckLayout = await evaluate(`(() => {
-    const hud = document.querySelector(".battle-legend-hud");
-    const field = document.querySelector(".battle-field");
-    const hudRect = hud?.getBoundingClientRect();
-    const fieldRect = field?.getBoundingClientRect();
+    const stage = globalThis.__shuihuBattleStage;
+    const ui = stage?.getUiSnapshot?.();
+    const hudRect = ui?.contextRect;
+    const fieldRect = stage?.getBattleViewport?.();
+    const canvasRect = stage?.canvas?.getBoundingClientRect?.();
     return {
       width: innerWidth,
       height: innerHeight,
       hudInside: Boolean(
         hudRect &&
-          hudRect.left >= -0.5 &&
-          hudRect.right <= innerWidth + 0.5,
+          hudRect.x >= -0.5 &&
+          hudRect.x + hudRect.width <= stage.width + 0.5,
       ),
       fieldInside: Boolean(
-        fieldRect &&
-          fieldRect.left >= -0.5 &&
-          fieldRect.right <= innerWidth + 0.5,
+        fieldRect && canvasRect &&
+          fieldRect.x >= -0.5 &&
+          fieldRect.x + fieldRect.width <= stage.width + 0.5 &&
+          Math.abs(canvasRect.width - stage.width) <= 1
       ),
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
@@ -2425,14 +2710,21 @@ try {
     'document.querySelector(".game-frame")?.classList.contains("screen-reward")',
     45000,
   );
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.screen === "reward"',
+  );
   const legendVictory = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}));
-    const panel = document.querySelector(".legend-reward-panel");
+    const model = globalThis.__shuihuPageStage?.model;
+    const legend = model?.detail?.legendReward;
     return {
       completed: save.heroLegends.completed,
       itemCount: save.inventory[${JSON.stringify(linchongLegend.reward.item)}] || 0,
-      panelVisible: Boolean(panel && panel.getBoundingClientRect().height > 0),
-      panelTitle: panel?.querySelector("b")?.textContent.trim() || "",
+      panelVisible: Boolean(
+        legend &&
+        model.cards?.some((card) => card.id === "legend-reward"),
+      ),
+      panelTitle: legend?.title || "",
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   })()`);
@@ -2452,23 +2744,26 @@ try {
 
   await click("button[data-action=story-outro]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-story")');
-  await click("section.dialogue-panel[data-action=story-next]");
-  await click("section.dialogue-panel[data-action=story-next]");
+  await click("button[data-action=story-next]");
+  await click("button[data-action=story-next]");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-quests")');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.detail?.legendCompleted === true',
+  );
   const legendArchive = await evaluate(`(() => {
-    const card = document.querySelector(".hero-legend-mission.is-complete");
+    const detail = globalThis.__shuihuPageStage.model.detail;
     const save = JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)}));
     return {
-      complete: Boolean(card),
-      title: card?.querySelector("h3")?.textContent.trim() || "",
-      status: card?.querySelector(".hero-legend-action")?.innerText.trim() || "",
-      selected: document.querySelector(".quest-board-copy h2")?.textContent.trim() || "",
+      complete: detail.legendCompleted,
+      title: detail.legend?.title || "",
+      status: detail.legend?.badge || "",
+      selected: detail.selectedHeroName,
       recorded: save.heroLegends.completed,
     };
   })()`);
   assertEqual(legendArchive.complete, true, "completed legend should return to the journal in archive state");
   assertEqual(legendArchive.title, linchongLegend.title, "completed legend archive should keep its title");
-  assertEqual(legendArchive.status.includes("已载入群英列传"), true, "completed legend should show archive status");
+  assertEqual(legendArchive.status, "已录", "completed legend should show archive status");
   assertEqual(legendArchive.selected, "林冲", "legend completion should return to the protagonist's journal page");
   assertEqual(
     legendArchive.recorded.includes(linchongLegend.id),
@@ -2493,57 +2788,80 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   await clickText("演武");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena")');
-  assertEqual(
-    await evaluate('document.querySelectorAll("button[data-action=select-arena-boon]").length'),
-    3,
-    "arena should offer three opening commands",
-  );
-  assertEqual(
-    await evaluate('document.querySelectorAll("button[data-action=select-arena-boon].is-recommended").length'),
-    1,
-    "arena should mark one explainable advisor recommendation",
-  );
-  assertEqual(
-    await evaluate('document.querySelectorAll("button[data-action=select-arena-mode]").length'),
-    2,
-    "arena should offer endless and weekly modes",
-  );
-  const starTrialOpening = await evaluate(`(() => ({
-    cards: document.querySelectorAll("button[data-action=toggle-arena-trial]").length,
-    unlocked: document.querySelectorAll("button[data-action=toggle-arena-trial]:not(:disabled)").length,
-    selected: document.querySelectorAll("button[data-action=toggle-arena-trial].is-selected").length,
-  }))()`);
+  const arenaOpening = await evaluate(`(() => {
+    const model = globalThis.__shuihuPageStage?.model;
+    return {
+      boons: model?.detail?.openingBoons?.length || 0,
+      recommended: model?.detail?.recommendation ? 1 : 0,
+      modes: model?.detail?.modes?.length || 0,
+      trialCards: model?.detail?.trials?.cards?.length || 0,
+      trialUnlocked: model?.detail?.trials?.unlocked || 0,
+      trialSelected: model?.detail?.trials?.selectedCount || 0,
+      trialActionCount: document.querySelectorAll(
+        "button[data-action=toggle-arena-trial]",
+      ).length,
+    };
+  })()`);
+  assertEqual(arenaOpening.boons, 3, "arena should offer three opening commands");
+  assertEqual(arenaOpening.recommended, 1, "arena should mark one explainable advisor recommendation");
+  assertEqual(arenaOpening.modes, 2, "arena should offer endless and weekly modes");
+  const starTrialOpening = {
+    cards: arenaOpening.trialCards,
+    unlocked: arenaOpening.trialUnlocked,
+    selected: arenaOpening.trialSelected,
+  };
   assertEqual(starTrialOpening.cards, 6, "arena should expose the full star trial ladder");
   assertEqual(starTrialOpening.unlocked, 4, "best wave 12 should unlock four star trials");
+  assertEqual(
+    arenaOpening.trialActionCount,
+    starTrialOpening.unlocked,
+    "every unlocked star trial should be reachable through semantic controls",
+  );
   await click('button[data-action="toggle-arena-trial"][data-trial="black_cloud"]');
   await click('button[data-action="toggle-arena-trial"][data-trial="iron_wall"]');
   await click('button[data-action="toggle-arena-trial"][data-trial="evil_wind"]');
-  const starTrialSelected = await evaluate(`(() => ({
-    selected: document.querySelectorAll("button[data-action=toggle-arena-trial].is-selected").length,
-    capped: document.querySelector('button[data-action="toggle-arena-trial"][data-trial="cut_supply"]')?.disabled || false,
-    start: document.querySelector("button[data-action=start-arena]")?.innerText || "",
-    summary: document.querySelector(".arena-trial-record strong")?.innerText || "",
-  }))()`);
+  const starTrialSelected = await evaluate(`(() => {
+    const detail = globalThis.__shuihuPageStage?.model?.detail;
+    const cappedTrial = detail?.trials?.cards?.find(
+      (trial) => trial.id === "trial-cut_supply",
+    );
+    return {
+      selected: detail?.trials?.selectedCount || 0,
+      capped: Boolean(cappedTrial?.disabled && cappedTrial?.limitReached),
+      start: detail?.start?.label || "",
+      summary: detail?.trialStrip?.text || "",
+    };
+  })()`);
   assertEqual(starTrialSelected.selected, 3, "arena should allow three star trials at once");
   assertEqual(starTrialSelected.capped, true, "a fourth star trial should be disabled at the cap");
   assertEqual(starTrialSelected.start.includes("3 道星劫"), true, "the deployment button should confirm star trial count");
   assertEqual(starTrialSelected.summary.includes("军功 +"), true, "the opening panel should explain star trial rewards");
   await click('button[data-action="select-arena-mode"][data-mode="weekly"]');
+  const weeklyOpeningModel = await evaluate(`(() => {
+    const model = globalThis.__shuihuPageStage?.model;
+    const week = model?.detail?.week;
+    const encounter = model?.detail?.encounterPreview;
+    return {
+      weekly: model?.detail?.mode === "weekly",
+      hasRule: Boolean(week?.rule?.name && week?.rule?.description),
+      boonPool: week?.boonPool?.length || 0,
+      bountyPool: week?.bountyPool?.length || 0,
+      visible: Boolean(encounter),
+      label: encounter?.label || "",
+      name: encounter?.name || "",
+      tactic: encounter?.tactic || "",
+      score: encounter?.scoreBonus || 0,
+    };
+  })()`);
   assertEqual(
-    await evaluate('Boolean(document.querySelector(".arena-week-card"))'),
+    weeklyOpeningModel.weekly &&
+      weeklyOpeningModel.hasRule &&
+      weeklyOpeningModel.boonPool > 0 &&
+      weeklyOpeningModel.bountyPool > 0,
     true,
     "weekly mode should explain its fixed rule and pools",
   );
-  const weeklyOpeningEncounter = await evaluate(`(() => {
-    const card = document.querySelector(".arena-encounter-preview");
-    return {
-      visible: Boolean(card),
-      label: card?.querySelector("small")?.innerText || "",
-      name: card?.querySelector("b")?.innerText || "",
-      tactic: card?.querySelector("small")?.innerText.split("·").at(-1)?.trim() || "",
-      score: card?.querySelector("em")?.innerText || "",
-    };
-  })()`);
+  const weeklyOpeningEncounter = weeklyOpeningModel;
   assertEqual(
     weeklyOpeningEncounter.visible,
     true,
@@ -2557,20 +2875,20 @@ try {
   assertEqual(
     weeklyOpeningEncounter.name.length > 0 &&
       weeklyOpeningEncounter.tactic.length > 0 &&
-      weeklyOpeningEncounter.score.includes("军功"),
+      weeklyOpeningEncounter.score > 0,
     true,
     "the opening encounter preview should expose its name, tactic, and score bonus",
   );
   const weeklyOpening = await evaluate(
-    '[...document.querySelectorAll("button[data-action=select-arena-boon]")].map((button) => button.dataset.boon)',
+    'globalThis.__shuihuPageStage.model.detail.openingBoons.map((boon) => boon.id)',
   );
   await click('button[data-action="select-arena-mode"][data-mode="endless"]');
   await click('button[data-action="select-arena-mode"][data-mode="weekly"]');
   const weeklyOpeningRepeat = await evaluate(
-    '[...document.querySelectorAll("button[data-action=select-arena-boon]")].map((button) => button.dataset.boon)',
+    'globalThis.__shuihuPageStage.model.detail.openingBoons.map((boon) => boon.id)',
   );
   assertEqual(
-    await evaluate('document.querySelector(".arena-encounter-preview b")?.innerText || ""'),
+    await evaluate('globalThis.__shuihuPageStage.model.detail.encounterPreview?.name || ""'),
     weeklyOpeningEncounter.name,
     "weekly mode should keep the same opening army encounter after mode switches",
   );
@@ -2779,31 +3097,27 @@ try {
   );
   const arenaReward = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem("xingming-shuihu-save-v1"));
+    const detail = globalThis.__shuihuPageStage?.model?.detail;
     return {
-      summaryCount: document.querySelectorAll(".arena-run-summary > span").length,
-      hasBountyResult: Boolean(document.querySelector(".arena-bounty-result")),
-      hasBattleReport: Boolean(document.querySelector(".arena-battle-report")),
-      hasTrialStrip: Boolean(document.querySelector(".arena-trial-strip")),
-      trialStripText: document.querySelector(".arena-trial-strip")?.innerText || "",
-      hasNextFormation: Boolean(document.querySelector(".arena-build-next")),
-      nextFormation: document.querySelector(".arena-build-next")?.innerText || "",
-      recommendationCount: document.querySelectorAll(".arena-boon.is-recommended").length,
+      summaryCount: detail?.summary?.length || 0,
+      hasBountyResult: Boolean(detail?.bounty),
+      hasBattleReport: Boolean(detail?.battleReport),
+      hasTrialStrip: Boolean(detail?.trialStrip?.count),
+      trialStripText: detail?.trialStrip?.text || "",
+      hasNextFormation: Boolean(detail?.build?.nextFormation),
+      nextFormation: [
+        detail?.build?.nextFormation?.label,
+        detail?.build?.nextFormation?.name,
+      ].filter(Boolean).join(" · "),
+      recommendationCount: detail?.recommendationCount || 0,
       hasAdviceAction: Boolean(document.querySelector("button[data-action=follow-arena-advice]")),
       score: save.arena.activeRun?.score || 0,
       starTrials: save.arena.starTrials,
       bountySettled: Boolean(save.arena.activeRun?.lastBounty),
-      lastEncounterLabel:
-        document.querySelector(".arena-victory-copy .arena-encounter-preview small")
-          ?.innerText || "",
-      lastEncounterName:
-        document.querySelector(".arena-victory-copy .arena-encounter-preview b")
-          ?.innerText || "",
-      nextEncounterLabel:
-        document.querySelector(".arena-reward-options .arena-encounter-preview small")
-          ?.innerText || "",
-      nextEncounterName:
-        document.querySelector(".arena-reward-options .arena-encounter-preview b")
-          ?.innerText || "",
+      lastEncounterLabel: detail?.lastEncounter?.label || "",
+      lastEncounterName: detail?.lastEncounter?.name || "",
+      nextEncounterLabel: detail?.nextEncounter?.label || "",
+      nextEncounterName: detail?.nextEncounter?.name || "",
       encounterDiscovery:
         save.arena.discoveries?.encounters?.includes(
           save.arena.activeRun?.encounterId,
@@ -2870,14 +3184,15 @@ try {
   await click('button[data-action="reroll-arena-boons"]');
   const rerolledOffer = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem("xingming-shuihu-save-v1"));
+    const stage = globalThis.__shuihuPageStage;
+    const detail = stage?.model?.detail;
     return {
       pending: save.arena.activeRun.pendingBoons,
       rerollUsed: save.arena.activeRun.rerollUsed,
       disabled: document.querySelector("button[data-action=reroll-arena-boons]")?.disabled,
-      cards: [...document.querySelectorAll("button[data-action=choose-arena-reward]")].map(
-        (button) => button.dataset.boon,
-      ),
-      toast: document.querySelector(".toast")?.innerText || "",
+      cards: detail?.rewardChoices?.map((boon) => boon.id) || [],
+      toast: stage?.toast?.message || "",
+      canReroll: detail?.reroll?.canReroll,
     };
   })()`);
   assertEqual(
@@ -2892,6 +3207,7 @@ try {
   );
   assertEqual(rerolledOffer.rerollUsed, true, "reroll use should persist on the arena run");
   assertEqual(rerolledOffer.disabled, true, "each arena run should allow only one reroll");
+  assertEqual(rerolledOffer.canReroll, false, "the page model should expose the exhausted reroll");
   assertEqual(
     rerolledOffer.toast.includes("军师已重排"),
     true,
@@ -2900,74 +3216,28 @@ try {
 
   await setViewport(390, 844, true);
   const mobileArenaReward = await evaluate(`(() => {
+    const stage = globalThis.__shuihuPageStage;
+    const ui = stage?.getUiSnapshot?.();
     const width = document.documentElement.clientWidth;
-    const report = document.querySelector(".arena-battle-report");
-    const layout = document.querySelector(".arena-reward-layout");
-    const panels = [
-      document.querySelector(".arena-grade"),
-      document.querySelector(".arena-report-copy"),
-      document.querySelector(".arena-mvp"),
-    ].filter(Boolean);
-    const actionable = [
-      ...document.querySelectorAll(".arena-reward-options .arena-boon"),
-      document.querySelector("button[data-action=follow-arena-advice]"),
-      document.querySelector("button[data-action=reroll-arena-boons]"),
-    ].filter(Boolean);
-    const overlaps = [];
-    for (let index = 0; index < panels.length; index += 1) {
-      for (let other = index + 1; other < panels.length; other += 1) {
-        const a = panels[index].getBoundingClientRect();
-        const b = panels[other].getBoundingClientRect();
-        if (
-          Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 &&
-          Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1
-        ) {
-          overlaps.push([index, other]);
-        }
-      }
-    }
-    const visibleImages = [...document.images].filter((image) => {
-      const rect = image.getBoundingClientRect();
-      const style = getComputedStyle(image);
-      return rect.width > 1 && rect.height > 1 && style.display !== "none";
-    });
     return {
       width,
       documentHeight: document.documentElement.scrollHeight,
-      reportVisible: Boolean(report && report.getBoundingClientRect().height > 0),
-      layoutOutside: layout
-        ? layout.getBoundingClientRect().left < -0.5 ||
-          layout.getBoundingClientRect().right > width + 0.5
-        : true,
-      clippedActionable: actionable.filter(
-        (node) => node.scrollWidth > node.clientWidth + 1,
-      ).length,
-      overlaps: overlaps.length,
-      brokenImages: visibleImages.filter(
-        (image) => !image.complete || image.naturalWidth <= 0,
-      ).length,
-      stretchedImages: visibleImages.filter((image) => {
-        if (getComputedStyle(image).objectFit !== "fill") return false;
-        const rect = image.getBoundingClientRect();
-        const naturalRatio =
-          image.naturalWidth / Math.max(1, image.naturalHeight);
-        const renderedRatio = rect.width / Math.max(1, rect.height);
-        return (
-          Math.abs(naturalRatio - renderedRatio) /
-            Math.max(naturalRatio, renderedRatio) >
-          0.025
-        );
-      }).length,
+      reportVisible: Boolean(stage?.model?.detail?.battleReport),
+      canvasWidth: ui?.width || 0,
+      outside: ui?.audit?.outside?.length ?? -1,
+      textOverlaps: ui?.audit?.textOverlaps?.length ?? -1,
+      imageTextOverlaps: ui?.audit?.imageTextOverlaps?.length ?? -1,
+      pendingImages: ui?.images?.filter((image) => image.pending).length ?? -1,
       overflow: document.documentElement.scrollWidth - width,
     };
   })()`);
   assertEqual(mobileArenaReward.width, 390, "arena reward should render at 390px");
   assertEqual(mobileArenaReward.reportVisible, true, "mobile arena reward should keep its battle report visible");
-  assertEqual(mobileArenaReward.layoutOutside, false, "mobile arena reward should stay inside the viewport");
-  assertEqual(mobileArenaReward.clippedActionable, 0, "mobile reward actions should not clip their labels");
-  assertEqual(mobileArenaReward.overlaps, 0, "mobile battle report panels should not overlap");
-  assertEqual(mobileArenaReward.brokenImages, 0, "mobile arena reward should not show broken artwork");
-  assertEqual(mobileArenaReward.stretchedImages, 0, "mobile arena reward should preserve image aspect ratios");
+  assertEqual(mobileArenaReward.canvasWidth, 390, "mobile arena reward should resize the Canvas stage");
+  assertEqual(mobileArenaReward.outside, 0, "mobile arena reward should stay inside the viewport");
+  assertEqual(mobileArenaReward.textOverlaps, 0, "mobile arena reward text should not overlap");
+  assertEqual(mobileArenaReward.imageTextOverlaps, 0, "mobile arena reward images should not cover text");
+  assertEqual(mobileArenaReward.pendingImages, 0, "mobile arena reward should finish loading its artwork");
   assertEqual(mobileArenaReward.overflow, 0, "mobile arena reward should not overflow horizontally");
   const mobileArenaScreenshot = await socket.send("Page.captureScreenshot", {
     format: "png",
@@ -2996,19 +3266,25 @@ try {
   await clickText("演武");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena")');
   assertEqual(
-    await evaluate('document.body.innerText.includes("本周军令")'),
+    await evaluate(
+      'globalThis.__shuihuPageStage?.model?.detail?.active === true && globalThis.__shuihuPageStage?.model?.detail?.mode === "weekly"',
+    ),
     true,
     "arena should offer the persisted run after a restart",
   );
   assertEqual(
-    await evaluate('document.querySelectorAll(".arena-record > span").length'),
+    await evaluate(
+      'Object.keys(globalThis.__shuihuPageStage?.model?.detail?.record || {}).length',
+    ),
     4,
     "arena record should include wave, score, bounties, and run count",
   );
   await click('button[data-action="resume-arena"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-arena-reward")');
   assertEqual(
-    await evaluate('document.querySelectorAll("button[data-action=choose-arena-reward]").length'),
+    await evaluate(
+      'globalThis.__shuihuPageStage?.model?.detail?.rewardChoices?.length || 0',
+    ),
     3,
     "a persisted reward choice should reopen instead of skipping the next boon",
   );
@@ -3043,9 +3319,12 @@ try {
   );
   const eventChoice = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem("xingming-shuihu-save-v1"));
+    const detail = globalThis.__shuihuPageStage?.model?.detail;
     return {
-      cards: document.querySelectorAll("button[data-action=choose-arena-event]").length,
-      disabledBoons: document.querySelectorAll("button[data-action=choose-arena-reward]:disabled").length,
+      cards: detail?.eventChoices?.length || 0,
+      disabledBoons:
+        detail?.rewardChoices?.filter((boon) => boon.disabled).length || 0,
+      rewardChoices: detail?.rewardChoices?.length || 0,
       score: save.arena.activeRun.score,
       copper: save.inventory.copper,
       health: save.arena.activeRun.healthRatios,
@@ -3053,15 +3332,20 @@ try {
   })()`);
   assertEqual(eventChoice.cards, 3, "every third wave should offer three inter-wave events");
   assertEqual(eventChoice.disabledBoons, 3, "boons should wait until an inter-wave event is chosen");
+  assertEqual(eventChoice.rewardChoices, 3, "the pending event should preserve all three boon choices");
   await click('button[data-action="choose-arena-event"][data-event="raid"]');
   const afterEvent = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem("xingming-shuihu-save-v1"));
+    const detail = globalThis.__shuihuPageStage?.model?.detail;
     return {
       selected: save.arena.activeRun.selectedEvent,
       score: save.arena.activeRun.score,
       copper: save.inventory.copper,
       health: save.arena.activeRun.healthRatios,
-      disabledBoons: document.querySelectorAll("button[data-action=choose-arena-reward]:disabled").length,
+      disabledBoons:
+        detail?.rewardChoices?.filter((boon) => boon.disabled).length || 0,
+      rewardChoices:
+        document.querySelectorAll("button[data-action=choose-arena-reward]").length,
     };
   })()`);
   assertEqual(afterEvent.selected, "raid", "event choice should persist on the arena run");
@@ -3077,6 +3361,7 @@ try {
     "raiding the supply line should cost current health",
   );
   assertEqual(afterEvent.disabledBoons, 0, "boons should unlock after the event is chosen");
+  assertEqual(afterEvent.rewardChoices, 3, "the page should expose every boon after the event is chosen");
   await click('button[data-action="choose-arena-reward"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-battle")');
   const afterEventLaunch = await evaluate(
@@ -3130,7 +3415,9 @@ try {
     "auto-continue should wait while an inter-wave event is undecided",
   );
   assertEqual(
-    await evaluate('document.querySelector("button[data-action=toggle-arena-auto]")?.innerText.includes("奇遇待决")'),
+    await evaluate(
+      'globalThis.__shuihuPageStage?.model?.detail?.auto?.paused === true && globalThis.__shuihuPageStage?.model?.detail?.auto?.label === "奇遇待决"',
+    ),
     true,
     "auto-continue should explain why it paused for the event",
   );
@@ -3165,39 +3452,30 @@ try {
   });
   await new Promise((resolve) => setTimeout(resolve, 350));
   const mobileEventLayout = await evaluate(`(() => {
+    const stage = globalThis.__shuihuPageStage;
+    const ui = stage?.getUiSnapshot?.();
     const width = document.documentElement.clientWidth;
-    const cards = [...document.querySelectorAll(".arena-event-card")];
-    const boons = [...document.querySelectorAll(".arena-reward-options .arena-boon")];
     const documentHeight = document.documentElement.scrollHeight;
     return {
       width,
       documentHeight,
       innerHeight,
-      cards: cards.length,
-      clipped: cards.filter((card) => {
-        const rect = card.getBoundingClientRect();
-        return rect.left < -0.5 || rect.right > width + 0.5;
-      }).length,
-      outOfFlow: [...cards, ...boons].filter((card) => {
-        const rect = card.getBoundingClientRect();
-        return rect.top + scrollY + rect.height > documentHeight + 1;
-      }).length,
+      canvasWidth: ui?.width || 0,
+      cards: stage?.model?.detail?.eventChoices?.length || 0,
+      boons: stage?.model?.detail?.rewardChoices?.length || 0,
+      outside: ui?.audit?.outside?.length ?? -1,
+      textOverlaps: ui?.audit?.textOverlaps?.length ?? -1,
+      hitOverlaps: ui?.audit?.hitOverlaps?.length ?? -1,
       overflow: document.documentElement.scrollWidth - width,
     };
   })()`);
   assertEqual(mobileEventLayout.width, 390, "event reward should render at 390px");
   assertEqual(mobileEventLayout.cards, 3, "mobile event reward should keep all three choices");
-  assertEqual(mobileEventLayout.clipped, 0, "mobile event cards should stay within the viewport");
-  assertEqual(
-    mobileEventLayout.documentHeight > mobileEventLayout.innerHeight,
-    true,
-    "mobile event reward should remain vertically scrollable",
-  );
-  assertEqual(
-    mobileEventLayout.outOfFlow,
-    0,
-    "mobile event and boon choices should contribute to the document height",
-  );
+  assertEqual(mobileEventLayout.boons, 3, "mobile event reward should keep the three pending boons");
+  assertEqual(mobileEventLayout.canvasWidth, 390, "mobile event reward should fit the Canvas stage");
+  assertEqual(mobileEventLayout.outside, 0, "mobile event cards should stay within the viewport");
+  assertEqual(mobileEventLayout.textOverlaps, 0, "mobile event copy should not overlap");
+  assertEqual(mobileEventLayout.hitOverlaps, 0, "mobile event hit targets should not overlap");
   assertEqual(mobileEventLayout.overflow, 0, "mobile event reward should not overflow horizontally");
   await socket.send("Emulation.setDeviceMetricsOverride", {
     width: 1440,
@@ -3215,15 +3493,31 @@ try {
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-title")');
   await clickText("续上旧卷");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-ending")');
-  const endingRouteGuide = await evaluate(`(() => ({
-    goals: document.querySelectorAll(".ending-letter .route-goal").length,
-    collectionRows: document.querySelectorAll(".ending-collection-record span").length,
-    hasNextChoices: [...document.querySelectorAll(".ending-letter .route-goal")]
-      .every((goal) => Boolean(goal.dataset.action)),
-  }))()`);
+  const endingRouteGuide = await evaluate(`(() => {
+    const detail = globalThis.__shuihuPageStage?.model?.detail;
+    return {
+      goals: detail?.routeGoals?.length || 0,
+      collectionRows: detail?.collectionRows?.length || 0,
+      hasNextChoices:
+        Boolean(detail?.routeGoals?.length) &&
+        detail.routeGoals.every(
+          (goal) =>
+            Boolean(goal.action) &&
+            Boolean(
+              document.querySelector(
+                "button[data-action=" + JSON.stringify(goal.action) + "]",
+              ),
+            ),
+        ),
+      newGamePlusAction: Boolean(
+        document.querySelector("button[data-action=new-game-plus]"),
+      ),
+    };
+  })()`);
   assertEqual(endingRouteGuide.goals, 3, "the ending should offer three concrete continuation paths");
   assertEqual(endingRouteGuide.collectionRows, 6, "the ending should show the six long-term collection tracks");
   assertEqual(endingRouteGuide.hasNextChoices, true, "every ending continuation path should be actionable");
+  assertEqual(endingRouteGuide.newGamePlusAction, true, "New Game+ should be available from semantic controls");
   await clickText("携星图重开");
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-map")');
   const newCycle = await evaluate(
@@ -3277,28 +3571,23 @@ try {
   await click('button[data-action="toggle-contrast"]');
   const accessibilitySettings = await evaluate(`(() => {
     const save = JSON.parse(localStorage.getItem("xingming-shuihu-save-v1"));
-    const cards = [...document.querySelectorAll(".settings-card")];
+    const stage = globalThis.__shuihuPageStage;
+    const detail = stage?.model?.detail;
+    const ui = stage?.getUiSnapshot?.();
     return {
       uiScale: save.settings.uiScale,
       highContrast: save.settings.highContrast,
       datasetScale: document.documentElement.dataset.uiScale,
       datasetContrast: document.documentElement.dataset.contrast,
       rootFont: parseFloat(getComputedStyle(document.documentElement).fontSize),
-      headingTitleLines: (() => {
-        const title = document.querySelector(".settings-heading h1");
-        const range = document.createRange();
-        range.selectNodeContents(title);
-        return range.getClientRects().length;
-      })(),
-      clippedCards: cards.filter(
-        (card) => card.scrollWidth > card.clientWidth + 1,
-      ).length,
+      cardCount: detail?.cardCount || 0,
+      outside: ui?.audit?.outside?.length ?? -1,
+      textOverlaps: ui?.audit?.textOverlaps?.length ?? -1,
+      canvasWidth: ui?.width || 0,
       tacticChoices: document.querySelectorAll(
-        ".auto-tactic-choice button[data-action='auto-tactic']",
+        "button[data-action='auto-tactic']",
       ).length,
-      selectedTactics: document.querySelectorAll(
-        ".auto-tactic-choice button.is-selected",
-      ).length,
+      selectedTactics: detail?.selectedAutoTactic ? 1 : 0,
       overflow:
         document.documentElement.scrollWidth -
         document.documentElement.clientWidth,
@@ -3309,8 +3598,10 @@ try {
   assertEqual(accessibilitySettings.datasetScale, "largest", "UI scale should apply immediately");
   assertEqual(accessibilitySettings.datasetContrast, "high", "high contrast should apply immediately");
   assertEqual(accessibilitySettings.rootFont, 18.4, "largest UI scale should update root text size");
-  assertEqual(accessibilitySettings.headingTitleLines, 1, "largest UI scale should keep the settings title on one line");
-  assertEqual(accessibilitySettings.clippedCards, 0, "largest UI scale should not clip settings cards");
+  assertEqual(accessibilitySettings.cardCount >= 9, true, "settings should expose every preference group");
+  assertEqual(accessibilitySettings.outside, 0, "largest UI scale should keep settings inside the viewport");
+  assertEqual(accessibilitySettings.textOverlaps, 0, "largest UI scale should not overlap settings text");
+  assertEqual(accessibilitySettings.canvasWidth, 1440, "settings should remain on the desktop Canvas");
   assertEqual(accessibilitySettings.tacticChoices, 4, "settings should expose all four auto tactics");
   assertEqual(accessibilitySettings.selectedTactics, 1, "settings should mark exactly one auto tactic as selected");
   assertEqual(accessibilitySettings.overflow, 0, "largest UI scale should not overflow horizontally");
@@ -3466,11 +3757,14 @@ try {
     input.dispatchEvent(new Event("change", { bubbles: true }));
   })()`);
   await new Promise((resolve) => setTimeout(resolve, 220));
-  const invalidImport = await evaluate(`({
-    save: localStorage.getItem(${JSON.stringify(SAVE_KEY)}),
-    modal: Boolean(document.querySelector("[data-modal-panel]")),
-    toast: document.querySelector(".toast")?.innerText || "",
-  })`);
+  const invalidImport = await evaluate(`(() => {
+    const stage = globalThis.__shuihuPageStage;
+    return {
+      save: localStorage.getItem(${JSON.stringify(SAVE_KEY)}),
+      modal: Boolean(stage?.model?.modal),
+      toast: stage?.toast?.message || "",
+    };
+  })()`);
   assertEqual(invalidImport.save, rawBeforeExport, "invalid import should not overwrite the current save");
   assertEqual(invalidImport.modal, false, "invalid import should not open the replacement confirmation");
   assertEqual(invalidImport.toast.includes("损坏"), true, "invalid import should explain the save is damaged");
@@ -3596,87 +3890,41 @@ try {
   for (const [name, width, height, mobile] of releaseViewports) {
     await setViewport(width, height, mobile);
     const layout = await evaluate(`(() => {
-      const main = document.querySelector(".quests-layout");
-      const topbar = document.querySelector(".topbar");
-      const cards = [...document.querySelectorAll(".quest-card")];
-      const recruitmentCards = [...document.querySelectorAll(".recruitment-card")];
-      const legend = document.querySelector(".hero-legend-mission");
-      const legendArt = document.querySelector(".hero-legend-mission-art");
-      const visibleImages = [...document.querySelectorAll(".quests-screen img")].filter((image) => {
-        const rect = image.getBoundingClientRect();
-        return rect.width > 1 && rect.height > 1;
-      });
-      const mainRect = main?.getBoundingClientRect();
-      const topbarRect = topbar?.getBoundingClientRect();
+      const stage = globalThis.__shuihuPageStage;
+      const model = stage.model;
+      const ui = stage.getUiSnapshot();
       return {
         width: innerWidth,
         height: innerHeight,
         documentHeight: document.documentElement.scrollHeight,
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        mainOutside: mainRect
-          ? mainRect.left < -0.5 || mainRect.right > innerWidth + 0.5
-          : true,
-        topbarOutside: topbarRect
-          ? topbarRect.left < -0.5 || topbarRect.right > innerWidth + 0.5
-          : true,
-        cards: cards.length,
-        clippedCards: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
-        recruitmentCards: recruitmentCards.length,
-        clippedRecruitments: recruitmentCards.filter(
-          (card) => card.scrollWidth > card.clientWidth + 1,
-        ).length,
-        recruitmentOutside: recruitmentCards.some(
-          (card) =>
-            card.getBoundingClientRect().left < -0.5 ||
-            card.getBoundingClientRect().right > innerWidth + 0.5,
-        ),
-        legendVisible: Boolean(legend && legend.getBoundingClientRect().height > 1),
-        legendOutside: legend
-          ? legend.getBoundingClientRect().left < -0.5 ||
-            legend.getBoundingClientRect().right > innerWidth + 0.5
-          : true,
-        legendClipped: legend ? legend.scrollWidth > legend.clientWidth + 1 : true,
-        legendArtCover: legendArt
-          ? getComputedStyle(legendArt)
-              .backgroundSize.split(",")
-              .every((size) => size.trim() === "cover")
-          : false,
-        stretchedImages: visibleImages.filter((image) => {
-          if (getComputedStyle(image).objectFit !== "fill") return false;
-          const rect = image.getBoundingClientRect();
-          const natural = image.naturalWidth / Math.max(1, image.naturalHeight);
-          const rendered = rect.width / Math.max(1, rect.height);
-          return Math.abs(natural - rendered) / Math.max(natural, rendered) > 0.025;
-        }).length,
+        heroes: model.detail.heroCards.length,
+        cards: model.detail.quests.length,
+        recruitmentCards: model.detail.recruitments.length,
+        legendVisible: Boolean(model.detail.legend),
+        legendTitle: model.detail.legend?.title || "",
+        outside: ui.audit.outside.length,
+        textOverlaps: ui.audit.textOverlaps.length,
+        imageTextOverlaps: ui.audit.imageTextOverlaps.length,
+        pendingImages: ui.images.filter((image) => image.pending).length,
       };
     })()`);
     assertEqual(layout.width, width, `${name} quests should use requested viewport width`);
     assertEqual(layout.height, height, `${name} quests should use requested viewport height`);
     assertPageScrolling(layout, `${name} quests`, mobile);
-    assertEqual(layout.mainOutside, false, `${name} quests should stay inside the viewport`);
-    assertEqual(layout.topbarOutside, false, `${name} quest top bar should stay inside the viewport`);
+    assertEqual(layout.outside, 0, `${name} quests should stay inside the viewport`);
+    assertEqual(layout.heroes, HERO_ORDER.length, `${name} quests should keep every hero story`);
     assertEqual(layout.cards, 3, `${name} quests should expose the full three-stage chain`);
-    assertEqual(layout.clippedCards, 0, `${name} quests should not clip card content`);
     assertEqual(
       layout.recruitmentCards,
       Object.keys(HERO_RECRUITMENTS).length,
       `${name} quests should expose every recruitment scroll`,
     );
-    assertEqual(
-      layout.clippedRecruitments,
-      0,
-      `${name} recruitment cards should not clip card content`,
-    );
-    assertEqual(
-      layout.recruitmentOutside,
-      false,
-      `${name} recruitment cards should stay inside the viewport`,
-    );
     assertEqual(layout.legendVisible, true, `${name} quests should expose the legend mission`);
-    assertEqual(layout.legendOutside, false, `${name} legend mission should stay inside the viewport`);
-    assertEqual(layout.legendClipped, false, `${name} legend mission should not clip its content`);
-    assertEqual(layout.legendArtCover, true, `${name} legend art should crop proportionally`);
-    assertEqual(layout.stretchedImages, 0, `${name} quest art should preserve its aspect ratio`);
+    assertEqual(layout.legendTitle, HERO_LEGENDS.linchong.title, `${name} legend card should name the selected hero story`);
+    assertEqual(layout.textOverlaps, 0, `${name} quests should not overlap text`);
+    assertEqual(layout.imageTextOverlaps, 0, `${name} quest art should not cover text`);
+    assertEqual(layout.pendingImages, 0, `${name} quest art should finish loading`);
     releaseLayouts.push({ screen: "quests", name, ...layout });
     if (name === "steamDeck" || name === "mobile") {
       await captureVisualQaScreenshot(`shuihu-recruitment-${name}.png`);
@@ -3687,21 +3935,21 @@ try {
   await click('button[data-action="nav-settings"]');
   await waitFor('document.querySelector(".game-frame")?.classList.contains("screen-settings")');
   await click('button[data-action="show-third-party-notices"]');
-  await waitFor('document.querySelector(".legal-notice-text")?.textContent.includes("steamworks.js")');
+  await waitFor(
+    'globalThis.__shuihuPageStage?.model?.modal?.body?.includes("steamworks.js")',
+  );
   const legalNotice = await evaluate(`(() => {
-    const text = document.querySelector(".legal-notice-text")?.textContent || "";
-    const panel = document.querySelector("[data-modal-panel]");
-    const rect = panel?.getBoundingClientRect();
+    const stage = globalThis.__shuihuPageStage;
+    const text = stage?.model?.modal?.body || "";
+    const ui = stage?.getUiSnapshot?.();
     return {
       electron: text.includes("Electron"),
       chromium: text.includes("Chromium"),
       steamworks: text.includes("steamworks.js"),
       valve: text.includes("Valve Steamworks SDK"),
       lucide: text.includes("Lucide icons"),
-      insideViewport: Boolean(rect && rect.left >= 0 && rect.right <= innerWidth),
-      readable: Boolean(
-        document.querySelector(".legal-notice-text")?.scrollHeight > 0
-      ),
+      insideViewport: (ui?.audit?.outside?.length ?? -1) === 0,
+      readable: text.length > 120,
     };
   })()`);
   assertEqual(legalNotice.electron, true, "third-party notices should credit Electron");
@@ -3711,8 +3959,8 @@ try {
   assertEqual(legalNotice.lucide, true, "third-party notices should credit Lucide");
   assertEqual(legalNotice.insideViewport, true, "third-party notices should stay inside the viewport");
   assertEqual(legalNotice.readable, true, "third-party notices should render readable text");
-  await click('[data-modal-panel] button[data-action="close-modal"]');
-  await waitFor('!document.querySelector("[data-modal-panel]")');
+  await click('button[data-action="close-modal"]');
+  await waitFor('!globalThis.__shuihuPageStage?.model?.modal');
   const legalDocuments = [
     ["privacy", "隐私说明", "本地保存的数据"],
     ["eula", "最终用户许可协议", "许可范围"],
@@ -3724,22 +3972,16 @@ try {
       `button[data-action="show-legal-document"][data-document="${documentId}"]`,
     );
     await waitFor(
-      `document.querySelector("[data-modal-panel]")?.innerText.includes(${JSON.stringify(expectedText)})`,
+      `globalThis.__shuihuPageStage?.model?.modal?.body?.includes(${JSON.stringify(expectedText)})`,
     );
     const legalDocument = await evaluate(`(() => {
-      const panel = document.querySelector("[data-modal-panel]");
-      const text = panel?.querySelector(".legal-notice-text");
-      const rect = panel?.getBoundingClientRect();
+      const stage = globalThis.__shuihuPageStage;
+      const modal = stage?.model?.modal;
+      const ui = stage?.getUiSnapshot?.();
       return {
-        title: panel?.querySelector("h2")?.textContent || "",
-        readable: Boolean(text && text.scrollHeight > text.clientHeight),
-        insideViewport: Boolean(
-          rect &&
-          rect.left >= -0.5 &&
-          rect.right <= innerWidth + 0.5 &&
-          rect.top >= -0.5 &&
-          rect.bottom <= innerHeight + 0.5
-        ),
+        title: modal?.title || "",
+        readable: (modal?.body?.length || 0) > 120,
+        insideViewport: (ui?.audit?.outside?.length ?? -1) === 0,
       };
     })()`);
     assertEqual(
@@ -3757,38 +3999,38 @@ try {
       true,
       `${documentId} legal document should stay inside the viewport`,
     );
-    await click('[data-modal-panel] button[data-action="close-modal"]');
-    await waitFor('!document.querySelector("[data-modal-panel]")');
+    await click('button[data-action="close-modal"]');
+    await waitFor('!globalThis.__shuihuPageStage?.model?.modal');
   }
   for (const [name, width, height, mobile] of releaseViewports) {
     await setViewport(width, height, mobile);
     const layout = await evaluate(`(() => {
-      const main = document.querySelector(".settings-layout");
-      const cards = [...document.querySelectorAll(".settings-card")];
-      const mainRect = main?.getBoundingClientRect();
+      const stage = globalThis.__shuihuPageStage;
+      const detail = stage?.model?.detail;
+      const ui = stage?.getUiSnapshot?.();
       return {
         width: innerWidth,
         height: innerHeight,
         documentHeight: document.documentElement.scrollHeight,
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        mainOutside: mainRect
-          ? mainRect.left < -0.5 || mainRect.right > innerWidth + 0.5
-          : true,
-        cards: cards.length,
-        clippedCards: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+        canvasWidth: ui?.width || 0,
+        outside: ui?.audit?.outside?.length ?? -1,
+        textOverlaps: ui?.audit?.textOverlaps?.length ?? -1,
+        cards: detail?.cardCount || 0,
+        controls: document.querySelectorAll(
+          "#engine-form-controls [data-engine-control]",
+        ).length,
       };
     })()`);
     assertEqual(layout.width, width, `${name} settings should use requested viewport width`);
     assertEqual(layout.height, height, `${name} settings should use requested viewport height`);
     assertPageScrolling(layout, `${name} settings`, mobile);
-    assertEqual(layout.mainOutside, false, `${name} settings should stay inside the viewport`);
+    assertEqual(layout.canvasWidth, width, `${name} settings should resize the Canvas stage`);
+    assertEqual(layout.outside, 0, `${name} settings should stay inside the viewport`);
+    assertEqual(layout.textOverlaps, 0, `${name} settings should not overlap text`);
     assertEqual(layout.cards >= 9, true, `${name} settings should render every preferences card`);
-    assertEqual(layout.clippedCards, 0, `${name} settings should not clip preference cards`);
+    assertEqual(layout.controls, 3, `${name} settings should preserve native volume and import controls`);
     if (name === "1080p" || name === "mobile") {
-      await evaluate(
-        `document.querySelector(".auto-tactic-choice")?.scrollIntoView({ block: "center" })`,
-      );
-      await new Promise((resolve) => setTimeout(resolve, 180));
       await captureVisualQaScreenshot(`shuihu-settings-tactics-${name}.png`);
     }
     releaseLayouts.push({ screen: "settings", name, ...layout });

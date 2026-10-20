@@ -1016,6 +1016,31 @@ export function battleEnemyScale(state) {
   return campaignEnemyScale(state);
 }
 
+export function recruitmentEnemyLevel(state, recruitment) {
+  if (!recruitment) return 1;
+  const activeLevels = activeHeroes(state).map(({ entry }) => entry.level);
+  const averageLevel =
+    activeLevels.reduce((sum, level) => sum + level, 0) /
+    Math.max(1, activeLevels.length);
+  const authoredChapter =
+    CHAPTERS[
+      Math.min(CHAPTERS.length - 1, Math.max(0, recruitment.requiredChapter))
+    ];
+  const authoredLevel = Math.max(
+    recruitment.requiredChapter + 2,
+    ...(authoredChapter?.battle?.enemies || []).map((enemy) =>
+      Math.max(1, Number(enemy.level) || 1),
+    ),
+  );
+  // Recruitment XP can greatly outpace the authored campaign curve.
+  // Keep side battles inside the adjacent chapter band instead of scaling
+  // their enemy level indefinitely with the player's active team.
+  return Math.max(
+    recruitment.requiredChapter + 2,
+    Math.min(Math.round(averageLevel + 1), authoredLevel + 2),
+  );
+}
+
 export function facilityMultiplier(state, facilityId) {
   const level = state.facilities[facilityId] || 1;
   return 1 + (level - 1) * 0.05;

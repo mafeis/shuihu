@@ -85,6 +85,36 @@ for (const expectedTool of [
   );
 }
 
+const openSourceBattleAssets = manifest.assets.filter((asset) =>
+  ["combat_sfx", "open_source_ui_sfx", "open_source_vfx"].includes(asset.type),
+);
+const openSourceCombatSfx = openSourceBattleAssets.filter(
+  (asset) => asset.type === "combat_sfx",
+);
+assert(
+  openSourceBattleAssets.length === 20,
+  "expected 20 Kenney CC0 battle presentation assets",
+);
+assert(
+  openSourceCombatSfx.length === 10,
+  "expected 10 Kenney CC0 combat sound effects",
+);
+for (const asset of openSourceBattleAssets) {
+  assert(
+    asset.author === "Kenney" && asset.license === "CC0-1.0",
+    `open-source battle asset lacks Kenney CC0 metadata: ${asset.file}`,
+  );
+  assert(
+    typeof asset.source_url === "string" &&
+      asset.source_url.startsWith("https://kenney.nl/"),
+    `open-source battle asset lacks a Kenney source URL: ${asset.file}`,
+  );
+}
+assert(
+  !manifest.assets.some((asset) => String(asset.type).startsWith("skill_vfx")),
+  "legacy generated VFX must not remain in the runtime asset manifest",
+);
+
 const runtimeFiles = [
   path.join(root, "index.html"),
   ...walkFiles(path.join(root, "src")),
@@ -122,6 +152,7 @@ console.log(
         (sum, category) => sum + Number(category.assetCount || 0),
         0,
       ),
+      openSourceBattleAssets: openSourceBattleAssets.length,
       runtimeFilesChecked: runtimeFiles.length,
       externalReviewComplete:
         disclosure.externalReview?.modelCommercialTermsVerified === true &&

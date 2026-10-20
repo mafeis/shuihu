@@ -55,10 +55,12 @@ html[data-contrast="high"] {
 }
 
 html {
+  height: 100%;
   min-width: 320px;
   font-size: 16px;
   background: var(--ink-950);
   scroll-behavior: smooth;
+  overflow: hidden;
 }
 
 html[data-ui-scale="large"] {
@@ -71,15 +73,15 @@ html[data-ui-scale="largest"] {
 
 body {
   margin: 0;
+  height: 100%;
   min-width: 320px;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 0;
   color: var(--paper-100);
   background: var(--ink-950);
   font-family: var(--sans);
   font-size: 0.9375rem;
   line-height: 1.55;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 button,
@@ -149,10 +151,199 @@ small {
   font-size: 0.75rem;
 }
 
+#app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+#app:has(.screen-battle .defeat-overlay) {
+  z-index: 5;
+}
+
 #app,
 .game-frame {
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+#game-stage-host {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: none;
+  overflow: hidden;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 420ms ease;
+}
+
+#game-stage-host.is-visible {
+  display: block;
+  pointer-events: auto;
+}
+
+body.is-title-prologue-active #game-stage-host {
+  opacity: 0;
+  transition: none;
+}
+
+#game-stage-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+body.is-page-stage-visible #app {
+  pointer-events: none;
+  z-index: 3;
+}
+
+body.is-page-stage-visible #engine-form-controls {
+  pointer-events: auto;
+}
+
+#app:has(.title-prologue) {
+  z-index: 3;
+  pointer-events: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.engine-form-controls {
+  position: fixed;
+  z-index: 24;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(22px, env(safe-area-inset-bottom));
+  width: min(390px, calc(100vw - 36px));
+  padding: 12px 14px;
+  border: 1px solid rgba(186, 154, 92, 0.56);
+  border-radius: 7px;
+  background:
+    linear-gradient(180deg, rgba(17, 24, 22, 0.98), rgba(8, 13, 12, 0.98));
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: #eee5d2;
+}
+
+.engine-form-controls[hidden] {
+  display: none;
+}
+
+.engine-form-controls > section {
+  display: grid;
+  gap: 10px;
+}
+
+.engine-form-controls > section > b {
+  color: #bba36b;
+  font-family: var(--serif);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.engine-form-range {
+  display: grid;
+  grid-template-columns: 72px minmax(90px, 1fr) 42px;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 0.75rem;
+}
+
+.engine-form-range input {
+  width: 100%;
+  min-height: 44px;
+  accent-color: #b99a5b;
+  cursor: ew-resize;
+}
+
+.engine-form-range output {
+  color: #ead39b;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.engine-form-file {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 0.75rem;
+}
+
+.engine-form-file input {
+  min-width: 0;
+  min-height: 44px;
+  color: #cfc3a9;
+  font: inherit;
+}
+
+.engine-form-file input::file-selector-button {
+  min-height: 40px;
+  margin-right: 10px;
+  border: 1px solid rgba(186, 154, 92, 0.58);
+  border-radius: 5px;
+  background: rgba(39, 52, 46, 0.9);
+  color: #eee5d2;
+  font: inherit;
+}
+
+@media (max-width: 920px) {
+  .engine-form-controls {
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: calc(66px + env(safe-area-inset-bottom));
+    width: auto;
+    padding: 10px 12px;
+  }
+}
+
+body[data-page-screen="settings"] .engine-form-controls {
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  left: max(104px, env(safe-area-inset-left));
+  width: auto;
+  padding: 8px 12px;
+}
+
+body[data-page-screen="settings"] .engine-form-controls > section {
+  grid-template-columns: 86px minmax(260px, 1fr) minmax(260px, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+body[data-page-screen="settings"] .engine-form-controls > section > b {
+  white-space: nowrap;
+}
+
+body[data-page-screen="settings"] .engine-form-range {
+  min-height: 34px;
+  grid-template-columns: 42px minmax(120px, 1fr) 40px;
+  gap: 8px;
+}
+
+body[data-page-screen="settings"] .engine-form-range input {
+  min-height: 28px;
+}
+
+body[data-page-screen="settings"] .engine-form-file {
+  display: none;
 }
 
 .game-frame {
@@ -692,6 +883,11 @@ button[aria-pressed="true"] {
   background: #070c0d;
   opacity: 1;
   animation: title-prologue-release 7s ease-in-out both;
+  pointer-events: auto;
+}
+
+.title-prologue.is-skipped {
+  animation: title-prologue-dismiss 280ms ease-out forwards;
   pointer-events: none;
 }
 
@@ -762,6 +958,29 @@ button[aria-pressed="true"] {
   height: 5%;
   background: linear-gradient(180deg, transparent, var(--bronze-300));
   animation: title-prologue-rule 7s ease both;
+}
+
+.title-prologue-skip {
+  position: absolute;
+  z-index: 4;
+  right: 34px;
+  bottom: 30px;
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid rgba(223, 213, 193, 0.2);
+  background: rgba(5, 10, 11, 0.66);
+  color: rgba(236, 228, 210, 0.72);
+  font-size: 0.625rem;
+  backdrop-filter: blur(9px);
+}
+
+.title-prologue-skip:hover {
+  border-color: rgba(215, 188, 125, 0.58);
+  background: rgba(5, 10, 11, 0.82);
+  color: var(--paper-100);
 }
 
 .title-screen.has-prologue .title-roster {
@@ -8405,9 +8624,32 @@ button[aria-pressed="true"] {
 }
 
 .battle-background,
-.battle-overlay {
+.battle-overlay,
+.battle-stage-canvas {
   position: absolute;
   inset: 0;
+}
+
+.battle-stage-canvas {
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.battle-screen:has(.battle-stage-canvas[data-renderer="dom"]) .battle-stage-canvas {
+  display: none;
+}
+
+.battle-screen .stage-proxy:not(.is-dom-rendered) .hero-figure,
+.battle-screen .stage-proxy:not(.is-dom-rendered) .enemy-figure {
+  visibility: hidden;
+}
+
+.battle-overlay {
+  z-index: 2;
+  pointer-events: none;
 }
 
 .battle-background {
@@ -8641,7 +8883,7 @@ button[aria-pressed="true"] {
 
 .battle-field {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   height: calc(100vh - 67px);
   height: calc(100dvh - 67px);
   min-height: 0;
@@ -8652,10 +8894,11 @@ button[aria-pressed="true"] {
 .battle-stage {
   position: relative;
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
   width: 100%;
   height: min(calc(100dvh - 185px), 650px);
   min-height: 420px;
-  grid-template-rows: minmax(178px, 0.9fr) 24px minmax(218px, 1fr);
   isolation: isolate;
 }
 
@@ -8689,8 +8932,207 @@ button[aria-pressed="true"] {
   pointer-events: none;
 }
 
-.battle-field.is-impacting .battle-stage {
-  animation: battle-collision-shake 280ms cubic-bezier(0.2, 0.7, 0.25, 1) both;
+.battle-combatants {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  min-height: 0;
+}
+
+.battle-combatants > .enemy-formation,
+.battle-combatants > .hero-formation {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.battle-combatants > .battle-midline {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  right: 0;
+  left: 0;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.battle-combatants .enemy-line,
+.battle-combatants .hero-line {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  pointer-events: none;
+}
+
+.battle-enemy-caption,
+.battle-hero-caption {
+  position: absolute;
+  z-index: 5;
+  left: 3%;
+  width: 94%;
+  pointer-events: none;
+}
+
+.battle-enemy-caption {
+  top: 2px;
+}
+
+.battle-hero-caption {
+  bottom: 2px;
+}
+
+.battle-screen .stage-proxy {
+  position: absolute;
+  z-index: 3;
+  display: block;
+  width: clamp(150px, 15vw, 218px);
+  max-width: none;
+  height: 112px;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.battle-screen .enemy-unit.stage-proxy {
+  max-width: none;
+  height: 112px;
+}
+
+.battle-screen .hero-unit.stage-proxy {
+  max-width: none;
+  height: 130px;
+}
+
+.battle-combatants .enemy-unit.stage-proxy:nth-of-type(1) {
+  z-index: 5;
+  top: 21%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.battle-combatants .enemy-unit.stage-proxy:nth-of-type(2) {
+  z-index: 3;
+  top: 3%;
+  left: 25%;
+  transform: translateX(-50%);
+}
+
+.battle-combatants .enemy-unit.stage-proxy:nth-of-type(3) {
+  z-index: 4;
+  top: 3%;
+  right: 25%;
+  transform: translateX(50%);
+}
+
+.battle-combatants .hero-unit.stage-proxy:nth-of-type(1) {
+  z-index: 5;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.battle-combatants .hero-unit.stage-proxy:nth-of-type(2) {
+  z-index: 3;
+  bottom: 22%;
+  left: 25%;
+  transform: translateX(-50%);
+}
+
+.battle-combatants .hero-unit.stage-proxy:nth-of-type(3) {
+  z-index: 4;
+  right: 25%;
+  bottom: 22%;
+  transform: translateX(50%);
+}
+
+.battle-combatants .stage-proxy .unit-hud {
+  position: absolute;
+  z-index: 4;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  transform: translateX(-50%);
+}
+
+.battle-combatants .stage-proxy.is-current .unit-hud {
+  border-color: rgba(215, 188, 125, 0.72);
+}
+
+.battle-combatants .stage-proxy .row-ribbon {
+  top: 0;
+  bottom: auto;
+}
+
+.battle-combatants .stage-proxy .target-reticle {
+  top: 41%;
+}
+
+.battle-combatants .stage-proxy.is-targetable .target-reticle,
+.battle-combatants .stage-proxy.is-target-focused .target-reticle {
+  display: grid;
+}
+
+.battle-combatants .stage-proxy.is-targetable .target-reticle,
+.battle-combatants .stage-proxy.is-target-focused .target-reticle {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.battle-combatants .stage-proxy.is-target-focused .target-reticle::after {
+  position: absolute;
+  z-index: -1;
+  top: 8%;
+  right: 8%;
+  bottom: 7%;
+  left: 8%;
+  border: 1px solid rgba(215, 188, 125, 0.26);
+  content: "";
+  background: radial-gradient(
+    ellipse at 50% 72%,
+    rgba(215, 188, 125, 0.09),
+    transparent 62%
+  );
+  pointer-events: none;
+}
+
+.battle-combatants .stage-proxy.is-current::before {
+  opacity: 0.6;
+}
+
+.battle-combatants .battle-motion {
+  z-index: 12;
+}
+
+.battle-combatants .battle-motion > b {
+  top: 34px;
+}
+
+.battle-combatants .stage-proxy.is-dom-rendered {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+
+.battle-combatants .enemy-unit.stage-proxy.is-dom-rendered {
+  max-width: 184px;
+  opacity: calc(1 - var(--stage-depth, 0) * 0.025);
+}
+
+.battle-combatants .hero-unit.stage-proxy.is-dom-rendered {
+  max-width: 228px;
+}
+
+.battle-combatants .stage-proxy.is-dom-rendered .hero-figure,
+.battle-combatants .stage-proxy.is-dom-rendered .enemy-figure {
+  visibility: visible;
+}
+
+.battle-combatants .stage-proxy.is-dom-rendered .unit-hud {
+  width: 100%;
 }
 
 .arena-bounty-hud {
@@ -9333,93 +9775,6 @@ button[aria-pressed="true"] {
   transform-origin: center 3px;
   animation: collision-shard 430ms ease-out both;
   animation-delay: calc(var(--collision-index) * 8ms);
-}
-
-.battle-skill-callout {
-  position: absolute;
-  z-index: 14;
-  top: 43%;
-  left: 50%;
-  display: grid;
-  min-width: 176px;
-  align-items: center;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
-  gap: 8px;
-  padding: 7px 11px 8px 8px;
-  border: 1px solid rgba(215, 188, 125, 0.42);
-  border-left: 2px solid var(--bronze-300);
-  background:
-    linear-gradient(90deg, rgba(143, 109, 50, 0.16), transparent 66%),
-    rgba(5, 10, 11, 0.9);
-  box-shadow:
-    0 13px 34px rgba(0, 0, 0, 0.38),
-    0 0 24px rgba(215, 188, 125, 0.08);
-  color: var(--bronze-300);
-  transform: translate(-50%, -50%);
-  animation: skill-callout 680ms ease-out both;
-  pointer-events: none;
-  backdrop-filter: blur(9px);
-}
-
-.battle-skill-callout > span {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-}
-
-.battle-skill-callout > div {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-}
-
-.battle-skill-callout small {
-  color: var(--paper-500);
-  font-size: 0.4375rem;
-}
-
-.battle-skill-callout b {
-  overflow: hidden;
-  color: var(--paper-100);
-  font-family: var(--serif);
-  font-size: 0.8125rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.battle-skill-callout em {
-  padding: 2px 5px;
-  border: 1px solid currentColor;
-  color: currentColor;
-  font-size: 0.4375rem;
-  font-style: normal;
-}
-
-.battle-skill-callout.tone-teal {
-  border-left-color: var(--teal-300);
-  color: var(--teal-300);
-  background:
-    linear-gradient(90deg, rgba(63, 111, 104, 0.17), transparent 66%),
-    rgba(5, 10, 11, 0.9);
-}
-
-.battle-skill-callout.tone-blue {
-  border-left-color: #8fb1c8;
-  color: #8fb1c8;
-  background:
-    linear-gradient(90deg, rgba(63, 91, 111, 0.18), transparent 66%),
-    rgba(5, 10, 11, 0.9);
-}
-
-.battle-skill-callout.tone-cinnabar {
-  border-left-color: var(--cinnabar-300);
-  color: var(--cinnabar-300);
-  background:
-    linear-gradient(90deg, rgba(127, 55, 43, 0.2), transparent 66%),
-    rgba(5, 10, 11, 0.9);
 }
 
 .skill-impact {
@@ -10662,6 +11017,10 @@ button[aria-pressed="true"] {
   transform: translateY(17px);
 }
 
+.battle-screen .stage-proxy.is-defeated {
+  transform: translate(-50%, 17px);
+}
+
 .battle-unit.is-current .unit-hud {
   border-color: rgba(215, 188, 125, 0.56);
 }
@@ -10901,27 +11260,24 @@ button[aria-pressed="true"] {
 
 .battle-midline {
   display: flex;
-  height: 23px;
+  height: 34px;
   align-items: center;
-  gap: 11px;
-  opacity: 0.62;
-}
-
-.battle-midline > span {
-  height: 1px;
-  flex: 1;
-  background: rgba(223, 213, 193, 0.2);
+  justify-content: center;
+  gap: 8px;
+  opacity: 1;
 }
 
 .battle-chain {
   display: flex;
-  min-width: 258px;
+  min-width: 228px;
+  flex: 0 1 258px;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 3px 9px;
+  padding: 6px 9px;
   border: 1px solid rgba(223, 213, 193, 0.15);
-  background: rgba(7, 12, 13, 0.64);
+  background: rgba(7, 12, 13, 0.78);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
   opacity: 1;
 }
 
@@ -10978,10 +11334,120 @@ button[aria-pressed="true"] {
   color: var(--bronze-300);
 }
 
-.battle-phase-label {
-  color: var(--paper-300);
+.battle-phase-status {
+  --phase-accent: var(--paper-300);
+  --phase-wash: rgba(223, 213, 193, 0.08);
+  display: grid;
+  min-width: 310px;
+  max-width: min(430px, 42vw);
+  height: 34px;
+  align-items: center;
+  grid-template-columns: 28px auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 3px 10px 3px 5px;
+  border: 1px solid color-mix(in srgb, var(--phase-accent) 42%, transparent);
+  border-left-width: 2px;
+  background:
+    linear-gradient(90deg, var(--phase-wash), transparent 58%),
+    rgba(7, 12, 13, 0.9);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.28),
+    inset 0 0 18px rgba(0, 0, 0, 0.16);
+}
+
+.battle-phase-status.tone-hero {
+  --phase-accent: var(--teal-300);
+  --phase-wash: rgba(49, 118, 108, 0.22);
+}
+
+.battle-phase-status.tone-enemy {
+  --phase-accent: #d78777;
+  --phase-wash: rgba(153, 67, 54, 0.22);
+}
+
+.battle-phase-status.tone-resolve {
+  --phase-accent: var(--bronze-300);
+  --phase-wash: rgba(143, 109, 50, 0.22);
+}
+
+.battle-phase-status.tone-muted,
+.battle-phase-status.tone-neutral {
+  --phase-accent: var(--paper-400);
+  --phase-wash: rgba(111, 126, 126, 0.12);
+}
+
+.battle-phase-status.tone-victory {
+  --phase-accent: var(--bronze-200);
+  --phase-wash: rgba(183, 147, 69, 0.28);
+}
+
+.battle-phase-status.tone-defeat {
+  --phase-accent: #cf7668;
+  --phase-wash: rgba(135, 49, 43, 0.26);
+}
+
+.phase-status-mark {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--phase-accent) 48%, transparent);
+  border-radius: 50%;
+  color: var(--phase-accent);
+  background: rgba(4, 8, 9, 0.58);
+  box-shadow: inset 0 0 10px var(--phase-wash);
+}
+
+.phase-status-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.phase-status-copy small {
+  overflow: hidden;
+  color: var(--paper-500);
+  font-size: 0.4375rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phase-status-copy b {
+  overflow: hidden;
+  color: var(--phase-accent);
   font-family: var(--serif);
-  font-size: 0.5625rem;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battle-phase-status > em {
+  overflow: hidden;
+  padding-left: 8px;
+  border-left: 1px solid rgba(223, 213, 193, 0.12);
+  color: var(--paper-400);
+  font-size: 0.5rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battle-phase-status[data-phase="select"] .phase-status-mark {
+  animation: phase-ready 1.8s ease-in-out infinite;
+}
+
+@keyframes phase-ready {
+  0%,
+  100% {
+    box-shadow: inset 0 0 10px var(--phase-wash);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 0 12px var(--phase-wash),
+      0 0 12px color-mix(in srgb, var(--phase-accent) 18%, transparent);
+  }
 }
 
 .battle-command {
@@ -11448,14 +11914,15 @@ button[aria-pressed="true"] {
 }
 
 .battle-result {
-  position: absolute;
+  position: relative;
   z-index: 18;
-  top: 28%;
-  left: 29%;
   display: flex;
-  max-width: 460px;
+  width: 100%;
+  max-width: none;
+  flex: none;
   align-items: flex-start;
   gap: 10px;
+  margin-bottom: 8px;
   padding: 12px 14px;
   border: 1px solid rgba(223, 213, 193, 0.17);
   border-left: 2px solid var(--cinnabar-400);
@@ -12924,7 +13391,7 @@ button[aria-pressed="true"] {
   12% {
     opacity: 1;
   }
-  78% {
+  86% {
     opacity: 1;
     transform: scale(1);
   }
@@ -12936,11 +13403,24 @@ button[aria-pressed="true"] {
 
 @keyframes title-prologue-release {
   0%,
-  88% {
+  96% {
     opacity: 1;
+    visibility: visible;
   }
   100% {
     opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes title-prologue-dismiss {
+  from {
+    opacity: 1;
+    visibility: visible;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
   }
 }
 
@@ -13926,6 +14406,15 @@ html[data-motion="reduced"] *::after {
     padding-right: 374px;
   }
 
+  .battle-phase-status {
+    min-width: 236px;
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .battle-phase-status > em {
+    display: none;
+  }
+
   .battle-screen .formation-slot {
     width: clamp(140px, 15vw, 192px);
   }
@@ -14210,7 +14699,7 @@ html[data-motion="reduced"] *::after {
   .battle-stage {
     height: min(418px, calc(100dvh - 422px));
     min-height: 300px;
-    grid-template-rows: minmax(138px, 0.88fr) 22px minmax(164px, 1fr);
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .enemy-formation,
@@ -15656,28 +16145,49 @@ html[data-motion="reduced"] *::after {
   }
 
   .battle-midline {
-    height: 22px;
-    gap: 5px;
-  }
-
-  .battle-midline > span {
-    display: none;
+    height: 30px;
+    gap: 4px;
   }
 
   .battle-chain {
-    width: 100%;
+    width: auto;
     min-width: 0;
+    flex: 1 1 auto;
     justify-content: flex-start;
+    padding: 3px 5px;
   }
 
   .battle-chain > b {
-    margin-left: auto;
-    text-align: right;
+    display: none;
   }
 
-  .battle-phase-label {
+  .battle-phase-status {
+    min-width: 0;
+    max-width: 54vw;
+    height: 28px;
     flex: 0 0 auto;
-    font-size: 0.5rem;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 5px;
+    padding: 2px 6px 2px 3px;
+  }
+
+  .phase-status-mark {
+    width: 21px;
+    height: 21px;
+  }
+
+  .phase-status-mark svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .phase-status-copy small {
+    display: none;
+  }
+
+  .phase-status-copy b {
+    max-width: 24vw;
+    font-size: 0.5625rem;
   }
 
   .battle-command {
@@ -17217,18 +17727,6 @@ html[data-motion="reduced"] *::after {
     inset: 7px 1px 66px;
   }
 
-  .battle-skill-callout {
-    top: 37%;
-    min-width: 148px;
-    grid-template-columns: 29px minmax(0, 1fr) auto;
-    padding: 5px 8px 6px 5px;
-  }
-
-  .battle-skill-callout > span {
-    width: 27px;
-    height: 27px;
-  }
-
   .skill-impact {
     top: 34%;
     transform: scale(0.82);
@@ -17278,21 +17776,6 @@ html[data-motion="reduced"] *::after {
     inset: 4px 0 69px;
   }
 
-  .battle-skill-callout {
-    top: 31%;
-    min-width: 128px;
-    gap: 5px;
-    padding-right: 6px;
-  }
-
-  .battle-skill-callout b {
-    font-size: 0.625rem;
-  }
-
-  .battle-skill-callout em {
-    display: none;
-  }
-
   .skill-impact {
     top: 28%;
     transform: scale(0.62);
@@ -17321,6 +17804,11 @@ html[data-motion="reduced"] *::after {
   .title-prologue-rule {
     top: 10%;
     right: 26px;
+  }
+
+  .title-prologue-skip {
+    right: 26px;
+    bottom: 24px;
   }
 
   .ending-cinematic-portrait {
@@ -17367,6 +17855,11 @@ html[data-motion="reduced"] *::after {
 
   .title-prologue-rule {
     display: none;
+  }
+
+  .title-prologue-skip {
+    right: 20px;
+    bottom: 18px;
   }
 
   .ending-cinematic-seal {
@@ -17429,7 +17922,7 @@ html[data-motion="reduced"] .ending-cinematic {
   .battle-stage {
     height: min(418px, calc(100dvh - 422px));
     min-height: 300px;
-    grid-template-rows: minmax(138px, 0.88fr) 22px minmax(164px, 1fr);
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .enemy-formation,
@@ -18114,5 +18607,385 @@ html[data-motion="reduced"] .ending-cinematic {
 
   .roster-screen .hero-card {
     height: 198px;
+  }
+}
+
+/* Battle interface v2: the canvas owns the stage, while compact HTML rails
+   keep phase, chain and turn controls readable without covering combatants. */
+
+.battle-tactical-readout {
+  display: flex;
+  min-height: 168px;
+  flex: 1;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 11px;
+  padding: 11px;
+  border: 1px solid rgba(103, 142, 136, 0.22);
+  border-left: 2px solid var(--teal-500);
+  background:
+    linear-gradient(135deg, rgba(66, 105, 99, 0.13), transparent 58%),
+    rgba(5, 10, 11, 0.46);
+}
+
+.battle-tactical-readout > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(103, 142, 136, 0.16);
+}
+
+.battle-tactical-readout > header > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--teal-300);
+}
+
+.battle-tactical-readout > header b {
+  color: var(--paper-200);
+  font-family: var(--serif);
+  font-size: 0.6875rem;
+}
+
+.battle-tactical-readout > header small {
+  color: var(--paper-500);
+  font-size: 0.5rem;
+}
+
+.tactical-attrs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.tactical-attrs > div {
+  display: flex;
+  min-width: 0;
+  min-height: 59px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 7px;
+  border: 1px solid rgba(223, 213, 193, 0.09);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.tactical-attrs small {
+  color: var(--paper-500);
+  font-size: 0.4375rem;
+}
+
+.tactical-attrs b {
+  overflow: hidden;
+  color: var(--path-color, var(--paper-100));
+  font-family: var(--serif);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tactical-attrs em {
+  overflow: hidden;
+  color: var(--paper-500);
+  font-size: 0.4rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tactical-status-line {
+  display: grid;
+  min-height: 25px;
+  align-items: center;
+  grid-template-columns: 35px minmax(0, 1fr);
+  gap: 5px;
+}
+
+.tactical-status-line > small {
+  color: var(--paper-500);
+  font-size: 0.4375rem;
+}
+
+.tactical-status-line > div {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tactical-status-line span {
+  display: inline-flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--ink-600);
+  color: var(--paper-400);
+  background: rgba(10, 17, 18, 0.72);
+  font-size: 0.4375rem;
+}
+
+.tactical-status-line span.tone-good {
+  border-color: rgba(103, 142, 136, 0.38);
+  color: var(--teal-300);
+}
+
+.tactical-status-line span.tone-bad {
+  border-color: rgba(199, 101, 84, 0.38);
+  color: var(--cinnabar-300);
+}
+
+.tactical-status-line span b {
+  font-size: 0.4rem;
+}
+
+.tactical-status-line span.is-empty {
+  border-style: dashed;
+  color: var(--paper-600);
+}
+
+.tactical-advice {
+  display: grid;
+  min-height: 42px;
+  align-items: start;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 6px;
+  margin: auto 0 0;
+  padding: 8px;
+  border-top: 1px solid rgba(215, 188, 125, 0.14);
+  color: var(--paper-400);
+  background: rgba(143, 109, 50, 0.07);
+  font-family: var(--serif);
+  font-size: 0.5rem;
+  line-height: 1.65;
+}
+
+.tactical-advice > svg {
+  margin-top: 2px;
+  color: var(--bronze-300);
+}
+
+@media (min-width: 921px) {
+  .battle-stage {
+    height: min(calc(100dvh - 185px), 760px);
+  }
+
+  .battle-command {
+    top: 10px;
+    bottom: 10px;
+    height: auto;
+    max-height: none;
+    padding: 16px;
+  }
+
+  .battle-command .current-actor {
+    min-height: 64px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .battle-command .skill-list {
+    gap: 7px;
+  }
+
+  .battle-command .skill-button {
+    min-height: 56px;
+  }
+
+  .battle-command .battle-log {
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  .battle-command .log-lines {
+    max-height: none;
+  }
+
+  .battle-combatants > .battle-midline {
+    top: 4px;
+    transform: none;
+    height: 34px;
+    gap: 9px;
+  }
+
+  .battle-chain {
+    min-width: 224px;
+    flex-basis: 246px;
+    background:
+      linear-gradient(90deg, rgba(25, 39, 39, 0.38), transparent 58%),
+      rgba(7, 12, 13, 0.82);
+  }
+
+  .battle-phase-status {
+    background:
+      linear-gradient(90deg, var(--phase-wash), transparent 62%),
+      rgba(7, 12, 13, 0.88);
+  }
+
+  .battle-enemy-caption,
+  .battle-hero-caption {
+    display: none;
+  }
+}
+
+/* Phaser-owned battle interface. HTML remains only as the fallback and
+   accessibility mirror; the visible stage, command rail and hit targets are
+   rendered by the engine. */
+
+#battle-canvas-host {
+  position: fixed;
+  z-index: 4;
+  display: none;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#battle-canvas-host.is-visible {
+  display: block;
+}
+
+#battle-canvas-host .battle-stage-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms linear;
+}
+
+#battle-canvas-host.is-ready .battle-stage-canvas {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.game-frame.screen-battle {
+  isolation: auto;
+}
+
+.game-frame.screen-battle:has(.defeat-overlay) {
+  z-index: 5;
+  isolation: isolate;
+}
+
+.battle-screen.has-engine-loading .battle-field,
+.battle-screen.has-engine-ui .battle-field {
+  padding: 0;
+}
+
+.battle-screen.has-engine-ui .battle-field {
+  position: absolute;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.battle-screen.has-engine-loading .battle-stage,
+.battle-screen.has-engine-ui .battle-stage {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.battle-screen.has-engine-ui .battle-background,
+.battle-screen.has-engine-ui .battle-overlay,
+.battle-screen.has-engine-ui .battle-header {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.battle-screen.has-engine-loading .battle-combatants,
+.battle-screen.has-engine-loading .battle-command,
+.battle-screen.has-engine-ui .battle-combatants {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.battle-screen.has-engine-loading .formation-caption,
+.battle-screen.has-engine-ui .formation-caption {
+  display: none;
+}
+
+.battle-screen.has-engine-ui .battle-command {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.battle-screen.has-engine-loading .battle-legend-hud,
+.battle-screen.has-engine-loading .battle-bond-hud,
+.battle-screen.has-engine-loading .battle-doctrine-hud,
+.battle-screen.has-engine-loading .battle-trial-hud,
+.battle-screen.has-engine-loading .arena-bounty-hud,
+.battle-screen.has-engine-loading .arena-encounter-hud,
+.battle-screen.has-engine-ui .battle-legend-hud,
+.battle-screen.has-engine-ui .battle-bond-hud,
+.battle-screen.has-engine-ui .battle-doctrine-hud,
+.battle-screen.has-engine-ui .battle-trial-hud,
+.battle-screen.has-engine-ui .arena-bounty-hud,
+.battle-screen.has-engine-ui .arena-encounter-hud {
+  display: none;
+}
+
+.battle-engine-loading {
+  position: absolute;
+  z-index: 8;
+  top: 50%;
+  left: 50%;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  color: var(--bronze-300);
+  transform: translate(-50%, -50%);
+}
+
+.battle-engine-loading span {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(215, 188, 125, 0.22);
+  border-top-color: var(--bronze-300);
+  border-radius: 50%;
+  animation: battle-engine-spin 900ms linear infinite;
+}
+
+.battle-engine-loading b {
+  font-family: var(--serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+}
+
+.battle-screen.has-engine-loading .battle-engine-loading {
+  display: flex;
+}
+
+@keyframes battle-engine-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 920px) {
+  .battle-screen.has-engine-loading .battle-field,
+  .battle-screen.has-engine-ui .battle-field {
+    height: 100dvh;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .battle-screen.has-engine-loading .battle-stage,
+  .battle-screen.has-engine-ui .battle-stage {
+    height: 100%;
+    min-height: 0;
   }
 }

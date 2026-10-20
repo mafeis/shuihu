@@ -171,6 +171,14 @@ export function battleVfxProfile({ skill, actor, result } = {}) {
       skill?.name ||
       (result.kind === "combo" ? "星命合击" : result.kind === "heal" ? "回春" : "变阵"),
     targetUids: uniqueTargets(result),
+    events: events.map((event) => ({
+      type: event.type,
+      targetUid: event.targetUid || null,
+      damage: Number(event.damage) || 0,
+      healing: Number(event.healing) || 0,
+      critical: Boolean(event.critical),
+      pathAdvantage: Boolean(event.pathAdvantage),
+    })),
     critical: events.some((event) => event.critical),
     pathAdvantage: events.some((event) => event.pathAdvantage),
     evaded: events.some((event) => event.type === "evade"),

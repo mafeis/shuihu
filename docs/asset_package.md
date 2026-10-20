@@ -14,6 +14,8 @@
 - 14 个透明 UI 图标：4 个武学路数、6 个战斗状态、4 个资源与战斗信息图标。
 - 1 段 MiniMax H3 生成的东京雪夜动态镜头与原生环境音。
 - 10 套由 ComfyUI YuE2 生成的 32 秒无缝循环配乐。
+- 10 枚由 Kenney CC0 音效裁切、母带派生的战斗一次性音效。
+- 8 张由 Kenney CC0 Particle Pack 派生的 Phaser 战斗粒子遮罩。
 - 所有正式图均保留 ComfyUI API 工作流、模型、种子和哈希记录。
 
 机器可读清单：[assets/manifest.json](../assets/manifest.json)
@@ -235,8 +237,8 @@ git lfs pull
 - UI 图标缩到 256 像素后仍可识别。
 - 角色与敌方立绘在战斗中统一使用 `object-fit: contain`；四十张角色透明画布统一为 896×1024，并在资产清单中记录 Alpha 边界、底部安全线与文件哈希。页面不再依赖逐角色 CSS 缩放表，避免同一角色在标题、招贤、剧情与战斗之间出现尺寸漂移。
 - 十套配乐无削波，并以双音轨交叉淡入淡出切换。
-- 十枚通用水浒战斗音效已生成、母带处理并接入运行时缓存，加载失败时保留 WebAudio 合成回退。
-- 战斗特效按技能行为使用六类通用模板，不再按流派复播同一视频。
+- 十枚 Kenney CC0 战斗音效已完成母带处理并接入 Web Audio 预解码缓存，不再使用程序合成回退。
+- 战斗特效按技能行为使用六类通用模板，由 Phaser 3 组合八张 Kenney CC0 粒子遮罩，不再按流派复播生成视频。
 
 ## 8. 音乐资产
 
@@ -274,22 +276,24 @@ npm run audio:verify
 
 | 分类 | 用途 | 文件 |
 | --- | --- | --- |
-| 开战 | 战鼓与短角声 | [battle-start.mp3](../assets/audio/sfx/battle-start.mp3) |
-| 刀击 | 单斩、突刺与刀剑命中 | [blade.mp3](../assets/audio/sfx/blade.mp3) |
-| 重击 | 重兵器、破甲与范围冲击 | [impact.mp3](../assets/audio/sfx/impact.mp3) |
-| 齐射 | 箭矢、飞石、暗器与投掷 | [volley.mp3](../assets/audio/sfx/volley.mp3) |
-| 守御 | 格挡、反击与防御架势 | [guard.mp3](../assets/audio/sfx/guard.mp3) |
-| 闪避 | 落空与身法 | [evade.mp3](../assets/audio/sfx/evade.mp3) |
-| 恢复 | 治疗、净化与回复 | [restore.mp3](../assets/audio/sfx/restore.mp3) |
-| 终式 | 攻击义技与星命合击 | [ultimate.mp3](../assets/audio/sfx/ultimate.mp3) |
-| 胜利 | 战斗胜利 | [victory.mp3](../assets/audio/sfx/victory.mp3) |
-| 败北 | 战斗失败 | [defeat.mp3](../assets/audio/sfx/defeat.mp3) |
+| 开战 | Kenney CC0 战鼓与短角派生 | [battle-start.mp3](../assets/audio/sfx/battle-start.mp3) |
+| 刀击 | Kenney CC0 单斩、突刺与刀剑命中派生 | [blade.mp3](../assets/audio/sfx/blade.mp3) |
+| 重击 | Kenney CC0 重兵器、破甲与范围冲击派生 | [impact.mp3](../assets/audio/sfx/impact.mp3) |
+| 齐射 | Kenney CC0 箭矢、飞石、暗器与投掷派生 | [volley.mp3](../assets/audio/sfx/volley.mp3) |
+| 守御 | Kenney CC0 格挡、反击与防御架势派生 | [guard.mp3](../assets/audio/sfx/guard.mp3) |
+| 闪避 | Kenney CC0 落空与身法派生 | [evade.mp3](../assets/audio/sfx/evade.mp3) |
+| 恢复 | Kenney CC0 治疗、净化与回复派生 | [restore.mp3](../assets/audio/sfx/restore.mp3) |
+| 终式 | Kenney CC0 攻击义技与星命合击派生 | [ultimate.mp3](../assets/audio/sfx/ultimate.mp3) |
+| 胜利 | Kenney CC0 战斗胜利派生 | [victory.mp3](../assets/audio/sfx/victory.mp3) |
+| 败北 | Kenney CC0 战斗失败派生 | [defeat.mp3](../assets/audio/sfx/defeat.mp3) |
 
-生成入口为 `tools/comfy_sfx_pipeline.py`，从缓存母带重建使用 `tools/master_game_sfx.py`。ComfyUI 提供短材质层，确定性瞬态层负责真正可辨识的刀风、低频冲击、金属泛音、回复音与终式节奏。浏览器通过 `AudioBuffer` 预解码缓存播放，并继续由统一音效总线控制音量。
+这些文件由 Kenney CC0 Impact Sounds、RPG Audio 与 UI Audio 的本地 WAV 衍生资源经过裁切、瞬态整理、响度母带和峰值限制生成。原始 WAV、许可文本与来源映射保留在 `assets/audio/sfx/source/` 和 [kenney_assets.md](kenney_assets.md)，运行时通过 `AudioBuffer` 预解码缓存播放，并由统一音效总线控制音量。
+
+`npm run audio:verify` 对短促一次性音效使用逐提示时长与集成响度窗口，因为 EBU 集成响度会随瞬态和尾音长度变化；所有音效仍统一执行真峰值、解码峰值与编码规格上限。
 
 ### 8.2 技能特效
 
-`src/battle-vfx.js` 根据技能目标、治疗、护御、攻击段数、义技标记、技能描述与结果事件选择通用模板，流派只改变色彩和呼出图标。
+`src/battle-vfx.js` 根据技能目标、治疗、护御、攻击段数、义技标记、技能描述与结果事件选择通用模板，流派只改变色彩和呼出图标。Phaser 舞台从 `assets/vfx/kenney/` 加载对应的 Kenney CC0 粒子遮罩，并在运行时叠加、染色和缓动。完整来源映射见 [kenney_assets.md](kenney_assets.md)。
 
 | 模板 | 典型技能 |
 | --- | --- |
@@ -300,7 +304,7 @@ npm run audio:verify
 | `restore` | 治疗、药浴、净化与回复 |
 | `ultimate` | 攻击型义技、连击与星命合击 |
 
-模板由 CSS/DOM 图层实时绘制，不使用按流派复播的视频。单位数值面板固定位于特效层之上；战斗倍速会同步缩短特效计时，避免自动战斗 4 倍速时残留遮挡。
+模板由 Phaser 3 舞台实时绘制，不使用按流派复播的视频。单位数值面板固定位于特效层之上；战斗倍速会同步缩短特效计时，避免自动战斗 4 倍速时残留遮挡。
 
 进入下一轮制作前仍需补：
 

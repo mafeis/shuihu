@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate loudness, true peak, encoding, and loop boundaries for game music."""
+"""Validate loudness, true peak, encoding, and loop boundaries for game audio."""
 
 from __future__ import annotations
 
@@ -26,21 +26,23 @@ TRACKS = [
     "boss_theme",
     "recruitment_theme",
 ]
+# Integrated loudness is duration and crest dependent for one-shots. These
+# per-cue windows preserve source character while sharing the same peak limits.
 SFX_CUES = {
-    "battle-start": 1.55,
-    "blade": 0.72,
-    "impact": 0.95,
-    "volley": 0.82,
-    "guard": 0.88,
-    "evade": 0.58,
-    "restore": 1.35,
-    "ultimate": 1.6,
-    "victory": 1.9,
-    "defeat": 2.0,
+    "battle-start": {"duration": 1.55, "lufs": -24.5},
+    "blade": {"duration": 0.72, "lufs": -16.25},
+    "impact": {"duration": 0.95, "lufs": -20.5},
+    "volley": {"duration": 0.82, "lufs": -20.0},
+    "guard": {"duration": 0.88, "lufs": -23.5},
+    "evade": {"duration": 0.58, "lufs": -21.5},
+    "restore": {"duration": 1.35, "lufs": -22.5},
+    "ultimate": {"duration": 1.6, "lufs": -23.5},
+    "victory": {"duration": 1.9, "lufs": -24.25},
+    "defeat": {"duration": 2.0, "lufs": -20.25},
 }
 TARGET_LUFS = -16.0
 LUFS_TOLERANCE = 1.5
-SFX_LUFS_TOLERANCE = 3.0
+SFX_LUFS_TOLERANCE = 2.0
 TRUE_PEAK_LIMIT = -1.0
 DECODED_PEAK_LIMIT = 0.98
 BOUNDARY_RATIO_LIMIT = 2.0
@@ -187,7 +189,7 @@ def validate_track(name: str) -> dict:
     }
 
 
-def validate_sfx(name: str, target_duration: float) -> dict:
+def validate_sfx(name: str, target: dict[str, float]) -> dict:
     path = SFX_DIR / f"{name}.mp3"
     if not path.exists():
         raise FileNotFoundError(path)
@@ -203,13 +205,14 @@ def validate_sfx(name: str, target_duration: float) -> dict:
         errors.append(f"channel count is {encoding['channels']}, expected 2")
     if encoding["bit_rate"] < 160_000:
         errors.append(f"bit rate is {encoding['bit_rate']}, expected at least 160 kbps")
-    if abs(encoding["duration"] - target_duration) > 0.22:
+    if abs(encoding["duration"] - target["duration"]) > 0.22:
         errors.append(
-            f"duration is {encoding['duration']:.2f}s, expected {target_duration:.2f}s"
+            f"duration is {encoding['duration']:.2f}s, expected {target['duration']:.2f}s"
         )
-    if abs(loud["integrated_lufs"] - TARGET_LUFS) > SFX_LUFS_TOLERANCE:
+    if abs(loud["integrated_lufs"] - target["lufs"]) > SFX_LUFS_TOLERANCE:
         errors.append(
-            f"integrated loudness is {loud['integrated_lufs']:.2f} LUFS"
+            f"integrated loudness is {loud['integrated_lufs']:.2f} LUFS, "
+            f"expected {target['lufs']:.2f} +/- {SFX_LUFS_TOLERANCE:.2f}"
         )
     if loud["true_peak_dbtp"] > TRUE_PEAK_LIMIT:
         errors.append(f"true peak is {loud['true_peak_dbtp']:.2f} dBTP")
@@ -217,6 +220,7 @@ def validate_sfx(name: str, target_duration: float) -> dict:
         errors.append(f"decoded peak is {decoded['decoded_peak']:.4f}")
     return {
         "cue": name,
+        "target_lufs": target["lufs"],
         "duration": round(encoding["duration"], 3),
         "bit_rate": encoding["bit_rate"],
         **{key: round(value, 4) for key, value in loud.items()},
@@ -242,8 +246,8 @@ def main() -> int:
         for error in report["errors"]:
             print(f"  - {error}")
         failed = failed or bool(report["errors"])
-    for name, target_duration in SFX_CUES.items():
-        report = validate_sfx(name, target_duration)
+    for name, target in SFX_CUES.items():
+        report = validate_sfx(name, target)
         sfx_reports.append(report)
         status = "PASS" if not report["errors"] else "FAIL"
         print(

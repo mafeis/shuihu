@@ -1,0 +1,31 @@
+THIRD-PARTY NOTICES
+===================
+
+Kenney Game Assets
+------------------
+
+Assets:
+- Particle Pack
+- Impact Sounds
+- RPG Audio
+- UI Audio
+
+Author: Kenney (https://www.kenney.nl)
+License: Creative Commons Zero 1.0 Universal (CC0-1.0)
+License URL: https://creativecommons.org/publicdomain/zero/1.0/
+Project URLs:
+- https://kenney.nl/assets/particle-pack
+- https://kenney.nl/assets/impact-sounds
+- https://kenney.nl/assets/rpg-audio
+- https://kenney.nl/assets/ui-audio
+
+The project uses adapted Kenney particle masks for Phaser battle VFX and
+mastered derivatives of Kenney combat and UI sounds. Full mappings and runtime
+integration notes are documented in docs/kenney_assets.md.
+
+Phaser 3
+--------
+
+Copyright (c) 2013-2025 Phaser Studio Inc.
+License: MIT
+Project URL: https://phaser.io/

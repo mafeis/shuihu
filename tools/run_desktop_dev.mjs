@@ -3,10 +3,16 @@
 import { createServer } from "vite";
 import electronPath from "electron";
 import { spawn } from "node:child_process";
+import {
+  DEV_SERVER_PORT,
+} from "../vite.config.js";
 
 const server = await createServer({
-  host: "127.0.0.1",
-  strictPort: false,
+  server: {
+    host: "127.0.0.1",
+    port: DEV_SERVER_PORT,
+    strictPort: true,
+  },
 });
 let electron = null;
 let shuttingDown = false;

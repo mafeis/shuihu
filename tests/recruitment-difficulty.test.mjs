@@ -33,6 +33,7 @@ import {
   applyHeroRecruitmentRewards,
   createInitialState,
   createRosterEntry,
+  recruitmentEnemyLevel,
   recordChoice,
   recruitHero,
   recommendTeam,
@@ -57,17 +58,7 @@ function recruitmentBattle(heroId, stateOrHeroIds, level = 1) {
     ? stateWithTeam(stateOrHeroIds, level)
     : stateOrHeroIds;
   const recruitment = HERO_RECRUITMENTS[heroId];
-  const activeLevels = state.team
-    .filter(Boolean)
-    .map((heroIdValue) => state.roster[heroIdValue].level);
-  const enemyLevel = Math.max(
-    recruitment.requiredChapter + 2,
-    Math.round(
-      activeLevels.reduce((sum, levelValue) => sum + levelValue, 0) /
-        activeLevels.length +
-        1,
-    ),
-  );
+  const enemyLevel = recruitmentEnemyLevel(state, recruitment);
   const chapter = {
     id: `recruitment-${heroId}`,
     index: -1,
@@ -463,6 +454,55 @@ test("玉麟出府 stays reliable across late-campaign auto-battle seeds", () =>
     );
   }
   assert.deepEqual(defeats, []);
+});
+
+test("没羽入阵 stays inside the chapter-eight level band", () => {
+  const state = createInitialState({ difficulty: "story" });
+  state.recruited = HERO_ORDER.filter((heroId) => heroId !== "zhangqing");
+  state.roster = Object.fromEntries(
+    state.recruited.map((heroId) => {
+      const entry = createRosterEntry(heroId);
+      entry.level = 21;
+      return [heroId, entry];
+    }),
+  );
+  state.team = ["luzhishen", "shiqian", "daizong"];
+  state.currentChapter = 7;
+  state.completedChapters = CHAPTERS.slice(0, 7).map(
+    (chapter) => chapter.id,
+  );
+  state.stats.battlesWon = 24;
+  state.bondArchive = ["wind_snow"];
+  state.chainArchive = ["sky_break"];
+  state.heroRecruitments.completed = Object.keys(HERO_RECRUITMENTS).filter(
+    (heroId) => heroId !== "zhangqing",
+  );
+
+  const recruitment = HERO_RECRUITMENTS.zhangqing;
+  assert.equal(
+    recruitmentEnemyLevel(state, recruitment),
+    13,
+    "late recruitment enemies should follow chapter eight instead of active levels",
+  );
+
+  const teams = [
+    recommendTeam(state).team,
+    ["luzhishen", "shiqian", "daizong"],
+  ];
+  for (const team of teams) {
+    state.team = [...team];
+    for (let seed = 0; seed < 80; seed += 1) {
+      const { battle } = recruitmentBattle(
+        "zhangqing",
+        cloneState(state),
+      );
+      assert.equal(
+        simulateAutoBattle(battle, ["balanced"], 0x60000 + seed),
+        "victory",
+        `${team.join("、")} should clear 没羽入阵 with seed ${seed}`,
+      );
+    }
+  }
 });
 
 test("first playthrough gives every chapter and recruitment a reachable route", () => {

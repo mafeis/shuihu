@@ -33,7 +33,7 @@
 
 ## 重新生成
 
-先保持 `http://localhost:4173/` 运行：
+先保持 `http://localhost:5173/` 运行：
 
 ```bash
 npm run steam:art

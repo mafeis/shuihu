@@ -190,30 +190,18 @@ python3 tools/comfy_music_pipeline.py battle_theme --force
 
 曲目提示词会明确民乐编制、时代感、速度、情绪与“无人声”。作业完成后脚本调用 `ffprobe` 检查时长，先用 FFmpeg 对首尾做 4 秒等功率交叠，再经过两遍 `loudnorm` 母带并将目标设为约 `-16 LUFS / -1.5 dBTP`。母带完成后额外做 120ms 首尾闭合，最后输出 44.1kHz、双声道、192kbps MP3。游戏中由 `src/audio.js` 使用双音轨交叉淡入淡出，避免场景切换断音。
 
-已有 ComfyUI 原始母带时，可只重建正式游戏音频：
+已有 ComfyUI 原始母带时，可只重建正式配乐：
 
 ```bash
-npm run audio:master
+npm run audio:master:music
 npm run audio:verify
 ```
 
 音频验收会检查 MP3 编码、44.1kHz、双声道、约 32 秒时长、约 `-16 LUFS` 响度、真峰值上限 `-1.0 dBTP`、解码峰值上限 `0.98` 与循环边界比上限 `2.0`。当前十首作品全部通过，最高循环边界比为 `1.04`。
 
-### 8.1 生成战斗一次性音效
+### 8.1 开源战斗音效
 
-```bash
-# 缺少的音效会通过 ComfyUI 生成，再从缓存母带重建
-COMFY_URL=http://100.122.17.21:8188 python3 tools/comfy_sfx_pipeline.py
-
-# 只重做单个分类
-COMFY_URL=http://100.122.17.21:8188 \
-  python3 tools/comfy_sfx_pipeline.py impact --force
-
-# 已有 ComfyUI 原始音时，仅重新裁切、瞬态整形与母带
-npm run audio:master:sfx
-```
-
-战斗音效与配乐共用 ComfyUI 资产流程，但不做循环。YuE2 先提供短材质层，`tools/combat_sfx_synth.py` 再叠加与技能语义对应的刀风、箭矢、重击、格挡、恢复和终式瞬态层。最终文件会去除前导静音、压缩动态、做短淡出，并输出 44.1kHz、双声道、192kbps MP3。
+战斗音效不再经过 ComfyUI。十个运行时文件来自 Kenney CC0 Impact Sounds、RPG Audio 与 UI Audio，衍生 WAV 与许可文本保存在 `assets/audio/sfx/source/`，完整映射见 [kenney_assets.md](kenney_assets.md)。
 
 当前十个通用分类为：
 
@@ -227,12 +215,15 @@ npm run audio:master:sfx
 - `ultimate`：攻击型义技与星命合击。
 - `victory` / `defeat`：胜负收束。
 
-`npm run audio:verify` 会同时检查配乐循环和所有一次性音效的编码、时长、响度、真峰值与解码峰值。
+`npm run audio:verify` 会同时检查配乐循环和全部 CC0 一次性音效的编码、时长、真峰值与解码峰值。一次性音效按提示使用独立集成响度窗口，避免用循环音乐的单一 LUFS 目标破坏短瞬态的原始动态。
 
 ## 9. 资产打包
 
 ```bash
 python3 tools/build_asset_package.py
+
+# 仅根据现有运行时文件重算清单与哈希
+python3 tools/build_asset_package.py --manifest-only
 ```
 
 脚本会：
@@ -241,6 +232,7 @@ python3 tools/build_asset_package.py
 - 提取工作流中的种子和提示词。
 - 记录图片尺寸、颜色模式和 Alpha 范围。
 - 记录音乐编码、码率、采样率、时长、种子和循环处理方式。
+- 记录 Kenney CC0 战斗音效与粒子遮罩的作者、许可、来源 URL、尺寸或音频元数据。
 - 计算 SHA-256。
 - 生成 `assets/manifest.json`。
 
@@ -257,4 +249,5 @@ python3 tools/build_asset_package.py
 - 缩放：角色与敌人立绘只在等比容器内缩放，不直接设置失真的固定宽高。
 - 音频：无削波，循环边界无明显断层，场景切换使用交叉淡化。
 - 追溯：能从成品回到工作流、模型、种子和原始生成图。
+- 第三方许可：CC0 衍生资源保留作者、来源 URL、许可文本和 SHA-256。
 

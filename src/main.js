@@ -74,6 +74,8 @@ import {
   totalChapterTactics,
 } from "./chapter-tactics.js";
 import {
+  arenaBuildSnapshot,
+  arenaBoonCounts,
   evaluateArenaPerformance,
   nextArenaSynergy,
   planArenaAutoContinue,
@@ -132,6 +134,7 @@ import {
   loadGame,
   recommendTeam,
   recommendTeams,
+  recruitmentEnemyLevel,
   recordChapterTactic,
   recordChoice,
   SAVE_BACKUP_KEY,
@@ -166,11 +169,19 @@ import {
   validTargets,
 } from "./battle.js";
 import {
+  BATTLE_PHASES,
+  battlePhasePresentation,
+  isBattlePhase,
+} from "./battle-phase.js";
+import {
   chooseAutoBattleAction,
   normalizeAutoBattleTactic,
   recordAutoBattleChoice,
 } from "./auto-battle.js";
 import { battleVfxProfile } from "./battle-vfx.js";
+import { createBattleStage } from "./battle-stage.js";
+import { createEngineModel } from "./engine/model-router.js";
+import { createPageStage } from "./engine/page-stage.js";
 import {
   cinematicImageFit,
   endingCinematicProfile,
@@ -187,6 +198,16 @@ const app = document.querySelector("#app");
 const gameShell = window.gameShell || null;
 const steamBridge = window.gameSteam || null;
 const diagnosticsBridge = window.gameDiagnostics || null;
+const pageStage = createPageStage({
+  onAction: (action, element) => {
+    sound.unlock();
+    handleAction(action, element);
+  },
+  onError: (error) => {
+    globalThis.__shuihuPageEngine = "failed";
+    reportDiagnostic("error", "page-stage-init-failed", String(error));
+  },
+});
 
 let state = null;
 let screen = "title";
@@ -198,9 +219,15 @@ let battle = null;
 let battleUi = createBattleUi();
 let battleTimer = null;
 let battleFeedbackTimer = null;
+let battleStage = null;
+let battleStageFallbackTimer = null;
+let battleStageBindRaf = null;
+let battleCanvasResizeRaf = null;
+let battleSurfaceObserver = null;
 let battleActorSide = null;
 let arenaAutoTimer = null;
 let titleVideoCleanup = null;
+let titlePrologueTimer = null;
 let titleProloguePlayed = false;
 let endingCinematicActive = false;
 let endingCinematicTimer = null;
@@ -241,6 +268,7 @@ let selectedFormationRow = 0;
 let selectedEquipmentHero = "linchong";
 let selectedCodexHero = "linchong";
 let selectedQuestHero = "linchong";
+let questPathFilter = "all";
 let codexArchives = { bonds: false, chains: false };
 let equipmentCategory = "all";
 let equipmentPathFilter = "all";
@@ -310,6 +338,7 @@ function renderPagination(page, directionAction, label) {
 function createBattleUi() {
   return {
     selectedSkillId: null,
+    menuOpen: false,
     processing: false,
     result: null,
     resultTone: "",
@@ -335,6 +364,7 @@ function presentBattleResult(result, vfx = null) {
 function clearBattleFeedback() {
   battleUi.feedback = [];
   battleUi.vfx = null;
+  battleStage?.reset(battle ? [...battle.heroes, ...battle.enemies] : []);
 }
 
 function clearBattleFeedbackTimer() {
@@ -396,80 +426,240 @@ function battleUnitSpatialStyle(unitUid) {
 
 function renderBattleMotion(event, label, tone = "") {
   if (!event) return "";
-  const collision = event.type === "damage" || event.type === "combo";
-  return `
-    <span class="battle-motion ${tone} ${collision ? "is-collision" : ""}" data-feedback-key="${event.key}" aria-hidden="true">
-      <span class="battle-motion-flash"></span>
-      ${
-        collision
-          ? `<span class="collision-burst">
-              <em></em>
-              ${Array.from({ length: 8 }, (_, index) => `<i style="--collision-index:${index};--collision-angle:${index * 45}deg;--collision-angle-end:${index * 45 + 22}deg"></i>`).join("")}
-            </span>`
-          : ""
+  return `<span class="battle-motion ${tone}" data-feedback-key="${event.key}" aria-hidden="true"><b>${escapeHtml(label)}</b></span>`;
+}
+
+function ensureBattleCanvas() {
+  let host = document.querySelector("#battle-canvas-host");
+  if (!host) {
+    host = document.createElement("div");
+    host.id = "battle-canvas-host";
+    host.setAttribute("aria-hidden", "true");
+    const canvas = document.createElement("canvas");
+    canvas.id = "battle-stage-canvas";
+    canvas.className = "battle-stage-canvas";
+    canvas.tabIndex = -1;
+    host.append(canvas);
+    document.body.append(host);
+  }
+  return host.querySelector("#battle-stage-canvas");
+}
+
+function positionBattleCanvasHost() {
+  const host = document.querySelector("#battle-canvas-host");
+  const battleScreen = document.querySelector(".battle-screen");
+  if (!host || !battleScreen) return;
+  const rect = battleScreen.getBoundingClientRect();
+  host.style.left = `${Math.round(rect.left)}px`;
+  host.style.top = `${Math.round(rect.top)}px`;
+  host.style.width = `${Math.round(rect.width)}px`;
+  host.style.height = `${Math.round(rect.height)}px`;
+}
+
+function observeBattleSurface() {
+  battleSurfaceObserver?.disconnect?.();
+  battleSurfaceObserver = null;
+  const battleScreen = document.querySelector(".battle-screen");
+  if (!battleScreen || typeof ResizeObserver !== "function") return;
+  battleSurfaceObserver = new ResizeObserver(() => {
+    scheduleBattleCanvasLayout();
+  });
+  battleSurfaceObserver.observe(battleScreen);
+}
+
+function scheduleBattleCanvasLayout() {
+  if (battleCanvasResizeRaf) {
+    window.cancelAnimationFrame(battleCanvasResizeRaf);
+  }
+  battleCanvasResizeRaf = window.requestAnimationFrame(() => {
+    battleCanvasResizeRaf = null;
+    if (screen !== "battle") return;
+    positionBattleCanvasHost();
+    battleStage?.refreshViewport?.();
+  });
+}
+
+function bindBattleStage() {
+  if (!battle) return;
+  observeBattleSurface();
+  positionBattleCanvasHost();
+  document.querySelector("#battle-canvas-host")?.classList.add("is-visible");
+  const canvas = ensureBattleCanvas();
+  if (!canvas) return;
+  if (battleStage && battleStage.canvas !== canvas) {
+    destroyBattleStage();
+  }
+  if (
+    battleStage?.mode === "phaser" ||
+    battleStage?.mode === "loading"
+  ) {
+    globalThis.__shuihuBattleEngine = battleStage.mode;
+    syncBattleStage();
+    return;
+  }
+  if (battleStageBindRaf) {
+    window.cancelAnimationFrame(battleStageBindRaf);
+    battleStageBindRaf = null;
+  }
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width < 220 || rect.height < 180) {
+    battleStageBindRaf = window.requestAnimationFrame(bindBattleStage);
+    return;
+  }
+  battleStage?.destroy?.();
+  try {
+    battleStage = createBattleStage(canvas, {
+      backdrop: battle.backdrop,
+      signature: `${battle.mode}-${battle.backdrop}`,
+      reducedMotion: reducedMotionFor(state),
+      speed: state.settings.battleSpeed,
+      callbacks: {
+        onMenu: () => showBattleMenu(),
+        onCloseMenu: () => closeBattleMenu(),
+        onRetreat: () => {
+          battleUi.menuOpen = false;
+          handleAction("battle-retreat");
+        },
+        onToggleAuto: () => toggleAutoBattle(),
+        onCycleTactic: () => cycleAutoTactic(),
+        onSetSpeed: (speed) => setBattleSpeed(speed),
+        onCycleSpeed: () => {
+          const speeds = [1, 2, 4];
+          const current = speeds.indexOf(state.settings.battleSpeed);
+          setBattleSpeed(speeds[(Math.max(0, current) + 1) % speeds.length]);
+        },
+        onToggleSound: () => toggleBattleSound(),
+        onSelectSkill: (skillId) => selectSkill(skillId),
+        onTarget: (uid) => selectBattleTarget(uid),
+        onCancelTarget: () => {
+          battleUi.selectedSkillId = null;
+          render();
+        },
+        onChainAttack: () => resolveChainAttack(),
+        onDismissTutorial: () => dismissBattleTutorial(),
+      },
+      onReady: () => {
+        if (screen === "battle" && canvas.isConnected) syncBattleStage();
+      },
+    });
+    globalThis.__shuihuBattleStage = battleStage;
+    globalThis.__shuihuBattleEngine = "loading";
+    battleStage.contextLostHandler = (event) => {
+      event.preventDefault();
+      reportDiagnostic("warning", "battle-stage-context-lost", {
+        engine: battleStage?.mode || null,
+      });
+    };
+    canvas.addEventListener(
+      "webglcontextlost",
+      battleStage.contextLostHandler,
+      { once: true },
+    );
+    battleStageFallbackTimer = window.setTimeout(() => {
+      if (!battleStage?.phaserReady) {
+        reportDiagnostic("warning", "battle-stage-fallback", {
+          reason: "phaser-scene-not-ready",
+        });
       }
-      <b>${escapeHtml(label)}</b>
-    </span>
-  `;
+    }, 7000);
+    syncBattleStage();
+    battleStage
+      .start()
+      .then(() => {
+        if (battleStage?.mode === "phaser" && battleStage.phaserReady) {
+          syncBattleStage();
+        }
+      })
+      .catch((error) => {
+        reportDiagnostic("error", "battle-stage-init-failed", String(error));
+        globalThis.__shuihuBattleEngine = "failed";
+      });
+  } catch (error) {
+    reportDiagnostic("error", "battle-stage-init-failed", String(error));
+    globalThis.__shuihuBattleEngine = "failed";
+  }
 }
 
-function battleVfxStyles(vfx, primary) {
-  const speed = [1, 2, 4].includes(state?.settings?.battleSpeed)
-    ? state.settings.battleSpeed
-    : 1;
-  const duration = (milliseconds) =>
-    `${Math.max(170, Math.round(milliseconds / speed))}ms`;
-  return [
-    `--vfx-core-time:${duration(440)}`,
-    `--vfx-ring-time:${duration(620)}`,
-    `--vfx-streak-time:${duration(520)}`,
-    `--vfx-shard-time:${duration(680)}`,
-    `--vfx-mote-time:${duration(780)}`,
-    `--vfx-wash-time:${duration(700)}`,
-    `--vfx-variant:${vfx.variant || 0}`,
-    `--vfx-side:${vfx.actorSide === "enemy" ? -1 : 1}`,
-    `--vfx-layer:${primary ? 3 : 1}`,
-  ].join(";");
+function syncBattleStage() {
+  const canvas = ensureBattleCanvas();
+  if (!canvas || !battle || !battleStage) return;
+  const engineReady = battleStage.mode === "phaser" && battleStage.phaserReady;
+  globalThis.__shuihuBattleEngine = engineReady ? "phaser" : "loading";
+  if (engineReady) {
+    window.clearTimeout(battleStageFallbackTimer);
+    battleStageFallbackTimer = null;
+  }
+  canvas.dataset.renderer = engineReady ? "phaser" : "loading";
+  setBattleEnginePresentation(engineReady ? "engine" : "loading");
+  for (const button of document.querySelectorAll(".stage-proxy")) {
+    button.classList.remove("is-dom-rendered");
+  }
+  const units = [...battle.heroes, ...battle.enemies];
+  const actor = currentCombatant(battle);
+  const selectedSkill =
+    actor?.side === "hero"
+      ? heroSkillList(actor).find(
+          (skill) => skill.id === battleUi.selectedSkillId,
+        )
+      : null;
+  const chainFormation = battle.chainReady
+    ? chainFormationForBattle(battle)
+    : null;
+  const engineUi = createBattleEngineUi(actor, selectedSkill, chainFormation);
+  battleStage.configure({
+    backdrop: battle.backdrop,
+    weather: battleStage.describeWeather(battle.backdrop),
+    reducedMotion: reducedMotionFor(state),
+    speed: state.settings.battleSpeed,
+  });
+  battleStage.prepareActors(
+    units,
+    battle.currentUid,
+    engineUi?.targetableUids || [],
+  );
+  battleStage.setBattleUi?.(engineUi);
+  if (battleUi.vfx && battleUi.vfx !== battleStage.renderedVfx) {
+    battleStage.renderedVfx = battleUi.vfx;
+    battleStage.play(battleUi.vfx, {
+      units,
+      events: battleUi.result?.events || [],
+    });
+  } else if (!battleUi.vfx && battleStage.renderedVfx) {
+    battleStage.reset(units, battle.currentUid);
+  }
+  requestAnimationFrame(() => battleStage?.syncProxyHud(units));
 }
 
-function renderBattleSkillImpact(vfx, primary = true) {
-  if (!vfx) return "";
-  return `
-    <span class="skill-impact is-${vfx.kind} tone-${vfx.tone} is-from-${vfx.actorSide || "hero"} ${vfx.heavy ? "is-heavy" : ""} ${vfx.ultimate ? "is-ultimate" : ""} ${vfx.multiTarget ? "is-multi-target" : ""} ${primary ? "is-primary" : "is-secondary"} is-variant-${vfx.variant || 0} ${reducedMotionFor(state) ? "is-reduced-motion" : ""}" style="${battleVfxStyles(vfx, primary)}" data-vfx-template="${vfx.template}" aria-hidden="true">
-      <span class="vfx-wash"></span>
-      <span class="vfx-arcs">
-        ${Array.from({ length: 3 }, (_, index) => `<i style="--vfx-index:${index}"></i>`).join("")}
-      </span>
-      <span class="vfx-streaks">
-        ${Array.from({ length: 8 }, (_, index) => `<i style="--vfx-index:${index}"></i>`).join("")}
-      </span>
-      <span class="vfx-shards">
-        ${Array.from({ length: 10 }, (_, index) => `<i style="--vfx-index:${index}"></i>`).join("")}
-      </span>
-      <span class="vfx-runes">
-        ${Array.from({ length: 4 }, (_, index) => `<i style="--vfx-index:${index}"></i>`).join("")}
-      </span>
-      <span class="vfx-motes">
-        ${Array.from({ length: 8 }, (_, index) => `<i style="--vfx-index:${index}"></i>`).join("")}
-      </span>
-      <span class="impact-core"></span>
-      <span class="impact-shockwave"></span>
-      <span class="impact-shockwave is-late"></span>
-      <em class="vfx-seal"></em>
-    </span>
-  `;
+function setBattleEnginePresentation(mode) {
+  const screenNode = document.querySelector(".battle-screen");
+  const host = document.querySelector("#battle-canvas-host");
+  if (!screenNode) return;
+  screenNode.dataset.engineUi = mode;
+  screenNode.classList.toggle("has-engine-ui", mode === "engine");
+  screenNode.classList.toggle("has-engine-loading", mode === "loading");
+  if (host) {
+    host.dataset.engineUi = mode;
+    host.classList.toggle("is-visible", mode === "engine" || mode === "loading");
+    host.classList.toggle("is-ready", mode === "engine");
+  }
 }
 
-function renderBattleSkillCallout() {
-  const vfx = battleUi.vfx;
-  if (!vfx) return "";
-  return `
-    <div class="battle-skill-callout is-${vfx.kind} tone-${vfx.tone}" aria-live="polite">
-      <span>${icon(vfx.icon, 18)}</span>
-      <div><small>${vfx.pathId ? PATHS[vfx.pathId]?.name || "星命" : "星命"}</small><b>${escapeHtml(vfx.skillName)}</b></div>
-      ${vfx.critical ? "<em>会心</em>" : vfx.pathAdvantage ? "<em>克制</em>" : ""}
-    </div>
-  `;
+function destroyBattleStage() {
+  battleSurfaceObserver?.disconnect?.();
+  battleSurfaceObserver = null;
+  if (battleStageBindRaf) {
+    window.cancelAnimationFrame(battleStageBindRaf);
+    battleStageBindRaf = null;
+  }
+  if (battleStageFallbackTimer) {
+    window.clearTimeout(battleStageFallbackTimer);
+    battleStageFallbackTimer = null;
+  }
+  battleStage?.destroy();
+  battleStage = null;
+  document.querySelector("#battle-canvas-host")?.remove();
+  if (globalThis.__shuihuBattleStage) delete globalThis.__shuihuBattleStage;
+  setBattleEnginePresentation("fallback");
 }
 
 function escapeHtml(value) {
@@ -835,65 +1025,248 @@ function statusList(unit) {
     .join("");
 }
 
-function renderGame() {
-  const currentRosterGallery = document.querySelector(
-    ".roster-screen .hero-gallery",
-  );
-  if (screen === "roster" && currentRosterGallery && !rosterResetScroll) {
-    rosterGalleryScrollTop = currentRosterGallery.scrollTop;
+function createPageModelContext() {
+  return {
+    screen,
+    state,
+    saved: state ? null : loadGame(),
+    selectedDifficulty,
+    focusedChapterId,
+    activeChapter,
+    story,
+    modal,
+    settingsOrigin,
+    selectedFormationRow,
+    selectedEquipmentHero,
+    selectedCodexHero,
+    selectedQuestHero,
+    questPathFilter,
+    equipmentCategory,
+    equipmentPathFilter,
+    equipmentPage,
+    rosterPathFilter,
+    rosterPage,
+    rosterDetailOpen,
+    arenaRun,
+    arenaMode,
+    arenaDraftSeed,
+    arenaDraftBoons,
+    arenaRewardChoices,
+    selectedArenaBoon,
+    arenaTrialSelection,
+    lastMasteryUnlocks,
+    lastBondUnlocks,
+    lastChainUnlocks,
+    lastAchievementUnlocks,
+    codexArchives,
+    desktopStatus,
+    difficulties: DIFFICULTIES,
+    campStatus: (buildingId) =>
+      state ? campBuildingStatus(state, buildingId) : "locked",
+    campLevel: state ? campAreaLevel(state) : 1,
+    restCost: state ? campRestCost(state) : 0,
+    nextAreaWins: state ? campAreaRequirement(state) : 5,
+  };
+}
+
+function engineActionAttributes(item) {
+  const attributes = [`data-action="${escapeHtml(item.action || "")}"`];
+  for (const [key, value] of Object.entries(item.data || {})) {
+    if (value === undefined || value === null) continue;
+    const attribute = `data-${key.replace(
+      /[A-Z]/g,
+      (letter) => `-${letter.toLowerCase()}`,
+    )}`;
+    attributes.push(`${attribute}="${escapeHtml(String(value))}"`);
   }
+  if (item.disabled) attributes.push("disabled");
+  if (item.pressed !== undefined) {
+    attributes.push(`aria-pressed="${item.pressed ? "true" : "false"}"`);
+  }
+  if (item.active) attributes.push('aria-current="true"');
+  return attributes.join(" ");
+}
+
+function engineActionList(items, label) {
+  const actions = (items || []).filter((item) => item?.action);
+  if (!actions.length) return "";
+  return `
+    <nav aria-label="${escapeHtml(label)}">
+      ${actions
+        .map(
+          (item) =>
+            `<button type="button" ${engineActionAttributes(item)}>${escapeHtml(item.label || item.title || item.action)}</button>`,
+        )
+        .join("")}
+    </nav>
+  `;
+}
+
+function renderEngineAccessibility(model) {
+  const region = document.querySelector("#engine-accessibility");
+  if (!region) return;
+  if (!model) {
+    region.innerHTML = "";
+    return;
+  }
+  const modalActions = model.modal
+    ? [...(model.modal.actions || []), model.modal.onDismiss]
+    : [];
+  const buttons = [
+    ...(model.nav || []),
+    ...(model.actions || []),
+    ...(model.tabs || []),
+    ...(model.cards || []),
+    ...modalActions,
+  ];
+  const seen = new Set();
+  const unique = buttons.filter((item) => {
+    if (!item?.action) return false;
+    const key = `${item.action}:${JSON.stringify(item.data || {})}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const heading = model.hero?.title || model.title || model.header?.title || "星命水浒";
+  const summary = model.hero?.body || model.hero?.subtitle || "";
+  region.innerHTML = `
+    <section aria-label="${escapeHtml(heading)}">
+      <h1>${escapeHtml(heading)}</h1>
+      ${summary ? `<p>${escapeHtml(summary)}</p>` : ""}
+      ${engineActionList(model.nav, "主要导航")}
+      ${engineActionList(model.actions, "当前页面操作")}
+      ${engineActionList(model.tabs, "分类与模式")}
+      ${engineActionList(model.cards, "页面条目")}
+      ${model.modal ? `
+        <section role="dialog" aria-modal="true" aria-label="${escapeHtml(model.modal.title || "梁山令")}" data-modal-panel>
+          <h2>${escapeHtml(model.modal.title || "梁山令")}</h2>
+          <pre class="legal-notice-text">${escapeHtml(model.modal.body || "")}</pre>
+          ${engineActionList(modalActions, "弹窗操作")}
+        </section>
+      ` : ""}
+      ${unique.length ? `<p>可使用键盘 Tab 键浏览全部 ${unique.length} 个操作。</p>` : ""}
+    </section>
+  `;
+}
+
+function renderEngineForms(model) {
+  const region = document.querySelector("#engine-form-controls");
+  if (!region) return;
+  const forms = model?.forms || [];
+  region.hidden = forms.length === 0;
+  if (!forms.length) {
+    region.innerHTML = "";
+    return;
+  }
+  const controls = forms
+    .map((control) => {
+      if (control.type === "range") {
+        return `
+          <label class="engine-form-range">
+            <span>${escapeHtml(control.label || control.id)}</span>
+            <input
+              type="range"
+              min="${Number(control.min) || 0}"
+              max="${Number(control.max) || 100}"
+              step="${Number(control.step) || 1}"
+              value="${Number(control.value) || 0}"
+              data-engine-control="${escapeHtml(control.id)}"
+              data-volume-setting="${escapeHtml(
+                control.data?.volumeSetting || "",
+              )}"
+              aria-label="${escapeHtml(control.label || control.id)}"
+            />
+            <output>${escapeHtml(control.output || `${control.value}%`)}</output>
+          </label>
+        `;
+      }
+      if (control.type === "file") {
+        return `
+          <label class="engine-form-file">
+            <span>${escapeHtml(control.label || "选择文件")}</span>
+            <input
+              type="file"
+              accept="${escapeHtml(control.accept || "")}"
+              data-engine-control="${escapeHtml(control.id)}"
+              data-save-import
+              aria-label="${escapeHtml(control.label || "选择文件")}"
+            />
+          </label>
+        `;
+      }
+      return "";
+    })
+    .join("");
+  region.innerHTML = `
+    <section class="volume-controls" aria-label="精确设置">
+      <b>精确设置</b>
+      ${controls}
+    </section>
+  `;
+}
+
+function renderGame() {
   pendingInputRestore ||= captureInputRestore(document.activeElement);
   clearBattleTimerIfLeavingBattle();
   titleVideoCleanup?.();
   titleVideoCleanup = null;
-  let content = "";
-  if (screen === "title") content = renderTitle();
-  if (screen === "map") content = renderMap();
-  if (screen === "camp") content = renderCamp();
-  if (screen === "roster") content = renderRoster();
-  if (screen === "quests") content = renderQuestBoard();
-  if (screen === "formation") content = renderFormation();
-  if (screen === "equipment") content = renderEquipment();
-  if (screen === "codex") content = renderCodex();
-  if (screen === "settings") content = renderSettings();
-  if (screen === "arena") content = renderArena();
-  if (screen === "arena-reward") content = renderArenaReward();
-  if (screen === "story") content = renderStory();
-  if (screen === "battle") content = renderBattle();
-  if (screen === "reward") content = renderReward();
-  if (screen === "final-choice") content = renderFinalChoice();
-  if (screen === "ending") content = renderEnding();
-
-  app.innerHTML = `
-    <div class="game-frame screen-${screen}" style="--screen-bg:url('${
-      activeChapter?.bg || currentChapterBg()
-    }')">
-      ${content}
-      <div class="toast-layer" id="toast-layer" aria-live="polite"></div>
-      ${renderModal()}
-    </div>
-  `;
+  if (titlePrologueTimer) {
+    window.clearTimeout(titlePrologueTimer);
+    titlePrologueTimer = null;
+  }
+  document.body.classList.remove("is-title-prologue-active");
   applyPreferences();
-  createIcons({
-    icons: ICON_COMPONENTS,
-    attrs: {
-      "stroke-width": 1.7,
-      "aria-hidden": "true",
-    },
-  });
-  window.scrollTo({ top: 0, behavior: "instant" });
-  if (screen === "roster") {
-    const gallery = document.querySelector(".roster-screen .hero-gallery");
-    if (gallery) {
-      gallery.scrollTop = rosterResetScroll ? 0 : rosterGalleryScrollTop;
-    }
-  }
-  rosterResetScroll = false;
-  restoreInputFocus();
-  if (screen === "title") bindTitleVideo();
+
   if (screen === "battle") {
+    pageStage.hide();
+    document.body.classList.remove("is-page-stage-visible");
+    app.innerHTML = `
+      <div class="game-frame screen-battle">
+        ${renderBattle()}
+        <div class="toast-layer" id="toast-layer" aria-live="polite"></div>
+      </div>
+    `;
+    restoreInputFocus();
+    positionBattleCanvasHost();
+    bindBattleStage();
     runBattleAutomation();
+    return;
   }
+
+  destroyBattleStage();
+  const savedForTitle = screen === "title" ? state || loadGame() : null;
+  const showTitlePrologue =
+    screen === "title" &&
+    !titleProloguePlayed &&
+    !reducedMotionFor(savedForTitle);
+  if (screen === "title") titleProloguePlayed = true;
+  app.innerHTML = `
+    <div class="game-frame screen-${screen}" aria-hidden="true">
+      ${showTitlePrologue ? renderTitlePrologue(savedForTitle) : ""}
+    </div>
+    <div id="engine-accessibility" class="sr-only"></div>
+    <div id="engine-form-controls" class="engine-form-controls" hidden></div>
+  `;
+  restoreInputFocus();
+  document.body.classList.add("is-page-stage-visible");
+  document.body.dataset.pageScreen = screen;
+  if (showTitlePrologue) {
+    document.body.classList.add("is-title-prologue-active");
+    titlePrologueTimer = window.setTimeout(() => {
+      titlePrologueTimer = null;
+      document.body.classList.remove("is-title-prologue-active");
+    }, 6600);
+  }
+  const model = createEngineModel(createPageModelContext());
+  renderEngineAccessibility(model);
+  renderEngineForms(model);
+  pageStage.sync(model).catch((error) => {
+    globalThis.__shuihuPageEngine = "failed";
+    reportDiagnostic("error", "page-model-failed", {
+      screen,
+      error: String(error?.stack || error),
+    });
+  });
   if (screen === "arena-reward") queueArenaAutoContinue();
   else clearArenaAutoTimer();
 }
@@ -962,7 +1335,28 @@ function bindTitleVideo() {
   if (!video) return;
 
   const reducedMotion = reducedMotionFor(state);
-  const showFallback = () => video.classList.remove("is-playing");
+  let fallbackTimer = null;
+  const clearFallbackTimer = () => {
+    if (!fallbackTimer) return;
+    window.clearTimeout(fallbackTimer);
+    fallbackTimer = null;
+  };
+  const showFallback = () => {
+    clearFallbackTimer();
+    video.classList.remove("is-playing");
+  };
+  const scheduleFallback = () => {
+    clearFallbackTimer();
+    fallbackTimer = window.setTimeout(() => {
+      fallbackTimer = null;
+      if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) showFallback();
+    }, 1500);
+  };
+  const handlePlaying = () => {
+    clearFallbackTimer();
+    video.classList.add("is-playing");
+  };
+  const handleReady = () => clearFallbackTimer();
   const play = () => {
     if (reducedMotion) {
       video.pause();
@@ -977,15 +1371,25 @@ function bindTitleVideo() {
     else play();
   };
 
-  video.addEventListener("playing", () => video.classList.add("is-playing"));
+  video.addEventListener("playing", handlePlaying);
   video.addEventListener("pause", showFallback);
-  video.addEventListener("waiting", showFallback);
-  video.addEventListener("stalled", showFallback);
+  video.addEventListener("waiting", scheduleFallback);
+  video.addEventListener("stalled", scheduleFallback);
+  video.addEventListener("canplay", handleReady);
+  video.addEventListener("loadeddata", handleReady);
   video.addEventListener("error", showFallback);
   document.addEventListener("visibilitychange", handleVisibility);
   play();
 
   titleVideoCleanup = () => {
+    clearFallbackTimer();
+    video.removeEventListener("playing", handlePlaying);
+    video.removeEventListener("pause", showFallback);
+    video.removeEventListener("waiting", scheduleFallback);
+    video.removeEventListener("stalled", scheduleFallback);
+    video.removeEventListener("canplay", handleReady);
+    video.removeEventListener("loadeddata", handleReady);
+    video.removeEventListener("error", showFallback);
     document.removeEventListener("visibilitychange", handleVisibility);
   };
 }
@@ -1016,10 +1420,15 @@ function scheduleBattle(callback, delay = 0) {
   const speed = [1, 2, 4].includes(state?.settings?.battleSpeed)
     ? state.settings.battleSpeed
     : 1;
-  battleTimer = window.setTimeout(() => {
+  const run = () => {
+    if (battleUi.menuOpen || modal) {
+      battleTimer = window.setTimeout(run, 180);
+      return;
+    }
     battleTimer = null;
     callback();
-  }, Math.max(35, Math.round(delay / speed)));
+  };
+  battleTimer = window.setTimeout(run, Math.max(35, Math.round(delay / speed)));
 }
 
 function battleVfxTransitionDelay(defaultDelay) {
@@ -1029,6 +1438,7 @@ function battleVfxTransitionDelay(defaultDelay) {
 
 function setScreen(nextScreen) {
   const previousScreen = screen;
+  if (nextScreen !== "battle") destroyBattleStage();
   if (screen === "battle" || screen === "story") {
     if (battleTimer) window.clearTimeout(battleTimer);
     battleTimer = null;
@@ -1313,6 +1723,10 @@ function persist() {
 }
 
 function toast(message, tone = "default") {
+  if (screen !== "battle") {
+    pageStage.showToast(message, tone);
+    return;
+  }
   const layer = document.querySelector("#toast-layer");
   if (!layer) return;
   if (toastTimer) window.clearTimeout(toastTimer);
@@ -1476,8 +1890,23 @@ function renderTitlePrologue(saved) {
         )
         .join("")}
       <span class="title-prologue-rule"></span>
+      <button class="title-prologue-skip" type="button" data-action="skip-title-prologue">
+        <span>跳过序章</span>${icon("chevrons-right", 15)}
+      </button>
     </section>
   `;
+}
+
+function skipTitlePrologue() {
+  const prologue = document.querySelector(".title-prologue:not(.is-skipped)");
+  if (!prologue) return false;
+  if (titlePrologueTimer) {
+    window.clearTimeout(titlePrologueTimer);
+    titlePrologueTimer = null;
+  }
+  document.body.classList.remove("is-title-prologue-active");
+  prologue.classList.add("is-skipped");
+  return true;
 }
 
 function renderTitle() {
@@ -1896,7 +2325,7 @@ function openCampBuilding(buildingId) {
 }
 
 function arenaBoonCards(boons, action, options = {}) {
-  const counts = arenaBoonCounts();
+  const counts = arenaBoonCounts(arenaRun?.boons || []);
   return boons
     .map((boon) => {
       const selected = selectedArenaBoon === boon.id;
@@ -4362,7 +4791,43 @@ function renderStoryResponse() {
 }
 
 function renderBattle() {
+  const specialRule = battle.specialRule || battle.legendRule;
+  const bonds = (battle.bondIds || [])
+    .map((bondId) => HERO_BONDS[bondId])
+    .filter(Boolean);
+  const doctrines = battle.heroes
+    .filter((unit) => unit.doctrineId)
+    .map((unit) => {
+      const doctrine = HERO_DOCTRINES[unit.refId]?.paths?.[unit.doctrineId];
+      return doctrine ? `${unit.name}·${doctrine.name}` : "";
+    })
+    .filter(Boolean);
+  return `
+    <main class="battle-screen has-engine-loading">
+      <div class="battle-background" style="background-image:url('${battle.backdrop}')" aria-hidden="true"></div>
+      <div class="battle-overlay" aria-hidden="true"></div>
+      <section class="sr-only" aria-label="战阵规则">
+        ${
+          specialRule
+            ? `<p>${escapeHtml(specialRule.name || "特殊战法")}：${escapeHtml(specialRule.desc || "")}</p>`
+            : ""
+        }
+        ${bonds.length ? `<p>兄弟契：${escapeHtml(bonds.map((bond) => bond.name).join("、"))}</p>` : ""}
+        ${doctrines.length ? `<p>命途：${escapeHtml(doctrines.join("、"))}</p>` : ""}
+      </section>
+      <section class="battle-field">
+        <div class="battle-stage">
+          <div class="battle-engine-loading" aria-hidden="true"><span></span><b>列阵</b></div>
+        </div>
+      </section>
+      ${isBattlePhase(battle, BATTLE_PHASES.DEFEAT) ? renderDefeatOverlay() : ""}
+    </main>
+  `;
+}
+
+function renderBattleDomFallback() {
   if (!battle) return "";
+  battleUi.feedback = [];
   const actor = currentCombatant(battle);
   const autoTactic = currentAutoTactic();
   const heroUnit = actor?.side === "hero" ? actor : null;
@@ -4424,30 +4889,13 @@ function renderBattle() {
       : chainPaths.length === 1
         ? `已记录${PATHS[chainPaths[0]].name}，再取两种不同路数`
         : "星命连携：使用三种不同路数后即可发动合击";
-  const currentSide = battleActorSide;
   const resultEvents = battleUi.result?.events || [];
-  const heroStriking =
-    currentSide === "hero" &&
-    Boolean(battleUi.result) &&
-    (resultEvents.some(
-      (event) =>
-        event.targetUid !== actor?.uid &&
-        (event.targetUid.startsWith("enemy-") || event.type === "combo"),
-    ) ||
-      battleUi.result.targets?.some((targetUid) =>
-        targetUid.startsWith("enemy-"),
-      ));
-  const enemyStriking =
-    currentSide === "enemy" &&
-    Boolean(
-      resultEvents.some((event) => event.targetUid?.startsWith("hero-")),
-    );
   const battleImpact = resultEvents.some(
     (event) => event.type === "damage" || event.type === "combo",
   );
   return `
-    <main class="battle-screen">
-      <div class="battle-background" style="background-image:url('${battle.backdrop}')"></div>
+    <main class="battle-screen has-engine-loading">
+      <div class="battle-background" style="background-image:url('${battle.backdrop}')" aria-hidden="true"></div>
       <div class="battle-overlay"></div>
       <header class="battle-header">
         <div class="battle-title">
@@ -4555,11 +5003,12 @@ function renderBattle() {
               </div>`
             : ""
         }
-        ${renderBattleSkillCallout()}
         <div class="battle-stage">
-          <div class="enemy-formation">
-            <div class="formation-caption"><span>${battle.mode === "arena" ? `演武第 ${battle.arenaWave} 阵` : "高俅爪牙"}</span><i></i><small>${battle.enemies.filter((unit) => unit.hp > 0).length} 人</small></div>
-            <div class="enemy-line ${enemyStriking ? "is-striking" : ""}">
+          <div class="battle-engine-loading" aria-hidden="true"><span></span><b>列阵</b></div>
+          <div class="formation-caption battle-enemy-caption"><span>${battle.mode === "arena" ? `演武第 ${battle.arenaWave} 阵` : "高俅爪牙"}</span><i></i><small>${battle.enemies.filter((unit) => unit.hp > 0).length} 人</small></div>
+          <div class="battle-combatants">
+            <div class="enemy-formation">
+              <div class="enemy-line"></div>
               ${renderFormationLine(battle.enemies, (unit) =>
                 renderEnemyUnit(
                   unit,
@@ -4570,26 +5019,21 @@ function renderBattle() {
                 ),
               )}
             </div>
-          </div>
-          <div class="battle-midline">
-            <span></span>
-            <div class="battle-chain ${battle.chainReady ? "is-ready" : ""}" aria-label="${chainLabel}">
-              <small>星命连携</small>
-              <span class="chain-path-slots">
-                ${Array.from({ length: 3 }, (_, index) =>
-                  chainPathMark(chainPaths[index] || null),
-                ).join("")}
-              </span>
-              <b title="${chainFormation?.desc || chainLabel}">${chainHint}</b>
+            <div class="battle-midline">
+              <div class="battle-chain ${battle.chainReady ? "is-ready" : ""}" aria-label="${chainLabel}">
+                <small>星命连携</small>
+                <span class="chain-path-slots">
+                  ${Array.from({ length: 3 }, (_, index) =>
+                    chainPathMark(chainPaths[index] || null),
+                  ).join("")}
+                </span>
+                <b title="${chainFormation?.desc || chainLabel}">${chainHint}</b>
+              </div>
+              ${renderBattlePhaseStatus(actor)}
             </div>
-            <div class="battle-phase-label">
-              ${battle.phase === "enemy" ? "敌军行动" : battle.phase === "select" ? "轮到我方" : battle.phase === "victory" ? "敌阵已破" : battle.phase === "defeat" ? "众人力竭" : "交锋"}
-            </div>
-            <span></span>
-          </div>
-          <div class="hero-formation">
-            <div class="formation-caption"><span>梁山好汉</span><i></i><small>义气</small></div>
-            <div class="hero-line ${heroStriking ? "is-striking" : ""}">
+            <div class="hero-formation">
+              <div class="formation-caption battle-hero-caption"><span>梁山好汉</span><i></i><small>义气</small></div>
+              <div class="hero-line"></div>
               ${renderFormationLine(battle.heroes, (unit) =>
                 renderBattleHero(
                   unit,
@@ -4597,17 +5041,42 @@ function renderBattle() {
                     !battleUi.processing &&
                     !state.settings.autoBattle,
                   battle.currentUid === unit.uid,
-                  heroStriking && battle.currentUid === unit.uid,
                 ),
               )}
             </div>
           </div>
         </div>
-        ${renderBattleResult()}
         ${renderBattleCommand(actor, selectedSkill, chainFormation)}
       </section>
-      ${battle.phase === "defeat" ? renderDefeatOverlay() : ""}
+      ${isBattlePhase(battle, BATTLE_PHASES.DEFEAT) ? renderDefeatOverlay() : ""}
     </main>
+  `;
+}
+
+function renderBattlePhaseStatus(actor) {
+  const phase = battlePhasePresentation(battle, actor, {
+    autoBattle: state.settings.autoBattle,
+    processing: battleUi.processing,
+  });
+  const vfx = battleUi.vfx;
+  const detail = vfx
+    ? [
+        vfx.skillName,
+        vfx.critical ? "会心" : null,
+        vfx.pathAdvantage ? "克制" : null,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : phase.detail;
+  return `
+    <div class="battle-phase-status ${vfx ? "is-vfx" : ""} tone-${phase.tone}" data-phase="${phase.id}" role="status" aria-live="polite" aria-label="${phase.eyebrow}，${phase.label}，${detail}">
+      <span class="phase-status-mark">${icon(phase.icon, 16)}</span>
+      <span class="phase-status-copy">
+        <small>第 ${Math.max(1, phase.round)} 回合 · ${phase.eyebrow}</small>
+        <b>${escapeHtml(phase.label)}</b>
+      </span>
+      <em>${escapeHtml(detail)}</em>
+    </div>
   `;
 }
 
@@ -4618,14 +5087,21 @@ function turnPortrait(unit) {
   return `<img class="turn-enemy-image" src="${unit.sprite}" alt="" />`;
 }
 
+function stageDomPose(unit) {
+  const row = Number(unit.row) || 0;
+  return [
+    `--stage-row:${row}`,
+    `--stage-lateral:${row === 0 ? 0 : row === 1 ? -1 : 1}`,
+    `--stage-depth:${row === 0 ? 0 : row === 1 ? 1 : 2}`,
+  ].join(";");
+}
+
 function renderEnemyUnit(unit, targetable, current) {
-  const striking = current && battleActorSide === "enemy";
   const vfx = battleUi.vfx;
   const casting = vfx?.actorUid === unit.uid;
-  const vfxTarget = Boolean(vfx?.targetUids?.includes(unit.uid));
+  const striking = current && battleActorSide === "enemy";
   const damage = takeBattleFeedback(unit.uid, "damage");
   const evade = takeBattleFeedback(unit.uid, "evade");
-  const spatialStyle = battleUnitSpatialStyle(unit.uid);
   const feedbackLabel = damage
     ? `-${damage.damage}${damage.critical ? " 暴击" : ""}${
         damage.pathAdvantage ? " 克制" : ""
@@ -4634,12 +5110,11 @@ function renderEnemyUnit(unit, targetable, current) {
       ? "闪避"
       : "";
   return `
-    <button class="battle-unit enemy-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${evade ? "is-evading" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" data-row="${unit.row}" style="${spatialStyle}" aria-label="${unit.name}">
+    <button class="battle-unit enemy-unit stage-proxy ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""}" style="${stageDomPose(unit)}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" data-row="${unit.row}" data-focus-action="focus-battle-target" aria-label="${unit.name}">
       ${renderBattleMotion(damage || evade, feedbackLabel, damage?.critical ? "is-critical" : evade ? "is-evade" : "")}
-      ${vfxTarget ? renderBattleSkillImpact(vfx, vfx?.targetUids?.[0] === unit.uid) : ""}
+      <span class="target-reticle">${icon("crosshair", 28)}</span>
       <div class="enemy-figure">
         <img src="${unit.sprite}" alt="" draggable="false" />
-        <span class="target-reticle">${icon("crosshair", 28)}</span>
       </div>
       <div class="unit-hud">
         <div class="unit-name-line">
@@ -4673,14 +5148,13 @@ function renderFormationLine(units, renderer) {
     .join("");
 }
 
-function renderBattleHero(unit, targetable, current, striking) {
+function renderBattleHero(unit, targetable, current) {
   const teamRow = ROWS[unit.row]?.name || "";
   const vfx = battleUi.vfx;
   const casting = vfx?.actorUid === unit.uid;
-  const vfxTarget = Boolean(vfx?.targetUids?.includes(unit.uid));
+  const striking = current && battleActorSide === "hero" && Boolean(battleUi.result);
   const damage = takeBattleFeedback(unit.uid, "damage");
   const heal = takeBattleFeedback(unit.uid, "heal");
-  const spatialStyle = battleUnitSpatialStyle(unit.uid);
   const feedbackLabel = damage
     ? `-${damage.damage}${damage.critical ? " 暴击" : ""}${
         damage.pathAdvantage ? " 克制" : ""
@@ -4689,13 +5163,12 @@ function renderBattleHero(unit, targetable, current, striking) {
       ? `+${heal.healing}`
       : "";
   return `
-    <button class="battle-unit hero-unit ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""} ${damage ? "is-hit" : ""} ${heal ? "is-healed" : ""}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" data-row="${unit.row}" style="${spatialStyle}" aria-label="${unit.name}">
+    <button class="battle-unit hero-unit stage-proxy ${targetable ? "is-targetable" : ""} ${current ? "is-current" : ""} ${striking ? "is-striking" : ""} ${casting ? `is-casting tone-${vfx.tone}` : ""} ${unit.hp <= 0 ? "is-defeated" : ""}" style="${stageDomPose(unit)}" data-action="${targetable ? "battle-target" : "inspect-unit"}" data-uid="${unit.uid}" data-row="${unit.row}" data-focus-action="focus-battle-target" aria-label="${unit.name}">
       ${renderBattleMotion(damage || heal, feedbackLabel, damage?.critical ? "is-critical" : heal ? "is-heal" : "")}
-      ${vfxTarget ? renderBattleSkillImpact(vfx, vfx?.targetUids?.[0] === unit.uid) : ""}
       <span class="row-ribbon">${teamRow}</span>
+      <span class="target-reticle">${icon("crosshair", 28)}</span>
       <div class="hero-figure">
         <img src="${unit.portrait}" alt="" draggable="false" />
-        <span class="target-reticle">${icon("crosshair", 28)}</span>
       </div>
       <div class="unit-hud">
         <div class="unit-name-line">
@@ -4733,7 +5206,7 @@ function renderBattleResult() {
 
 function renderBattleCommand(actor, selectedSkill, chainFormation) {
   if (!actor || actor.hp <= 0) {
-    return `<aside class="battle-command"><div class="command-waiting">${icon("hourglass", 22)}<b>整理战阵</b></div></aside>`;
+    return `<aside class="battle-command">${renderBattleResult()}<div class="command-waiting">${icon("hourglass", 22)}<b>整理战阵</b></div></aside>`;
   }
   if (actor.side === "enemy") {
     return `
@@ -4743,6 +5216,7 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
           <img class="enemy-command-crop" src="${actor.sprite}" alt="" />
           <div><small>${PATH_LABEL(actor.path)} · Lv.${actor.level}</small><h2>${actor.name}</h2></div>
         </div>
+        ${renderBattleResult()}
         <div class="command-waiting">${icon("hourglass", 24)}<b>正在判断阵势</b><small>敌军将在片刻后出手</small></div>
       </aside>
     `;
@@ -4758,6 +5232,7 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
         <div><small>${ROWS[actor.row].name} · ${PATHS[actor.path].name}</small><h2>${actor.name}</h2></div>
         <span class="actor-yiqi">${icon("zap", 16)}<b>${actor.yiqi}</b></span>
       </div>
+      ${renderBattleResult()}
       ${
         tutorialPending
           ? `<section class="battle-tutorial" aria-labelledby="battle-tutorial-title">
@@ -4804,7 +5279,7 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
               ? `<div class="target-prompt">${icon("crosshair", 17)}<span>为「${selectedSkill.name}」选择${
                   selectedSkill.target === "ally" ? "一名好汉" : "一个目标"
                 }</span><button data-action="cancel-target">取消</button></div>`
-              : `<div class="skill-prompt"><span>选择招式</span><small>${battle.phase === "select" ? "路数克制会造成额外伤害" : "等待行动结算"}</small></div>`
+              : `<div class="skill-prompt"><span>选择招式</span><small>${isBattlePhase(battle, BATTLE_PHASES.SELECT) ? "路数克制会造成额外伤害" : "等待行动结算"}</small></div>`
           : ""
       }
       ${
@@ -4814,6 +5289,7 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
           .map((skill) => renderSkillButton(skill, actor))
           .join("")}
       </div>
+      ${renderBattleTacticalReadout(actor, selectedSkill)}
       <div class="battle-log">
         <div class="log-heading"><span>战况</span><small>${battle.log.length ? "实时" : ""}</small></div>
         <div class="log-lines">
@@ -4830,6 +5306,262 @@ function renderBattleCommand(actor, selectedSkill, chainFormation) {
   `;
 }
 
+function renderBattleTacticalReadout(actor, selectedSkill) {
+  const path = PATHS[actor.path];
+  const pathTarget = PATHS[path?.beats];
+  const chainPaths = chainPathsForBattle(battle);
+  const vulnerableEnemies = battle.enemies.filter(
+    (unit) => unit.hp > 0 && pathTarget?.id === unit.path,
+  );
+  const activeStatuses = Object.entries(actor.statuses || {})
+    .filter(([status, duration]) => duration > 0 && STATUS_DEFS[status])
+    .map(
+      ([status, duration]) =>
+        `<span class="tone-${STATUS_DEFS[status].tone}">${STATUS_DEFS[status].name}<b>${duration}</b></span>`,
+    );
+  let advice = "观察敌方护势与出手顺序，选择能打破阵线的招式。";
+  if (selectedSkill) {
+    advice =
+      selectedSkill.target === "ally"
+        ? `「${selectedSkill.name}」等待选择一名友方目标。`
+        : `「${selectedSkill.name}」等待选择一名敌方目标。`;
+  } else if (vulnerableEnemies.length) {
+    advice = `${escapeHtml(vulnerableEnemies.map((unit) => unit.name).join("、"))}受${path.name}克制，优先攻击可提高伤害与破势。`;
+  } else if (chainPaths.length) {
+    advice = `本阵已记录${chainPaths.length}种路数，再以不同路数出手即可推进星命连携。`;
+  }
+  return `
+    <section class="battle-tactical-readout" aria-label="当前战势">
+      <header>
+        <span>${icon("compass", 15)}<b>当前战势</b></span>
+        <small>${ROWS[actor.row].name} · Lv.${actor.level}</small>
+      </header>
+      <div class="tactical-attrs">
+        <div>
+          <small>路数</small>
+          <b style="--path-color:${path?.color || "var(--paper-300)"}">${path?.name || "未知"}</b>
+          <em>${pathTarget ? `克制 ${pathTarget.name}` : "无相克关系"}</em>
+        </div>
+        <div>
+          <small>护势</small>
+          <b>${actor.poise}/${actor.poiseMax}</b>
+          <em>${actor.broken > 0 ? "护势已破" : "护势稳固"}</em>
+        </div>
+        <div>
+          <small>身法</small>
+          <b>${actor.spd}</b>
+          <em>行动权重</em>
+        </div>
+      </div>
+      <div class="tactical-status-line">
+        <small>状态</small>
+        <div>${activeStatuses.length ? activeStatuses.join("") : "<span class=\"is-empty\">无异常状态</span>"}</div>
+      </div>
+      <p class="tactical-advice">${icon("route", 14)}<span>${advice}</span></p>
+    </section>
+  `;
+}
+
+function createBattleEngineUi(actor, selectedSkill, chainFormation) {
+  if (!actor) return null;
+  const legend = Boolean(story?.legendHeroId);
+  const recruitment = Boolean(story?.heroRecruitmentId);
+  const specialBattle = legend || recruitment;
+  const specialRule = battle.specialRule || battle.legendRule;
+  const specialRuleLabel =
+    battle.mode === "legend"
+      ? "群英列传战意"
+      : battle.mode === "recruitment"
+        ? "聚义战意"
+        : battle.mode === "arena"
+          ? "演武军势"
+          : "临阵战意";
+  const bondContext = (battle.bondIds || [])
+    .map((bondId) => HERO_BONDS[bondId])
+    .filter(Boolean)
+    .map((bond) => ({
+      id: bond.id,
+      name: bond.name,
+      tone: bond.tone || "gold",
+    }));
+  const doctrineContext = battle.heroes
+    .filter((unit) => unit.doctrineId)
+    .map((unit) => {
+      const doctrine = HERO_DOCTRINES[unit.refId]?.paths?.[unit.doctrineId];
+      return doctrine
+        ? {
+            id: `${unit.refId}:${unit.doctrineId}`,
+            name: `${unit.name}·${doctrine.name}`,
+            tone: doctrine.tone || "teal",
+          }
+        : null;
+    })
+    .filter(Boolean);
+  const phase = battlePhasePresentation(battle, actor, {
+    autoBattle: state.settings.autoBattle,
+    processing: battleUi.processing,
+  });
+  const tutorialPending =
+    battle.mode === "campaign" &&
+    !state.flags.tutorialSeen &&
+    actor.side === "hero";
+  const paths = chainPathsForBattle(battle);
+  const autoTactic = currentAutoTactic();
+  const turnPreviewItems = turnPreview(battle, 7);
+  const skills =
+    actor.side === "hero"
+      ? heroSkillList(actor).map((skill) => {
+          const cooldown = actor.cooldowns[skill.id] || 0;
+          const usable =
+            skillUsable(actor, skill) &&
+            isBattlePhase(battle, BATTLE_PHASES.SELECT) &&
+            !battleUi.processing &&
+            !tutorialPending &&
+            !state.settings.autoBattle;
+          return {
+            id: skill.id,
+            name: skill.name,
+            kind: skill.heal ? "heal" : skill.target === "ally" ? "guard" : "damage",
+            ultimate: Boolean(skill.ultimate),
+            selected: battleUi.selectedSkillId === skill.id,
+            disabled: !usable,
+            cooling: cooldown > 0,
+            costLabel:
+              cooldown > 0
+                ? `冷却 ${cooldown}`
+                : skill.yiqiCost
+                  ? `气 ${skill.yiqiCost}`
+                  : skill.cooldown
+                    ? `冷却 ${skill.cooldown}`
+                    : "调息",
+          };
+        })
+      : [];
+  const statusTags = Object.entries(actor.statuses || {})
+    .filter(([status, duration]) => duration > 0 && STATUS_DEFS[status])
+    .slice(0, 3)
+    .map(([status, duration]) => ({
+      label: `${STATUS_DEFS[status].name} ${duration}`,
+      tone: STATUS_DEFS[status].tone === "bad" ? "bad" : "good",
+    }));
+  const resultLines = battleUi.result?.lines || [];
+  let prompt = "选择招式";
+  if (state.settings.autoBattle) {
+    prompt = "自动交战中";
+  } else if (battleUi.processing) {
+    prompt = "结算战果";
+  } else if (selectedSkill) {
+    prompt =
+      selectedSkill.target === "ally" ? "点击发亮的好汉" : "点击发亮的敌人";
+  } else if (chainAttackReady(battle)) {
+    prompt = "可发动星命合击";
+  } else if (actor.side === "enemy") {
+    prompt = "敌方行动";
+  }
+  return {
+    kind: actor.side === "hero" ? "hero" : "enemy",
+    menu: {
+      open: Boolean(battleUi.menuOpen),
+      title: "战阵暂停",
+      note: specialBattle
+        ? "奖励尚未结算，可稍后重新进入"
+        : "退出后需从本章战前重新开始",
+      resumeLabel: "继续迎战",
+      retreatLabel: specialBattle
+        ? legend
+          ? "暂离列传"
+          : "暂离聚义帖"
+        : "退回营寨",
+    },
+    header: {
+      chapterLabel: `${activeChapter?.label || ""} · ${activeChapter?.location || ""}`.replace(/^ · | · $/g, ""),
+      title: activeChapter?.title || "战阵",
+      autoBattle: Boolean(state.settings.autoBattle),
+      speed: state.settings.battleSpeed,
+      sound: Boolean(state.settings.sound),
+      tacticShort: autoTactic.short,
+      tacticName: autoTactic.name,
+      round: Math.max(1, Number(battle.round) || 1),
+      turnOrder: turnPreviewItems.map((unit) => ({
+        name: unit.name,
+        side: unit.side,
+        spd: unit.spd,
+        portrait: unit.portrait,
+        sprite: unit.sprite,
+      })),
+    },
+    context: {
+      specialRule: specialRule
+        ? {
+            label: specialRuleLabel,
+            name: specialRule.name || "",
+            desc: specialRule.desc || "",
+            tone:
+              specialRule.tone ||
+              (battle.mode === "arena" || battle.mode === "recruitment"
+                ? "gold"
+                : "teal"),
+          }
+        : null,
+      bonds: bondContext,
+      doctrines: doctrineContext,
+    },
+    round: Math.max(0, Number(phase.round) || 0),
+    phase: {
+      label: phase.label,
+      tone: phase.tone,
+    },
+    actor: {
+      uid: actor.uid,
+      name: actor.name,
+      portrait: actor.portrait,
+      sprite: actor.sprite,
+      side: actor.side,
+      level: actor.level,
+      yiqi: actor.yiqi,
+      pathName: PATHS[actor.path]?.name || "未知",
+      rowName: ROWS[actor.row]?.name || "战阵",
+    },
+    selectedSkillId: battleUi.selectedSkillId,
+    step: selectedSkill ? 2 : 1,
+    prompt,
+    skills,
+    statusTags,
+    autoBattle: Boolean(state.settings.autoBattle),
+    processing: Boolean(battleUi.processing),
+    tutorialPending,
+    targetableUids: selectedSkill
+      ? validTargets(battle, actor.uid, selectedSkill).map((unit) => unit.uid)
+      : [],
+    chain: {
+      ready: chainAttackReady(battle),
+      name: chainFormation?.name || "星命合击",
+      hint: chainFormation
+        ? "合击已蓄势"
+        : paths.length
+          ? `${paths.length}/3 路`
+          : "三路起势",
+      paths: paths.map((pathId) => ({
+        id: pathId,
+        tone:
+          pathId === "gang"
+            ? "cinnabar"
+            : pathId === "shou"
+              ? "blue"
+              : pathId === "ling"
+                ? "teal"
+                : "gold",
+      })),
+    },
+    result: resultLines.length
+      ? {
+          kind: battleUi.result?.kind || "damage",
+          lines: resultLines.slice(0, 2),
+        }
+      : null,
+  };
+}
+
 function PATH_LABEL(pathId) {
   return PATHS[pathId]?.name || "";
 }
@@ -4838,7 +5570,7 @@ function renderSkillButton(skill, actor) {
   const cooldown = actor.cooldowns[skill.id] || 0;
   const usable =
     skillUsable(actor, skill) &&
-    battle.phase === "select" &&
+    isBattlePhase(battle, BATTLE_PHASES.SELECT) &&
     !battleUi.processing &&
     !state.settings.autoBattle;
   const selected = battleUi.selectedSkillId === skill.id;
@@ -4889,31 +5621,31 @@ function renderDefeatOverlay() {
 function runBattleAutomation() {
   if (!battle || battleUi.processing) return;
   if (battle.mode === "campaign" && !state.flags.tutorialSeen) return;
-  if (battle.phase === "skipping") {
-    battleUi.processing = true;
-    scheduleBattle(() => {
-      battleUi.processing = false;
-      finishResolutionAndAdvance(battle);
-      render();
-    }, 520);
-    return;
-  }
-  if (battle.phase === "select") {
-    const actor = currentCombatant(battle);
-    if (!actor || actor.hp <= 0 || actor.side !== "hero") {
+  switch (battle.phase) {
+    case BATTLE_PHASES.SKIPPING:
       battleUi.processing = true;
       scheduleBattle(() => {
         battleUi.processing = false;
         finishResolutionAndAdvance(battle);
         render();
-      }, 260);
+      }, 520);
       return;
-    }
-    if (state.settings.autoBattle) {
+    case BATTLE_PHASES.SELECT: {
+      const actor = currentCombatant(battle);
+      if (!actor || actor.hp <= 0 || actor.side !== "hero") {
+        battleUi.processing = true;
+        scheduleBattle(() => {
+          battleUi.processing = false;
+          finishResolutionAndAdvance(battle);
+          render();
+        }, 260);
+        return;
+      }
+      if (!state.settings.autoBattle) return;
       battleUi.processing = true;
       scheduleBattle(() => {
         battleUi.processing = false;
-        if (!battle || battle.phase !== "select") {
+        if (!battle || !isBattlePhase(battle, BATTLE_PHASES.SELECT)) {
           render();
           return;
         }
@@ -4923,17 +5655,25 @@ function runBattleAutomation() {
         }
         runAutoHeroTurn();
       }, 260);
+      return;
     }
-    return;
-  }
-  if (battle.phase === "enemy") {
-    battleUi.processing = true;
-    scheduleBattle(() => runEnemyTurn(), 620);
+    case BATTLE_PHASES.ENEMY:
+      battleUi.processing = true;
+      scheduleBattle(() => runEnemyTurn(), 620);
+      return;
+    default:
+      return;
   }
 }
 
 function runAutoHeroTurn() {
-  if (!battle || battle.phase !== "select" || battleUi.processing) return;
+  if (
+    !battle ||
+    !isBattlePhase(battle, BATTLE_PHASES.SELECT) ||
+    battleUi.processing
+  ) {
+    return;
+  }
   const actor = currentCombatant(battle);
   if (!actor || actor.side !== "hero" || actor.hp <= 0) {
     finishResolutionAndAdvance(battle);
@@ -4963,7 +5703,13 @@ function runAutoHeroTurn() {
 }
 
 function resolveChainAttack() {
-  if (!battle || battle.phase !== "select" || battleUi.processing) return;
+  if (
+    !battle ||
+    !isBattlePhase(battle, BATTLE_PHASES.SELECT) ||
+    battleUi.processing
+  ) {
+    return;
+  }
   const actor = currentCombatant(battle);
   if (!actor || actor.side !== "hero" || !chainAttackReady(battle)) return;
   battleUi.processing = true;
@@ -4995,7 +5741,7 @@ function resolveChainAttack() {
 }
 
 function runEnemyTurn() {
-  if (!battle || battle.phase !== "enemy") {
+  if (!battle || !isBattlePhase(battle, BATTLE_PHASES.ENEMY)) {
     battleUi.processing = false;
     return;
   }
@@ -5044,7 +5790,13 @@ function runEnemyTurn() {
 }
 
 function selectSkill(skillId) {
-  if (!battle || battle.phase !== "select" || battleUi.processing) return;
+  if (
+    !battle ||
+    !isBattlePhase(battle, BATTLE_PHASES.SELECT) ||
+    battleUi.processing
+  ) {
+    return;
+  }
   const actor = currentCombatant(battle);
   if (!actor || actor.side !== "hero") return;
   const skill = heroSkillList(actor).find((item) => item.id === skillId);
@@ -5064,8 +5816,43 @@ function selectSkill(skillId) {
   render();
 }
 
+function selectBattleTarget(uid) {
+  if (
+    !battle ||
+    !battleUi.selectedSkillId ||
+    !isBattlePhase(battle, BATTLE_PHASES.SELECT) ||
+    battleUi.processing
+  ) {
+    return;
+  }
+  const actor = currentCombatant(battle);
+  const skill = actor
+    ? heroSkillList(actor).find((item) => item.id === battleUi.selectedSkillId)
+    : null;
+  if (!skill) return;
+  const valid = validTargets(battle, actor.uid, skill).some(
+    (unit) => unit.uid === uid && unit.hp > 0,
+  );
+  if (!valid) return;
+  resolveHeroAction(skill, uid);
+}
+
+function dismissBattleTutorial() {
+  if (!state || !battle) return;
+  state.flags.tutorialSeen = true;
+  persist();
+  sound.confirm();
+  render();
+}
+
 function resolveHeroAction(skill, targetUid = null) {
-  if (!battle || battle.phase !== "select" || battleUi.processing) return;
+  if (
+    !battle ||
+    !isBattlePhase(battle, BATTLE_PHASES.SELECT) ||
+    battleUi.processing
+  ) {
+    return;
+  }
   const actor = currentCombatant(battle);
   if (!actor || actor.side !== "hero") return;
   battleUi.processing = true;
@@ -5074,7 +5861,6 @@ function resolveHeroAction(skill, targetUid = null) {
   const result = performAction(battle, actor.uid, skill, targetUid);
   if (!result.ok) {
     battleUi.processing = false;
-    battle.phase = "select";
     toast(result.message || "此招无法施展", "danger");
     render();
     return;
@@ -5122,11 +5908,11 @@ function advanceAfterResult() {
   battleUi.result = null;
   battleUi.resultTone = "";
   battleUi.processing = false;
-  if (battle.phase === "victory") {
+  if (isBattlePhase(battle, BATTLE_PHASES.VICTORY)) {
     settleVictory();
     return;
   }
-  if (battle.phase === "defeat") {
+  if (isBattlePhase(battle, BATTLE_PHASES.DEFEAT)) {
     if (battle.mode === "arena" && arenaRun && !arenaRun.defeated) {
       arenaRun.defeated = true;
       state.arena.lastWave = Math.max(
@@ -5633,6 +6419,7 @@ function startNewGame(options = {}) {
   selectedEquipmentHero = "linchong";
   selectedCodexHero = "linchong";
   selectedQuestHero = "linchong";
+  questPathFilter = "all";
   clearArenaTransientState();
   persist();
   sound.confirm();
@@ -5664,6 +6451,7 @@ function continueGame() {
   selectedEquipmentHero = state.recruited[0];
   selectedCodexHero = state.recruited[0];
   selectedQuestHero = state.recruited[0];
+  questPathFilter = "all";
   unlockSteamAchievements(state.achievements || []);
   syncSteamStats();
   queueSteamCloudSave(150);
@@ -5731,13 +6519,7 @@ function createLegendChapter(heroId) {
 
 function createRecruitmentChapter(heroId) {
   const recruitment = HERO_RECRUITMENTS[heroId];
-  const levels = activeHeroes(state).map(({ entry }) => entry.level);
-  const averageLevel =
-    levels.reduce((sum, level) => sum + level, 0) / Math.max(1, levels.length);
-  const enemyLevel = Math.max(
-    recruitment.requiredChapter + 2,
-    Math.round(averageLevel + 1),
-  );
+  const enemyLevel = recruitmentEnemyLevel(state, recruitment);
   return {
     id: `recruitment-${heroId}`,
     index: -1,
@@ -5952,9 +6734,9 @@ function startChapterBattle() {
   if (story) story.stage = priorStage;
 }
 
-function launchStoryBattle() {
+function launchStoryBattle({ restart = false } = {}) {
   if (!activeChapter) return;
-  if (screen === "battle") return;
+  if (screen === "battle" && !restart) return;
   lastMasteryUnlocks = [];
   lastAchievementUnlocks = [];
   lastBondUnlocks = [];
@@ -5994,7 +6776,7 @@ function launchStoryBattle() {
 }
 
 function randomArenaBoons(count) {
-  const counts = arenaBoonCounts();
+  const counts = arenaBoonCounts(arenaRun?.boons || []);
   return Object.values(ARENA_BOONS)
     .map((boon) => {
       const depth = counts[boon.id] || 0;
@@ -6040,33 +6822,6 @@ function sameArenaOffer(left, right) {
     leftIds.length === rightIds.length &&
     leftIds.every((boonId, index) => boonId === rightIds[index])
   );
-}
-
-function arenaBoonCounts(boons = arenaRun?.boons || []) {
-  return boons.reduce((counts, boonId) => {
-    if (!ARENA_BOONS[boonId]) return counts;
-    counts[boonId] = (counts[boonId] || 0) + 1;
-    return counts;
-  }, {});
-}
-
-function arenaBuildSnapshot(boons = arenaRun?.boons || []) {
-  const counts = arenaBoonCounts(boons);
-  return {
-    counts,
-    masteries: Object.entries(counts)
-      .filter(([boonId, count]) => count >= 3 && ARENA_BOON_MASTERIES[boonId])
-      .map(([boonId, count]) => ({
-        boonId,
-        count,
-        mastery: ARENA_BOON_MASTERIES[boonId],
-      })),
-    synergies: Object.values(ARENA_SYNERGIES).filter((synergy) =>
-      synergy.requires.every(
-        ([boonId, required]) => (counts[boonId] || 0) >= required,
-      ),
-    ),
-  };
 }
 
 function recordArenaDiscoveries(
@@ -6735,7 +7490,7 @@ function applyArenaEvent(eventId) {
       ...new Set([...(arenaRun.lastWeeklyMarks || []), ...gainedMarks]),
     ];
   } else if (eventId === "drill") {
-    const counts = arenaBoonCounts();
+    const counts = arenaBoonCounts(arenaRun?.boons || []);
     const copiedBoonId = Object.keys(counts).sort(
       (a, b) =>
         counts[a] - counts[b] ||
@@ -6876,6 +7631,12 @@ function showStoryMenu() {
 }
 
 function showBattleMenu() {
+  if (screen === "battle" && battle && battleStage?.mode === "phaser") {
+    battleUi.menuOpen = true;
+    sound.click();
+    render();
+    return;
+  }
   const legend = Boolean(story?.legendHeroId);
   const recruitment = Boolean(story?.heroRecruitmentId);
   const specialBattle = legend || recruitment;
@@ -6889,6 +7650,13 @@ function showBattleMenu() {
       { label: specialBattle ? (legend ? "暂离列传" : "暂离聚义帖") : "退回营寨", action: "battle-retreat", tone: "danger-ghost", icon: specialBattle ? "scroll-text" : "landmark" },
     ],
   });
+}
+
+function closeBattleMenu() {
+  if (!battleUi.menuOpen) return;
+  battleUi.menuOpen = false;
+  sound.click();
+  render();
 }
 
 function toggleAutoBattle() {
@@ -6924,6 +7692,15 @@ function setBattleSpeed(speed) {
   render();
 }
 
+function toggleBattleSound() {
+  if (!state) return;
+  state.settings.sound = !state.settings.sound;
+  sound.setEnabled(state.settings.sound);
+  if (state.settings.sound) sound.confirm();
+  persist();
+  render();
+}
+
 function setAutoTactic(tacticId, notify = true) {
   if (!state || !AUTO_BATTLE_TACTICS[tacticId]) return;
   state.settings.autoTactic = tacticId;
@@ -6948,6 +7725,9 @@ function cycleAutoTactic() {
 function handleAction(action, element) {
   if (!action) return;
   switch (action) {
+    case "skip-title-prologue":
+      if (skipTitlePrologue()) sound.click();
+      return;
     case "new-game":
       if (hasSavedGame()) {
         openModal({
@@ -7075,6 +7855,15 @@ function handleAction(action, element) {
       }
       setScreen("quests");
       return;
+    case "filter-quest-path": {
+      const pathId = element.dataset.path || "all";
+      questPathFilter = ["all", ...Object.keys(PATHS)].includes(pathId)
+        ? pathId
+        : "all";
+      sound.click();
+      render();
+      return;
+    }
     case "quest-hero":
       if (state.recruited.includes(element.dataset.hero)) {
         selectedQuestHero = element.dataset.hero;
@@ -7544,12 +8333,7 @@ function handleAction(action, element) {
       }
       return;
     case "toggle-sound":
-      state.settings.sound = !state.settings.sound;
-      sound.setEnabled(state.settings.sound);
-      if (state.settings.sound) sound.confirm();
-      persist();
-      if (screen === "battle") render();
-      else render();
+      toggleBattleSound();
       return;
     case "toggle-fullscreen":
       toggleDesktopFullscreen();
@@ -7572,6 +8356,18 @@ function handleAction(action, element) {
     case "export-save":
       exportCurrentSave();
       return;
+    case "trigger-save-import":
+      document.querySelector("[data-save-import]")?.click();
+      return;
+    case "focus-settings-control": {
+      const control = document.querySelector(
+        `[data-engine-control="${CSS.escape(
+          element.dataset.control || "",
+        )}"]`,
+      );
+      control?.focus({ preventScroll: true });
+      return;
+    }
     case "cancel-save-import":
       pendingImportedState = null;
       modal = null;
@@ -7685,11 +8481,7 @@ function handleAction(action, element) {
       startChapterBattle();
       return;
     case "dismiss-battle-tutorial":
-      if (!state || !battle) return;
-      state.flags.tutorialSeen = true;
-      persist();
-      sound.confirm();
-      render();
+      dismissBattleTutorial();
       return;
     case "story-skip":
       story.stage = story.legendHeroId ? "legend-ready" : "choice";
@@ -7722,15 +8514,12 @@ function handleAction(action, element) {
       render();
       return;
     case "battle-target": {
-      if (!battleUi.selectedSkillId) {
-        toast("先从右侧选择招式", "danger");
-        return;
-      }
-      const actor = currentCombatant(battle);
-      const skill = actor ? heroSkillList(actor).find((item) => item.id === battleUi.selectedSkillId) : null;
-      if (skill) resolveHeroAction(skill, element.dataset.uid);
+      selectBattleTarget(element.dataset.uid);
       return;
     }
+    case "focus-battle-target":
+      battleStage?.bindFocus(element.dataset.uid);
+      return;
     case "battle-menu":
       showBattleMenu();
       return;
@@ -7755,7 +8544,7 @@ function handleAction(action, element) {
     case "retry-battle":
       battle = null;
       battleUi = createBattleUi();
-      launchStoryBattle();
+      launchStoryBattle({ restart: true });
       return;
     case "story-outro":
       story.stage = "outro";
@@ -7875,6 +8664,14 @@ function gamepadFocusables() {
     });
 }
 
+function engineAccessibilityFocusables() {
+  return [
+    ...document.querySelectorAll(
+      "#engine-accessibility button:not(:disabled)",
+    ),
+  ];
+}
+
 function focusForGamepad(element) {
   if (!element) return;
   document.documentElement.dataset.input = "gamepad";
@@ -7884,7 +8681,24 @@ function focusForGamepad(element) {
 
 function moveGamepadFocus(direction) {
   const focusables = gamepadFocusables();
-  if (!focusables.length) return;
+  const semanticFocusables = engineAccessibilityFocusables();
+  if (
+    semanticFocusables.includes(document.activeElement) &&
+    semanticFocusables.length
+  ) {
+    const currentIndex = semanticFocusables.indexOf(document.activeElement);
+    const step = direction === "left" || direction === "up" ? -1 : 1;
+    const nextIndex = Math.min(
+      semanticFocusables.length - 1,
+      Math.max(0, currentIndex + step),
+    );
+    focusForGamepad(semanticFocusables[nextIndex]);
+    return;
+  }
+  if (!focusables.length) {
+    if (semanticFocusables.length) focusForGamepad(semanticFocusables[0]);
+    return;
+  }
   const current = focusables.includes(document.activeElement)
     ? document.activeElement
     : focusables.find((element) => element.matches(".button.primary, .skill-button, .toggle")) ||
@@ -7916,6 +8730,11 @@ function moveGamepadFocus(direction) {
 }
 
 function activateGamepadFocus() {
+  const semanticFocusables = engineAccessibilityFocusables();
+  if (semanticFocusables.includes(document.activeElement)) {
+    document.activeElement.click();
+    return;
+  }
   const focusables = gamepadFocusables();
   if (!focusables.length) return;
   if (!focusables.includes(document.activeElement)) {
@@ -7954,6 +8773,10 @@ function activateGamepadBack() {
     return;
   }
   if (screen === "battle") {
+    if (battleUi.menuOpen) {
+      closeBattleMenu();
+      return;
+    }
     showBattleMenu();
     return;
   }
@@ -7970,13 +8793,35 @@ function activateGamepadBack() {
 function handleGamepadButtonPress(index, pad) {
   if (index === 0) activateGamepadFocus();
   if (index === 1) activateGamepadBack();
-  if (index === 2 && screen === "battle" && battle && !modal) toggleAutoBattle();
-  if (index === 3 && screen === "battle" && battle && !modal) {
+  if (
+    index === 2 &&
+    screen === "battle" &&
+    battle &&
+    !modal &&
+    !battleUi.menuOpen
+  ) {
+    toggleAutoBattle();
+  }
+  if (
+    index === 3 &&
+    screen === "battle" &&
+    battle &&
+    !modal &&
+    !battleUi.menuOpen
+  ) {
     const speeds = [1, 2, 4];
     const next = speeds[(speeds.indexOf(state.settings.battleSpeed) + 1) % speeds.length];
     setBattleSpeed(next);
   }
-  if (index === 4 && screen === "battle" && battle && !modal) cycleAutoTactic();
+  if (
+    index === 4 &&
+    screen === "battle" &&
+    battle &&
+    !modal &&
+    !battleUi.menuOpen
+  ) {
+    cycleAutoTactic();
+  }
   if (index === 10) moveGamepadFocus("left");
   if (index === 11) moveGamepadFocus("right");
   if (index === 6 || index === 9) {
@@ -8041,6 +8886,16 @@ function pollGamepads() {
   window.requestAnimationFrame(pollGamepads);
 }
 
+const scheduleStageLayout = () => {
+  scheduleBattleCanvasLayout();
+  pageStage.refresh();
+};
+
+window.addEventListener("resize", scheduleStageLayout, { passive: true });
+window.visualViewport?.addEventListener("resize", scheduleStageLayout, {
+  passive: true,
+});
+
 window.addEventListener("keydown", (event) => {
   if (isTextEditable(event.target)) {
     if (isGameShortcut(event)) event.stopImmediatePropagation();
@@ -8048,10 +8903,22 @@ window.addEventListener("keydown", (event) => {
   }
   sound.unlock();
   document.documentElement.dataset.input = "keyboard";
+  if (
+    screen === "title" &&
+    ["Escape", "Enter", " "].includes(event.key) &&
+    skipTitlePrologue()
+  ) {
+    event.preventDefault();
+    return;
+  }
   if (event.key === "Escape") {
     if (modal) {
       modal = null;
       render();
+      return;
+    }
+    if (screen === "battle" && battleUi.menuOpen) {
+      closeBattleMenu();
       return;
     }
     if (screen === "story") showStoryMenu();
@@ -8063,7 +8930,14 @@ window.addEventListener("keydown", (event) => {
       storyNext();
     }
   }
-  if (screen === "battle" && !modal && !event.metaKey && !event.ctrlKey && !event.altKey) {
+  if (
+    screen === "battle" &&
+    !modal &&
+    !battleUi.menuOpen &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.altKey
+  ) {
     if (event.key.toLowerCase() === "a") {
       event.preventDefault();
       toggleAutoBattle();
@@ -8086,33 +8960,44 @@ window.setInterval(() => {
     !battle ||
     battleTimer ||
     modal ||
+    battleUi.menuOpen ||
     performance.now() - lastBattleScreenOpenedAt < 2000
   ) {
     return;
   }
-  if (battle.phase === "resolving") {
-    battleUi.processing = true;
-    scheduleBattle(() => advanceAfterResult(), 400);
-  } else if (battle.phase === "skipping") {
-    battleUi.processing = true;
-    scheduleBattle(() => {
-      battleUi.processing = false;
-      finishResolutionAndAdvance(battle);
-      render();
-    }, 250);
-  } else if (battle.phase === "enemy") {
-    battleUi.processing = true;
-    scheduleBattle(() => runEnemyTurn(), 250);
-  } else if (battle.phase === "select") {
-    const actor = currentCombatant(battle);
-    if (state.settings.autoBattle || !actor || actor.hp <= 0) {
-      runBattleAutomation();
+  switch (battle.phase) {
+    case BATTLE_PHASES.RESOLVING:
+      battleUi.processing = true;
+      scheduleBattle(() => advanceAfterResult(), 400);
+      break;
+    case BATTLE_PHASES.SKIPPING:
+      battleUi.processing = true;
+      scheduleBattle(() => {
+        battleUi.processing = false;
+        finishResolutionAndAdvance(battle);
+        render();
+      }, 250);
+      break;
+    case BATTLE_PHASES.ENEMY:
+      battleUi.processing = true;
+      scheduleBattle(() => runEnemyTurn(), 250);
+      break;
+    case BATTLE_PHASES.SELECT: {
+      const actor = currentCombatant(battle);
+      if (state.settings.autoBattle || !actor || actor.hp <= 0) {
+        runBattleAutomation();
+      }
+      break;
     }
-  } else if (battle.phase === "victory") {
-    scheduleBattle(() => settleVictory(), 150);
-  } else if (battle.phase === "defeat") {
-    battleUi.processing = false;
-    render();
+    case BATTLE_PHASES.VICTORY:
+      scheduleBattle(() => settleVictory(), 150);
+      break;
+    case BATTLE_PHASES.DEFEAT:
+      battleUi.processing = false;
+      render();
+      break;
+    default:
+      break;
   }
 }, 1200);
 
@@ -8130,7 +9015,13 @@ window.addEventListener("gamepaddisconnected", () => {
 });
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && screen === "battle" && battle && !modal) {
+  if (
+    document.hidden &&
+    screen === "battle" &&
+    battle &&
+    !modal &&
+    !battleUi.menuOpen
+  ) {
     showBattleMenu();
   } else if (!document.hidden && screen === "arena-reward") {
     queueArenaAutoContinue();

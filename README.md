@@ -72,7 +72,7 @@ npm run desktop:pack:win      # Windows x64 NSIS 安装包与 ZIP
 
 ## 素材与制作
 
-游戏使用 AI 辅助生产的美术、音乐和视频素材，生成式资产披露见 [store/steam_ai_disclosure.json](store/steam_ai_disclosure.json)。正式角色素材、音频与商店图由 Git LFS 管理；原始生成稿、QA 截图和内部 ComfyUI 工作流不进入公开仓库。
+游戏使用 AI 辅助生产的美术、音乐和视频素材，战斗音效与粒子特效使用 Kenney CC0 衍生资源。生成式资产披露见 [store/steam_ai_disclosure.json](store/steam_ai_disclosure.json)，第三方许可见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。正式角色素材、音频与商店图由 Git LFS 管理；原始生成稿、QA 截图和内部 ComfyUI 工作流不进入公开仓库。
 
 GitHub 自动生成的 “Download ZIP” 只包含 LFS 指针，不包含实际素材。需要完整源码时请使用 Git 克隆；只想直接运行或分享时，请下载 [发行页](https://github.com/mafeis/shuihu/releases/latest)中的完整安装包。
 

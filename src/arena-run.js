@@ -19,13 +19,32 @@ const BOON_BASE_VALUE = {
   aegis: 14,
 };
 
-function boonCounts(boons = []) {
+export function arenaBoonCounts(boons = []) {
   return boons.reduce((counts, boonId) => {
     if (ARENA_BOONS[boonId]) {
       counts[boonId] = (counts[boonId] || 0) + 1;
     }
     return counts;
   }, {});
+}
+
+export function arenaBuildSnapshot(boons = []) {
+  const counts = arenaBoonCounts(boons);
+  return {
+    counts,
+    masteries: Object.entries(counts)
+      .filter(([boonId, count]) => count >= 3 && ARENA_BOON_MASTERIES[boonId])
+      .map(([boonId, count]) => ({
+        boonId,
+        count,
+        mastery: ARENA_BOON_MASTERIES[boonId],
+      })),
+    synergies: Object.values(ARENA_SYNERGIES).filter((synergy) =>
+      synergy.requires.every(
+        ([boonId, required]) => (counts[boonId] || 0) >= required,
+      ),
+    ),
+  };
 }
 
 function activeSynergyIds(counts) {
@@ -41,7 +60,7 @@ function activeSynergyIds(counts) {
 }
 
 export function nextArenaSynergy(currentBoons = []) {
-  const counts = boonCounts(currentBoons);
+  const counts = arenaBoonCounts(currentBoons);
   const active = activeSynergyIds(counts);
   let best = null;
 
@@ -86,7 +105,7 @@ export function recommendArenaBoon(
     .filter((boon) => ARENA_BOONS[boon?.id]);
   if (!validOffers.length) return null;
 
-  const counts = boonCounts(currentBoons);
+  const counts = arenaBoonCounts(currentBoons);
   const currentSynergies = activeSynergyIds(counts);
   let best = null;
 

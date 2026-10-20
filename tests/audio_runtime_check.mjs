@@ -94,30 +94,30 @@ try {
   assert.equal(
     report.loadedBufferCount,
     10,
-    "all ten generated combat one-shots should decode",
+    "all ten Kenney combat one-shots should decode",
   );
   assert.equal(
     report.sfxStatus.loaded.length,
     10,
-    "the runtime should cache every generated combat one-shot",
+    "the runtime should cache every Kenney combat one-shot",
   );
   assert.equal(
     report.sfxStatus.failures.length,
     0,
-    "generated combat one-shots should not fail to load",
+    "Kenney combat one-shots should not fail to load",
   );
   assert.ok(
-    report.sfxStatus.generatedPlays >= 10,
-    "combat cues should play from generated buffers after preload",
+    report.sfxStatus.openSourcePlays >= 10,
+    "combat cues should play from Kenney buffers after preload",
   );
   assert.equal(
     Object.values(report.sfxBytes).every((bytes) => bytes > 8_000),
     true,
-    "every generated combat one-shot should contain audio data",
+    "every Kenney combat one-shot should contain audio data",
   );
   assert.ok(
     report.media.some((entry) => entry.src.includes("/assets/audio/sfx/")),
-    "the browser should request generated combat one-shots",
+    "the browser should request Kenney combat one-shots",
   );
   console.log(JSON.stringify(report, null, 2));
 } finally {

@@ -14,6 +14,12 @@ import {
   deriveEnemyStats,
   yiqiMultiplier,
 } from "./state.js";
+import {
+  BATTLE_PHASES,
+  isBattlePhase,
+  isTerminalBattlePhase,
+  setBattlePhase,
+} from "./battle-phase.js";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const chance = (probability) => Math.random() < probability;
@@ -272,7 +278,9 @@ export function createBattle(state, chapter, options = {}) {
     round: 0,
     turnQueue: [],
     currentUid: null,
-    phase: "loading",
+    phase: BATTLE_PHASES.LOADING,
+    phaseSerial: 0,
+    phaseTransition: null,
     log: [],
     chainAttacks: 0,
     poiseBreaks: 0,
@@ -416,7 +424,7 @@ function startRound(battle) {
 }
 
 export function startNextTurn(battle) {
-  if (battle.phase === "victory" || battle.phase === "defeat") return null;
+  if (isTerminalBattlePhase(battle)) return null;
   if (battle.turnQueue.length === 0) startRound(battle);
 
   let actor = null;
@@ -463,11 +471,19 @@ export function startNextTurn(battle) {
     actor.statuses.stun -= 1;
     pushLog(battle, "bad", `${actor.name}眩晕，无法行动。`);
     finishActorTurn(battle, actor);
-    battle.phase = "skipping";
+    setBattlePhase(battle, BATTLE_PHASES.SKIPPING, {
+      reason: "stunned",
+    });
     return actor;
   }
 
-  battle.phase = actor.side === "hero" ? "select" : "enemy";
+  setBattlePhase(
+    battle,
+    actor.side === "hero"
+      ? BATTLE_PHASES.SELECT
+      : BATTLE_PHASES.ENEMY,
+    { reason: "turn-start" },
+  );
   return actor;
 }
 
@@ -598,9 +614,11 @@ export function performAction(battle, actorUid, skill, targetUid = null) {
   if (!actor || actor.hp <= 0 || !skillUsable(actor, skill)) {
     return { ok: false, message: "无法施展。" };
   }
-  battle.phase = "resolving";
   const targets = resolveTargets(battle, actor, skill, targetUid);
   if (!targets.length) return { ok: false, message: "没有有效目标。" };
+  setBattlePhase(battle, BATTLE_PHASES.RESOLVING, {
+    reason: `action:${skill.id}`,
+  });
 
   const result = {
     ok: true,
@@ -741,7 +759,7 @@ export function chainAttackReady(battle) {
   return Boolean(
     battle &&
       battle.chainReady &&
-      battle.phase === "select" &&
+      isBattlePhase(battle, BATTLE_PHASES.SELECT) &&
       livingSide(battle, "hero").length > 0,
   );
 }
@@ -793,7 +811,9 @@ export function performChainAttack(battle, actorUid) {
     return { ok: false, message: "星命合击尚未蓄势。" };
   }
 
-  battle.phase = "resolving";
+  setBattlePhase(battle, BATTLE_PHASES.RESOLVING, {
+    reason: "chain-attack",
+  });
   const chainHeroes = battle.chainHeroes
     .map((uidValue) => combatantById(battle, uidValue))
     .filter((unit) => unit?.side === "hero" && unit.hp > 0);
@@ -2394,14 +2414,18 @@ function markDefeated(battle, target, result, creditedActor) {
 }
 
 export function checkBattleEnd(battle) {
-  if (battle.phase === "victory" || battle.phase === "defeat") return true;
+  if (isTerminalBattlePhase(battle)) return true;
   if (livingSide(battle, "enemy").length === 0) {
-    battle.phase = "victory";
+    setBattlePhase(battle, BATTLE_PHASES.VICTORY, {
+      reason: "enemies-defeated",
+    });
     pushLog(battle, "victory", "敌阵已破。");
     return true;
   }
   if (livingSide(battle, "hero").length === 0) {
-    battle.phase = "defeat";
+    setBattlePhase(battle, BATTLE_PHASES.DEFEAT, {
+      reason: "heroes-defeated",
+    });
     pushLog(battle, "defeat", "梁山众人力竭败退。");
     return true;
   }
@@ -2425,6 +2449,6 @@ export function turnPreview(battle, limit = 6) {
 }
 
 export function finishResolutionAndAdvance(battle) {
-  if (battle.phase === "victory" || battle.phase === "defeat") return battle.phase;
+  if (isTerminalBattlePhase(battle)) return battle.phase;
   return startNextTurn(battle);
 }
