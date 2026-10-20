@@ -92,26 +92,3 @@ export const WATER_MARGIN_MEMORIES = WATER_MARGIN_SAGA
     };
   });
 
-const tacticPresets = [
-  { id: "protect", name: "先护百姓", icon: "shield-check", tone: "blue", desc: "全队开场获得 1 层护御，受到的伤害降低 6%。", effects: { teamModifiers: { damageReductionPct: 0.06 }, heroOpeningStatuses: [{ status: "guard", duration: 1 }] } },
-  { id: "cutoff", name: "夺路断后", icon: "crosshair", tone: "gold", desc: "敌军开场损失 12% 护势，全队破势提高 15%。", effects: { teamModifiers: { poisePct: 0.15, enemyStartPoisePct: 0.12 } } },
-];
-
-export const WATER_MARGIN_CHAPTER_TACTICS = Object.fromEntries(
-  WATER_MARGIN_SAGA.map((arc, index) => [
-    arc.id,
-    tacticPresets.map((preset) => ({
-      ...preset,
-      id: `${arc.id}_${preset.id}`,
-      name: index % 2 ? "留证破阵" : preset.name,
-    })),
-  ]),
-);
-
-export const WATER_MARGIN_CHAPTER_TACTIC_IDS = new Set(
-  Object.values(WATER_MARGIN_CHAPTER_TACTICS).flat().map((tactic) => tactic.id),
-);
-
-export function getWaterMarginChapterTactics(chapterId) {
-  return WATER_MARGIN_CHAPTER_TACTICS[chapterId] || [];
-}

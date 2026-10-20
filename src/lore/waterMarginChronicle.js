@@ -295,32 +295,6 @@ export const WATER_MARGIN_SAGA = [
   },
 ];
 
-export const WATER_MARGIN_SCENE_LOCATIONS = {
-  longhu_mountain: "龙虎山伏魔殿",
-  yellow_river_ferry: "黄河渡口",
-  bianjing_snow_night: "东京汴梁",
-  boar_forest: "野猪林",
-  cangzhou: "沧州牢城",
-  qingfeng_fort: "清风寨",
-  jiangzhou_execution: "江州法场",
-  zhujiazhuang_snow_night: "祝家庄",
-  damingfu_lantern_night: "北京大名府",
-  liangshan_water_fort: "梁山泊",
-  shijia_village: "华阴史家庄",
-  weizhou_pavilion: "渭州状元桥",
-  huangni_ridge: "黄泥冈",
-  yuncheng_courtyard: "郓城宋家",
-  yiling_mountain: "沂岭",
-  gaotang_temple: "高唐州",
-  mangdang_shrine: "芒砀山",
-  zengtou_fort: "曾头市",
-  dongchang_wall: "东昌府",
-  youzhou_plain: "幽州",
-  hebei_fortress: "河北五州",
-  nanfeng_river: "南丰",
-  yongjin_gate: "杭州涌金门",
-  liuhe_temple: "杭州六和寺",
-};
 
 export const WATER_MARGIN_SCENE_ASSETS = {
   yellow_river_ferry: "/assets/environments/yellow_river_ferry.png",
@@ -356,6 +330,3 @@ export function waterMarginSceneAsset(sceneId) {
   );
 }
 
-export function waterMarginSceneLocation(sceneId) {
-  return WATER_MARGIN_SCENE_LOCATIONS[sceneId] || "梁山泊";
-}
